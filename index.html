@@ -1,55 +1,134 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
+
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Caroline Diniz Centro de Estética</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+
+  <title>Caroline Diniz Sistema</title>
 
   <link rel="stylesheet" href="style.css">
 </head>
 
 <body>
 
-  <div class="container">
+  <div class="layout">
 
     <aside class="sidebar">
-      <h1>CD</h1>
 
-      <ul>
-        <li>Agenda</li>
-        <li>Clientes</li>
-        <li>Profissionais</li>
-        <li>Relatórios</li>
-        <li>Financeiro</li>
-      </ul>
+      <div class="logo">
+        Caroline Diniz
+      </div>
+
+      <nav>
+
+        <a class="active">Agenda</a>
+        <a>Clientes</a>
+        <a>Comandas</a>
+        <a>Financeiro</a>
+        <a>Profissionais</a>
+        <a>Relatórios</a>
+        <a>Configurações</a>
+
+      </nav>
+
     </aside>
 
-    <main class="content">
+    <main class="main">
 
-      <header>
-        <h2>Agenda do Dia</h2>
+      <header class="topbar">
 
-        <button>
-          Novo Agendamento
-        </button>
-      </header>
-
-      <section class="agenda">
-
-        <div class="card">
-          <h3>Maria Oliveira</h3>
-
-          <p>Limpeza de Pele</p>
-
-          <span>14:00 - 15:00</span>
+        <div>
+          <h1>Agenda</h1>
+          <p>09 de Maio de 2026</p>
         </div>
 
-        <div class="card">
-          <h3>Ana Paula</h3>
+        <button class="btn">
+          Novo Agendamento
+        </button>
 
-          <p>Massagem Relaxante</p>
+      </header>
 
-          <span>15:20 - 16:20</span>
+      <section class="agenda-container">
+
+        <div class="agenda-header">
+
+          <div class="time-column"></div>
+
+          <div class="professional">
+            Carol
+          </div>
+
+          <div class="professional">
+            Jessica
+          </div>
+
+          <div class="professional">
+            Fernanda
+          </div>
+
+          <div class="professional">
+            Silamara
+          </div>
+
+        </div>
+
+        <div class="agenda-body">
+
+          <div class="time-column">
+
+            <div class="time">08:00</div>
+            <div class="time">09:00</div>
+            <div class="time">10:00</div>
+            <div class="time">11:00</div>
+            <div class="time">12:00</div>
+            <div class="time">13:00</div>
+            <div class="time">14:00</div>
+            <div class="time">15:00</div>
+            <div class="time">16:00</div>
+            <div class="time">17:00</div>
+            <div class="time">18:00</div>
+
+          </div>
+
+          <div class="column">
+
+            <div class="appointment">
+              <strong>Maria Oliveira</strong>
+              <span>Limpeza de Pele</span>
+              <small>14:00 - 15:00</small>
+            </div>
+
+            <div class="appointment">
+              <strong>Ana Clara</strong>
+              <span>Drenagem</span>
+              <small>16:00 - 17:00</small>
+            </div>
+
+          </div>
+
+          <div class="column">
+
+            <div class="appointment">
+              <strong>Juliana Souza</strong>
+              <span>Massagem</span>
+              <small>10:00 - 11:00</small>
+            </div>
+
+          </div>
+
+          <div class="column"></div>
+
+          <div class="column">
+
+            <div class="appointment">
+              <strong>Fernanda Lima</strong>
+              <span>Microagulhamento</span>
+              <small>09:00 - 10:30</small>
+            </div>
+
+          </div>
+
         </div>
 
       </section>
@@ -58,7 +137,6 @@
 
   </div>
 
-  <script src="script.js"></script>
-
 </body>
+
 </html>
