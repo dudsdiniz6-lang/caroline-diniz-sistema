@@ -257,3 +257,59 @@ nav a:hover{
   background:white;
   z-index:10;
 }
+[aula="tempo"]{
+  height:80px;
+  border-bottom:1px solid #f1f1f1;
+  font-size:12px;
+  color:#999;
+  padding-top:8px;
+  padding-left:10px;
+  background:white;
+}
+
+[aula="coluna"]{
+  min-width:250px;
+  border-left:1px solid #eeeeee;
+  position:relative;
+}
+
+[aula="encontro"]{
+  background:#dbeafe;
+  border-left:4px solid #ff7a00;
+  border-radius:14px;
+  padding:14px;
+  margin:8px;
+  font-size:14px;
+  box-shadow:0 2px 10px rgba(0,0,0,0.04);
+  transition:0.2s;
+}
+
+[aula="encontro"]:hover{
+  transform:scale(1.01);
+}
+
+[aula="corpo da agenda"]{
+  display:flex;
+}
+
+[aula="coluna de tempo"]{
+  width:80px;
+  background:#fafafa;
+}
+
+[aula="profissional"]{
+  min-width:250px;
+  text-align:center;
+  font-weight:600;
+  padding:15px;
+  border-left:1px solid #eeeeee;
+  background:white;
+}
+
+[aula="cabeçalho da agenda"]{
+  display:flex;
+  position:sticky;
+  top:0;
+  background:white;
+  z-index:10;
+}
