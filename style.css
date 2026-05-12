@@ -463,3 +463,6 @@ nav a:hover{
   padding:15px;
   border-radius:12px;
 }
+  html{
+  scroll-behavior:smooth;
+}
