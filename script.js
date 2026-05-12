@@ -245,7 +245,11 @@ function carregarAgenda(){
 }
 
 window.onload = function(){
+
   atualizarFinanceiro();
+
+  carregarClientes();
+
 };
 function salvarCliente(){
 
