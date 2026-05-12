@@ -122,9 +122,11 @@ nav a:hover{
 }
 
 .column{
-  border-right:1px solid #eee;
-  padding:10px;
+  min-width:250px;
+  border-left:1px solid #eeeeee;
   position:relative;
+  height:3000px;
+  padding:10px;
 }
 
 .appointment{
