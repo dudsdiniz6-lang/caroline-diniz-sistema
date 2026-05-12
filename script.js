@@ -5,6 +5,7 @@ const usuarios = [
   { usuario:"pedro", senha:"123", cargo:"funcionario" },
   { usuario:"silamara", senha:"123", cargo:"funcionario" },
   { usuario:"jessica", senha:"123", cargo:"funcionario" },
+{ usuario:"ssica", senha:"123", cargo:"funcionario" },
   { usuario:"alice", senha:"123", cargo:"funcionario" }
 ];
 
@@ -17,7 +18,11 @@ function fecharModal() {
 }
 
 function fazerLogin(){
-  const usuario = document.getElementById("usuario").value.toLowerCase().trim();
+  const usuario = document.getElementById("usuario").value
+  .toLowerCase()
+  .trim()
+  .normalize("NFD")
+  .replace(/[\u0300-\u036f]/g, "");
   const senha = document.getElementById("senha").value.trim();
 
   const usuarioEncontrado = usuarios.find((item)=>{
