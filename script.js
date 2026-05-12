@@ -1,9 +1,65 @@
+const usuarios = [
+  { usuario:"eduarda", senha:"123", cargo:"dona" },
+  { usuario:"caroline", senha:"123", cargo:"dona" },
+  { usuario:"ana", senha:"123", cargo:"gerente" },
+  { usuario:"pedro", senha:"123", cargo:"funcionario" },
+  { usuario:"silamara", senha:"123", cargo:"funcionario" },
+  { usuario:"jessica", senha:"123", cargo:"funcionario" },
+  { usuario:"alice", senha:"123", cargo:"funcionario" }
+];
+
 function abrirModal() {
   document.getElementById("modal").style.display = "flex";
 }
 
 function fecharModal() {
   document.getElementById("modal").style.display = "none";
+}
+
+function fazerLogin(){
+  const usuario = document.getElementById("usuario").value.toLowerCase().trim();
+  const senha = document.getElementById("senha").value.trim();
+
+  const usuarioEncontrado = usuarios.find((item)=>{
+    return item.usuario === usuario && item.senha === senha;
+  });
+
+  if(!usuarioEncontrado){
+    alert("Usuário ou senha inválidos");
+    return;
+  }
+
+  localStorage.setItem("usuarioLogado", JSON.stringify(usuarioEncontrado));
+  document.getElementById("login-screen").style.display = "none";
+
+  aplicarPermissoes();
+  carregarAgenda();
+}
+
+function sairSistema(){
+  localStorage.removeItem("usuarioLogado");
+  location.reload();
+}
+
+function aplicarPermissoes(){
+  const usuarioLogado = JSON.parse(localStorage.getItem("usuarioLogado"));
+  if(!usuarioLogado) return;
+
+  const menus = document.querySelectorAll("nav a");
+
+  menus.forEach((menu)=>{
+    const texto = menu.innerText;
+
+    if(usuarioLogado.cargo === "gerente" && texto === "Financeiro"){
+      menu.style.display = "none";
+    }
+
+    if(usuarioLogado.cargo === "funcionario"){
+      if(texto === "Financeiro" || texto === "Comandas" || texto === "Relatórios"){
+        menu.style.display = "none";
+      }
+    }
+  });
 }
 
 function calcularTop(horario) {
@@ -24,31 +80,19 @@ function atualizarFinanceiro() {
 }
 
 function criarCard(agendamento) {
-  const colunas = document.querySelectorAll(".column");
-  const coluna = colunas[agendamento.profissional];
   const usuarioLogado = JSON.parse(localStorage.getItem("usuarioLogado"));
 
-if(
-  usuarioLogado &&
-  usuarioLogado.cargo === "funcionario"
-){
+  if(usuarioLogado && usuarioLogado.cargo === "funcionario"){
+    const nomes = ["carol", "jessica", "fernanda", "silamara"];
+    const indiceUsuario = nomes.indexOf(usuarioLogado.usuario);
 
-  const nomes = [
-    "carol",
-    "jessica",
-    "fernanda",
-    "silamara"
-  ];
-
-  const indiceUsuario = nomes.indexOf(usuarioLogado.usuario);
-
-  if(indiceUsuario != agendamento.profissional){
-
-    return;
-
+    if(indiceUsuario != agendamento.profissional){
+      return;
+    }
   }
 
-}
+  const colunas = document.querySelectorAll(".column");
+  const coluna = colunas[agendamento.profissional];
 
   const card = document.createElement("div");
   card.classList.add("appointment");
@@ -71,7 +115,6 @@ if(
 
   card.onclick = function () {
     const novoHorario = prompt("Editar horário:", agendamento.horario);
-
     if (!novoHorario) return;
 
     agendamento.horario = novoHorario;
@@ -100,7 +143,6 @@ if(
     event.preventDefault();
 
     const confirmar = confirm("Deseja excluir este agendamento?");
-
     if (!confirmar) return;
 
     card.remove();
@@ -112,7 +154,6 @@ if(
     });
 
     localStorage.setItem("agendamentos", JSON.stringify(agendamentos));
-
     atualizarFinanceiro();
   };
 
@@ -154,7 +195,13 @@ function salvarAgendamento() {
   fecharModal();
 }
 
-window.onload = function () {
+function carregarAgenda(){
+  const colunas = document.querySelectorAll(".column");
+
+  colunas.forEach((coluna)=>{
+    coluna.innerHTML = "";
+  });
+
   const agendamentos = JSON.parse(localStorage.getItem("agendamentos")) || [];
 
   agendamentos.forEach((agendamento) => {
@@ -162,71 +209,8 @@ window.onload = function () {
   });
 
   atualizarFinanceiro();
+}
+
+window.onload = function () {
+  atualizarFinanceiro();
 };
-const usuarios = [
-  { usuario:"eduarda", senha:"123", cargo:"dona" },
-  { usuario:"caroline", senha:"123", cargo:"dona" },
-  { usuario:"ana", senha:"123", cargo:"gerente" },
-  { usuario:"pedro", senha:"123", cargo:"funcionario" },
-  { usuario:"silamara", senha:"123", cargo:"funcionario" },
-  { usuario:"jessica", senha:"123", cargo:"funcionario" },
-  { usuario:"alice", senha:"123", cargo:"funcionario" }
-];
-
-function fazerLogin(){
-
-  const usuario = document.getElementById("usuario").value.toLowerCase().trim();
-  const senha = document.getElementById("senha").value.trim();
-
-  const usuarioEncontrado = usuarios.find((item)=>{
-    return item.usuario === usuario && item.senha === senha;
-  });
-
-  if(!usuarioEncontrado){
-    alert("Usuário ou senha inválidos");
-    return;
-  }
-
-  localStorage.setItem("usuarioLogado", JSON.stringify(usuarioEncontrado));
-
-  document.getElementById("login-screen").style.display = "none";
-
-  aplicarPermissoes();
-
-}
-
-function sairSistema(){
-
-  localStorage.removeItem("usuarioLogado");
-
-  location.reload();
-
-}
-
-function aplicarPermissoes(){
-
-  const usuarioLogado = JSON.parse(localStorage.getItem("usuarioLogado"));
-
-  if(!usuarioLogado) return;
-
-  const menus = document.querySelectorAll("nav a");
-
-  menus.forEach((menu)=>{
-
-    const texto = menu.innerText;
-
-    if(usuarioLogado.cargo === "gerente" && texto === "Financeiro"){
-      menu.style.display = "none";
-    }
-
-    if(usuarioLogado.cargo === "funcionario"){
-
-      if(texto === "Financeiro" || texto === "Comandas" || texto === "Relatórios"){
-        menu.style.display = "none";
-      }
-
-    }
-
-  });
-
-}
