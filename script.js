@@ -301,3 +301,13 @@ function carregarClientes(){
   });
 
 }
+function mostrarClientes(){
+
+  const clientes = document.getElementById("clientes-container");
+
+  clientes.scrollIntoView({
+    behavior: "smooth",
+    block: "start"
+  });
+
+}
