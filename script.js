@@ -140,3 +140,51 @@ window.onload = function () {
 
   atualizarFinanceiro();
 };
+const usuarios = [
+
+  {
+    usuario:"eduarda",
+    senha:"123",
+    cargo:"dona"
+  },
+
+  {
+    usuario:"caroline",
+    senha:"123",
+    cargo:"dona"
+  },
+
+  {
+    usuario:"ana",
+    senha:"123",
+    cargo:"gerente"
+  }
+
+];
+
+function fazerLogin(){
+
+  const usuario = document.getElementById("usuario").value;
+
+  const senha = document.getElementById("senha").value;
+
+  const usuarioEncontrado = usuarios.find((item)=>{
+
+    return item.usuario === usuario &&
+           item.senha === senha;
+
+  });
+
+  if(!usuarioEncontrado){
+
+    alert("Usuário ou senha inválidos");
+
+    return;
+
+  }
+
+  localStorage.setItem("usuarioLogado", JSON.stringify(usuarioEncontrado));
+
+  document.getElementById("login-screen").style.display = "none";
+
+}
