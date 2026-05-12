@@ -193,6 +193,7 @@ function fazerLogin(){
   localStorage.setItem("usuarioLogado", JSON.stringify(usuarioEncontrado));
 
   document.getElementById("login-screen").style.display = "none";
+  aplicarPermissoes();
 
 }
 function sairSistema(){
@@ -200,5 +201,32 @@ function sairSistema(){
   localStorage.removeItem("usuarioLogado");
 
   location.reload();
+
+}
+function aplicarPermissoes(){
+
+  const usuarioLogado = JSON.parse(localStorage.getItem("usuarioLogado"));
+
+  if(!usuarioLogado) return;
+
+  const menus = document.querySelectorAll("nav a");
+
+  menus.forEach((menu)=>{
+
+    const texto = menu.innerText;
+
+    if(usuarioLogado.cargo === "gerente" && texto === "Financeiro"){
+      menu.style.display = "none";
+    }
+
+    if(usuarioLogado.cargo === "funcionario"){
+
+      if(texto === "Financeiro" || texto === "Comandas" || texto === "Relatórios"){
+        menu.style.display = "none";
+      }
+
+    }
+
+  });
 
 }
