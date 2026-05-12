@@ -19,6 +19,21 @@ const coluna = colunas[profissional];
   const card = document.createElement("div");
 
   card.classList.add("appointment");
+  const [hora, minuto] = horario.split(":");
+
+const totalMinutos = (parseInt(hora) * 60) + parseInt(minuto);
+
+const inicioAgenda = 8 * 60;
+
+const posicao = ((totalMinutos - inicioAgenda) / 20) * 80;
+
+card.style.position = "absolute";
+
+card.style.top = `${posicao}px`;
+
+card.style.left = "0";
+
+card.style.right = "0";
 
   card.innerHTML = `
     <strong>${cliente}</strong>
