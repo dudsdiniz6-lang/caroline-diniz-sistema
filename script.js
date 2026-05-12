@@ -25,15 +25,9 @@ const totalMinutos = (parseInt(hora) * 60) + parseInt(minuto);
 
 const inicioAgenda = 8 * 60;
 
-const posicao = ((totalMinutos - inicioAgenda) / 20) * 80;
+const posicao = ((totalMinutos - inicioAgenda) / 20) * 40;
 
-card.style.position = "absolute";
-
-card.style.top = `${posicao}px`;
-
-card.style.left = "5px";
-
-card.style.right = "5px";
+card.style.marginTop = `${posicao}px`;
 
   card.innerHTML = `
     <strong>${cliente}</strong>
