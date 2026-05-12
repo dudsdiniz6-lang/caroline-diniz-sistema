@@ -89,13 +89,41 @@ window.onload = function(){
     coluna.appendChild(card);
 card.onclick = function(){
 
-  card.remove();
+  const novoHorario = prompt("Editar horário:", horario);
+
+  if(!novoHorario) return;
+
+  horario = novoHorario;
+
+  const [hora, minuto] = horario.split(":");
+
+  const minutosTotais = (parseInt(hora) * 60) + parseInt(minuto);
+
+  const inicioAgenda = 14 * 60;
+
+  const diferenca = minutosTotais - inicioAgenda;
+
+  const posicaoTop = (diferenca / 20) * 80;
+
+  card.style.top = `${posicaoTop}px`;
+
+  card.innerHTML = `
+    <strong>${cliente}</strong>
+    <span>Novo Atendimento</span>
+    <small>${horario}</small>
+  `;
 
   let agendamentos = JSON.parse(localStorage.getItem("agendamentos")) || [];
 
-  agendamentos = agendamentos.filter((item)=>{
+  agendamentos = agendamentos.map((item)=>{
 
-    return item.id != card.dataset.id;
+    if(item.id == card.dataset.id){
+
+      item.horario = horario;
+
+    }
+
+    return item;
 
   });
 
