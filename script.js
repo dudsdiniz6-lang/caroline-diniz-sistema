@@ -47,12 +47,15 @@ function sairSistema(){
 }
 
 function aplicarPermissoes(){
+
   const usuarioLogado = JSON.parse(localStorage.getItem("usuarioLogado"));
+
   if(!usuarioLogado) return;
 
   const menus = document.querySelectorAll("nav a");
 
   menus.forEach((menu)=>{
+
     const texto = menu.innerText;
 
     if(usuarioLogado.cargo === "gerente" && texto === "Financeiro"){
@@ -60,10 +63,48 @@ function aplicarPermissoes(){
     }
 
     if(usuarioLogado.cargo === "funcionario"){
+
       if(texto === "Financeiro" || texto === "Comandas" || texto === "Relatórios"){
         menu.style.display = "none";
       }
+
     }
+
+  });
+
+  if(usuarioLogado.cargo === "funcionario"){
+
+    const nomes = ["carol", "jessica", "fernanda", "silamara", "ssica"];
+
+    let indiceUsuario = nomes.indexOf(usuarioLogado.usuario);
+
+    if(usuarioLogado.usuario === "ssica"){
+      indiceUsuario = 1;
+    }
+
+    const colunas = document.querySelectorAll(".column");
+
+    const profissionais = document.querySelectorAll(".professional");
+
+    colunas.forEach((coluna, index)=>{
+
+      if(index !== indiceUsuario){
+        coluna.style.display = "none";
+      }
+
+    });
+
+    profissionais.forEach((profissional, index)=>{
+
+      if(index !== indiceUsuario){
+        profissional.style.display = "none";
+      }
+
+    });
+
+  }
+
+}
   });
   if(usuarioLogado.cargo === "funcionario"){
 
