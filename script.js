@@ -163,6 +163,13 @@ const usuarios = [
 ];
 
 function fazerLogin(){
+  const usuarioLogado = JSON.parse(localStorage.getItem("usuarioLogado"));
+
+if(usuarioLogado){
+
+  document.getElementById("login-screen").style.display = "none";
+
+}
 
   const usuario = document.getElementById("usuario").value;
 
