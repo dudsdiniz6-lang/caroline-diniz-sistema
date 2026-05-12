@@ -84,7 +84,11 @@ window.onload = function(){
     `;
 
     coluna.appendChild(card);
+card.onclick = function(){
 
+  card.remove();
+
+}
   });
 
 }
