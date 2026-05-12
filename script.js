@@ -38,6 +38,7 @@ card.style.top = `${posicaoTop}px`;
 
   coluna.appendChild(card);
   const agendamento = {
+  id: Date.now(),
   cliente,
   horario,
   profissional
@@ -64,6 +65,8 @@ window.onload = function(){
     const card = document.createElement("div");
 
     card.classList.add("appointment");
+    card.dataset.id = agendamento.id;
+    card.dataset.id = agendamento.id;
 
     const [hora, minuto] = agendamento.horario.split(":");
 
@@ -85,6 +88,20 @@ window.onload = function(){
 
     coluna.appendChild(card);
 card.onclick = function(){
+
+  card.remove();
+
+  let agendamentos = JSON.parse(localStorage.getItem("agendamentos")) || [];
+
+  agendamentos = agendamentos.filter((item)=>{
+
+    return item.id != card.dataset.id;
+
+  });
+
+  localStorage.setItem("agendamentos", JSON.stringify(agendamentos));
+
+}
 
   card.remove();
 
