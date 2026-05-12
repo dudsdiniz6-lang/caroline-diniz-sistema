@@ -66,7 +66,6 @@ window.onload = function(){
 
     card.classList.add("appointment");
     card.dataset.id = agendamento.id;
-    card.dataset.id = agendamento.id;
 
     const [hora, minuto] = agendamento.horario.split(":");
 
