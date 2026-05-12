@@ -40,7 +40,7 @@
       <nav>
 
         <a class="active">Agenda</a>
-        <a>Clientes</a>
+        <a onclick="mostrarClientes()">Clientes</a>
         <a>Comandas</a>
         <a>Financeiro</a>
         <a>Profissionais</a>
@@ -247,3 +247,10 @@
 </body>
 
 </html>
+function mostrarClientes(){
+
+  document.getElementById("clientes-container").scrollIntoView({
+    behavior: "smooth"
+  });
+
+}
