@@ -17,6 +17,20 @@ function salvarAgendamento() {
 const colunas = document.querySelectorAll(".column");
 
 const coluna = colunas[profissional];
+  const conflito = agendamentos.some((item)=>{
+
+  return item.profissional == profissional &&
+         item.horario == horario;
+
+});
+
+if(conflito){
+
+  alert("Já existe um atendimento nesse horário.");
+
+  return;
+
+}
 
   const card = document.createElement("div");
 
