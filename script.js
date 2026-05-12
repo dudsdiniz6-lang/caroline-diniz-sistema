@@ -27,7 +27,7 @@ const inicioAgenda = 14 * 60;
 
 const diferenca = minutosTotais - inicioAgenda;
 
-const posicaoTop = ((diferenca / 20) * 50) + 10;
+const posicaoTop = (diferenca / 20) * 80;
 
 card.style.top = `${posicaoTop}px`;
   card.innerHTML = `
