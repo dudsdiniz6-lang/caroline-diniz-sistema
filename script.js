@@ -88,6 +88,16 @@ card.onclick = function(){
 
   card.remove();
 
+  let agendamentos = JSON.parse(localStorage.getItem("agendamentos")) || [];
+
+  agendamentos = agendamentos.filter((item)=>{
+
+    return !(item.cliente === cliente && item.horario === horario);
+
+  });
+
+  localStorage.setItem("agendamentos", JSON.stringify(agendamentos));
+
 }
   });
 
