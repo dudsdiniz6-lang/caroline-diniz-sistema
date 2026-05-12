@@ -164,84 +164,37 @@ window.onload = function () {
   atualizarFinanceiro();
 };
 const usuarios = [
-
-  {
-    usuario:"eduarda",
-    senha:"123",
-    cargo:"dona"
-  },
-
-  {
-    usuario:"caroline",
-    senha:"123",
-    cargo:"dona"
-  },
-
-  {
-    usuario:"ana",
-    senha:"123",
-    cargo:"gerente"
-  },
-
-  {
-    usuario:"pedro",
-    senha:"123",
-    cargo:"funcionario"
-  },
-
-  {
-    usuario:"silamara",
-    senha:"123",
-    cargo:"funcionario"
-  },
-
-  {
-    usuario:"jessica",
-    senha:"123",
-    cargo:"funcionario"
-  },
-
-  {
-    usuario:"alice",
-    senha:"123",
-    cargo:"funcionario"
-  }
-
+  { usuario:"eduarda", senha:"123", cargo:"dona" },
+  { usuario:"caroline", senha:"123", cargo:"dona" },
+  { usuario:"ana", senha:"123", cargo:"gerente" },
+  { usuario:"pedro", senha:"123", cargo:"funcionario" },
+  { usuario:"silamara", senha:"123", cargo:"funcionario" },
+  { usuario:"jessica", senha:"123", cargo:"funcionario" },
+  { usuario:"alice", senha:"123", cargo:"funcionario" }
 ];
+
 function fazerLogin(){
-  function sairSistema(){
 
-  localStorage.removeItem("usuarioLogado");
-
-  location.reload();
-
-}
-
-  const usuario = document.getElementById("usuario").value;
-
-  const senha = document.getElementById("senha").value;
+  const usuario = document.getElementById("usuario").value.toLowerCase().trim();
+  const senha = document.getElementById("senha").value.trim();
 
   const usuarioEncontrado = usuarios.find((item)=>{
-
-    return item.usuario === usuario &&
-           item.senha === senha;
-
+    return item.usuario === usuario && item.senha === senha;
   });
 
   if(!usuarioEncontrado){
-
     alert("Usuário ou senha inválidos");
-
     return;
-
   }
 
   localStorage.setItem("usuarioLogado", JSON.stringify(usuarioEncontrado));
 
   document.getElementById("login-screen").style.display = "none";
+
   aplicarPermissoes();
 
 }
+
 function sairSistema(){
 
   localStorage.removeItem("usuarioLogado");
@@ -249,6 +202,7 @@ function sairSistema(){
   location.reload();
 
 }
+
 function aplicarPermissoes(){
 
   const usuarioLogado = JSON.parse(localStorage.getItem("usuarioLogado"));
