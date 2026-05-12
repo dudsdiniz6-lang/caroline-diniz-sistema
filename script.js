@@ -247,3 +247,53 @@ function carregarAgenda(){
 window.onload = function(){
   atualizarFinanceiro();
 };
+function salvarCliente(){
+
+  const nome = document.getElementById("nomeCliente").value;
+
+  const telefone = document.getElementById("telefoneCliente").value;
+
+  const observacao = document.getElementById("observacaoCliente").value;
+
+  const cliente = {
+    id: Date.now(),
+    nome,
+    telefone,
+    observacao
+  };
+
+  let clientes = JSON.parse(localStorage.getItem("clientes")) || [];
+
+  clientes.push(cliente);
+
+  localStorage.setItem("clientes", JSON.stringify(clientes));
+
+  carregarClientes();
+
+}
+
+function carregarClientes(){
+
+  const lista = document.getElementById("listaClientes");
+
+  lista.innerHTML = "";
+
+  const clientes = JSON.parse(localStorage.getItem("clientes")) || [];
+
+  clientes.forEach((cliente)=>{
+
+    const card = document.createElement("div");
+
+    card.classList.add("cliente-card");
+
+    card.innerHTML = `
+      <strong>${cliente.nome}</strong>
+      <p>${cliente.telefone}</p>
+      <small>${cliente.observacao}</small>
+    `;
+
+    lista.appendChild(card);
+
+  });
+
+}
