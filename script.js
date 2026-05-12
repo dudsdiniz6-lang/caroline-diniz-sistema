@@ -163,11 +163,11 @@ const usuarios = [
 ];
 
 function fazerLogin(){
-  const usuarioLogado = JSON.parse(localStorage.getItem("usuarioLogado"));
+  function sairSistema(){
 
-if(usuarioLogado){
+  localStorage.removeItem("usuarioLogado");
 
-  document.getElementById("login-screen").style.display = "none";
+  location.reload();
 
 }
 
