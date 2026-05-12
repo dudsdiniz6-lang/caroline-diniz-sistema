@@ -152,3 +152,18 @@ card.onclick = function(){
   });
 
 }
+function atualizarFinanceiro(){
+
+  const agendamentos = JSON.parse(localStorage.getItem("agendamentos")) || [];
+
+  const totalClientes = agendamentos.length;
+
+  const faturamento = totalClientes * 70;
+
+  document.getElementById("clientes-total").innerText = totalClientes;
+
+  document.getElementById("faturamento").innerText = `R$ ${faturamento}`;
+
+}
+
+atualizarFinanceiro();
