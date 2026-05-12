@@ -11,6 +11,7 @@ function salvarAgendamento() {
   const horario = document.getElementById("horario").value;
 
   const profissional = document.getElementById("profissional").value;
+  const duracao = document.getElementById("duracao").value;
 
 const colunas = document.querySelectorAll(".column");
 
@@ -30,6 +31,9 @@ const diferenca = minutosTotais - inicioAgenda;
 const posicaoTop = (diferenca / 20) * 80;
 
 card.style.top = `${posicaoTop}px`;
+  const altura = (duracao / 20) * 80;
+
+card.style.height = `${altura - 10}px`;
   card.innerHTML = `
     <strong>${cliente}</strong>
     <span>Novo Atendimento</span>
