@@ -23,7 +23,7 @@ const [hora, minuto] = horario.split(":");
 
 const minutosTotais = (parseInt(hora) * 60) + parseInt(minuto);
 
-const inicioAgenda = 8 * 60;
+const inicioAgenda = 14 * 60;
 
 const diferenca = minutosTotais - inicioAgenda;
 
