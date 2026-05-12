@@ -31,9 +31,9 @@ card.style.position = "absolute";
 
 card.style.top = `${posicao}px`;
 
-card.style.left = "0";
+card.style.left = "5px";
 
-card.style.right = "0";
+card.style.right = "5px";
 
   card.innerHTML = `
     <strong>${cliente}</strong>
