@@ -12,6 +12,7 @@ function salvarAgendamento() {
 
   const profissional = document.getElementById("profissional").value;
   const duracao = document.getElementById("duracao").value;
+  const servico = document.getElementById("servico").value;
 
 const colunas = document.querySelectorAll(".column");
 
@@ -20,6 +21,7 @@ const coluna = colunas[profissional];
   const card = document.createElement("div");
 
   card.classList.add("appointment");
+  card.classList.add(servico);
 const [hora, minuto] = horario.split(":");
 
 const minutosTotais = (parseInt(hora) * 60) + parseInt(minuto);
