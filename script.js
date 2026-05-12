@@ -61,6 +61,26 @@ function criarCard(agendamento) {
   `;
 
   card.onclick = function () {
+    card.oncontextmenu = function (event) {
+
+  event.preventDefault();
+
+  const confirmar = confirm("Deseja excluir este agendamento?");
+
+  if (!confirmar) return;
+
+  card.remove();
+
+  let agendamentos = JSON.parse(localStorage.getItem("agendamentos")) || [];
+
+  agendamentos = agendamentos.filter((item) => {
+    return item.id != agendamento.id;
+  });
+
+  localStorage.setItem("agendamentos", JSON.stringify(agendamentos));
+
+  atualizarFinanceiro();
+};
 
     const novoHorario = prompt("Editar horário:", agendamento.horario);
 
