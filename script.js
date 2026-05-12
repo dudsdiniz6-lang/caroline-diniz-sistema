@@ -26,6 +26,29 @@ function atualizarFinanceiro() {
 function criarCard(agendamento) {
   const colunas = document.querySelectorAll(".column");
   const coluna = colunas[agendamento.profissional];
+  const usuarioLogado = JSON.parse(localStorage.getItem("usuarioLogado"));
+
+if(
+  usuarioLogado &&
+  usuarioLogado.cargo === "funcionario"
+){
+
+  const nomes = [
+    "carol",
+    "jessica",
+    "fernanda",
+    "silamara"
+  ];
+
+  const indiceUsuario = nomes.indexOf(usuarioLogado.usuario);
+
+  if(indiceUsuario != agendamento.profissional){
+
+    return;
+
+  }
+
+}
 
   const card = document.createElement("div");
   card.classList.add("appointment");
