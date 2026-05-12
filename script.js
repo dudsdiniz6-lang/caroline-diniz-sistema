@@ -195,3 +195,10 @@ function fazerLogin(){
   document.getElementById("login-screen").style.display = "none";
 
 }
+function sairSistema(){
+
+  localStorage.removeItem("usuarioLogado");
+
+  location.reload();
+
+}
