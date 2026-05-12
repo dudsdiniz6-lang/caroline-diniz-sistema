@@ -61,24 +61,55 @@ function criarCard(agendamento) {
   `;
 
   card.onclick = function () {
-    card.oncontextmenu = function (event) {
 
-  event.preventDefault();
+    const novoHorario = prompt("Editar horário:", agendamento.horario);
 
-  const confirmar = confirm("Deseja excluir este agendamento?");
+    if (!novoHorario) return;
 
-  if (!confirmar) return;
+    agendamento.horario = novoHorario;
 
-  card.remove();
+    card.style.top = `${calcularTop(agendamento.horario)}px`;
 
-  let agendamentos = JSON.parse(localStorage.getItem("agendamentos")) || [];
+    card.innerHTML = `
+      <strong>${agendamento.cliente}</strong>
+      <span>${agendamento.servico || "Novo Atendimento"}</span>
+      <small>${agendamento.horario}</small>
+    `;
 
-  agendamentos = agendamentos.filter((item) => {
-    return item.id != agendamento.id;
-  });
+    let agendamentos = JSON.parse(localStorage.getItem("agendamentos")) || [];
 
-  localStorage.setItem("agendamentos", JSON.stringify(agendamentos));
+    agendamentos = agendamentos.map((item) => {
 
+      if (item.id == card.dataset.id) {
+        item.horario = agendamento.horario;
+      }
+
+      return item;
+    });
+
+    localStorage.setItem("agendamentos", JSON.stringify(agendamentos));
+  };
+
+  card.oncontextmenu = function (event) {
+
+    event.preventDefault();
+
+    const confirmar = confirm("Deseja excluir este agendamento?");
+
+    if (!confirmar) return;
+
+    card.remove();
+
+    let agendamentos = JSON.parse(localStorage.getItem("agendamentos")) || [];
+
+    agendamentos = agendamentos.filter((item) => {
+      return item.id != agendamento.id;
+    });
+
+    localStorage.setItem("agendamentos", JSON.stringify(agendamentos));
+
+    atualizarFinanceiro();
+  };
   atualizarFinanceiro();
 };
 
