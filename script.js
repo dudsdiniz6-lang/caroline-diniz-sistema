@@ -65,6 +65,37 @@ function aplicarPermissoes(){
       }
     }
   });
+  if(usuarioLogado.cargo === "funcionario"){
+
+  const nomes = ["carol", "jessica", "fernanda", "silamara"];
+
+  const indiceUsuario = nomes.indexOf(usuarioLogado.usuario);
+
+  const colunas = document.querySelectorAll(".column");
+
+  const profissionais = document.querySelectorAll(".professional");
+
+  colunas.forEach((coluna, index)=>{
+
+    if(index !== indiceUsuario){
+
+      coluna.style.display = "none";
+
+    }
+
+  });
+
+  profissionais.forEach((profissional, index)=>{
+
+    if(index !== indiceUsuario){
+
+      profissional.style.display = "none";
+
+    }
+
+  });
+
+}
 }
 
 function calcularTop(horario) {
