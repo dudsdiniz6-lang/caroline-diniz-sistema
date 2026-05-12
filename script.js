@@ -10,7 +10,11 @@ function salvarAgendamento() {
   const cliente = document.getElementById("cliente").value;
   const horario = document.getElementById("horario").value;
 
-  const coluna = document.querySelector(".column");
+  const profissional = document.getElementById("profissional").value;
+
+const colunas = document.querySelectorAll(".column");
+
+const coluna = colunas[profissional];
 
   const card = document.createElement("div");
 
