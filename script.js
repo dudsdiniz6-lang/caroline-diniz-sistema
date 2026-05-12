@@ -158,10 +158,33 @@ const usuarios = [
     usuario:"ana",
     senha:"123",
     cargo:"gerente"
+  },
+
+  {
+    usuario:"pedro",
+    senha:"123",
+    cargo:"funcionario"
+  },
+
+  {
+    usuario:"silamara",
+    senha:"123",
+    cargo:"funcionario"
+  },
+
+  {
+    usuario:"jessica",
+    senha:"123",
+    cargo:"funcionario"
+  },
+
+  {
+    usuario:"alice",
+    senha:"123",
+    cargo:"funcionario"
   }
 
 ];
-
 function fazerLogin(){
   function sairSistema(){
 
