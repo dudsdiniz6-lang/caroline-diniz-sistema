@@ -88,7 +88,7 @@ window.onload = function(){
     coluna.appendChild(card);
 card.onclick = function(){
 
- const novoHorario = prompt("Editar horário:", agendamento.horario);
+  const novoHorario = prompt("Editar horário:", agendamento.horario);
 
   if(!novoHorario) return;
 
@@ -107,7 +107,7 @@ card.onclick = function(){
   card.style.top = `${posicaoTop}px`;
 
   card.innerHTML = `
-    <strong>${cliente}</strong>
+    <strong>${agendamento.cliente}</strong>
     <span>Novo Atendimento</span>
     <small>${agendamento.horario}</small>
   `;
@@ -118,7 +118,7 @@ card.onclick = function(){
 
     if(item.id == card.dataset.id){
 
-      item.horario = horario;
+      item.horario = agendamento.horario;
 
     }
 
@@ -127,7 +127,6 @@ card.onclick = function(){
   });
 
   localStorage.setItem("agendamentos", JSON.stringify(agendamentos));
-
 
 }
   });
