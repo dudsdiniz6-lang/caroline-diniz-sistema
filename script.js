@@ -88,13 +88,13 @@ window.onload = function(){
     coluna.appendChild(card);
 card.onclick = function(){
 
-  const novoHorario = prompt("Editar horário:", horario);
+ const novoHorario = prompt("Editar horário:", agendamento.horario);
 
   if(!novoHorario) return;
 
-  horario = novoHorario;
+  agendamento.horario = novoHorario;
 
-  const [hora, minuto] = horario.split(":");
+  const [hora, minuto] = agendamento.horario.split(":");
 
   const minutosTotais = (parseInt(hora) * 60) + parseInt(minuto);
 
@@ -109,7 +109,7 @@ card.onclick = function(){
   card.innerHTML = `
     <strong>${cliente}</strong>
     <span>Novo Atendimento</span>
-    <small>${horario}</small>
+    <small>${agendamento.horario}</small>
   `;
 
   let agendamentos = JSON.parse(localStorage.getItem("agendamentos")) || [];
