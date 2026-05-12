@@ -5,9 +5,17 @@ const usuarios = [
   { usuario:"pedro", senha:"123", cargo:"funcionario" },
   { usuario:"silamara", senha:"123", cargo:"funcionario" },
   { usuario:"jessica", senha:"123", cargo:"funcionario" },
-{ usuario:"ssica", senha:"123", cargo:"funcionario" },
+  { usuario:"ssica", senha:"123", cargo:"funcionario" },
   { usuario:"alice", senha:"123", cargo:"funcionario" }
 ];
+
+const mapaProfissionais = {
+  carol: 0,
+  jessica: 1,
+  ssica: 1,
+  fernanda: 2,
+  silamara: 3
+};
 
 function abrirModal() {
   document.getElementById("modal").style.display = "flex";
@@ -19,10 +27,11 @@ function fecharModal() {
 
 function fazerLogin(){
   const usuario = document.getElementById("usuario").value
-  .toLowerCase()
-  .trim()
-  .normalize("NFD")
-  .replace(/[\u0300-\u036f]/g, "");
+    .toLowerCase()
+    .trim()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "");
+
   const senha = document.getElementById("senha").value.trim();
 
   const usuarioEncontrado = usuarios.find((item)=>{
@@ -35,6 +44,7 @@ function fazerLogin(){
   }
 
   localStorage.setItem("usuarioLogado", JSON.stringify(usuarioEncontrado));
+
   document.getElementById("login-screen").style.display = "none";
 
   aplicarPermissoes();
@@ -47,7 +57,6 @@ function sairSistema(){
 }
 
 function aplicarPermissoes(){
-
   const usuarioLogado = JSON.parse(localStorage.getItem("usuarioLogado"));
 
   if(!usuarioLogado) return;
@@ -55,7 +64,6 @@ function aplicarPermissoes(){
   const menus = document.querySelectorAll("nav a");
 
   menus.forEach((menu)=>{
-
     const texto = menu.innerText;
 
     if(usuarioLogado.cargo === "gerente" && texto === "Financeiro"){
@@ -63,80 +71,26 @@ function aplicarPermissoes(){
     }
 
     if(usuarioLogado.cargo === "funcionario"){
-
       if(texto === "Financeiro" || texto === "Comandas" || texto === "Relatórios"){
         menu.style.display = "none";
       }
-
     }
-
   });
 
   if(usuarioLogado.cargo === "funcionario"){
-
-    const nomes = ["carol", "jessica", "fernanda", "silamara", "ssica"];
-
-    let indiceUsuario = nomes.indexOf(usuarioLogado.usuario);
-
-    if(usuarioLogado.usuario === "ssica"){
-      indiceUsuario = 1;
-    }
+    const indiceUsuario = mapaProfissionais[usuarioLogado.usuario];
 
     const colunas = document.querySelectorAll(".column");
-
     const profissionais = document.querySelectorAll(".professional");
 
     colunas.forEach((coluna, index)=>{
-
-      if(index !== indiceUsuario){
-        coluna.style.display = "none";
-      }
-
+      coluna.style.display = index === indiceUsuario ? "block" : "none";
     });
 
     profissionais.forEach((profissional, index)=>{
-
-      if(index !== indiceUsuario){
-        profissional.style.display = "none";
-      }
-
+      profissional.style.display = index === indiceUsuario ? "block" : "none";
     });
-
   }
-
-}
-  });
-  if(usuarioLogado.cargo === "funcionario"){
-
-  const nomes = ["carol", "jessica", "fernanda", "silamara"];
-
-  const indiceUsuario = nomes.indexOf(usuarioLogado.usuario);
-
-  const colunas = document.querySelectorAll(".column");
-
-  const profissionais = document.querySelectorAll(".professional");
-
-  colunas.forEach((coluna, index)=>{
-
-    if(index !== indiceUsuario){
-
-      coluna.style.display = "none";
-
-    }
-
-  });
-
-  profissionais.forEach((profissional, index)=>{
-
-    if(index !== indiceUsuario){
-
-      profissional.style.display = "none";
-
-    }
-
-  });
-
-}
 }
 
 function calcularTop(horario) {
@@ -160,8 +114,7 @@ function criarCard(agendamento) {
   const usuarioLogado = JSON.parse(localStorage.getItem("usuarioLogado"));
 
   if(usuarioLogado && usuarioLogado.cargo === "funcionario"){
-    const nomes = ["carol", "jessica", "fernanda", "silamara"];
-    const indiceUsuario = nomes.indexOf(usuarioLogado.usuario);
+    const indiceUsuario = mapaProfissionais[usuarioLogado.usuario];
 
     if(indiceUsuario != agendamento.profissional){
       return;
@@ -174,7 +127,7 @@ function criarCard(agendamento) {
   const card = document.createElement("div");
   card.classList.add("appointment");
 
-  if (agendamento.servico) {
+  if(agendamento.servico){
     card.classList.add(agendamento.servico);
   }
 
@@ -190,9 +143,10 @@ function criarCard(agendamento) {
     <small>${agendamento.horario}</small>
   `;
 
-  card.onclick = function () {
+  card.onclick = function(){
     const novoHorario = prompt("Editar horário:", agendamento.horario);
-    if (!novoHorario) return;
+
+    if(!novoHorario) return;
 
     agendamento.horario = novoHorario;
     card.style.top = `${calcularTop(agendamento.horario)}px`;
@@ -205,8 +159,8 @@ function criarCard(agendamento) {
 
     let agendamentos = JSON.parse(localStorage.getItem("agendamentos")) || [];
 
-    agendamentos = agendamentos.map((item) => {
-      if (item.id == card.dataset.id) {
+    agendamentos = agendamentos.map((item)=>{
+      if(item.id == card.dataset.id){
         item.horario = agendamento.horario;
       }
 
@@ -216,28 +170,30 @@ function criarCard(agendamento) {
     localStorage.setItem("agendamentos", JSON.stringify(agendamentos));
   };
 
-  card.oncontextmenu = function (event) {
+  card.oncontextmenu = function(event){
     event.preventDefault();
 
     const confirmar = confirm("Deseja excluir este agendamento?");
-    if (!confirmar) return;
+
+    if(!confirmar) return;
 
     card.remove();
 
     let agendamentos = JSON.parse(localStorage.getItem("agendamentos")) || [];
 
-    agendamentos = agendamentos.filter((item) => {
+    agendamentos = agendamentos.filter((item)=>{
       return item.id != agendamento.id;
     });
 
     localStorage.setItem("agendamentos", JSON.stringify(agendamentos));
+
     atualizarFinanceiro();
   };
 
   coluna.appendChild(card);
 }
 
-function salvarAgendamento() {
+function salvarAgendamento(){
   const cliente = document.getElementById("cliente").value;
   const horario = document.getElementById("horario").value;
   const profissional = document.getElementById("profissional").value;
@@ -246,11 +202,11 @@ function salvarAgendamento() {
 
   let agendamentos = JSON.parse(localStorage.getItem("agendamentos")) || [];
 
-  const conflito = agendamentos.some((item) => {
+  const conflito = agendamentos.some((item)=>{
     return item.profissional == profissional && item.horario == horario;
   });
 
-  if (conflito) {
+  if(conflito){
     alert("Já existe um atendimento nesse horário.");
     return;
   }
@@ -281,13 +237,13 @@ function carregarAgenda(){
 
   const agendamentos = JSON.parse(localStorage.getItem("agendamentos")) || [];
 
-  agendamentos.forEach((agendamento) => {
+  agendamentos.forEach((agendamento)=>{
     criarCard(agendamento);
   });
 
   atualizarFinanceiro();
 }
 
-window.onload = function () {
+window.onload = function(){
   atualizarFinanceiro();
 };
