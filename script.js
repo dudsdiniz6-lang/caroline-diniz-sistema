@@ -38,7 +38,7 @@ card.style.top = `${posicaoTop}px`;
 card.style.height = `${altura - 10}px`;
   card.innerHTML = `
     <strong>${cliente}</strong>
-    <span>Novo Atendimento</span>
+<span>${servico}</span>
     <small>${horario}</small>
   `;
 
