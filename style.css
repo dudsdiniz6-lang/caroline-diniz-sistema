@@ -88,6 +88,12 @@ nav a:hover{
   cursor:pointer;
   font-size:15px;
   font-weight:bold;
+  transition:0.2s;
+}
+
+.btn:hover{
+  transform:translateY(-2px);
+  box-shadow:0 8px 20px rgba(255,122,0,0.3);
 }
 
 .cards{
