@@ -395,3 +395,17 @@ function mostrarSecao(secao){
   document.getElementById(secao).style.display = "block";
 
 }
+function voltarAgenda(){
+
+  const secoes = document.querySelectorAll(".clientes-container");
+
+  secoes.forEach((item)=>{
+    item.style.display = "none";
+  });
+
+  window.scrollTo({
+    top:0,
+    behavior:"smooth"
+  });
+
+}
