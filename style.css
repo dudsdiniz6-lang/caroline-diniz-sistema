@@ -65,17 +65,20 @@ nav a:hover{
 
 .topbar{
   display:flex;
-  justify-content:space-between;
-  align-items:center;
-  margin-bottom:30px;
-}
-
-.topbar{
-  display:flex;
   flex-direction:column;
   align-items:stretch;
   gap:20px;
   margin-bottom:30px;
+
+  position:sticky;
+  top:0;
+  z-index:20;
+
+  background:rgba(245,246,250,0.85);
+
+  backdrop-filter:blur(10px);
+
+  padding-bottom:15px;
 }
 
 .topbar p{
