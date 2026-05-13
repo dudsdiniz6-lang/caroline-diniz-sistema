@@ -6,8 +6,6 @@
 }
 
 body{
-  margin:0;
-  font-family:Arial, Helvetica, sans-serif;
   background:#f5f6fa;
 }
 
@@ -92,6 +90,30 @@ nav a:hover{
   font-weight:bold;
 }
 
+.cards{
+  display:flex;
+  gap:20px;
+  margin-bottom:25px;
+}
+
+.card-financeiro{
+  background:white;
+  padding:25px;
+  border-radius:18px;
+  min-width:220px;
+  box-shadow:0 4px 15px rgba(0,0,0,0.05);
+}
+
+.card-financeiro h3{
+  font-size:28px;
+  margin-bottom:8px;
+  color:#ff7a00;
+}
+
+.card-financeiro p{
+  color:#777;
+}
+
 .agenda-container{
   background:white;
   border-radius:20px;
@@ -123,12 +145,14 @@ nav a:hover{
   background:#fafafa;
 }
 
-.time{
+[aula="tempo"]{
   height:80px;
-  padding:10px;
-  color:#777;
-  font-size:14px;
-  border-bottom:1px solid #eee;
+  border-bottom:1px solid #f1f1f1;
+  font-size:12px;
+  color:#999;
+  padding-top:8px;
+  padding-left:10px;
+  background:white;
 }
 
 .column{
@@ -143,15 +167,11 @@ nav a:hover{
   position:absolute;
   left:8px;
   right:8px;
-  
   background:#dcebff;
   border-left:5px solid #ff7a00;
   border-radius:14px;
-  
   padding:12px;
-  
   cursor:pointer;
-
   box-shadow:0 2px 10px rgba(0,0,0,0.04);
 }
 
@@ -171,6 +191,27 @@ nav a:hover{
   color:#ff7a00;
   font-weight:bold;
 }
+
+.corte{
+  background:#dbeafe;
+  border-left:5px solid #3b82f6;
+}
+
+.escova{
+  background:#ffe4f1;
+  border-left:5px solid #ec4899;
+}
+
+.unha{
+  background:#f3e8ff;
+  border-left:5px solid #a855f7;
+}
+
+.progressiva{
+  background:#fef3c7;
+  border-left:5px solid #f59e0b;
+}
+
 .modal{
   position:fixed;
   top:0;
@@ -227,161 +268,7 @@ nav a:hover{
   cursor:pointer;
   font-weight:bold;
 }
-[aula="tempo"]{
-  height:60px;
-  border-bottom:1px solid #eeeeee;
-  font-size:12px;
-  color:#777;
-  padding-top:5px;
-}
 
-[aula="coluna"]{
-  min-width:250px;
-  border-left:1px solid #eeeeee;
-  position:relative;
-}
-
-[aula="encontro"]{
-  background:#dbeafe;
-  border-left:4px solid #ff7a00;
-  border-radius:12px;
-  padding:10px;
-  margin:8px;
-  font-size:14px;
-  box-shadow:0 2px 8px rgba(0,0,0,0.05);
-}
-
-[aula="corpo da agenda"]{
-  display:flex;
-}
-
-[aula="coluna de tempo"]{
-  width:80px;
-  background:#fafafa;
-}
-
-[aula="profissional"]{
-  min-width:250px;
-  text-align:center;
-  font-weight:600;
-  padding:15px;
-  border-left:1px solid #eeeeee;
-  background:white;
-}
-
-[aula="cabeçalho da agenda"]{
-  display:flex;
-  position:sticky;
-  top:0;
-  background:white;
-  z-index:10;
-}
-[aula="tempo"]{
-  height:80px;
-  border-bottom:1px solid #f1f1f1;
-  font-size:12px;
-  color:#999;
-  padding-top:8px;
-  padding-left:10px;
-  background:white;
-}
-
-[aula="coluna"]{
-  min-width:250px;
-  border-left:1px solid #eeeeee;
-  position:relative;
-}
-
-[aula="encontro"]{
-  background:#dbeafe;
-  border-left:4px solid #ff7a00;
-  border-radius:14px;
-  padding:14px;
-  margin:8px;
-  font-size:14px;
-  box-shadow:0 2px 10px rgba(0,0,0,0.04);
-  transition:0.2s;
-}
-
-[aula="encontro"]:hover{
-  transform:scale(1.01);
-}
-
-[aula="corpo da agenda"]{
-  display:flex;
-}
-
-[aula="coluna de tempo"]{
-  width:80px;
-  background:#fafafa;
-}
-
-[aula="profissional"]{
-  min-width:250px;
-  text-align:center;
-  font-weight:600;
-  padding:15px;
-  border-left:1px solid #eeeeee;
-  background:white;
-}
-
-[aula="cabeçalho da agenda"]{
-  display:flex;
-  position:sticky;
-  top:0;
-  background:white;
-  z-index:10;
-}
-.time{
-  height:80px;
-  border-bottom:1px solid #f1f1f1;
-  font-size:12px;
-  color:#999;
-  padding-top:8px;
-  padding-left:10px;
-  background:white;
-  .corte{
-  background:#dbeafe;
-  border-left:5px solid #3b82f6;
-}
-
-.escova{
-  background:#ffe4f1;
-  border-left:5px solid #ec4899;
-}
-
-.unha{
-  background:#f3e8ff;
-  border-left:5px solid #a855f7;
-}
-
-.progressiva{
-  background:#fef3c7;
-  border-left:5px solid #f59e0b;
-}
-  .cards{
-  display:flex;
-  gap:20px;
-  margin-bottom:25px;
-}
-
-.card-financeiro{
-  background:white;
-  padding:25px;
-  border-radius:18px;
-  min-width:220px;
-  box-shadow:0 4px 15px rgba(0,0,0,0.05);
-}
-
-.card-financeiro h3{
-  font-size:28px;
-  margin-bottom:8px;
-  color:#ff7a00;
-}
-
-.card-financeiro p{
-  color:#777;
-}
 .login-screen{
   position:fixed;
   top:0;
@@ -427,12 +314,14 @@ nav a:hover{
   cursor:pointer;
   font-weight:bold;
 }
+
 .clientes-container{
   background:white;
   margin-top:30px;
   padding:25px;
   border-radius:20px;
   box-shadow:0 5px 20px rgba(0,0,0,0.05);
+  display:none;
 }
 
 .clientes-container h2{
@@ -473,9 +362,7 @@ nav a:hover{
   padding:15px;
   border-radius:12px;
 }
-  html{
+
+html{
   scroll-behavior:smooth;
-}
-.clientes-container{
-  display:none;
 }
