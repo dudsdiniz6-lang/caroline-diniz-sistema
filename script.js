@@ -385,7 +385,7 @@ function carregarHistoricoFinanceiro(){
 
 }
 function mostrarSecao(secao){
-
+document.querySelector(".agenda-container").style.display = "none";
   const secoes = document.querySelectorAll(".clientes-container");
 
   secoes.forEach((item)=>{
@@ -402,7 +402,7 @@ function voltarAgenda(){
   secoes.forEach((item)=>{
     item.style.display = "none";
   });
-
+document.querySelector(".agenda-container").style.display = "block";
   window.scrollTo({
     top:0,
     behavior:"smooth"
