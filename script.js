@@ -147,7 +147,21 @@ function criarCard(agendamento) {
     const acao = prompt("Digite:\n1 - Editar horário\n2 - Faturar\n3 - Cancelar");
 
 if(acao === "2"){
-  alert("Comanda em desenvolvimento");
+ const valor = prompt("Valor do atendimento:");
+
+if(!valor) return;
+
+let caixa = Number(localStorage.getItem("caixa")) || 0;
+
+caixa += Number(valor);
+
+localStorage.setItem("caixa", caixa);
+
+document.getElementById("faturamento").innerText = `R$ ${caixa}`;
+
+card.style.opacity = "0.6";
+
+alert("Atendimento faturado!");
   return;
 }
 
