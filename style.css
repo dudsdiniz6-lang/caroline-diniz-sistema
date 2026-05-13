@@ -15,10 +15,13 @@ body{
 }
 
 .sidebar{
-  width:250px;
-  background:#181818;
+  width:220px;
+  background:#0f0f0f;
   color:white;
+  min-height:100vh;
   padding:30px 20px;
+  position:sticky;
+  top:0;
 }
 
 .logo{
