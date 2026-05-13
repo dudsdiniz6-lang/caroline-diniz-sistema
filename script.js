@@ -104,10 +104,12 @@ function calcularTop(horario) {
 function atualizarFinanceiro() {
   const agendamentos = JSON.parse(localStorage.getItem("agendamentos")) || [];
   const totalClientes = agendamentos.length;
-  const faturamento = totalClientes * 70;
+  const faturamento = Number(localStorage.getItem("caixa")) || 0;
+const atendimentosPagos = Number(localStorage.getItem("atendimentosPagos")) || 0;
 
   document.getElementById("clientes-total").innerText = totalClientes;
   document.getElementById("faturamento").innerText = `R$ ${faturamento}`;
+  document.getElementById("atendimentos-pagos").innerText = atendimentosPagos;
 }
 
 function criarCard(agendamento) {
