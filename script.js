@@ -144,7 +144,18 @@ function criarCard(agendamento) {
   `;
 
   card.onclick = function(){
-    const novoHorario = prompt("Editar horário:", agendamento.horario);
+    const acao = prompt("Digite:\n1 - Editar horário\n2 - Faturar\n3 - Cancelar");
+
+if(acao === "2"){
+  alert("Comanda em desenvolvimento");
+  return;
+}
+
+if(acao === "3"){
+  return;
+}
+
+const novoHorario = prompt("Editar horário:", agendamento.horario);
 
     if(!novoHorario) return;
 
