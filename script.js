@@ -158,6 +158,11 @@ let caixa = Number(localStorage.getItem("caixa")) || 0;
 caixa += Number(valor);
 
 localStorage.setItem("caixa", caixa);
+  let atendimentosPagos = Number(localStorage.getItem("atendimentosPagos")) || 0;
+
+atendimentosPagos++;
+
+localStorage.setItem("atendimentosPagos", atendimentosPagos);
 
 document.getElementById("faturamento").innerText = `R$ ${caixa}`;
 
