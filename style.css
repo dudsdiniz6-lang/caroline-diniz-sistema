@@ -6,7 +6,9 @@
 }
 
 body{
-  background:#f4f4f4;
+  margin:0;
+  font-family:Arial, Helvetica, sans-serif;
+  background:#f5f6fa;
 }
 
 .layout{
