@@ -163,6 +163,18 @@ localStorage.setItem("caixa", caixa);
 atendimentosPagos++;
 
 localStorage.setItem("atendimentosPagos", atendimentosPagos);
+  let historico = JSON.parse(localStorage.getItem("historicoFinanceiro")) || [];
+
+historico.push({
+  cliente: agendamento.cliente,
+  servico: agendamento.servico || "Novo Atendimento",
+  valor: Number(valor),
+  data: new Date().toLocaleDateString("pt-BR")
+});
+
+localStorage.setItem("historicoFinanceiro", JSON.stringify(historico));
+
+carregarHistoricoFinanceiro();
 
 document.getElementById("faturamento").innerText = `R$ ${caixa}`;
 
