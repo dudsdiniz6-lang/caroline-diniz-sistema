@@ -384,3 +384,14 @@ function carregarHistoricoFinanceiro(){
   });
 
 }
+function mostrarSecao(secao){
+
+  const secoes = document.querySelectorAll(".clientes-container");
+
+  secoes.forEach((item)=>{
+    item.style.display = "none";
+  });
+
+  document.getElementById(secao).style.display = "block";
+
+}
