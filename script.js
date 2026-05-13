@@ -357,3 +357,30 @@ function mostrarClientes(){
   });
 
 }
+function carregarHistoricoFinanceiro(){
+
+  const lista = document.getElementById("historico-financeiro");
+
+  if(!lista) return;
+
+  lista.innerHTML = "";
+
+  const historico = JSON.parse(localStorage.getItem("historicoFinanceiro")) || [];
+
+  historico.forEach((item)=>{
+
+    const div = document.createElement("div");
+
+    div.classList.add("cliente-card");
+
+    div.innerHTML = `
+      <strong>${item.cliente}</strong>
+      <p>${item.servico} — R$ ${item.valor}</p>
+      <small>${item.data}</small>
+    `;
+
+    lista.appendChild(div);
+
+  });
+
+}
