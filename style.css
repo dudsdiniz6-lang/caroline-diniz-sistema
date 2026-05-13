@@ -194,7 +194,8 @@ nav a:hover{
 
 .appointment strong{
   display:block;
-  margin-bottom:5px;
+  margin-bottom:6px;
+  font-size:15px;
 }
 
 .appointment span{
