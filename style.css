@@ -366,3 +366,11 @@ nav a:hover{
 html{
   scroll-behavior:smooth;
 }
+.appointment{
+  transition:0.2s;
+}
+
+.appointment:hover{
+  transform:scale(1.02);
+  box-shadow:0 8px 25px rgba(0,0,0,0.12);
+}
