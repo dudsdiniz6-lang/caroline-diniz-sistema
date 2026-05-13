@@ -294,6 +294,8 @@ window.onload = function(){
 
   carregarClientes();
 
+  carregarHistoricoFinanceiro();
+
 };
 function salvarCliente(){
 
