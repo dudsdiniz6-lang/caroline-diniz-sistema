@@ -274,9 +274,18 @@ nav a:hover{
 
 .form input,
 .form select{
-  padding:14px;
-  border:1px solid #ddd;
-  border-radius:12px;
+  padding:15px;
+  border:1px solid #e5e5e5;
+  border-radius:14px;
+  font-size:14px;
+  outline:none;
+  transition:0.2s;
+}
+
+.form input:focus,
+.form select:focus{
+  border-color:#ff7a00;
+  box-shadow:0 0 0 3px rgba(255,122,0,0.12);
 }
 
 .save-btn{
