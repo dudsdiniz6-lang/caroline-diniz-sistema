@@ -129,11 +129,10 @@ function carregarAgenda(){
 
 function salvarCliente(){
   const cliente = {
-    id: Date.now(),
-    nome: document.getElementById("nomeCliente").value,
-    telefone: document.getElementById("telefoneCliente").value,
-    observacoes: document.getElementById("observacaoCliente").value
-  };
+  nome: document.getElementById("nomeCliente").value,
+  telefone: document.getElementById("telefoneCliente").value,
+  observacoes: document.getElementById("observacaoCliente").value
+};
 
   supabaseClient
     .from("clients")
