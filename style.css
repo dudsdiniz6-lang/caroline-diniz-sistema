@@ -520,3 +520,12 @@ nav a:hover,
   color:#ff7a00;
   font-weight:bold;
 }
+.appointment{
+  height:auto !important;
+  min-height:85px;
+}
+
+.appointment em{
+  display:block;
+  width:fit-content;
+}
