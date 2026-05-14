@@ -488,3 +488,14 @@ nav a:hover,
 ::-webkit-scrollbar-thumb:hover{
   background:#b5b5b5;
 }
+.appointment em{
+  display:inline-block;
+  margin-top:6px;
+  font-style:normal;
+  font-size:11px;
+  padding:4px 8px;
+  border-radius:999px;
+  background:white;
+  color:#ff7a00;
+  font-weight:bold;
+}
