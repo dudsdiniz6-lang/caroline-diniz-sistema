@@ -4,267 +4,175 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-
   <title>Caroline Diniz Sistema</title>
-
   <link rel="stylesheet" href="style.css">
 </head>
 
 <body>
+
   <div class="login-screen" id="login-screen">
+    <div class="login-box">
+      <h1>Caroline Diniz</h1>
 
-  <div class="login-box">
+      <input type="text" id="usuario" placeholder="Usuário">
+      <input type="password" id="senha" placeholder="Senha">
 
-    <h1>Caroline Diniz</h1>
-
-    <input type="text" id="usuario" placeholder="Usuário">
-
-    <input type="password" id="senha" placeholder="Senha">
-
-    <button onclick="fazerLogin()">
-      Entrar
-    </button>
-
+      <button onclick="fazerLogin()">Entrar</button>
+    </div>
   </div>
-
-</div>
 
   <div class="layout">
 
     <aside class="sidebar">
-
-      <div class="logo">
-        Caroline Diniz
-      </div>
+      <div class="logo">Caroline Diniz</div>
 
       <nav>
-
-  <a class="active" onclick="voltarAgenda()">Agenda</a>
-
-  <a onclick="mostrarSecao('clientes-container')">Clientes</a>
-
-  <a>Comandas</a>
-
-  <a onclick="mostrarSecao('financeiro-container')">Financeiro</a>
-
-  <a>Profissionais</a>
-
-  <a>Relatórios</a>
-
-  <a>Configurações</a>
-
-</nav>
-
+        <a class="active" onclick="voltarAgenda()">Agenda</a>
+        <a onclick="mostrarSecao('clientes-container')">Clientes</a>
+        <a>Comandas</a>
+        <a onclick="mostrarSecao('financeiro-container')">Financeiro</a>
+        <a>Profissionais</a>
+        <a>Relatórios</a>
+        <a>Configurações</a>
+      </nav>
     </aside>
 
     <main class="main">
 
       <header class="topbar">
+
         <div class="cards">
+          <div class="card-financeiro">
+            <h3 id="faturamento">R$ 0</h3>
+            <p>Faturamento</p>
+          </div>
 
-  <div class="card-financeiro">
-    <h3 id="faturamento">R$ 0</h3>
-    <p>Faturamento</p>
-  </div>
+          <div class="card-financeiro">
+            <h3 id="clientes-total">0</h3>
+            <p>Clientes</p>
+          </div>
 
-  <div class="card-financeiro">
-    <h3 id="clientes-total">0</h3>
-    <p>Clientes</p>
-    <div class="card-financeiro">
-  <h3 id="atendimentos-pagos">0</h3>
-  <p>Pagos</p>
-</div>
-  </div>
-
-</div>
+          <div class="card-financeiro">
+            <h3 id="atendimentos-pagos">0</h3>
+            <p>Pagos</p>
+          </div>
+        </div>
 
         <div>
           <h1>Agenda</h1>
           <p>09 de Maio de 2026</p>
         </div>
 
-      <div class="acoes-topo">
+        <div class="acoes-topo">
+          <button class="btn" onclick="abrirModal()">Novo Agendamento</button>
+          <button class="btn" onclick="sairSistema()">Sair</button>
+        </div>
 
-  <button class="btn" onclick="abrirModal()">
-    Novo Agendamento
-  </button>
-
-  <button class="btn" onclick="sairSistema()">
-    Sair
-  </button>
-
-</div>
       </header>
 
       <section class="agenda-container">
 
         <div class="agenda-header">
-
           <div class="time-column"></div>
-
-          <div class="professional">
-            Carol
-          </div>
-
-          <div class="professional">
-            Jessica
-          </div>
-
-          <div class="professional">
-            Fernanda
-          </div>
-
-          <div class="professional">
-            Silamara
-          </div>
-
+          <div class="professional">Carol</div>
+          <div class="professional">Jessica</div>
+          <div class="professional">Fernanda</div>
+          <div class="professional">Silamara</div>
         </div>
 
         <div class="agenda-body">
 
           <div class="time-column">
-
             <div aula="tempo">14:00</div>
-<div aula="tempo">14:20</div>
-<div aula="tempo">14:40</div>
-
-<div aula="tempo">15:00</div>
-<div aula="tempo">15:20</div>
-<div aula="tempo">15:40</div>
-
-<div aula="tempo">16:00</div>
-<div aula="tempo">16:20</div>
-<div aula="tempo">16:40</div>
-
-<div aula="tempo">17:00</div>
-<div aula="tempo">17:20</div>
-<div aula="tempo">17:40</div>
-
-<div aula="tempo">18:00</div>
-
-          </div>
-
-          <div class="column">
-
-            <div class="appointment">
-              <strong>Maria Oliveira</strong>
-              <span>Limpeza de Pele</span>
-              <small>14:00 - 15:00</small>
-            </div>
-
-            <div class="appointment">
-              <strong>Ana Clara</strong>
-              <span>Drenagem</span>
-              <small>16:00 - 17:00</small>
-            </div>
-
-          </div>
-
-          <div class="column">
-
-            <div class="appointment">
-              <strong>Juliana Souza</strong>
-              <span>Massagem</span>
-              <small>10:00 - 11:00</small>
-            </div>
-
+            <div aula="tempo">14:20</div>
+            <div aula="tempo">14:40</div>
+            <div aula="tempo">15:00</div>
+            <div aula="tempo">15:20</div>
+            <div aula="tempo">15:40</div>
+            <div aula="tempo">16:00</div>
+            <div aula="tempo">16:20</div>
+            <div aula="tempo">16:40</div>
+            <div aula="tempo">17:00</div>
+            <div aula="tempo">17:20</div>
+            <div aula="tempo">17:40</div>
+            <div aula="tempo">18:00</div>
           </div>
 
           <div class="column"></div>
-
-          <div class="column">
-
-            <div class="appointment">
-              <strong>Fernanda Lima</strong>
-              <span>Microagulhamento</span>
-              <small>09:00 - 10:30</small>
-            </div>
-
-          </div>
+          <div class="column"></div>
+          <div class="column"></div>
+          <div class="column"></div>
 
         </div>
-
       </section>
+
       <section class="clientes-container" id="clientes-container">
+        <h2>Clientes</h2>
 
-  <h2>Clientes</h2>
+        <div class="form-clientes">
+          <input type="text" id="nomeCliente" placeholder="Nome da cliente">
+          <input type="text" id="telefoneCliente" placeholder="Telefone">
+          <textarea id="observacaoCliente" placeholder="Observações"></textarea>
 
-  <div class="form-clientes">
-    <input type="text" id="nomeCliente" placeholder="Nome da cliente">
-    <input type="text" id="telefoneCliente" placeholder="Telefone">
-    <textarea id="observacaoCliente" placeholder="Observações"></textarea>
+          <button onclick="salvarCliente()">Salvar Cliente</button>
+        </div>
 
-    <button onclick="salvarCliente()">
-      Salvar Cliente
-    </button>
-  </div>
+        <div id="listaClientes"></div>
+      </section>
 
-  <div id="listaClientes"></div>
-
-</section>
       <section class="financeiro-container clientes-container" id="financeiro-container">
+        <h2>Histórico Financeiro</h2>
+        <div id="historico-financeiro"></div>
+      </section>
 
-  <h2>Histórico Financeiro</h2>
-
-  <div id="historico-financeiro"></div>
-
-</section>
-</main>
-
+    </main>
   </div>
-<div class="modal" id="modal">
 
-  <div class="modal-content">
+  <div class="modal" id="modal">
+    <div class="modal-content">
 
-    <div class="modal-header">
+      <div class="modal-header">
+        <h2>Novo Agendamento</h2>
+        <button class="close" onclick="fecharModal()">X</button>
+      </div>
 
-      <h2>Novo Agendamento</h2>
+      <div class="form">
+        <input type="text" id="cliente" placeholder="Nome da Cliente">
 
-      <button class="close" onclick="fecharModal()">
-        X
-      </button>
+        <select id="profissional">
+          <option value="0">Carol</option>
+          <option value="1">Jessica</option>
+          <option value="2">Fernanda</option>
+          <option value="3">Silamara</option>
+        </select>
+
+        <select id="duracao">
+          <option value="20">20 minutos</option>
+          <option value="40">40 minutos</option>
+          <option value="60">1 hora</option>
+          <option value="80">1h20</option>
+          <option value="120">2 horas</option>
+        </select>
+
+        <select id="servico">
+          <option value="corte">Corte</option>
+          <option value="escova">Escova</option>
+          <option value="unha">Unha</option>
+          <option value="progressiva">Progressiva</option>
+        </select>
+
+        <input type="time" id="horario">
+
+        <button class="save-btn" onclick="salvarAgendamento()">
+          Salvar Agendamento
+        </button>
+      </div>
 
     </div>
-
-  <div class="form">
-
-  <input type="text" id="cliente" placeholder="Nome da Cliente">
-
-  <select id="profissional">
-    <option value="0">Carol</option>
-    <option value="1">Jessica</option>
-    <option value="2">Fernanda</option>
-    <option value="3">Silamara</option>
-  </select>
-
-  <select id="duracao">
-    <option value="20">20 minutos</option>
-    <option value="40">40 minutos</option>
-    <option value="60">1 hora</option>
-    <option value="80">1h20</option>
-    <option value="120">2 horas</option>
-  </select>
-
-  <select id="servico">
-    <option value="corte">Corte</option>
-    <option value="escova">Escova</option>
-    <option value="unha">Unha</option>
-    <option value="progressiva">Progressiva</option>
-  </select>
-
-  <input type="time" id="horario">
-
-  <button class="save-btn" onclick="salvarAgendamento()">
-  Salvar Agendamento
-</button>
-
-</div>
-
   </div>
 
-</div>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
-<script src="script.js"></script>
-</body>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
+  <script src="script.js"></script>
 
+</body>
 </html>
