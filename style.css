@@ -558,3 +558,10 @@ html{
   transform:translateY(-3px);
   transition:0.2s;
 }
+
+.agenda-container,
+.clientes-container,
+.card-financeiro,
+.modal-content{
+  border:1px solid rgba(0,0,0,0.03);
+}
