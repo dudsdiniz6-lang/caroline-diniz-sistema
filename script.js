@@ -423,7 +423,22 @@ const novoHorario = `${String(hora).padStart(2, "0")}:${String(minuto).padStart(
 const horarioTexto = target.querySelector("small");
 
 horarioTexto.innerText = novoHorario;
+const id = Number(target.dataset.id);
 
+supabaseClient
+  .from("Agendamentos")
+  .update({
+    horario: novoHorario
+  })
+  .eq("id", id)
+  .then((resposta)=>{
+
+    if(resposta.error){
+      console.log(resposta.error);
+      alert("Erro ao atualizar horário");
+    }
+
+  });
       }
     }
   });
