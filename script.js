@@ -132,7 +132,7 @@ function salvarCliente(){
     id: Date.now(),
     nome: document.getElementById("nomeCliente").value,
     telefone: document.getElementById("telefoneCliente").value,
-    observacao: document.getElementById("observacaoCliente").value
+    observacoes: document.getElementById("observacaoCliente").value
   };
 
   supabaseClient
@@ -158,7 +158,7 @@ function carregarClientes(){
           <div class="cliente-card">
             <strong>${cliente.nome}</strong>
             <p>${cliente.telefone}</p>
-            <small>${cliente.observacao || ""}</small>
+            <small>$${cliente.observacoes || ""}</small>
           </div>
         `;
       });
