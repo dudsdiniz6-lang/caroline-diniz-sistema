@@ -1,3 +1,11 @@
+const SUPABASE_URL = "https://oxvtfdxdlshbvtqtnpgo.supabase.co";
+
+const SUPABASE_KEY = "sb_publishable_KQ58nMCXUZl0Nz5jEHkKKg_RbpL-QTw";
+
+const supabaseClient = supabase.createClient(
+  SUPABASE_URL,
+  SUPABASE_KEY
+);
 const usuarios = [
   { usuario:"eduarda", senha:"123", cargo:"dona" },
   { usuario:"caroline", senha:"123", cargo:"dona" },
