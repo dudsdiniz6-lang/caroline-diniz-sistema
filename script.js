@@ -370,3 +370,24 @@ window.onload = function(){
   carregarHistoricoFinanceiro();
   carregarClientes();
 };
+function ativarArrastar(){
+
+  interact(".appointment").draggable({
+
+    listeners:{
+      move(event){
+
+        const target = event.target;
+
+        const y = (parseFloat(target.getAttribute("data-y")) || 0) + event.dy;
+
+        target.style.transform = `translateY(${y}px)`;
+
+        target.setAttribute("data-y", y);
+
+      }
+    }
+
+  });
+
+}
