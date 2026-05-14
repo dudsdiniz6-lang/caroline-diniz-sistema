@@ -96,7 +96,9 @@ Depois salva e atualiza.
 
   card.onclick = function(){
 
-    const acao = prompt("Digite:\n1 - Editar horário\n2 - Faturar\n3 - Excluir\n4 - Cancelar");
+    const acao = prompt(
+"Digite:\n1 - Editar horário\n2 - Faturar\n3 - Excluir\n4 - Confirmar\n5 - Finalizar\n6 - Cancelar atendimento"
+);
 
     if(acao === "2"){
 
