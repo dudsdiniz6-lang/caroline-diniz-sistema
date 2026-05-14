@@ -23,7 +23,12 @@ function fecharModal(){
 }
 
 function fazerLogin(){
-  const usuario = document.getElementById("usuario").value.toLowerCase().trim();
+  const usuario = document.getElementById("usuario").value
+    .toLowerCase()
+    .trim()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "");
+
   const senha = document.getElementById("senha").value.trim();
 
   const usuarioEncontrado = usuarios.find((item)=>{
@@ -36,6 +41,7 @@ function fazerLogin(){
   }
 
   localStorage.setItem("usuarioLogado", JSON.stringify(usuarioEncontrado));
+
   document.getElementById("login-screen").style.display = "none";
 
   carregarAgenda();
@@ -52,22 +58,18 @@ function calcularTop(horario){
   const [hora, minuto] = horario.split(":");
   const minutosTotais = parseInt(hora) * 60 + parseInt(minuto);
   const inicioAgenda = 14 * 60;
+
   return ((minutosTotais - inicioAgenda) / 20) * 80;
-}
-
-function atualizarFinanceiro(){
-  const faturamento = Number(localStorage.getItem("caixa")) || 0;
-  const atendimentosPagos = Number(localStorage.getItem("atendimentosPagos")) || 0;
-
-  document.getElementById("faturamento").innerText = `R$ ${faturamento}`;
-  document.getElementById("atendimentos-pagos").innerText = atendimentosPagos;
 }
 
 function criarCard(agendamento){
   const colunas = document.querySelectorAll(".column");
   const coluna = colunas[agendamento.profissional];
 
+  if(!coluna) return;
+
   const card = document.createElement("div");
+
   card.classList.add("appointment");
 
   if(agendamento.servico){
@@ -85,89 +87,109 @@ function criarCard(agendamento){
     <span>${agendamento.servico || "Novo Atendimento"}</span>
     <small>${agendamento.horario}</small>
   `;
-card.onclick = function(){
 
-  const acao = prompt("Digite:\n1 - Editar horário\n2 - Faturar\n3 - Cancelar");
+  card.onclick = function(){
 
-  if(acao === "2"){
+    const acao = prompt("Digite:\n1 - Editar horário\n2 - Faturar\n3 - Excluir\n4 - Cancelar");
 
-    const valor = prompt("Valor do atendimento:");
+    if(acao === "2"){
 
-    if(!valor) return;
+      const valor = prompt("Valor do atendimento:");
 
-    let caixa = Number(localStorage.getItem("caixa")) || 0;
+      if(!valor) return;
 
-    caixa += Number(valor);
+      supabaseClient
+        .from("comandas")
+        .insert([{
+          id: Date.now(),
+          cliente: agendamento.cliente,
+          servico: agendamento.servico || "Novo Atendimento",
+          valor: Number(valor),
+          data: new Date().toLocaleDateString("pt-BR")
+        }])
+        .then((resposta)=>{
 
-    localStorage.setItem("caixa", caixa);
+          if(resposta.error){
+            alert("Erro ao faturar: " + resposta.error.message);
+            console.log(resposta.error);
+            return;
+          }
 
-    let atendimentosPagos = Number(localStorage.getItem("atendimentosPagos")) || 0;
+          carregarHistoricoFinanceiro();
 
-    atendimentosPagos++;
+          card.style.opacity = "0.6";
 
-    localStorage.setItem("atendimentosPagos", atendimentosPagos);
+          alert("Atendimento faturado!");
+        });
 
-   supabaseClient
-  .from("comandas")
-  .insert([{
-    cliente: agendamento.cliente,
-    servico: agendamento.servico || "Novo Atendimento",
-    valor: Number(valor),
-    data: new Date().toLocaleDateString("pt-BR")
-  }])
-  .then(()=>{
+      return;
+    }
 
-    carregarHistoricoFinanceiro();
+    if(acao === "3"){
 
-  });
+      const confirmar = confirm("Deseja excluir este agendamento?");
 
-    atualizarFinanceiro();
+      if(!confirmar) return;
 
-    card.style.opacity = "0.6";
+      supabaseClient
+        .from("Agendamentos")
+        .delete()
+        .eq("id", Number(agendamento.id))
+        .then((resposta)=>{
 
-    alert("Atendimento faturado!");
+          if(resposta.error){
+            alert("Erro ao excluir: " + resposta.error.message);
+            console.log(resposta.error);
+            return;
+          }
 
-    return;
-  }
+          card.remove();
 
- if(acao === "3"){
+          carregarAgenda();
+        });
 
-  const confirmar = confirm("Deseja excluir este agendamento?");
+      return;
+    }
 
-  if(!confirmar) return;
+    if(acao === "4"){
+      return;
+    }
 
-  supabaseClient
-    .from("Agendamentos")
-    .delete()
-    .eq("id", agendamento.id)
-    .then(()=>{
+    const novoHorario = prompt("Editar horário:", agendamento.horario);
 
-      card.remove();
+    if(!novoHorario) return;
 
-    });
+    supabaseClient
+      .from("Agendamentos")
+      .update({
+        horario: novoHorario
+      })
+      .eq("id", Number(agendamento.id))
+      .then((resposta)=>{
 
-  return;
-}
+        if(resposta.error){
+          alert("Erro ao editar: " + resposta.error.message);
+          console.log(resposta.error);
+          return;
+        }
 
-  const novoHorario = prompt("Editar horário:", agendamento.horario);
+        agendamento.horario = novoHorario;
 
-  if(!novoHorario) return;
+        card.style.top = `${calcularTop(agendamento.horario)}px`;
 
-  agendamento.horario = novoHorario;
+        card.innerHTML = `
+          <strong>${agendamento.cliente}</strong>
+          <span>${agendamento.servico || "Novo Atendimento"}</span>
+          <small>${agendamento.horario}</small>
+        `;
+      });
+  };
 
-  card.style.top = `${calcularTop(agendamento.horario)}px`;
-
-  card.innerHTML = `
-    <strong>${agendamento.cliente}</strong>
-    <span>${agendamento.servico || "Novo Atendimento"}</span>
-    <small>${agendamento.horario}</small>
-  `;
-
-};
   coluna.appendChild(card);
 }
 
 function salvarAgendamento(){
+
   const agendamento = {
     id: Date.now(),
     cliente: document.getElementById("cliente").value,
@@ -180,13 +202,21 @@ function salvarAgendamento(){
   supabaseClient
     .from("Agendamentos")
     .insert([agendamento])
-    .then(()=>{
+    .then((resposta)=>{
+
+      if(resposta.error){
+        alert("Erro ao salvar agendamento: " + resposta.error.message);
+        console.log(resposta.error);
+        return;
+      }
+
       criarCard(agendamento);
       fecharModal();
     });
 }
 
 function carregarAgenda(){
+
   const colunas = document.querySelectorAll(".column");
 
   colunas.forEach((coluna)=>{
@@ -197,55 +227,70 @@ function carregarAgenda(){
     .from("Agendamentos")
     .select("*")
     .then((resposta)=>{
+
       const agendamentos = resposta.data || [];
 
       agendamentos.forEach((agendamento)=>{
         criarCard(agendamento);
       });
+
     });
 }
 
 function salvarCliente(){
+
   const cliente = {
-  nome: document.getElementById("nomeCliente").value,
-  telefone: document.getElementById("telefoneCliente").value,
-  observacoes: document.getElementById("observacaoCliente").value
-};
+    nome: document.getElementById("nomeCliente").value,
+    telefone: document.getElementById("telefoneCliente").value,
+    observacoes: document.getElementById("observacaoCliente").value
+  };
 
- supabaseClient
-  .from("Agendamentos")
-  .delete()
-  .eq("id", Number(agendamento.id))
-  .then((resposta)=>{
+  supabaseClient
+    .from("clients")
+    .insert([cliente])
+    .then((resposta)=>{
 
-    if(resposta.error){
-      alert("Erro ao excluir no Supabase: " + resposta.error.message);
-      console.log(resposta.error);
-      return;
-    }
+      if(resposta.error){
+        alert("Erro ao salvar cliente: " + resposta.error.message);
+        console.log(resposta.error);
+        return;
+      }
 
-    card.remove();
+      document.getElementById("nomeCliente").value = "";
+      document.getElementById("telefoneCliente").value = "";
+      document.getElementById("observacaoCliente").value = "";
 
-  });
+      carregarClientes();
+    });
+}
+
 function carregarClientes(){
+
   supabaseClient
     .from("clients")
     .select("*")
     .then((resposta)=>{
+
       const clientes = resposta.data || [];
       const lista = document.getElementById("listaClientes");
+
+      if(!lista) return;
 
       lista.innerHTML = "";
 
       clientes.forEach((cliente)=>{
+
         lista.innerHTML += `
           <div class="cliente-card">
             <strong>${cliente.nome}</strong>
             <p>${cliente.telefone}</p>
-            <small>$${cliente.observacoes || ""}</small>
+            <small>${cliente.observacoes || ""}</small>
           </div>
         `;
+
       });
+
+      document.getElementById("clientes-total").innerText = clientes.length;
     });
 }
 
@@ -264,7 +309,11 @@ function carregarHistoricoFinanceiro(){
 
       const historico = resposta.data || [];
 
+      let total = 0;
+
       historico.forEach((item)=>{
+
+        total += Number(item.valor);
 
         lista.innerHTML += `
           <div class="cliente-card">
@@ -276,11 +325,14 @@ function carregarHistoricoFinanceiro(){
 
       });
 
-    });
+      document.getElementById("faturamento").innerText = `R$ ${total}`;
+      document.getElementById("atendimentos-pagos").innerText = historico.length;
 
+    });
 }
 
 function mostrarSecao(secao){
+
   document.querySelector(".agenda-container").style.display = "none";
 
   const secoes = document.querySelectorAll(".clientes-container");
@@ -290,9 +342,18 @@ function mostrarSecao(secao){
   });
 
   document.getElementById(secao).style.display = "block";
+
+  if(secao === "clientes-container"){
+    carregarClientes();
+  }
+
+  if(secao === "financeiro-container"){
+    carregarHistoricoFinanceiro();
+  }
 }
 
 function voltarAgenda(){
+
   const secoes = document.querySelectorAll(".clientes-container");
 
   secoes.forEach((item)=>{
@@ -300,8 +361,11 @@ function voltarAgenda(){
   });
 
   document.querySelector(".agenda-container").style.display = "block";
+
+  carregarAgenda();
 }
 
 window.onload = function(){
-  atualizarFinanceiro();
+  carregarHistoricoFinanceiro();
+  carregarClientes();
 };
