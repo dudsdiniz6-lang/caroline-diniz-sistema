@@ -313,6 +313,8 @@ window.onload = function(){
 
   atualizarFinanceiro();
 
+  carregarAgenda();
+
   carregarClientes();
 
   carregarHistoricoFinanceiro();
