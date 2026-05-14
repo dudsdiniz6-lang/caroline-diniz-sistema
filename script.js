@@ -83,10 +83,11 @@ function criarCard(agendamento){
   card.style.height = `${altura - 10}px`;
 
   card.innerHTML = `
-    <strong>${agendamento.cliente}</strong>
-    <span>${agendamento.servico || "Novo Atendimento"}</span>
-    <small>${agendamento.horario}</small>
-  `;
+  <strong>${agendamento.cliente}</strong>
+  <span>${agendamento.servico || "Novo Atendimento"}</span>
+  <small>${agendamento.horario}</small>
+  <em>${agendamento.status || "Agendado"}</em>
+`;
 
   card.onclick = function(){
 
