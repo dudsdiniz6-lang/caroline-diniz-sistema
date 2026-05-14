@@ -158,7 +158,77 @@ Depois salva e atualiza.
 
       return;
     }
+if(acao === "4"){
 
+  agendamento.status = "Confirmado";
+
+  card.classList.remove(
+    "status-agendado",
+    "status-finalizado",
+    "status-cancelado"
+  );
+
+  card.classList.add("status-confirmado");
+
+  card.querySelector("em").innerText = "Confirmado";
+
+  supabaseClient
+    .from("Agendamentos")
+    .update({
+      status:"Confirmado"
+    })
+    .eq("id", Number(agendamento.id));
+
+  return;
+}
+
+if(acao === "5"){
+
+  agendamento.status = "Finalizado";
+
+  card.classList.remove(
+    "status-agendado",
+    "status-confirmado",
+    "status-cancelado"
+  );
+
+  card.classList.add("status-finalizado");
+
+  card.querySelector("em").innerText = "Finalizado";
+
+  supabaseClient
+    .from("Agendamentos")
+    .update({
+      status:"Finalizado"
+    })
+    .eq("id", Number(agendamento.id));
+
+  return;
+}
+
+if(acao === "6"){
+
+  agendamento.status = "Cancelado";
+
+  card.classList.remove(
+    "status-agendado",
+    "status-confirmado",
+    "status-finalizado"
+  );
+
+  card.classList.add("status-cancelado");
+
+  card.querySelector("em").innerText = "Cancelado";
+
+  supabaseClient
+    .from("Agendamentos")
+    .update({
+      status:"Cancelado"
+    })
+    .eq("id", Number(agendamento.id));
+
+  return;
+}
     if(acao === "4"){
       return;
     }
