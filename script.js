@@ -337,13 +337,14 @@ function salvarCliente(){
 
   let clientes = JSON.parse(localStorage.getItem("clientes")) || [];
 
-  clientes.push(cliente);
+  supabaseClient
+  .from("clients")
+  .insert([cliente])
+  .then(()=>{
 
-  localStorage.setItem("clientes", JSON.stringify(clientes));
+    carregarClientes();
 
-  carregarClientes();
-
-}
+  });
 
 function carregarClientes(){
 
