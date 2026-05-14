@@ -529,3 +529,19 @@ nav a:hover,
   display:block;
   width:fit-content;
 }
+.status-agendado{
+  border-right:5px solid #ff7a00;
+}
+
+.status-confirmado{
+  border-right:5px solid #22c55e;
+}
+
+.status-finalizado{
+  border-right:5px solid #3b82f6;
+}
+
+.status-cancelado{
+  border-right:5px solid #ef4444;
+  opacity:0.55;
+}
