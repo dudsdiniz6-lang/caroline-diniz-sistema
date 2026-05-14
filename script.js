@@ -348,27 +348,34 @@ function salvarCliente(){
 
 function carregarClientes(){
 
-  const lista = document.getElementById("listaClientes");
+  supabaseClient
+    .from("clients")
+    .select("*")
+    .then((resposta)=>{
 
-  lista.innerHTML = "";
+      const clientes = resposta.data || [];
 
-  const clientes = JSON.parse(localStorage.getItem("clientes")) || [];
+      const lista = document.getElementById("listaClientes");
 
-  clientes.forEach((cliente)=>{
+      lista.innerHTML = "";
 
-    const card = document.createElement("div");
+      clientes.forEach((cliente)=>{
 
-    card.classList.add("cliente-card");
+        lista.innerHTML += `
+          <div class="cliente-card">
 
-    card.innerHTML = `
-      <strong>${cliente.nome}</strong>
-      <p>${cliente.telefone}</p>
-      <small>${cliente.observacao}</small>
-    `;
+            <strong>${cliente.nome}</strong>
 
-    lista.appendChild(card);
+            <p>${cliente.telefone}</p>
 
-  });
+            <small>${cliente.observacao || ""}</small>
+
+          </div>
+        `;
+
+      });
+
+    });
 
 }
 function mostrarClientes(){
