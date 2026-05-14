@@ -196,7 +196,8 @@ function salvarAgendamento(){
     horario: document.getElementById("horario").value,
     profissional: document.getElementById("profissional").value,
     duracao: document.getElementById("duracao").value,
-    servico: document.getElementById("servico").value
+    servico: document.getElementById("servico").value,
+    status: "Agendado"
   };
 
   supabaseClient
@@ -205,15 +206,16 @@ function salvarAgendamento(){
     .then((resposta)=>{
 
       if(resposta.error){
-        alert("Erro ao salvar agendamento: " + resposta.error.message);
+        alert("Erro ao salvar agendamento");
         console.log(resposta.error);
         return;
       }
 
       criarCard(agendamento);
+
       fecharModal();
+
     });
-}
 
 function carregarAgenda(){
 
