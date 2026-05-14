@@ -212,14 +212,21 @@ function salvarCliente(){
   observacoes: document.getElementById("observacaoCliente").value
 };
 
-  supabaseClient
-    .from("clients")
-    .insert([cliente])
-    .then(()=>{
-      carregarClientes();
-    });
-}
+ supabaseClient
+  .from("Agendamentos")
+  .delete()
+  .eq("id", Number(agendamento.id))
+  .then((resposta)=>{
 
+    if(resposta.error){
+      alert("Erro ao excluir no Supabase: " + resposta.error.message);
+      console.log(resposta.error);
+      return;
+    }
+
+    card.remove();
+
+  });
 function carregarClientes(){
   supabaseClient
     .from("clients")
