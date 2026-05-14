@@ -69,7 +69,14 @@ function criarCard(agendamento){
   const card = document.createElement("div");
 
   card.classList.add("appointment");
+const statusClasse = (agendamento.status || "Agendado")
+  .toLowerCase()
+  .normalize("NFD")
+  .replace(/[\u0300-\u036f]/g, "");
 
+card.classList.add(`status-${statusClasse}`);
+
+Depois salva e atualiza.
   if(agendamento.servico){
     card.classList.add(agendamento.servico);
   }
