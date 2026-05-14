@@ -272,10 +272,14 @@ function salvarAgendamento(){
     servico
   };
 
-  agendamentos.push(agendamento);
-  localStorage.setItem("agendamentos", JSON.stringify(agendamentos));
+  supabaseClient
+.from("agendamentos")
+.insert([agendamento])
+.then(()=>{
 
   criarCard(agendamento);
+
+});
   atualizarFinanceiro();
   fecharModal();
 }
