@@ -177,11 +177,11 @@ function criarCard(agendamento){
         card.style.top = `${calcularTop(agendamento.horario)}px`;
 
         card.innerHTML = `
-          <strong>${agendamento.cliente}</strong>
-          <span>${agendamento.servico || "Novo Atendimento"}</span>
-          <small>${agendamento.horario}</small>
-          <em>${agendamento.status || "Agendado"}</em>
-        `;
+  <strong>${agendamento.cliente}</strong>
+  <span>${agendamento.servico || "Novo Atendimento"}</span>
+  <small>${agendamento.horario}</small>
+  <em>${agendamento.status || "Agendado"}</em>
+`;
       });
   };
 
