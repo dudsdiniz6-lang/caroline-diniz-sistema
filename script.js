@@ -273,7 +273,7 @@ function salvarAgendamento(){
   };
 
   supabaseClient
-.from("agendamentos")
+.from("Agendamentos")
 .insert([agendamento])
 .then(()=>{
 
@@ -293,7 +293,7 @@ function carregarAgenda(){
   });
 
   supabaseClient
-    .from("agendamentos")
+    .from("Agendamentos")
     .select("*")
     .then((resposta)=>{
 
