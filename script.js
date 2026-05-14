@@ -374,8 +374,12 @@ window.onload = function(){
 };
 function ativarArrastar(){
 
-  interact(".appointment").draggable({
+  if(typeof interact === "undefined"){
+    console.log("InteractJS não carregou");
+    return;
+  }
 
+  interact(".appointment").draggable({
     listeners:{
       move(event){
 
@@ -387,9 +391,28 @@ function ativarArrastar(){
 
         target.setAttribute("data-y", y);
 
+      },
+
+      end(event){
+
+        const target = event.target;
+
+        const deslocamento = parseFloat(target.getAttribute("data-y")) || 0;
+
+        const topAtual = parseFloat(target.style.top) || 0;
+
+        const novoTop = topAtual + deslocamento;
+
+        const encaixado = Math.round(novoTop / 80) * 80;
+
+        target.style.transform = "translateY(0px)";
+
+        target.style.top = `${encaixado}px`;
+
+        target.setAttribute("data-y", 0);
+
       }
     }
-
   });
 
 }
