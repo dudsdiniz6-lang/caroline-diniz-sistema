@@ -285,19 +285,28 @@ function salvarAgendamento(){
 }
 
 function carregarAgenda(){
+
   const colunas = document.querySelectorAll(".column");
 
   colunas.forEach((coluna)=>{
     coluna.innerHTML = "";
   });
 
-  const agendamentos = JSON.parse(localStorage.getItem("agendamentos")) || [];
+  supabaseClient
+    .from("agendamentos")
+    .select("*")
+    .then((resposta)=>{
 
-  agendamentos.forEach((agendamento)=>{
-    criarCard(agendamento);
-  });
+      const agendamentos = resposta.data || [];
 
-  atualizarFinanceiro();
+      agendamentos.forEach((agendamento)=>{
+        criarCard(agendamento);
+      });
+
+      atualizarFinanceiro();
+
+    });
+
 }
 
 window.onload = function(){
