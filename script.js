@@ -130,9 +130,24 @@ card.onclick = function(){
     return;
   }
 
-  if(acao === "3"){
-    return;
-  }
+ if(acao === "3"){
+
+  const confirmar = confirm("Deseja excluir este agendamento?");
+
+  if(!confirmar) return;
+
+  supabaseClient
+    .from("Agendamentos")
+    .delete()
+    .eq("id", agendamento.id)
+    .then(()=>{
+
+      card.remove();
+
+    });
+
+  return;
+}
 
   const novoHorario = prompt("Editar horário:", agendamento.horario);
 
