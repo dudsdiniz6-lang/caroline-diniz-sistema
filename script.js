@@ -107,18 +107,19 @@ card.onclick = function(){
 
     localStorage.setItem("atendimentosPagos", atendimentosPagos);
 
-    let historico = JSON.parse(localStorage.getItem("historicoFinanceiro")) || [];
-
-    historico.push({
-      cliente: agendamento.cliente,
-      servico: agendamento.servico || "Novo Atendimento",
-      valor: Number(valor),
-      data: new Date().toLocaleDateString("pt-BR")
-    });
-
-    localStorage.setItem("historicoFinanceiro", JSON.stringify(historico));
+   supabaseClient
+  .from("comandas")
+  .insert([{
+    cliente: agendamento.cliente,
+    servico: agendamento.servico || "Novo Atendimento",
+    valor: Number(valor),
+    data: new Date().toLocaleDateString("pt-BR")
+  }])
+  .then(()=>{
 
     carregarHistoricoFinanceiro();
+
+  });
 
     atualizarFinanceiro();
 
