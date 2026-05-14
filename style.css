@@ -499,3 +499,24 @@ nav a:hover,
   color:#ff7a00;
   font-weight:bold;
 }
+.appointment{
+  min-height:75px;
+  padding:12px;
+}
+
+.appointment small{
+  display:block;
+  margin-top:4px;
+}
+
+.appointment em{
+  display:inline-block;
+  margin-top:6px;
+  font-style:normal;
+  font-size:11px;
+  padding:3px 7px;
+  border-radius:999px;
+  background:white;
+  color:#ff7a00;
+  font-weight:bold;
+}
