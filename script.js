@@ -85,7 +85,69 @@ function criarCard(agendamento){
     <span>${agendamento.servico || "Novo Atendimento"}</span>
     <small>${agendamento.horario}</small>
   `;
+card.onclick = function(){
 
+  const acao = prompt("Digite:\n1 - Editar horário\n2 - Faturar\n3 - Cancelar");
+
+  if(acao === "2"){
+
+    const valor = prompt("Valor do atendimento:");
+
+    if(!valor) return;
+
+    let caixa = Number(localStorage.getItem("caixa")) || 0;
+
+    caixa += Number(valor);
+
+    localStorage.setItem("caixa", caixa);
+
+    let atendimentosPagos = Number(localStorage.getItem("atendimentosPagos")) || 0;
+
+    atendimentosPagos++;
+
+    localStorage.setItem("atendimentosPagos", atendimentosPagos);
+
+    let historico = JSON.parse(localStorage.getItem("historicoFinanceiro")) || [];
+
+    historico.push({
+      cliente: agendamento.cliente,
+      servico: agendamento.servico || "Novo Atendimento",
+      valor: Number(valor),
+      data: new Date().toLocaleDateString("pt-BR")
+    });
+
+    localStorage.setItem("historicoFinanceiro", JSON.stringify(historico));
+
+    carregarHistoricoFinanceiro();
+
+    atualizarFinanceiro();
+
+    card.style.opacity = "0.6";
+
+    alert("Atendimento faturado!");
+
+    return;
+  }
+
+  if(acao === "3"){
+    return;
+  }
+
+  const novoHorario = prompt("Editar horário:", agendamento.horario);
+
+  if(!novoHorario) return;
+
+  agendamento.horario = novoHorario;
+
+  card.style.top = `${calcularTop(agendamento.horario)}px`;
+
+  card.innerHTML = `
+    <strong>${agendamento.cliente}</strong>
+    <span>${agendamento.servico || "Novo Atendimento"}</span>
+    <small>${agendamento.horario}</small>
+  `;
+
+};
   coluna.appendChild(card);
 }
 
