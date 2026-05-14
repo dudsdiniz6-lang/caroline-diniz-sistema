@@ -76,7 +76,6 @@ const statusClasse = (agendamento.status || "Agendado")
 
 card.classList.add(`status-${statusClasse}`);
 
-Depois salva e atualiza.
   if(agendamento.servico){
     card.classList.add(agendamento.servico);
   }
