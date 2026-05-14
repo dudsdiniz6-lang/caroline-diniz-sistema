@@ -41,7 +41,6 @@ function fazerLogin(){
   }
 
   localStorage.setItem("usuarioLogado", JSON.stringify(usuarioEncontrado));
-
   document.getElementById("login-screen").style.display = "none";
 
   carregarAgenda();
@@ -58,7 +57,6 @@ function calcularTop(horario){
   const [hora, minuto] = horario.split(":");
   const minutosTotais = parseInt(hora) * 60 + parseInt(minuto);
   const inicioAgenda = 14 * 60;
-
   return ((minutosTotais - inicioAgenda) / 20) * 80;
 }
 
@@ -83,11 +81,11 @@ function criarCard(agendamento){
   card.style.height = `${altura - 10}px`;
 
   card.innerHTML = `
-  <strong>${agendamento.cliente}</strong>
-  <span>${agendamento.servico || "Novo Atendimento"}</span>
-  <small>${agendamento.horario}</small>
-  <em>${agendamento.status || "Agendado"}</em>
-`;
+    <strong>${agendamento.cliente}</strong>
+    <span>${agendamento.servico || "Novo Atendimento"}</span>
+    <small>${agendamento.horario}</small>
+    <em>${agendamento.status || "Agendado"}</em>
+  `;
 
   card.onclick = function(){
 
@@ -182,6 +180,7 @@ function criarCard(agendamento){
           <strong>${agendamento.cliente}</strong>
           <span>${agendamento.servico || "Novo Atendimento"}</span>
           <small>${agendamento.horario}</small>
+          <em>${agendamento.status || "Agendado"}</em>
         `;
       });
   };
@@ -207,16 +206,15 @@ function salvarAgendamento(){
     .then((resposta)=>{
 
       if(resposta.error){
-        alert("Erro ao salvar agendamento");
+        alert("Erro ao salvar agendamento: " + resposta.error.message);
         console.log(resposta.error);
         return;
       }
 
       criarCard(agendamento);
-
       fecharModal();
-
     });
+}
 
 function carregarAgenda(){
 
