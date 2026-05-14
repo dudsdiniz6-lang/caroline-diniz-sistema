@@ -228,23 +228,34 @@ function carregarClientes(){
 }
 
 function carregarHistoricoFinanceiro(){
+
   const lista = document.getElementById("historico-financeiro");
 
   if(!lista) return;
 
   lista.innerHTML = "";
 
-  const historico = JSON.parse(localStorage.getItem("historicoFinanceiro")) || [];
+  supabaseClient
+    .from("comandas")
+    .select("*")
+    .then((resposta)=>{
 
-  historico.forEach((item)=>{
-    lista.innerHTML += `
-      <div class="cliente-card">
-        <strong>${item.cliente}</strong>
-        <p>${item.servico} — R$ ${item.valor}</p>
-        <small>${item.data}</small>
-      </div>
-    `;
-  });
+      const historico = resposta.data || [];
+
+      historico.forEach((item)=>{
+
+        lista.innerHTML += `
+          <div class="cliente-card">
+            <strong>${item.cliente}</strong>
+            <p>${item.servico} — R$ ${item.valor}</p>
+            <small>${item.data}</small>
+          </div>
+        `;
+
+      });
+
+    });
+
 }
 
 function mostrarSecao(secao){
