@@ -224,18 +224,20 @@ function carregarAgenda(){
     coluna.innerHTML = "";
   });
 
-  supabaseClient
-    .from("Agendamentos")
-    .select("*")
-    .then((resposta)=>{
+ supabaseClient
+  .from("Agendamentos")
+  .select("*")
+  .then((resposta)=>{
 
-      const agendamentos = resposta.data || [];
+    const agendamentos = resposta.data || [];
 
-      agendamentos.forEach((agendamento)=>{
-        criarCard(agendamento);
-      });
-
+    agendamentos.forEach((agendamento)=>{
+      criarCard(agendamento);
     });
+
+    ativarArrastar();
+
+  });
 }
 
 function salvarCliente(){
