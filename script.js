@@ -410,6 +410,19 @@ function ativarArrastar(){
         target.style.top = `${encaixado}px`;
 
         target.setAttribute("data-y", 0);
+        const minutosDesdeInicio = (encaixado / 80) * 20;
+
+const minutosTotais = (14 * 60) + minutosDesdeInicio;
+
+const hora = Math.floor(minutosTotais / 60);
+
+const minuto = minutosTotais % 60;
+
+const novoHorario = `${String(hora).padStart(2, "0")}:${String(minuto).padStart(2, "0")}`;
+
+const horarioTexto = target.querySelector("small");
+
+horarioTexto.innerText = novoHorario;
 
       }
     }
