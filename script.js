@@ -195,22 +195,27 @@ function criarCard(agendamento){
     }
 
     if(acao === "6"){
-      atualizarStatus(agendamento, card, "Cancelado");
-      return;
-    }
+  atualizarStatus(agendamento, card, "Cancelado");
+  return;
+}
 
-    const novoHorario = prompt("Editar horário:", agendamento.horario);
-    if(!novoHorario) return;
+if(acao === "7"){
 
-    supabaseClient
-      .from("Agendamentos")
-      .update({ horario: novoHorario })
-      .eq("id", Number(agendamento.id))
-      .then((resposta)=>{
-        if(resposta.error){
-          alert("Erro ao editar: " + resposta.error.message);
-          return;
-        }
+  if(!agendamento.telefone){
+    alert("Este agendamento não tem telefone cadastrado.");
+    return;
+  }
+
+  const telefone = agendamento.telefone.replace(/\D/g, "");
+
+  const mensagem = `Olá, ${agendamento.cliente}! Passando para confirmar seu horário no Caroline Diniz: ${agendamento.data} às ${agendamento.horario}.`;
+
+  const link = `https://wa.me/55${telefone}?text=${encodeURIComponent(mensagem)}`;
+
+  window.open(link, "_blank");
+
+  return;
+}
 
         agendamento.horario = novoHorario;
         carregarAgenda();
