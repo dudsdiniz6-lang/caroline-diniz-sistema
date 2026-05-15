@@ -240,16 +240,17 @@ function atualizarStatus(agendamento, card, status){
 
 function salvarAgendamento(){
 
-  const agendamento = {
-    id: Date.now(),
-    cliente: document.getElementById("cliente").value,
-    horario: document.getElementById("horario").value,
-    profissional: document.getElementById("profissional").value,
-    duracao: document.getElementById("duracao").value,
-    servico: document.getElementById("servico").value,
-    status: "Agendado",
-    data: formatarData(dataSelecionada)
-  };
+ const agendamento = {
+  id: Date.now(),
+  cliente: document.getElementById("cliente").value,
+  telefone: document.getElementById("telefoneAgendamento").value,
+  horario: document.getElementById("horario").value,
+  profissional: document.getElementById("profissional").value,
+  duracao: document.getElementById("duracao").value,
+  servico: document.getElementById("servico").value,
+  status: "Agendado",
+  data: formatarData(dataSelecionada)
+};
 
   supabaseClient
     .from("Agendamentos")
