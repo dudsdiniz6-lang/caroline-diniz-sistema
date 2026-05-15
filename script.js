@@ -276,6 +276,7 @@ function salvarAgendamento(){
     duracao: document.getElementById("duracao").value,
     servico: document.getElementById("servico").value,
     status: "Agendado"
+    data: new Date().toLocaleDateString("pt-BR")
   };
 
   supabaseClient
