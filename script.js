@@ -450,6 +450,7 @@ window.onload = function(){
   carregarHistoricoFinanceiro();
   carregarClientes();
 };
+
 function ativarArrastar(){
 
   if(typeof interact === "undefined"){
@@ -462,13 +463,13 @@ function ativarArrastar(){
       move(event){
 
         const target = event.target;
-const colunaDestino = event.target.closest(".column");
+
+        const x = (parseFloat(target.getAttribute("data-x")) || 0) + event.dx;
         const y = (parseFloat(target.getAttribute("data-y")) || 0) + event.dy;
 
-        target.style.transform = `translateY(${y}px)`;
-if(colunaDestino){
-  colunaDestino.appendChild(target);
-}
+        target.style.transform = `translate(${x}px, ${y}px)`;
+
+        target.setAttribute("data-x", x);
         target.setAttribute("data-y", y);
 
       },
@@ -477,48 +478,65 @@ if(colunaDestino){
 
         const target = event.target;
 
-        const deslocamento = parseFloat(target.getAttribute("data-y")) || 0;
+        const x = parseFloat(target.getAttribute("data-x")) || 0;
+        const y = parseFloat(target.getAttribute("data-y")) || 0;
+
+        const colunas = Array.from(document.querySelectorAll(".column"));
+
+        let colunaAtual = target.parentElement;
+        let indiceAtual = colunas.indexOf(colunaAtual);
+
+        const larguraColuna = colunaAtual.offsetWidth;
+
+        let deslocamentoColunas = Math.round(x / larguraColuna);
+
+        let novoIndice = indiceAtual + deslocamentoColunas;
+
+        if(novoIndice < 0) novoIndice = 0;
+        if(novoIndice > colunas.length - 1) novoIndice = colunas.length - 1;
+
+        const novaColuna = colunas[novoIndice];
+
+        novaColuna.appendChild(target);
 
         const topAtual = parseFloat(target.style.top) || 0;
-
-        const novoTop = topAtual + deslocamento;
-
+        const novoTop = topAtual + y;
         const encaixado = Math.round(novoTop / 80) * 80;
 
-        target.style.transform = "translateY(0px)";
-
+        target.style.transform = "translate(0px, 0px)";
         target.style.top = `${encaixado}px`;
 
+        target.setAttribute("data-x", 0);
         target.setAttribute("data-y", 0);
+
         const minutosDesdeInicio = (encaixado / 80) * 20;
+        const minutosTotais = (14 * 60) + minutosDesdeInicio;
 
-const minutosTotais = (14 * 60) + minutosDesdeInicio;
+        const hora = Math.floor(minutosTotais / 60);
+        const minuto = minutosTotais % 60;
 
-const hora = Math.floor(minutosTotais / 60);
+        const novoHorario = `${String(hora).padStart(2, "0")}:${String(minuto).padStart(2, "0")}`;
 
-const minuto = minutosTotais % 60;
+        target.querySelector("small").innerText = novoHorario;
 
-const novoHorario = `${String(hora).padStart(2, "0")}:${String(minuto).padStart(2, "0")}`;
+        const id = Number(target.dataset.id);
 
-const horarioTexto = target.querySelector("small");
+        supabaseClient
+          .from("Agendamentos")
+          .update({
+            horario: novoHorario,
+            profissional: String(novoIndice)
+          })
+          .eq("id", id)
+          .then((resposta)=>{
 
-horarioTexto.innerText = novoHorario;
-const id = Number(target.dataset.id);
+            if(resposta.error){
+              alert("Erro ao atualizar agendamento");
+              console.log(resposta.error);
+            }
 
-supabaseClient
-  .from("Agendamentos")
-  .update({
-    horario: novoHorario
-  })
-  .eq("id", id)
-  .then((resposta)=>{
+          });
 
-    if(resposta.error){
-      console.log(resposta.error);
-      alert("Erro ao atualizar horário");
-    }
-
-  });
       }
     }
   });
