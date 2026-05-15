@@ -3,6 +3,8 @@ const SUPABASE_KEY = "sb_publishable_KQ58nMCXUZl0Nz5jEHkKKg_RbpL-QTw";
 
 const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
+let dataSelecionada = new Date();
+
 const usuarios = [
   { usuario:"eduarda", senha:"123", cargo:"dona" },
   { usuario:"caroline", senha:"123", cargo:"dona" },
@@ -13,6 +15,29 @@ const usuarios = [
   { usuario:"ssica", senha:"123", cargo:"funcionario" },
   { usuario:"alice", senha:"123", cargo:"funcionario" }
 ];
+
+function formatarData(data){
+  return data.toLocaleDateString("pt-BR");
+}
+
+function atualizarDataAgenda(){
+  const campo = document.getElementById("data-agenda");
+  if(campo){
+    campo.innerText = formatarData(dataSelecionada);
+  }
+}
+
+function voltarDia(){
+  dataSelecionada.setDate(dataSelecionada.getDate() - 1);
+  atualizarDataAgenda();
+  carregarAgenda();
+}
+
+function avancarDia(){
+  dataSelecionada.setDate(dataSelecionada.getDate() + 1);
+  atualizarDataAgenda();
+  carregarAgenda();
+}
 
 function abrirModal(){
   document.getElementById("modal").style.display = "flex";
@@ -43,6 +68,7 @@ function fazerLogin(){
   localStorage.setItem("usuarioLogado", JSON.stringify(usuarioEncontrado));
   document.getElementById("login-screen").style.display = "none";
 
+  atualizarDataAgenda();
   carregarAgenda();
   carregarClientes();
   carregarHistoricoFinanceiro();
@@ -67,14 +93,14 @@ function criarCard(agendamento){
   if(!coluna) return;
 
   const card = document.createElement("div");
-
   card.classList.add("appointment");
-const statusClasse = (agendamento.status || "Agendado")
-  .toLowerCase()
-  .normalize("NFD")
-  .replace(/[\u0300-\u036f]/g, "");
 
-card.classList.add(`status-${statusClasse}`);
+  const statusClasse = (agendamento.status || "Agendado")
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "");
+
+  card.classList.add(`status-${statusClasse}`);
 
   if(agendamento.servico){
     card.classList.add(agendamento.servico);
@@ -87,22 +113,21 @@ card.classList.add(`status-${statusClasse}`);
   card.style.height = `${altura - 10}px`;
 
   card.innerHTML = `
-  <strong>${agendamento.cliente}</strong>
-  <span>${agendamento.servico || "Novo Atendimento"}</span>
-  <small>${agendamento.horario}</small>
-  <em>${agendamento.status || "Agendado"}</em>
-`;
+    <strong>${agendamento.cliente}</strong>
+    <span>${agendamento.servico || "Novo Atendimento"}</span>
+    <small>${agendamento.horario}</small>
+    <em>${agendamento.status || "Agendado"}</em>
+  `;
 
   card.onclick = function(){
 
     const acao = prompt(
-"Digite:\n1 - Editar horário\n2 - Faturar\n3 - Excluir\n4 - Confirmar\n5 - Finalizar\n6 - Cancelar atendimento"
-);
+      "Digite:\n1 - Editar horário\n2 - Faturar\n3 - Excluir\n4 - Confirmar\n5 - Finalizar\n6 - Cancelar atendimento"
+    );
 
     if(acao === "2"){
 
       const valor = prompt("Valor do atendimento:");
-
       if(!valor) return;
 
       supabaseClient
@@ -112,20 +137,16 @@ card.classList.add(`status-${statusClasse}`);
           cliente: agendamento.cliente,
           servico: agendamento.servico || "Novo Atendimento",
           valor: Number(valor),
-          data: new Date().toLocaleDateString("pt-BR")
+          data: formatarData(dataSelecionada)
         }])
         .then((resposta)=>{
-
           if(resposta.error){
             alert("Erro ao faturar: " + resposta.error.message);
-            console.log(resposta.error);
             return;
           }
 
           carregarHistoricoFinanceiro();
-
           card.style.opacity = "0.6";
-
           alert("Atendimento faturado!");
         });
 
@@ -135,7 +156,6 @@ card.classList.add(`status-${statusClasse}`);
     if(acao === "3"){
 
       const confirmar = confirm("Deseja excluir este agendamento?");
-
       if(!confirmar) return;
 
       supabaseClient
@@ -143,127 +163,70 @@ card.classList.add(`status-${statusClasse}`);
         .delete()
         .eq("id", Number(agendamento.id))
         .then((resposta)=>{
-
           if(resposta.error){
             alert("Erro ao excluir: " + resposta.error.message);
-            console.log(resposta.error);
             return;
           }
 
           card.remove();
-
           carregarAgenda();
         });
 
       return;
     }
-if(acao === "4"){
 
-  agendamento.status = "Confirmado";
-
-  card.classList.remove(
-    "status-agendado",
-    "status-finalizado",
-    "status-cancelado"
-  );
-
-  card.classList.add("status-confirmado");
-
-  card.querySelector("em").innerText = "Confirmado";
-
-  supabaseClient
-    .from("Agendamentos")
-    .update({
-      status:"Confirmado"
-    })
-    .eq("id", Number(agendamento.id));
-
-  return;
-}
-
-if(acao === "5"){
-
-  agendamento.status = "Finalizado";
-
-  card.classList.remove(
-    "status-agendado",
-    "status-confirmado",
-    "status-cancelado"
-  );
-
-  card.classList.add("status-finalizado");
-
-  card.querySelector("em").innerText = "Finalizado";
-
-  supabaseClient
-    .from("Agendamentos")
-    .update({
-      status:"Finalizado"
-    })
-    .eq("id", Number(agendamento.id));
-
-  return;
-}
-
-if(acao === "6"){
-
-  agendamento.status = "Cancelado";
-
-  card.classList.remove(
-    "status-agendado",
-    "status-confirmado",
-    "status-finalizado"
-  );
-
-  card.classList.add("status-cancelado");
-
-  card.querySelector("em").innerText = "Cancelado";
-
-  supabaseClient
-    .from("Agendamentos")
-    .update({
-      status:"Cancelado"
-    })
-    .eq("id", Number(agendamento.id));
-
-  return;
-}
     if(acao === "4"){
+      atualizarStatus(agendamento, card, "Confirmado");
+      return;
+    }
+
+    if(acao === "5"){
+      atualizarStatus(agendamento, card, "Finalizado");
+      return;
+    }
+
+    if(acao === "6"){
+      atualizarStatus(agendamento, card, "Cancelado");
       return;
     }
 
     const novoHorario = prompt("Editar horário:", agendamento.horario);
-
     if(!novoHorario) return;
 
     supabaseClient
       .from("Agendamentos")
-      .update({
-        horario: novoHorario
-      })
+      .update({ horario: novoHorario })
       .eq("id", Number(agendamento.id))
       .then((resposta)=>{
-
         if(resposta.error){
           alert("Erro ao editar: " + resposta.error.message);
-          console.log(resposta.error);
           return;
         }
 
         agendamento.horario = novoHorario;
-
-        card.style.top = `${calcularTop(agendamento.horario)}px`;
-
-        card.innerHTML = `
-  <strong>${agendamento.cliente}</strong>
-  <span>${agendamento.servico || "Novo Atendimento"}</span>
-  <small>${agendamento.horario}</small>
-  <em>${agendamento.status || "Agendado"}</em>
-`;
+        carregarAgenda();
       });
   };
 
   coluna.appendChild(card);
+}
+
+function atualizarStatus(agendamento, card, status){
+
+  agendamento.status = status;
+
+  supabaseClient
+    .from("Agendamentos")
+    .update({ status })
+    .eq("id", Number(agendamento.id))
+    .then((resposta)=>{
+      if(resposta.error){
+        alert("Erro ao atualizar status");
+        return;
+      }
+
+      carregarAgenda();
+    });
 }
 
 function salvarAgendamento(){
@@ -275,18 +238,16 @@ function salvarAgendamento(){
     profissional: document.getElementById("profissional").value,
     duracao: document.getElementById("duracao").value,
     servico: document.getElementById("servico").value,
-    status: "Agendado"
-    data: new Date().toLocaleDateString("pt-BR")
+    status: "Agendado",
+    data: formatarData(dataSelecionada)
   };
 
   supabaseClient
     .from("Agendamentos")
     .insert([agendamento])
     .then((resposta)=>{
-
       if(resposta.error){
         alert("Erro ao salvar agendamento: " + resposta.error.message);
-        console.log(resposta.error);
         return;
       }
 
@@ -303,20 +264,20 @@ function carregarAgenda(){
     coluna.innerHTML = "";
   });
 
- supabaseClient
-  .from("Agendamentos")
-  .select("*")
-  .then((resposta)=>{
+  supabaseClient
+    .from("Agendamentos")
+    .select("*")
+    .eq("data", formatarData(dataSelecionada))
+    .then((resposta)=>{
 
-    const agendamentos = resposta.data || [];
+      const agendamentos = resposta.data || [];
 
-    agendamentos.forEach((agendamento)=>{
-      criarCard(agendamento);
+      agendamentos.forEach((agendamento)=>{
+        criarCard(agendamento);
+      });
+
+      ativarArrastar();
     });
-
-    ativarArrastar();
-
-  });
 }
 
 function salvarCliente(){
@@ -334,7 +295,6 @@ function salvarCliente(){
 
       if(resposta.error){
         alert("Erro ao salvar cliente: " + resposta.error.message);
-        console.log(resposta.error);
         return;
       }
 
@@ -361,7 +321,6 @@ function carregarClientes(){
       lista.innerHTML = "";
 
       clientes.forEach((cliente)=>{
-
         lista.innerHTML += `
           <div class="cliente-card">
             <strong>${cliente.nome}</strong>
@@ -369,7 +328,6 @@ function carregarClientes(){
             <small>${cliente.observacoes || ""}</small>
           </div>
         `;
-
       });
 
       document.getElementById("clientes-total").innerText = clientes.length;
@@ -390,11 +348,9 @@ function carregarHistoricoFinanceiro(){
     .then((resposta)=>{
 
       const historico = resposta.data || [];
-
       let total = 0;
 
       historico.forEach((item)=>{
-
         total += Number(item.valor);
 
         lista.innerHTML += `
@@ -404,12 +360,10 @@ function carregarHistoricoFinanceiro(){
             <small>${item.data}</small>
           </div>
         `;
-
       });
 
       document.getElementById("faturamento").innerText = `R$ ${total}`;
       document.getElementById("atendimentos-pagos").innerText = historico.length;
-
     });
 }
 
@@ -447,15 +401,9 @@ function voltarAgenda(){
   carregarAgenda();
 }
 
-window.onload = function(){
-  carregarHistoricoFinanceiro();
-  carregarClientes();
-};
-
 function ativarArrastar(){
 
   if(typeof interact === "undefined"){
-    console.log("InteractJS não carregou");
     return;
   }
 
@@ -472,7 +420,6 @@ function ativarArrastar(){
 
         target.setAttribute("data-x", x);
         target.setAttribute("data-y", y);
-
       },
 
       end(event){
@@ -490,7 +437,6 @@ function ativarArrastar(){
         const larguraColuna = colunaAtual.offsetWidth;
 
         let deslocamentoColunas = Math.round(x / larguraColuna);
-
         let novoIndice = indiceAtual + deslocamentoColunas;
 
         if(novoIndice < 0) novoIndice = 0;
@@ -528,18 +474,14 @@ function ativarArrastar(){
             horario: novoHorario,
             profissional: String(novoIndice)
           })
-          .eq("id", id)
-          .then((resposta)=>{
-
-            if(resposta.error){
-              alert("Erro ao atualizar agendamento");
-              console.log(resposta.error);
-            }
-
-          });
-
+          .eq("id", id);
       }
     }
   });
-
 }
+
+window.onload = function(){
+  atualizarDataAgenda();
+  carregarHistoricoFinanceiro();
+  carregarClientes();
+};
