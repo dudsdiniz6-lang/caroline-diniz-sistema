@@ -462,7 +462,7 @@ function ativarArrastar(){
       move(event){
 
         const target = event.target;
-
+const colunaDestino = event.target.closest(".column");
         const y = (parseFloat(target.getAttribute("data-y")) || 0) + event.dy;
 
         target.style.transform = `translateY(${y}px)`;
