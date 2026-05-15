@@ -466,7 +466,9 @@ const colunaDestino = event.target.closest(".column");
         const y = (parseFloat(target.getAttribute("data-y")) || 0) + event.dy;
 
         target.style.transform = `translateY(${y}px)`;
-
+if(colunaDestino){
+  colunaDestino.appendChild(target);
+}
         target.setAttribute("data-y", y);
 
       },
