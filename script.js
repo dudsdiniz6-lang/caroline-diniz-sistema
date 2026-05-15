@@ -22,9 +22,7 @@ function formatarData(data){
 
 function atualizarDataAgenda(){
   const campo = document.getElementById("data-agenda");
-  if(campo){
-    campo.innerText = formatarData(dataSelecionada);
-  }
+  if(campo) campo.innerText = formatarData(dataSelecionada);
 }
 
 function voltarDia(){
@@ -34,16 +32,13 @@ function voltarDia(){
 }
 
 function avancarDia(){
-  function irParaHoje(){
-
-  dataSelecionada = new Date();
-
-  atualizarDataAgenda();
-
-  carregarAgenda();
-
-}
   dataSelecionada.setDate(dataSelecionada.getDate() + 1);
+  atualizarDataAgenda();
+  carregarAgenda();
+}
+
+function irParaHoje(){
+  dataSelecionada = new Date();
   atualizarDataAgenda();
   carregarAgenda();
 }
@@ -57,12 +52,7 @@ function fecharModal(){
 }
 
 function fazerLogin(){
-  const usuario = document.getElementById("usuario").value
-    .toLowerCase()
-    .trim()
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "");
-
+  const usuario = document.getElementById("usuario").value.toLowerCase().trim().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
   const senha = document.getElementById("senha").value.trim();
 
   const usuarioEncontrado = usuarios.find((item)=>{
@@ -131,8 +121,26 @@ function criarCard(agendamento){
   card.onclick = function(){
 
     const acao = prompt(
-  "Digite:\n1 - Editar horário\n2 - Faturar\n3 - Excluir\n4 - Confirmar\n5 - Finalizar\n6 - Cancelar atendimento\n7 - Enviar WhatsApp"
-);
+      "Digite:\n1 - Editar horário\n2 - Faturar\n3 - Excluir\n4 - Confirmar\n5 - Finalizar\n6 - Cancelar atendimento\n7 - Enviar WhatsApp"
+    );
+
+    if(acao === "7"){
+
+      if(!agendamento.telefone){
+        alert("Este agendamento não tem telefone cadastrado.");
+        return;
+      }
+
+      const telefone = agendamento.telefone.replace(/\D/g, "");
+
+      const mensagem = `Olá, ${agendamento.cliente}! Passando para confirmar seu horário no Caroline Diniz: ${agendamento.data} às ${agendamento.horario}.`;
+
+      const link = `https://wa.me/55${telefone}?text=${encodeURIComponent(mensagem)}`;
+
+      window.open(link, "_blank");
+
+      return;
+    }
 
     if(acao === "2"){
 
@@ -185,39 +193,33 @@ function criarCard(agendamento){
     }
 
     if(acao === "4"){
-      atualizarStatus(agendamento, card, "Confirmado");
+      atualizarStatus(agendamento, "Confirmado");
       return;
     }
 
     if(acao === "5"){
-      atualizarStatus(agendamento, card, "Finalizado");
+      atualizarStatus(agendamento, "Finalizado");
       return;
     }
 
     if(acao === "6"){
-  atualizarStatus(agendamento, card, "Cancelado");
-  return;
-}
+      atualizarStatus(agendamento, "Cancelado");
+      return;
+    }
 
-if(acao === "7"){
+    const novoHorario = prompt("Editar horário:", agendamento.horario);
+    if(!novoHorario) return;
 
-  if(!agendamento.telefone){
-    alert("Este agendamento não tem telefone cadastrado.");
-    return;
-  }
+    supabaseClient
+      .from("Agendamentos")
+      .update({ horario: novoHorario })
+      .eq("id", Number(agendamento.id))
+      .then((resposta)=>{
+        if(resposta.error){
+          alert("Erro ao editar: " + resposta.error.message);
+          return;
+        }
 
-  const telefone = agendamento.telefone.replace(/\D/g, "");
-
-  const mensagem = `Olá, ${agendamento.cliente}! Passando para confirmar seu horário no Caroline Diniz: ${agendamento.data} às ${agendamento.horario}.`;
-
-  const link = `https://wa.me/55${telefone}?text=${encodeURIComponent(mensagem)}`;
-
-  window.open(link, "_blank");
-
-  return;
-}
-
-        agendamento.horario = novoHorario;
         carregarAgenda();
       });
   };
@@ -225,10 +227,7 @@ if(acao === "7"){
   coluna.appendChild(card);
 }
 
-function atualizarStatus(agendamento, card, status){
-
-  agendamento.status = status;
-
+function atualizarStatus(agendamento, status){
   supabaseClient
     .from("Agendamentos")
     .update({ status })
@@ -245,17 +244,17 @@ function atualizarStatus(agendamento, card, status){
 
 function salvarAgendamento(){
 
- const agendamento = {
-  id: Date.now(),
-  cliente: document.getElementById("cliente").value,
-  telefone: document.getElementById("telefoneAgendamento").value,
-  horario: document.getElementById("horario").value,
-  profissional: document.getElementById("profissional").value,
-  duracao: document.getElementById("duracao").value,
-  servico: document.getElementById("servico").value,
-  status: "Agendado",
-  data: formatarData(dataSelecionada)
-};
+  const agendamento = {
+    id: Date.now(),
+    cliente: document.getElementById("cliente").value,
+    telefone: document.getElementById("telefoneAgendamento").value,
+    horario: document.getElementById("horario").value,
+    profissional: document.getElementById("profissional").value,
+    duracao: document.getElementById("duracao").value,
+    servico: document.getElementById("servico").value,
+    status: "Agendado",
+    data: formatarData(dataSelecionada)
+  };
 
   supabaseClient
     .from("Agendamentos")
@@ -307,7 +306,6 @@ function salvarCliente(){
     .from("clients")
     .insert([cliente])
     .then((resposta)=>{
-
       if(resposta.error){
         alert("Erro ao salvar cliente: " + resposta.error.message);
         return;
