@@ -34,6 +34,15 @@ function voltarDia(){
 }
 
 function avancarDia(){
+  function irParaHoje(){
+
+  dataSelecionada = new Date();
+
+  atualizarDataAgenda();
+
+  carregarAgenda();
+
+}
   dataSelecionada.setDate(dataSelecionada.getDate() + 1);
   atualizarDataAgenda();
   carregarAgenda();
