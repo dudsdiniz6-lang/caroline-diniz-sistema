@@ -131,8 +131,8 @@ function criarCard(agendamento){
   card.onclick = function(){
 
     const acao = prompt(
-      "Digite:\n1 - Editar horário\n2 - Faturar\n3 - Excluir\n4 - Confirmar\n5 - Finalizar\n6 - Cancelar atendimento"
-    );
+  "Digite:\n1 - Editar horário\n2 - Faturar\n3 - Excluir\n4 - Confirmar\n5 - Finalizar\n6 - Cancelar atendimento\n7 - Enviar WhatsApp"
+);
 
     if(acao === "2"){
 
