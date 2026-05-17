@@ -1,0 +1,9 @@
+{
+  "name": "Caroline Diniz Sistema",
+  "short_name": "Caroline Diniz",
+  "start_url": ".",
+  "display": "standalone",
+  "background_color": "#f5f6fa",
+  "theme_color": "#ff7a00",
+  "icons": []
+}
