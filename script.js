@@ -402,7 +402,47 @@ function carregarHistoricoFinanceiro(){
       document.getElementById("atendimentos-pagos").innerText = historico.length;
     });
 }
+function carregarComissoes(){
 
+  const lista = document.getElementById("lista-comissoes");
+
+  if(!lista) return;
+
+  lista.innerHTML = "";
+
+  supabaseClient
+    .from("comissoes")
+    .select("*")
+    .then((resposta)=>{
+
+      const comissoes = resposta.data || [];
+
+      let total = 0;
+
+      comissoes.forEach((item)=>{
+
+        total += Number(item.comissao);
+
+        lista.innerHTML += `
+          <div class="cliente-card">
+            <strong>${item.profissional}</strong>
+            <p>${item.cliente} — ${item.servico}</p>
+            <small>
+              Comissão: R$ ${Number(item.comissao).toFixed(2)}
+            </small>
+          </div>
+        `;
+      });
+
+      lista.innerHTML += `
+        <div class="cliente-card">
+          <strong>Total Geral</strong>
+          <p>R$ ${total.toFixed(2)}</p>
+        </div>
+      `;
+    });
+
+}
 function mostrarSecao(secao){
 
   document.querySelector(".agenda-container").style.display = "none";
