@@ -639,3 +639,24 @@ nav a:hover,
   box-shadow:0 5px 20px rgba(0,0,0,0.05);
   max-height:350px;
 }
+#metas-profissionais{
+  display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(220px,1fr));
+  gap:20px;
+  margin-bottom:30px;
+}
+
+.barra-meta{
+  width:100%;
+  height:14px;
+  background:#e5e7eb;
+  border-radius:20px;
+  overflow:hidden;
+  margin:15px 0;
+}
+
+.progresso-meta{
+  height:100%;
+  background:#ff7a00;
+  border-radius:20px;
+}
