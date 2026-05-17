@@ -498,3 +498,35 @@ window.onload = function(){
   carregarHistoricoFinanceiro();
   carregarClientes();
 };
+let eventoInstalacao = null;
+
+window.addEventListener("beforeinstallprompt", (event)=>{
+  event.preventDefault();
+
+  eventoInstalacao = event;
+
+  const botao = document.getElementById("btn-instalar");
+
+  if(botao){
+    botao.style.display = "inline-block";
+  }
+});
+
+document.addEventListener("click", (event)=>{
+
+  if(event.target && event.target.id === "btn-instalar"){
+
+    if(!eventoInstalacao){
+      alert("Instalação ainda não disponível neste navegador.");
+      return;
+    }
+
+    eventoInstalacao.prompt();
+
+    eventoInstalacao.userChoice.then(()=>{
+      eventoInstalacao = null;
+      document.getElementById("btn-instalar").style.display = "none";
+    });
+  }
+
+});
