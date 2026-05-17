@@ -631,3 +631,11 @@ nav a:hover,
   font-size:18px;
   color:#ff7a00;
 }
+#graficoFinanceiro{
+  background:white;
+  margin-top:25px;
+  padding:20px;
+  border-radius:20px;
+  box-shadow:0 5px 20px rgba(0,0,0,0.05);
+  max-height:350px;
+}
