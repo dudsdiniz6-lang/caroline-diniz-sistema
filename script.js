@@ -448,7 +448,12 @@ if(metasDiv){
         resumo[item.profissional] += Number(item.comissao);
 
       });
-
+const metas = {
+  Carol:5000,
+  Jessica:5000,
+  Fernanda:5000,
+  Silamara:5000
+};
       Object.keys(resumo).forEach((profissional)=>{
 
         lista.innerHTML += `
