@@ -185,14 +185,6 @@ function criarCard(agendamento){
   return;
 }
 
-          carregarHistoricoFinanceiro();
-          card.style.opacity = "0.6";
-          alert("Atendimento faturado!");
-        });
-
-      return;
-    }
-
     if(acao === "3"){
 
       const confirmar = confirm("Deseja excluir este agendamento?");
