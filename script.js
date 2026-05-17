@@ -389,7 +389,30 @@ function carregarHistoricoFinanceiro(){
           </div>
         `;
       });
+const ctx = document.getElementById("graficoFinanceiro");
 
+if(ctx){
+
+  const valores = historico.map((item)=> Number(item.valor));
+
+  const nomes = historico.map((item)=> item.cliente);
+
+  if(window.graficoFinanceiro){
+    window.graficoFinanceiro.destroy();
+  }
+
+  window.graficoFinanceiro = new Chart(ctx,{
+    type:"bar",
+    data:{
+      labels:nomes,
+      datasets:[{
+        label:"Faturamento",
+        data:valores
+      }]
+    }
+  });
+
+}
       document.getElementById("faturamento").innerText = `R$ ${total}`;
       document.getElementById("atendimentos-pagos").innerText = historico.length;
     });
