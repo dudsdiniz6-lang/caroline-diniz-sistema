@@ -462,6 +462,9 @@ function mostrarSecao(secao){
   if(secao === "financeiro-container"){
     carregarHistoricoFinanceiro();
   }
+  if(secao === "comissoes-container"){
+  carregarComissoes();
+}
 }
 
 function voltarAgenda(){
