@@ -409,29 +409,30 @@ function carregarComissoes(){
 
       const comissoes = resposta.data || [];
 
-      let total = 0;
+      const resumo = {};
 
       comissoes.forEach((item)=>{
 
-        total += Number(item.comissao);
+        if(!resumo[item.profissional]){
+          resumo[item.profissional] = 0;
+        }
+
+        resumo[item.profissional] += Number(item.comissao);
+
+      });
+
+      Object.keys(resumo).forEach((profissional)=>{
 
         lista.innerHTML += `
           <div class="cliente-card">
-            <strong>${item.profissional}</strong>
-            <p>${item.cliente} — ${item.servico}</p>
-            <small>
-              Comissão: R$ ${Number(item.comissao).toFixed(2)}
-            </small>
+            <strong>${profissional}</strong>
+            <p>Total de comissão</p>
+            <small>R$ ${resumo[profissional].toFixed(2)}</small>
           </div>
         `;
+
       });
 
-      lista.innerHTML += `
-        <div class="cliente-card">
-          <strong>Total Geral</strong>
-          <p>R$ ${total.toFixed(2)}</p>
-        </div>
-      `;
     });
 
 }
