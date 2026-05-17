@@ -424,6 +424,11 @@ function carregarComissoes(){
   if(!lista) return;
 
   lista.innerHTML = "";
+  const metasDiv = document.getElementById("metas-profissionais");
+
+if(metasDiv){
+  metasDiv.innerHTML = "";
+}
 
   supabaseClient
     .from("comissoes")
