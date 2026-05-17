@@ -455,7 +455,30 @@ const metas = {
   Silamara:5000
 };
       Object.keys(resumo).forEach((profissional)=>{
+const valorMeta = metas[profissional] || 5000;
 
+const porcentagem = Math.min(
+  (resumo[profissional] / valorMeta) * 100,
+  100
+);
+
+metasDiv.innerHTML += `
+  <div class="cliente-card">
+    <strong>${profissional}</strong>
+
+    <div class="barra-meta">
+      <div 
+        class="progresso-meta"
+        style="width:${porcentagem}%"
+      ></div>
+    </div>
+
+    <small>
+      R$ ${resumo[profissional].toFixed(2)}
+      / R$ ${valorMeta}
+    </small>
+  </div>
+`;
         lista.innerHTML += `
           <div class="cliente-card">
             <strong>${profissional}</strong>
