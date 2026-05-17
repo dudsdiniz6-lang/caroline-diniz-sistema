@@ -144,23 +144,46 @@ function criarCard(agendamento){
 
     if(acao === "2"){
 
-      const valor = prompt("Valor do atendimento:");
-      if(!valor) return;
+  const valor = prompt("Valor do atendimento:");
+
+  if(!valor) return;
+
+  const profissionalNome = ["Carol", "Jessica", "Fernanda", "Silamara"][agendamento.profissional];
+
+  const comissao = Number(valor) * 0.4;
+
+  supabaseClient
+    .from("comandas")
+    .insert([{
+      id: Date.now(),
+      cliente: agendamento.cliente,
+      servico: agendamento.servico || "Novo Atendimento",
+      valor: Number(valor),
+      data: formatarData(dataSelecionada)
+    }])
+    .then(()=>{
 
       supabaseClient
-        .from("comandas")
+        .from("comissoes")
         .insert([{
           id: Date.now(),
+          profissional: profissionalNome,
           cliente: agendamento.cliente,
           servico: agendamento.servico || "Novo Atendimento",
           valor: Number(valor),
+          comissao: comissao,
           data: formatarData(dataSelecionada)
-        }])
-        .then((resposta)=>{
-          if(resposta.error){
-            alert("Erro ao faturar: " + resposta.error.message);
-            return;
-          }
+        }]);
+
+      carregarHistoricoFinanceiro();
+
+      card.style.opacity = "0.6";
+
+      alert("Atendimento faturado!");
+    });
+
+  return;
+}
 
           carregarHistoricoFinanceiro();
           card.style.opacity = "0.6";
