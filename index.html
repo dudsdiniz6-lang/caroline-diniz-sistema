@@ -182,6 +182,10 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
   <script src="https://cdn.jsdelivr.net/npm/interactjs/dist/interact.min.js"></script>
   <script src="script.js"></script>
-
+<script>
+  if("serviceWorker" in navigator){
+    navigator.serviceWorker.register("sw.js");
+  }
+</script>
 </body>
 </html>
