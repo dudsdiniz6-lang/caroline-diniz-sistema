@@ -453,7 +453,11 @@ function mostrarSecao(secao){
     item.style.display = "none";
   });
 
-  document.getElementById(secao).style.display = "block";
+  const secaoSelecionada = document.getElementById(secao);
+
+  if(secaoSelecionada){
+    secaoSelecionada.style.display = "block";
+  }
 
   if(secao === "clientes-container"){
     carregarClientes();
@@ -462,9 +466,11 @@ function mostrarSecao(secao){
   if(secao === "financeiro-container"){
     carregarHistoricoFinanceiro();
   }
+
   if(secao === "comissoes-container"){
-  carregarComissoes();
-}
+    carregarComissoes();
+  }
+
 }
 
 function voltarAgenda(){
