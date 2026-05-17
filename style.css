@@ -609,3 +609,25 @@ nav a:hover,
   }
 
 }
+#lista-comissoes{
+  display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(220px,1fr));
+  gap:20px;
+}
+
+#lista-comissoes .cliente-card{
+  background:#111827;
+  color:white;
+  border:none;
+  padding:25px;
+  border-radius:18px;
+}
+
+#lista-comissoes strong{
+  font-size:20px;
+}
+
+#lista-comissoes small{
+  font-size:18px;
+  color:#ff7a00;
+}
