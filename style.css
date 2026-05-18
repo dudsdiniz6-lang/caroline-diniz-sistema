@@ -698,3 +698,13 @@ nav a:hover,
   border-color:#ff7a00;
   box-shadow:0 0 0 3px rgba(255,122,0,0.12);
 }
+.aniversariante{
+  display:inline-block;
+  margin-top:8px;
+  background:#ffedd5;
+  color:#ea580c;
+  padding:6px 10px;
+  border-radius:999px;
+  font-size:12px;
+  font-weight:700;
+}
