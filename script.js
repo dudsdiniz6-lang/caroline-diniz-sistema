@@ -428,6 +428,27 @@ function carregarClientes(){
             const quantidadeVisitas = historicoCliente.length;
 
             const ultimoProcedimento =
+              let diasSemVir = 0;
+
+if(historicoCliente.length > 0){
+
+  const ultimaData = historicoCliente[historicoCliente.length - 1].data;
+
+  const partes = ultimaData.split("/");
+
+  const dataUltimaVisita = new Date(
+    partes[2],
+    partes[1] - 1,
+    partes[0]
+  );
+
+  const hoje = new Date();
+
+  diasSemVir = Math.floor(
+    (hoje - dataUltimaVisita) / (1000 * 60 * 60 * 24)
+  );
+
+}
               historicoCliente.length > 0
                 ? historicoCliente[historicoCliente.length - 1].servico
                 : "Nenhum";
