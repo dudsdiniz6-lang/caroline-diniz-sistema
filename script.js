@@ -787,3 +787,46 @@ document.addEventListener("click", (event)=>{
   }
 
 });
+function editarCliente(id){
+
+  supabaseClient
+    .from("clients")
+    .select("*")
+    .eq("id", id)
+    .single()
+    .then((resposta)=>{
+
+      const cliente = resposta.data;
+
+      if(!cliente) return;
+
+      const nome = prompt("Nome:", cliente.nome);
+      if(nome === null) return;
+
+      const telefone = prompt("Telefone:", cliente.telefone || "");
+      const aniversario = prompt("Aniversário:", cliente.aniversario || "");
+      const preferencia = prompt("Preferência:", cliente.preferencia || "");
+      const alergias = prompt("Alergias:", cliente.alergias || "");
+      const observacoes = prompt("Observações:", cliente.observacoes || "");
+
+      supabaseClient
+        .from("clients")
+        .update({
+          nome,
+          telefone,
+          aniversario,
+          preferencia,
+          alergias,
+          observacoes
+        })
+        .eq("id", id)
+        .then(()=>{
+
+          alert("Cliente atualizado!");
+          carregarClientes();
+
+        });
+
+    });
+
+}
