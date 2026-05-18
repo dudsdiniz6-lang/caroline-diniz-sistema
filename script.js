@@ -415,102 +415,78 @@ function carregarClientes(){
 
           const mesHoje = String(hoje.getMonth() + 1).padStart(2,"0");
 
-clientes.forEach((cliente)=>{
+          clientes.forEach((cliente)=>{
 
-  lista.innerHTML += `
-    <div class="cliente-card">
+            const historicoCliente = historico.filter((item)=>{
+              return item.cliente === cliente.nome;
+            });
 
-      <strong>${cliente.nome}</strong>
+            const totalGasto = historicoCliente.reduce((total, item)=>{
+              return total + Number(item.valor);
+            }, 0);
 
-      ${
-        cliente.aniversario &&
-        cliente.aniversario.slice(5,10) === `${mesHoje}-${diaHoje}`
-          ? "<span class='aniversariante'>Aniversariante hoje 🎂</span>"
-          : ""
-      }
+            const quantidadeVisitas = historicoCliente.length;
 
-      <p>${cliente.telefone}</p>
+            const ultimoProcedimento =
+              historicoCliente.length > 0
+                ? historicoCliente[historicoCliente.length - 1].servico
+                : "Nenhum";
 
-      <small>
-        🎂 ${cliente.aniversario || "Não informado"}
-      </small>
+            lista.innerHTML += `
+              <div class="cliente-card">
 
-      <small>
-        ✨ ${cliente.preferencia || "Sem preferências"}
-      </small>
+                <strong>${cliente.nome}</strong>
 
-      <small>
-        ⚠ ${cliente.alergias || "Sem alergias"}
-      </small>
+                ${
+                  cliente.aniversario &&
+                  cliente.aniversario.slice(5,10) === `${mesHoje}-${diaHoje}`
+                    ? "<span class='aniversariante'>Aniversariante hoje 🎂</span>"
+                    : ""
+                }
 
-      <small>
-        📝 ${cliente.observacoes || ""}
-      </small>
+                <p>${cliente.telefone}</p>
 
-   </div>
-  `;
+                <small>
+                  🎂 ${cliente.aniversario || "Não informado"}
+                </small>
 
-});
+                <small>
+                  ✨ ${cliente.preferencia || "Sem preferências"}
+                </small>
 
-});
+                <small>
+                  ⚠ ${cliente.alergias || "Sem alergias"}
+                </small>
 
-});
-}
+                <small>
+                  📝 ${cliente.observacoes || ""}
+                </small>
 
-function carregarHistoricoFinanceiro(){
+                <hr>
 
-  const lista = document.getElementById("historico-financeiro");
+                <small>
+                  💰 Total gasto: R$ ${totalGasto.toFixed(2)}
+                </small>
 
-  if(!lista) return;
+                <small>
+                  📅 Visitas: ${quantidadeVisitas}
+                </small>
 
-  lista.innerHTML = "";
+                <small>
+                  💅 Último procedimento: ${ultimoProcedimento}
+                </small>
 
-  supabaseClient
-    .from("comandas")
-    .select("*")
-    .then((resposta)=>{
+              </div>
+            `;
 
-      const historico = resposta.data || [];
-      let total = 0;
+          });
 
-      historico.forEach((item)=>{
-        total += Number(item.valor);
+          document.getElementById("clientes-total").innerText = clientes.length;
 
-        lista.innerHTML += `
-          <div class="cliente-card">
-            <strong>${item.cliente}</strong>
-            <p>${item.servico} — R$ ${item.valor}</p>
-            <small>${item.data}</small>
-          </div>
-        `;
-      });
-const ctx = document.getElementById("graficoFinanceiro");
+        });
 
-if(ctx){
-
-  const valores = historico.map((item)=> Number(item.valor));
-
-  const nomes = historico.map((item)=> item.cliente);
-
-  if(window.graficoFinanceiro){
-    window.graficoFinanceiro.destroy();
-  }
-
-  window.graficoFinanceiro = new Chart(ctx,{
-    type:"bar",
-    data:{
-      labels:nomes,
-      datasets:[{
-        label:"Faturamento",
-        data:valores
-      }]
-    }
-  });
-
-}
-      document.getElementById("faturamento").innerText = `R$ ${total}`;
-      document.getElementById("atendimentos-pagos").innerText = historico.length;
     });
+
 }
 function carregarComissoes(){
 
