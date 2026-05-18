@@ -496,6 +496,15 @@ if(historicoCliente.length > 0){
                 <small>
                   💅 Último procedimento: ${ultimoProcedimento}
                 </small>
+                <small>
+  ⏳ Dias sem vir: ${diasSemVir}
+</small>
+
+${
+  diasSemVir >= 30
+    ? "<span class='aniversariante'>Cliente para reativar</span>"
+    : ""
+}
 
               </div>
             `;
