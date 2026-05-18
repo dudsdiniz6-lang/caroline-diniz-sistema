@@ -447,8 +447,10 @@ clientes.forEach((cliente)=>{
         📝 ${cliente.observacoes || ""}
       </small>
 
-    </div>
- });
+   </div>
+  `;
+
+});
 
 });
 
