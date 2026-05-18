@@ -297,10 +297,25 @@ function salvarAgendamento(){
 function carregarAgenda(){
 
   const colunas = document.querySelectorAll(".column");
+  const profissionais = document.querySelectorAll(".professional");
   const filtro = document.getElementById("filtroProfissional")?.value || "";
 
-  colunas.forEach((coluna)=>{
+  colunas.forEach((coluna, index)=>{
     coluna.innerHTML = "";
+
+    if(filtro === "" || String(index) === filtro){
+      coluna.style.display = "block";
+    }else{
+      coluna.style.display = "none";
+    }
+  });
+
+  profissionais.forEach((profissional, index)=>{
+    if(filtro === "" || String(index) === filtro){
+      profissional.style.display = "block";
+    }else{
+      profissional.style.display = "none";
+    }
   });
 
   supabaseClient
@@ -313,13 +328,13 @@ function carregarAgenda(){
 
       agendamentos.forEach((agendamento)=>{
 
-  if(filtro !== "" && agendamento.profissional != filtro){
-    return;
-  }
+        if(filtro !== "" && agendamento.profissional != filtro){
+          return;
+        }
 
-  criarCard(agendamento);
+        criarCard(agendamento);
 
-});
+      });
 
       ativarArrastar();
     });
