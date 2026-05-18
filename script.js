@@ -120,16 +120,16 @@ function criarCard(agendamento){
 
   card.onclick = function(){
 
-    const acao = prompt(
-      "Digite:\n1 - Editar horário\n2 - Faturar\n3 - Excluir\n4 - Confirmar\n5 - Finalizar\n6 - Cancelar atendimento\n7 - Enviar WhatsApp"
-    );
+  const acao = prompt(
+  "Digite:\n1 - Editar horário\n2 - Faturar\n3 - Excluir\n4 - Confirmar\n5 - Finalizar\n6 - Cancelar atendimento\n7 - Enviar WhatsApp\n8 - Faltou\n9 - Reagendado"
+);
 
-    if(acao === "7"){
+if(acao === "7"){
 
-      if(!agendamento.telefone){
-        alert("Este agendamento não tem telefone cadastrado.");
-        return;
-      }
+  if(!agendamento.telefone){
+    alert("Este agendamento não tem telefone cadastrado.");
+    return;
+  }
 
       const telefone = agendamento.telefone.replace(/\D/g, "");
 
