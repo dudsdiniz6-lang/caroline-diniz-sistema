@@ -395,23 +395,25 @@ function carregarClientes(){
     .then((resposta)=>{
 
       const clientes = resposta.data || [];
+
       supabaseClient
-  .from("comandas")
-  .select("*")
-  .then((financeiroResposta)=>{
+        .from("comandas")
+        .select("*")
+        .then((financeiroResposta)=>{
 
-    const historico = financeiroResposta.data || [];
-      const lista = document.getElementById("listaClientes");
+          const historico = financeiroResposta.data || [];
 
-      if(!lista) return;
+          const lista = document.getElementById("listaClientes");
 
-      lista.innerHTML = "";
-const hoje = new Date();
+          if(!lista) return;
 
-const diaHoje = String(hoje.getDate()).padStart(2,"0");
+          lista.innerHTML = "";
 
-const mesHoje = String(hoje.getMonth() + 1).padStart(2,"0");
-     clientes.forEach((cliente)=>{
+          const hoje = new Date();
+
+          const diaHoje = String(hoje.getDate()).padStart(2,"0");
+
+          const mesHoje = String(hoje.getMonth() + 1).padStart(2,"0");
 
   lista.innerHTML += `
     <div class="cliente-card">
