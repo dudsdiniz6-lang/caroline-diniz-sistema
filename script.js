@@ -362,10 +362,13 @@ function carregarAgenda(){
 function salvarCliente(){
 
   const cliente = {
-    nome: document.getElementById("nomeCliente").value,
-    telefone: document.getElementById("telefoneCliente").value,
-    observacoes: document.getElementById("observacaoCliente").value
-  };
+  nome: document.getElementById("nomeCliente").value,
+  telefone: document.getElementById("telefoneCliente").value,
+  aniversario: document.getElementById("aniversarioCliente").value,
+  preferencia: document.getElementById("preferenciaCliente").value,
+  alergias: document.getElementById("alergiasCliente").value,
+  observacoes: document.getElementById("observacaoCliente").value
+};
 
   supabaseClient
     .from("clients")
