@@ -515,6 +515,9 @@ function carregarClientes(){
                 <button onclick="editarCliente('${cliente.id}')">
   Editar
 </button>
+<button onclick="excluirCliente('${cliente.id}')">
+  Excluir
+</button>
               </div>
             `;
 
