@@ -300,23 +300,37 @@ function carregarAgenda(){
   const profissionais = document.querySelectorAll(".professional");
   const filtro = document.getElementById("filtroProfissional")?.value || "";
 
-  colunas.forEach((coluna, index)=>{
+  const agendaHeader = document.querySelector(".agenda-header");
+  const agendaBody = document.querySelector(".agenda-body");
+
+  colunas.forEach((coluna)=>{
     coluna.innerHTML = "";
+  });
 
-    if(filtro === "" || String(index) === filtro){
+  if(filtro === ""){
+    agendaHeader.style.gridTemplateColumns = "80px repeat(4, 1fr)";
+    agendaBody.style.gridTemplateColumns = "80px repeat(4, 1fr)";
+
+    colunas.forEach((coluna)=>{
       coluna.style.display = "block";
-    }else{
-      coluna.style.display = "none";
-    }
-  });
+    });
 
-  profissionais.forEach((profissional, index)=>{
-    if(filtro === "" || String(index) === filtro){
+    profissionais.forEach((profissional)=>{
       profissional.style.display = "block";
-    }else{
-      profissional.style.display = "none";
-    }
-  });
+    });
+
+  }else{
+    agendaHeader.style.gridTemplateColumns = "80px 1fr";
+    agendaBody.style.gridTemplateColumns = "80px 1fr";
+
+    colunas.forEach((coluna, index)=>{
+      coluna.style.display = String(index) === filtro ? "block" : "none";
+    });
+
+    profissionais.forEach((profissional, index)=>{
+      profissional.style.display = String(index) === filtro ? "block" : "none";
+    });
+  }
 
   supabaseClient
     .from("Agendamentos")
@@ -337,6 +351,7 @@ function carregarAgenda(){
       });
 
       ativarArrastar();
+
     });
 }
 
