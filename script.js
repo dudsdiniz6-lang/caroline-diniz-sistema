@@ -405,36 +405,42 @@ const hoje = new Date();
 const diaHoje = String(hoje.getDate()).padStart(2,"0");
 
 const mesHoje = String(hoje.getMonth() + 1).padStart(2,"0");
-      clientes.forEach((cliente)=>{
-        lista.innerHTML += `
-  <div class="cliente-card">
-    <strong>${cliente.nome}</strong>
+     clientes.forEach((cliente)=>{
 
-    <p>${cliente.telefone}</p>
+  lista.innerHTML += `
+    <div class="cliente-card">
 
-    <small>
-      🎂 ${cliente.aniversario || "Não informado"}
-    </small>
+      <strong>${cliente.nome}</strong>
 
-    <small>
-      ✨ ${cliente.preferencia || "Sem preferências"}
-    </small>
+      ${
+        cliente.aniversario &&
+        cliente.aniversario.slice(5,10) === `${mesHoje}-${diaHoje}`
+          ? "<span class='aniversariante'>Aniversariante hoje 🎂</span>"
+          : ""
+      }
 
-    <small>
-      ⚠ ${cliente.alergias || "Sem alergias"}
-    </small>
+      <p>${cliente.telefone}</p>
 
-    <small>
-      📝 ${cliente.observacoes || ""}
-    </small>
-  </div>
-`;
-            <strong>${cliente.nome}</strong>
-            <p>${cliente.telefone}</p>
-            <small>${cliente.observacoes || ""}</small>
-          </div>
-        `;
-      });
+      <small>
+        🎂 ${cliente.aniversario || "Não informado"}
+      </small>
+
+      <small>
+        ✨ ${cliente.preferencia || "Sem preferências"}
+      </small>
+
+      <small>
+        ⚠ ${cliente.alergias || "Sem alergias"}
+      </small>
+
+      <small>
+        📝 ${cliente.observacoes || ""}
+      </small>
+
+    </div>
+  `;
+
+});
 
       document.getElementById("clientes-total").innerText = clientes.length;
     });
