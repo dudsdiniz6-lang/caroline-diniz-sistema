@@ -63,15 +63,22 @@
         <div>
           <h1>Agenda</h1>
 
-          <div class="controle-data">
+         <div class="controle-data">
   <button onclick="voltarDia()">◀</button>
   <span id="data-agenda">09/05/2026</span>
   <button onclick="avancarDia()">▶</button>
   <button onclick="irParaHoje()">Hoje</button>
 </div>
-        </div>
 
-        <div class="acoes-topo">
+<select id="filtroProfissional" onchange="carregarAgenda()">
+  <option value="">Todos Profissionais</option>
+  <option value="0">Carol</option>
+  <option value="1">Jessica</option>
+  <option value="2">Fernanda</option>
+  <option value="3">Silamara</option>
+</select>
+
+<div class="acoes-topo">
   <button class="btn" onclick="abrirModal()">Novo Agendamento</button>
   <button class="btn" id="btn-instalar" style="display:none;">Instalar App</button>
   <button class="btn" onclick="sairSistema()">Sair</button>
