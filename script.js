@@ -456,9 +456,6 @@ clientes.forEach((cliente)=>{
 
 });
 }
-      document.getElementById("clientes-total").innerText = clientes.length;
-    });
-}
 
 function carregarHistoricoFinanceiro(){
 
