@@ -133,8 +133,15 @@ if(acao === "7"){
 
       const telefone = agendamento.telefone.replace(/\D/g, "");
 
-      const mensagem = `Olá, ${agendamento.cliente}! Passando para confirmar seu horário no Caroline Diniz: ${agendamento.data} às ${agendamento.horario}.`;
+      const mensagem = `Olá, ${agendamento.cliente}! Tudo bem?
 
+Passando para confirmar seu horário no Caroline Diniz.
+
+📅 Data: ${agendamento.data}
+⏰ Horário: ${agendamento.horario}
+✨ Serviço: ${agendamento.servico || "Atendimento"}
+
+Pedimos que responda esta mensagem confirmando sua presença.`;
       const link = `https://wa.me/55${telefone}?text=${encodeURIComponent(mensagem)}`;
 
       window.open(link, "_blank");
