@@ -65,6 +65,7 @@ function fazerLogin(){
   }
 
   localStorage.setItem("usuarioLogado", JSON.stringify(usuarioEncontrado));
+  window.usuarioAtual = usuarioEncontrado;
   document.getElementById("login-screen").style.display = "none";
 
   atualizarDataAgenda();
