@@ -290,17 +290,43 @@ function salvarAgendamento(){
   };
 
   supabaseClient
-    .from("Agendamentos")
-    .insert([agendamento])
-    .then((resposta)=>{
-      if(resposta.error){
-        alert("Erro ao salvar agendamento: " + resposta.error.message);
+  .from("Agendamentos")
+  .select("*")
+  .eq("data", agendamento.data)
+  .eq("horario", agendamento.horario)
+  .eq("profissional", agendamento.profissional)
+  .then((verificacao)=>{
+
+    const conflito = verificacao.data || [];
+
+    if(conflito.length > 0){
+
+      const continuar = confirm(
+        "Já existe cliente neste horário. Deseja continuar mesmo assim?"
+      );
+
+      if(!continuar){
         return;
       }
 
-      criarCard(agendamento);
-      fecharModal();
-    });
+    }
+
+    supabaseClient
+      .from("Agendamentos")
+      .insert([agendamento])
+      .then((resposta)=>{
+
+        if(resposta.error){
+          alert("Erro ao salvar agendamento: " + resposta.error.message);
+          return;
+        }
+
+        criarCard(agendamento);
+        fecharModal();
+
+      });
+
+  });
 }
 
 function carregarAgenda(){
