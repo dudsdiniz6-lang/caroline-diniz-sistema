@@ -838,3 +838,38 @@ function editarCliente(id){
     });
 
 }
+function aplicarPermissoes(){
+
+  const usuario = JSON.parse(localStorage.getItem("usuarioLogado"));
+
+  if(!usuario) return;
+
+  const links = document.querySelectorAll("nav a");
+
+  links.forEach((link)=>{
+
+    const texto = link.innerText.trim();
+
+    if(usuario.cargo === "funcionario"){
+
+      if(
+        texto === "Financeiro" ||
+        texto === "Comissões" ||
+        texto === "Configurações"
+      ){
+        link.style.display = "none";
+      }
+
+    }
+
+    if(usuario.cargo === "gerente"){
+
+      if(texto === "Configurações"){
+        link.style.display = "none";
+      }
+
+    }
+
+  });
+
+}
