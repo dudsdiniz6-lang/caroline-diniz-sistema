@@ -415,6 +415,8 @@ function carregarClientes(){
 
           const mesHoje = String(hoje.getMonth() + 1).padStart(2,"0");
 
+clientes.forEach((cliente)=>{
+
   lista.innerHTML += `
     <div class="cliente-card">
 
@@ -446,10 +448,12 @@ function carregarClientes(){
       </small>
 
     </div>
-  `;
+ });
 
 });
 
+});
+}
       document.getElementById("clientes-total").innerText = clientes.length;
     });
 }
