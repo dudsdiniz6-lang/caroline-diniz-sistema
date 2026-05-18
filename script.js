@@ -869,6 +869,31 @@ function editarCliente(id){
     });
 
 }
+function excluirCliente(id){
+
+  const confirmar = confirm(
+    "Deseja realmente excluir esta cliente?"
+  );
+
+  if(!confirmar) return;
+
+  supabaseClient
+    .from("clients")
+    .delete()
+    .eq("id", id)
+    .then((resposta)=>{
+
+      if(resposta.error){
+        alert("Erro ao excluir cliente.");
+        return;
+      }
+
+      alert("Cliente excluída!");
+      carregarClientes();
+
+    });
+
+}
 function aplicarPermissoes(){
 
   const usuario = JSON.parse(localStorage.getItem("usuarioLogado"));
