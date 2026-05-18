@@ -346,6 +346,9 @@ function carregarAgenda(){
         if(filtro !== "" && agendamento.profissional != filtro){
           return;
         }
+        if(busca !== "" && !agendamento.cliente.toLowerCase().includes(busca)){
+  return;
+}
 
         criarCard(agendamento);
 
