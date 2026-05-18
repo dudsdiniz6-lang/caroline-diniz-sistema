@@ -668,3 +668,18 @@ nav a:hover,
 .status-reagendado{
   border-right:5px solid #8b5cf6;
 }
+#filtroProfissional{
+  max-width:260px;
+  padding:12px 14px;
+  border-radius:14px;
+  border:1px solid #e5e5e5;
+  background:white;
+  font-weight:600;
+  color:#333;
+  outline:none;
+}
+
+#filtroProfissional:focus{
+  border-color:#ff7a00;
+  box-shadow:0 0 0 3px rgba(255,122,0,0.12);
+}
