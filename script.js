@@ -339,9 +339,10 @@ function carregarAgenda(){
   const agendaHeader = document.querySelector(".agenda-header");
   const agendaBody = document.querySelector(".agenda-body");
 
-  colunas.forEach((coluna)=>{
-    coluna.innerHTML = "";
-  });
+ colunas.forEach((coluna)=>{
+  coluna.innerHTML = "";
+  coluna.style.position = "relative";
+});
 
   if(filtro === ""){
     agendaHeader.style.gridTemplateColumns = "80px repeat(4, 1fr)";
