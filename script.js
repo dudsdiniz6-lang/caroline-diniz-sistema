@@ -221,6 +221,15 @@ if(acao === "7"){
       atualizarStatus(agendamento, "Cancelado");
       return;
     }
+    if(acao === "8"){
+  atualizarStatus(agendamento, "Faltou");
+  return;
+}
+
+if(acao === "9"){
+  atualizarStatus(agendamento, "Reagendado");
+  return;
+}
 
     const novoHorario = prompt("Editar horário:", agendamento.horario);
     if(!novoHorario) return;
