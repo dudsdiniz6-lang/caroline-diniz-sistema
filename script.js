@@ -72,6 +72,7 @@ function fazerLogin(){
   carregarAgenda();
   carregarClientes();
   carregarHistoricoFinanceiro();
+  aplicarPermissoes();
 }
 
 function sairSistema(){
