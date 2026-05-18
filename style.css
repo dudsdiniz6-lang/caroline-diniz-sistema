@@ -256,35 +256,36 @@ nav a:hover,
   font-size:15px;
 }
 .status-agendado{
-  background:#fff7ed;
-  border-left:5px solid #fb923c;
+  background:#fff7ed !important;
+  border-left:5px solid #fb923c !important;
 }
 
 .status-confirmado{
-  background:#ecfdf5;
-  border-left:5px solid #22c55e;
+  background:#ecfdf5 !important;
+  border-left:5px solid #22c55e !important;
 }
 
 .status-finalizado{
-  background:#eff6ff;
-  border-left:5px solid #3b82f6;
+  background:#eff6ff !important;
+  border-left:5px solid #3b82f6 !important;
 }
 
 .status-cancelado{
-  background:#fef2f2;
-  border-left:5px solid #ef4444;
+  background:#fef2f2 !important;
+  border-left:5px solid #ef4444 !important;
+  opacity:0.75;
 }
 
 .status-faltou{
-  background:#f3f4f6;
-  border-left:5px solid #6b7280;
+  background:#f3f4f6 !important;
+  border-left:5px solid #6b7280 !important;
+  opacity:0.7;
 }
 
 .status-reagendado{
-  background:#fefce8;
-  border-left:5px solid #eab308;
+  background:#fefce8 !important;
+  border-left:5px solid #eab308 !important;
 }
-
 .appointment span{
   display:block;
   color:#555;
