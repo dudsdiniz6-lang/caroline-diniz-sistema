@@ -400,7 +400,11 @@ function carregarClientes(){
       if(!lista) return;
 
       lista.innerHTML = "";
+const hoje = new Date();
 
+const diaHoje = String(hoje.getDate()).padStart(2,"0");
+
+const mesHoje = String(hoje.getMonth() + 1).padStart(2,"0");
       clientes.forEach((cliente)=>{
         lista.innerHTML += `
   <div class="cliente-card">
