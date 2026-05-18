@@ -299,6 +299,7 @@ function carregarAgenda(){
   const colunas = document.querySelectorAll(".column");
   const profissionais = document.querySelectorAll(".professional");
   const filtro = document.getElementById("filtroProfissional")?.value || "";
+  const busca = document.getElementById("buscaCliente")?.value.toLowerCase().trim() || "";
 
   const agendaHeader = document.querySelector(".agenda-header");
   const agendaBody = document.querySelector(".agenda-body");
