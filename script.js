@@ -395,6 +395,12 @@ function carregarClientes(){
     .then((resposta)=>{
 
       const clientes = resposta.data || [];
+      supabaseClient
+  .from("comandas")
+  .select("*")
+  .then((financeiroResposta)=>{
+
+    const historico = financeiroResposta.data || [];
       const lista = document.getElementById("listaClientes");
 
       if(!lista) return;
