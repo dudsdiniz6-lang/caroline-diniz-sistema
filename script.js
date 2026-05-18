@@ -476,6 +476,9 @@ function carregarClientes(){
                     ? "<span class='aniversariante'>Cliente para reativar</span>"
                     : ""
                 }
+                <button onclick="editarCliente('${cliente.id}')">
+  Editar
+</button>
               </div>
             `;
 
