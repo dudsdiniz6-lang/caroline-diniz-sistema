@@ -402,7 +402,6 @@ function carregarClientes(){
         .then((financeiroResposta)=>{
 
           const historico = financeiroResposta.data || [];
-
           const lista = document.getElementById("listaClientes");
 
           if(!lista) return;
@@ -410,9 +409,7 @@ function carregarClientes(){
           lista.innerHTML = "";
 
           const hoje = new Date();
-
           const diaHoje = String(hoje.getDate()).padStart(2,"0");
-
           const mesHoje = String(hoje.getMonth() + 1).padStart(2,"0");
 
           clientes.forEach((cliente)=>{
@@ -428,34 +425,29 @@ function carregarClientes(){
             const quantidadeVisitas = historicoCliente.length;
 
             const ultimoProcedimento =
-              let diasSemVir = 0;
-
-if(historicoCliente.length > 0){
-
-  const ultimaData = historicoCliente[historicoCliente.length - 1].data;
-
-  const partes = ultimaData.split("/");
-
-  const dataUltimaVisita = new Date(
-    partes[2],
-    partes[1] - 1,
-    partes[0]
-  );
-
-  const hoje = new Date();
-
-  diasSemVir = Math.floor(
-    (hoje - dataUltimaVisita) / (1000 * 60 * 60 * 24)
-  );
-
-}
               historicoCliente.length > 0
                 ? historicoCliente[historicoCliente.length - 1].servico
                 : "Nenhum";
 
+            let diasSemVir = 0;
+
+            if(historicoCliente.length > 0){
+              const ultimaData = historicoCliente[historicoCliente.length - 1].data;
+              const partes = ultimaData.split("/");
+
+              const dataUltimaVisita = new Date(
+                partes[2],
+                partes[1] - 1,
+                partes[0]
+              );
+
+              diasSemVir = Math.floor(
+                (hoje - dataUltimaVisita) / (1000 * 60 * 60 * 24)
+              );
+            }
+
             lista.innerHTML += `
               <div class="cliente-card">
-
                 <strong>${cliente.nome}</strong>
 
                 ${
@@ -467,45 +459,23 @@ if(historicoCliente.length > 0){
 
                 <p>${cliente.telefone}</p>
 
-                <small>
-                  🎂 ${cliente.aniversario || "Não informado"}
-                </small>
-
-                <small>
-                  ✨ ${cliente.preferencia || "Sem preferências"}
-                </small>
-
-                <small>
-                  ⚠ ${cliente.alergias || "Sem alergias"}
-                </small>
-
-                <small>
-                  📝 ${cliente.observacoes || ""}
-                </small>
+                <small>🎂 ${cliente.aniversario || "Não informado"}</small>
+                <small>✨ ${cliente.preferencia || "Sem preferências"}</small>
+                <small>⚠ ${cliente.alergias || "Sem alergias"}</small>
+                <small>📝 ${cliente.observacoes || ""}</small>
 
                 <hr>
 
-                <small>
-                  💰 Total gasto: R$ ${totalGasto.toFixed(2)}
-                </small>
+                <small>💰 Total gasto: R$ ${totalGasto.toFixed(2)}</small>
+                <small>📅 Visitas: ${quantidadeVisitas}</small>
+                <small>💅 Último procedimento: ${ultimoProcedimento}</small>
+                <small>⏳ Dias sem vir: ${diasSemVir}</small>
 
-                <small>
-                  📅 Visitas: ${quantidadeVisitas}
-                </small>
-
-                <small>
-                  💅 Último procedimento: ${ultimoProcedimento}
-                </small>
-                <small>
-  ⏳ Dias sem vir: ${diasSemVir}
-</small>
-
-${
-  diasSemVir >= 30
-    ? "<span class='aniversariante'>Cliente para reativar</span>"
-    : ""
-}
-
+                ${
+                  diasSemVir >= 30
+                    ? "<span class='aniversariante'>Cliente para reativar</span>"
+                    : ""
+                }
               </div>
             `;
 
