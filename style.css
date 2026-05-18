@@ -255,6 +255,35 @@ nav a:hover,
   margin-bottom:6px;
   font-size:15px;
 }
+.status-agendado{
+  background:#fff7ed;
+  border-left:5px solid #fb923c;
+}
+
+.status-confirmado{
+  background:#ecfdf5;
+  border-left:5px solid #22c55e;
+}
+
+.status-finalizado{
+  background:#eff6ff;
+  border-left:5px solid #3b82f6;
+}
+
+.status-cancelado{
+  background:#fef2f2;
+  border-left:5px solid #ef4444;
+}
+
+.status-faltou{
+  background:#f3f4f6;
+  border-left:5px solid #6b7280;
+}
+
+.status-reagendado{
+  background:#fefce8;
+  border-left:5px solid #eab308;
+}
 
 .appointment span{
   display:block;
