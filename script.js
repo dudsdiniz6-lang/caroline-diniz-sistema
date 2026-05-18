@@ -403,7 +403,28 @@ function carregarClientes(){
 
       clientes.forEach((cliente)=>{
         lista.innerHTML += `
-          <div class="cliente-card">
+  <div class="cliente-card">
+    <strong>${cliente.nome}</strong>
+
+    <p>${cliente.telefone}</p>
+
+    <small>
+      🎂 ${cliente.aniversario || "Não informado"}
+    </small>
+
+    <small>
+      ✨ ${cliente.preferencia || "Sem preferências"}
+    </small>
+
+    <small>
+      ⚠ ${cliente.alergias || "Sem alergias"}
+    </small>
+
+    <small>
+      📝 ${cliente.observacoes || ""}
+    </small>
+  </div>
+`;
             <strong>${cliente.nome}</strong>
             <p>${cliente.telefone}</p>
             <small>${cliente.observacoes || ""}</small>
