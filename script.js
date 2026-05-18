@@ -297,6 +297,7 @@ function salvarAgendamento(){
 function carregarAgenda(){
 
   const colunas = document.querySelectorAll(".column");
+  const filtro = document.getElementById("filtroProfissional")?.value || "";
 
   colunas.forEach((coluna)=>{
     coluna.innerHTML = "";
