@@ -674,14 +674,6 @@ nav a:hover,
   background:#ff7a00;
   border-radius:20px;
 }
-.status-faltou{
-  border-right:5px solid #7f1d1d;
-  opacity:0.45;
-}
-
-.status-reagendado{
-  border-right:5px solid #8b5cf6;
-}
 #filtroProfissional{
   max-width:260px;
   padding:12px 14px;
