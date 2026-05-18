@@ -488,6 +488,68 @@ function carregarClientes(){
     });
 
 }
+function carregarHistoricoFinanceiro(){
+
+  const lista = document.getElementById("historico-financeiro");
+
+  if(!lista) return;
+
+  lista.innerHTML = "";
+
+  supabaseClient
+    .from("comandas")
+    .select("*")
+    .then((resposta)=>{
+
+      const historico = resposta.data || [];
+
+      let total = 0;
+
+      historico.forEach((item)=>{
+
+        total += Number(item.valor);
+
+        lista.innerHTML += `
+          <div class="cliente-card">
+            <strong>${item.cliente}</strong>
+            <p>${item.servico} — R$ ${item.valor}</p>
+            <small>${item.data}</small>
+          </div>
+        `;
+
+      });
+
+      const ctx = document.getElementById("graficoFinanceiro");
+
+      if(ctx && typeof Chart !== "undefined"){
+
+        const valores = historico.map((item)=> Number(item.valor));
+
+        const nomes = historico.map((item)=> item.cliente);
+
+        if(window.graficoFinanceiro){
+          window.graficoFinanceiro.destroy();
+        }
+
+        window.graficoFinanceiro = new Chart(ctx,{
+          type:"bar",
+          data:{
+            labels:nomes,
+            datasets:[{
+              label:"Faturamento",
+              data:valores
+            }]
+          }
+        });
+
+      }
+
+      document.getElementById("faturamento").innerText = `R$ ${total}`;
+      document.getElementById("atendimentos-pagos").innerText = historico.length;
+
+    });
+
+}
 function carregarComissoes(){
 
   const lista = document.getElementById("lista-comissoes");
