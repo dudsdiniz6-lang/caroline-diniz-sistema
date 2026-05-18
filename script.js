@@ -312,8 +312,14 @@ function carregarAgenda(){
       const agendamentos = resposta.data || [];
 
       agendamentos.forEach((agendamento)=>{
-        criarCard(agendamento);
-      });
+
+  if(filtro !== "" && agendamento.profissional != filtro){
+    return;
+  }
+
+  criarCard(agendamento);
+
+});
 
       ativarArrastar();
     });
