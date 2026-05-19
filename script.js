@@ -1007,3 +1007,29 @@ function salvarFotoCliente(){
     });
 
 }
+function verGaleriaCliente(clienteId){
+
+  supabaseClient
+    .from("fotos_clientes")
+    .select("*")
+    .eq("cliente_id", clienteId)
+    .then((resposta)=>{
+
+      const fotos = resposta.data || [];
+
+      if(fotos.length === 0){
+        alert("Esta cliente ainda não possui fotos salvas.");
+        return;
+      }
+
+      let mensagem = "Galeria da cliente:\n\n";
+
+      fotos.forEach((foto)=>{
+        mensagem += `${foto.data} - ${foto.descricao || "Sem descrição"}\n${foto.imagem}\n\n`;
+      });
+
+      alert(mensagem);
+
+    });
+
+}
