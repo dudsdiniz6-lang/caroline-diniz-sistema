@@ -1372,3 +1372,51 @@ function salvarProdutoEstoque(){
     });
 
 }
+function carregarEstoque(){
+
+  const lista = document.getElementById("lista-estoque");
+
+  if(!lista) return;
+
+  lista.innerHTML = "";
+
+  supabaseClient
+    .from("estoque")
+    .select("*")
+    .then((resposta)=>{
+
+      const produtos = resposta.data || [];
+
+      produtos.forEach((produto)=>{
+
+        const estoqueBaixo = produto.quantidade <= 3;
+
+        lista.innerHTML += `
+          <div class="cliente-card">
+
+            <strong>
+              ${produto.produto}
+            </strong>
+
+            ${
+              estoqueBaixo
+                ? "<span class='aniversariante'>Estoque baixo</span>"
+                : ""
+            }
+
+            <small>
+              Quantidade: ${produto.quantidade}
+            </small>
+
+            <small>
+              Custo: R$ ${Number(produto.custo).toFixed(2)}
+            </small>
+
+          </div>
+        `;
+
+      });
+
+    });
+
+}
