@@ -599,7 +599,28 @@ ranking[item.cliente] += Number(item.valor);
         });
 
       }
+const rankingDiv = document.getElementById("ranking-clientes");
 
+if(rankingDiv){
+
+  rankingDiv.innerHTML = "";
+
+  Object.keys(ranking)
+    .sort((a,b)=> ranking[b] - ranking[a])
+    .slice(0,5)
+    .forEach((cliente)=>{
+
+      rankingDiv.innerHTML += `
+        <div class="cliente-card">
+          <strong>${cliente}</strong>
+          <p>Total gasto</p>
+          <small>R$ ${ranking[cliente].toFixed(2)}</small>
+        </div>
+      `;
+
+    });
+
+}
       document.getElementById("faturamento").innerText = `R$ ${total}`;
       document.getElementById("atendimentos-pagos").innerText = historico.length;
 
