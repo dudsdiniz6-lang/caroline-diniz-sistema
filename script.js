@@ -1452,3 +1452,43 @@ function salvarConsumoServico(){
     });
 
 }
+function carregarConsumoServicos(){
+
+  const lista = document.getElementById("lista-consumo-servicos");
+
+  if(!lista) return;
+
+  lista.innerHTML = "";
+
+  supabaseClient
+    .from("consumo_servicos")
+    .select("*")
+    .then((resposta)=>{
+
+      const consumos = resposta.data || [];
+
+      consumos.forEach((item)=>{
+
+        lista.innerHTML += `
+          <div class="cliente-card">
+
+            <strong>
+              ${item.servico}
+            </strong>
+
+            <small>
+              Produto: ${item.produto}
+            </small>
+
+            <small>
+              Quantidade consumida: ${item.quantidade}
+            </small>
+
+          </div>
+        `;
+
+      });
+
+    });
+
+}
