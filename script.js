@@ -617,6 +617,7 @@ faturamentoMensal[mesAno] += Number(item.valor);
       }
 const rankingDiv = document.getElementById("ranking-clientes");
       const rankingServicosDiv = document.getElementById("ranking-servicos");
+      const faturamentoMensalDiv = document.getElementById("faturamento-mensal");
 
 if(rankingDiv){
 
