@@ -403,6 +403,7 @@ function salvarCliente(){
   aniversario: document.getElementById("aniversarioCliente").value,
   preferencia: document.getElementById("preferenciaCliente").value,
   alergias: document.getElementById("alergiasCliente").value,
+    foto: document.getElementById("fotoCliente").value,
   observacoes: document.getElementById("observacaoCliente").value
 };
 
