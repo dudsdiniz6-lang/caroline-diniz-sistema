@@ -606,6 +606,7 @@ rankingServicos[item.servico] += 1;
 
       }
 const rankingDiv = document.getElementById("ranking-clientes");
+      const rankingServicosDiv = document.getElementById("ranking-servicos");
 
 if(rankingDiv){
 
