@@ -1014,9 +1014,15 @@ function ativarArrastar(){
 }
 
 window.onload = function(){
+
   atualizarDataAgenda();
+
   carregarHistoricoFinanceiro();
+
   carregarClientes();
+
+  carregarCaixa();
+
 };
 let eventoInstalacao = null;
 
