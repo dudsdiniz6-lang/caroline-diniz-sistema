@@ -556,6 +556,15 @@ function carregarHistoricoFinanceiro(){
       let total = 0;
       let totalComissoes = 0;
       const metaMensal = 30000;
+      const hoje = new Date();
+
+const diaAtual = hoje.getDate();
+
+const ultimoDiaMes = new Date(
+  hoje.getFullYear(),
+  hoje.getMonth() + 1,
+  0
+).getDate();
       const ranking = {};
       const rankingServicos = {};
       const faturamentoMensal = {};
