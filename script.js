@@ -559,6 +559,11 @@ function carregarHistoricoFinanceiro(){
       historico.forEach((item)=>{
 
         total += Number(item.valor);
+        if(!ranking[item.cliente]){
+  ranking[item.cliente] = 0;
+}
+
+ranking[item.cliente] += Number(item.valor);
 
         lista.innerHTML += `
           <div class="cliente-card">
