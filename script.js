@@ -563,6 +563,12 @@ let totalAtendimentos = 0;
       historico.forEach((item)=>{
 
         total += Number(item.valor);
+        totalAtendimentos++;
+
+if(item.status === "Faltou"){
+  faltas++;
+}
+        
         if(!ranking[item.cliente]){
   ranking[item.cliente] = 0;
 }
