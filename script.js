@@ -1340,3 +1340,35 @@ function carregarCaixa(){
     });
 
 }
+function salvarProdutoEstoque(){
+
+  const produto = document.getElementById("produtoEstoque").value;
+  const quantidade = Number(document.getElementById("quantidadeEstoque").value || 0);
+  const custo = Number(document.getElementById("custoEstoque").value || 0);
+
+  supabaseClient
+    .from("estoque")
+    .insert([{
+      id: Date.now(),
+      produto,
+      quantidade,
+      custo
+    }])
+    .then((resposta)=>{
+
+      if(resposta.error){
+        alert("Erro ao salvar produto.");
+        return;
+      }
+
+      alert("Produto salvo!");
+
+      document.getElementById("produtoEstoque").value = "";
+      document.getElementById("quantidadeEstoque").value = "";
+      document.getElementById("custoEstoque").value = "";
+
+      carregarEstoque();
+
+    });
+
+}
