@@ -557,6 +557,8 @@ function carregarHistoricoFinanceiro(){
       const ranking = {};
       const rankingServicos = {};
       const faturamentoMensal = {};
+      let faltas = 0;
+let totalAtendimentos = 0;
 
       historico.forEach((item)=>{
 
