@@ -172,23 +172,63 @@ Pedimos que responda esta mensagem confirmando sua presença.`;
     }])
     .then(()=>{
 
+     supabaseClient
+  .from("comissoes")
+  .insert([{
+    id: Date.now(),
+    profissional: profissionalNome,
+    cliente: agendamento.cliente,
+    servico: agendamento.servico || "Novo Atendimento",
+    valor: Number(valor),
+    comissao: comissao,
+    data: formatarData(dataSelecionada)
+  }]);
+
+supabaseClient
+  .from("consumo_servicos")
+  .select("*")
+  .eq("servico", agendamento.servico)
+  .then((consumoResposta)=>{
+
+    const consumos = consumoResposta.data || [];
+
+    consumos.forEach((consumo)=>{
+
       supabaseClient
-        .from("comissoes")
-        .insert([{
-          id: Date.now(),
-          profissional: profissionalNome,
-          cliente: agendamento.cliente,
-          servico: agendamento.servico || "Novo Atendimento",
-          valor: Number(valor),
-          comissao: comissao,
-          data: formatarData(dataSelecionada)
-        }]);
+        .from("estoque")
+        .select("*")
+        .eq("produto", consumo.produto)
+        .single()
+        .then((produtoResposta)=>{
 
-      carregarHistoricoFinanceiro();
+          const produto = produtoResposta.data;
 
-      card.style.opacity = "0.6";
+          if(!produto) return;
 
-      alert("Atendimento faturado!");
+          const novaQuantidade =
+            Number(produto.quantidade) - Number(consumo.quantidade);
+
+          supabaseClient
+            .from("estoque")
+            .update({
+              quantidade:novaQuantidade
+            })
+            .eq("id", produto.id);
+
+        });
+
+    });
+
+    carregarEstoque();
+
+  });
+
+carregarHistoricoFinanceiro();
+
+card.style.opacity = "0.6";
+
+alert("Atendimento faturado!");
+
     });
 
   return;
