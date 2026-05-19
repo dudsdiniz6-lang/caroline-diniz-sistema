@@ -565,6 +565,11 @@ function carregarHistoricoFinanceiro(){
 }
 
 ranking[item.cliente] += Number(item.valor);
+        if(!rankingServicos[item.servico]){
+  rankingServicos[item.servico] = 0;
+}
+
+rankingServicos[item.servico] += 1;
 
         lista.innerHTML += `
           <div class="cliente-card">
