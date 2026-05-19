@@ -712,6 +712,46 @@ if(taxaFaltasDiv){
 
 }
     if(lucroLiquidoDiv){
+      if(metaMensalDiv){
+
+  const porcentagemMeta = Math.min(
+    ((total / metaMensal) * 100),
+    100
+  );
+
+  const falta = Math.max(
+    metaMensal - total,
+    0
+  );
+
+  metaMensalDiv.innerHTML = `
+    <div class="cliente-card">
+
+      <strong>
+        ${porcentagemMeta.toFixed(1)}%
+      </strong>
+
+      <p>Meta mensal atingida</p>
+
+      <small>
+        Faturado: R$ ${total.toFixed(2)}
+      </small>
+
+      <small>
+        Falta: R$ ${falta.toFixed(2)}
+      </small>
+
+      <div class="barra-meta">
+        <div
+          class="progresso-meta"
+          style="width:${porcentagemMeta}%"
+        ></div>
+      </div>
+
+    </div>
+  `;
+
+}
 
   const lucroLiquido = total - totalComissoes;
 
