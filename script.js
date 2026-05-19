@@ -555,6 +555,7 @@ function carregarHistoricoFinanceiro(){
 
       let total = 0;
       let totalComissoes = 0;
+      const metaMensal = 30000;
       const ranking = {};
       const rankingServicos = {};
       const faturamentoMensal = {};
