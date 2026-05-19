@@ -1023,6 +1023,8 @@ window.onload = function(){
 
   carregarCaixa();
 
+  carregarEstoque();
+
 };
 let eventoInstalacao = null;
 
