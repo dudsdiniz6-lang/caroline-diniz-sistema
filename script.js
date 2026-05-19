@@ -1422,3 +1422,33 @@ function carregarEstoque(){
     });
 
 }
+function salvarConsumoServico(){
+
+  const servico = document.getElementById("servicoConsumo").value;
+  const produto = document.getElementById("produtoConsumo").value;
+  const quantidade = Number(document.getElementById("quantidadeConsumo").value || 0);
+
+  supabaseClient
+    .from("consumo_servicos")
+    .insert([{
+      id: Date.now(),
+      servico,
+      produto,
+      quantidade
+    }])
+    .then((resposta)=>{
+
+      if(resposta.error){
+        alert("Erro ao salvar consumo.");
+        return;
+      }
+
+      alert("Consumo salvo!");
+
+      document.getElementById("servicoConsumo").value = "";
+      document.getElementById("produtoConsumo").value = "";
+      document.getElementById("quantidadeConsumo").value = "";
+
+    });
+
+}
