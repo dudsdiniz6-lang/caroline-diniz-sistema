@@ -1249,3 +1249,38 @@ function verGaleriaCliente(clienteId){
     });
 
 }
+function salvarCaixa(){
+
+  const entrada = Number(
+    document.getElementById("entradaCaixa").value || 0
+  );
+
+  const despesa = Number(
+    document.getElementById("despesaCaixa").value || 0
+  );
+
+  supabaseClient
+    .from("caixa")
+    .insert([{
+      id: Date.now(),
+      entrada,
+      despesa,
+      data: new Date().toLocaleDateString("pt-BR")
+    }])
+    .then((resposta)=>{
+
+      if(resposta.error){
+        alert("Erro ao salvar caixa.");
+        return;
+      }
+
+      alert("Caixa salvo!");
+
+      document.getElementById("entradaCaixa").value = "";
+      document.getElementById("despesaCaixa").value = "";
+
+      carregarCaixa();
+
+    });
+
+}
