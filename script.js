@@ -520,6 +520,9 @@ ${
                 <button onclick="editarCliente('${cliente.id}')">
   Editar
 </button>
+<button onclick="verGaleriaCliente('${cliente.id}')">
+  Galeria
+</button>
 <button onclick="excluirCliente('${cliente.id}')">
   Excluir
 </button>
