@@ -628,8 +628,30 @@ if(rankingDiv){
     });
 
 }
-      document.getElementById("faturamento").innerText = `R$ ${total}`;
-      document.getElementById("atendimentos-pagos").innerText = historico.length;
+
+if(rankingServicosDiv){
+
+  rankingServicosDiv.innerHTML = "";
+
+  Object.keys(rankingServicos)
+    .sort((a,b)=> rankingServicos[b] - rankingServicos[a])
+    .slice(0,5)
+    .forEach((servico)=>{
+
+      rankingServicosDiv.innerHTML += `
+        <div class="cliente-card">
+          <strong>${servico}</strong>
+          <p>Quantidade vendida</p>
+          <small>${rankingServicos[servico]} vendas</small>
+        </div>
+      `;
+
+    });
+
+}
+
+document.getElementById("faturamento").innerText = `R$ ${total}`;
+document.getElementById("atendimentos-pagos").innerText = historico.length;
 
     });
 
