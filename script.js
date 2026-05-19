@@ -556,6 +556,7 @@ function carregarHistoricoFinanceiro(){
       let total = 0;
       const ranking = {};
       const rankingServicos = {};
+      const faturamentoMensal = {};
 
       historico.forEach((item)=>{
 
