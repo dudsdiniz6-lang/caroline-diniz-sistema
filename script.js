@@ -709,6 +709,26 @@ if(taxaFaltasDiv){
   `;
 
 }
+    if(lucroLiquidoDiv){
+
+  const lucroLiquido = total - totalComissoes;
+
+  lucroLiquidoDiv.innerHTML = `
+    <div class="cliente-card">
+      <strong>R$ ${lucroLiquido.toFixed(2)}</strong>
+      <p>Lucro líquido estimado</p>
+
+      <small>
+        Faturamento: R$ ${total.toFixed(2)}
+      </small>
+
+      <small>
+        Comissões: R$ ${totalComissoes.toFixed(2)}
+      </small>
+    </div>
+  `;
+
+}  
 
 
 document.getElementById("faturamento").innerText = `R$ ${total}`;
