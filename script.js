@@ -661,6 +661,24 @@ if(rankingServicosDiv){
 
 }
 
+if(faturamentoMensalDiv){
+
+  faturamentoMensalDiv.innerHTML = "";
+
+  Object.keys(faturamentoMensal).forEach((mes)=>{
+
+    faturamentoMensalDiv.innerHTML += `
+      <div class="cliente-card">
+        <strong>${mes}</strong>
+        <p>Faturamento do mês</p>
+        <small>R$ ${faturamentoMensal[mes].toFixed(2)}</small>
+      </div>
+    `;
+
+  });
+
+}
+
 document.getElementById("faturamento").innerText = `R$ ${total}`;
 document.getElementById("atendimentos-pagos").innerText = historico.length;
 
