@@ -688,6 +688,26 @@ if(faturamentoMensalDiv){
 
 }
 
+if(taxaFaltasDiv){
+
+  const porcentagemFaltas =
+    totalAtendimentos > 0
+      ? ((faltas / totalAtendimentos) * 100).toFixed(1)
+      : 0;
+
+  taxaFaltasDiv.innerHTML = `
+    <div class="cliente-card">
+      <strong>${porcentagemFaltas}%</strong>
+      <p>Taxa de faltas</p>
+      <small>
+        ${faltas} faltas em ${totalAtendimentos} atendimentos
+      </small>
+    </div>
+  `;
+
+}
+
+
 document.getElementById("faturamento").innerText = `R$ ${total}`;
 document.getElementById("atendimentos-pagos").innerText = historico.length;
 
