@@ -564,6 +564,7 @@ let totalAtendimentos = 0;
       historico.forEach((item)=>{
 
         total += Number(item.valor);
+        totalComissoes += Number(item.valor) * 0.4;
         totalAtendimentos++;
 
 if(item.status === "Faltou"){
