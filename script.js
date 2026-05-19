@@ -1025,6 +1025,8 @@ window.onload = function(){
 
   carregarEstoque();
 
+  carregarConsumoServicos();
+
 };
 let eventoInstalacao = null;
 
