@@ -493,7 +493,11 @@ function carregarClientes(){
                     ? "<span class='aniversariante'>Aniversariante hoje 🎂</span>"
                     : ""
                 }
-
+${
+  cliente.foto
+    ? `<img src="${cliente.foto}" class="foto-cliente">`
+    : ""
+}
                 <p>${cliente.telefone}</p>
 
                 <small>🎂 ${cliente.aniversario || "Não informado"}</small>
