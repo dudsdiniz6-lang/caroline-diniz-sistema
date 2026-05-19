@@ -571,6 +571,15 @@ ranking[item.cliente] += Number(item.valor);
 }
 
 rankingServicos[item.servico] += 1;
+        const partesData = item.data.split("/");
+
+const mesAno = `${partesData[1]}/${partesData[2]}`;
+
+if(!faturamentoMensal[mesAno]){
+  faturamentoMensal[mesAno] = 0;
+}
+
+faturamentoMensal[mesAno] += Number(item.valor);
 
         lista.innerHTML += `
           <div class="cliente-card">
