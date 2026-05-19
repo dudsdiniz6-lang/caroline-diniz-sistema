@@ -1284,3 +1284,53 @@ function salvarCaixa(){
     });
 
 }
+function carregarCaixa(){
+
+  const caixaDiv = document.getElementById("caixa-diario");
+
+  if(!caixaDiv) return;
+
+  caixaDiv.innerHTML = "";
+
+  supabaseClient
+    .from("caixa")
+    .select("*")
+    .then((resposta)=>{
+
+      const caixas = resposta.data || [];
+
+      let totalEntrada = 0;
+      let totalDespesa = 0;
+
+      caixas.forEach((item)=>{
+
+        totalEntrada += Number(item.entrada || 0);
+        totalDespesa += Number(item.despesa || 0);
+
+      });
+
+      const saldo = totalEntrada - totalDespesa;
+
+      caixaDiv.innerHTML = `
+        <div class="cliente-card">
+
+          <strong>
+            R$ ${saldo.toFixed(2)}
+          </strong>
+
+          <p>Saldo do caixa</p>
+
+          <small>
+            Entradas: R$ ${totalEntrada.toFixed(2)}
+          </small>
+
+          <small>
+            Despesas: R$ ${totalDespesa.toFixed(2)}
+          </small>
+
+        </div>
+      `;
+
+    });
+
+}
