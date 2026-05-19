@@ -722,7 +722,7 @@ if(taxaFaltasDiv){
 
 }
     if(lucroLiquidoDiv){
-      if(metaMensalDiv){
+    if(metaMensalDiv){
 
   const porcentagemMeta = Math.min(
     ((total / metaMensal) * 100),
@@ -763,8 +763,35 @@ if(taxaFaltasDiv){
 
 }
 
-  const lucroLiquido = total - totalComissoes;
+if(previsaoFaturamentoDiv){
 
+  const mediaDiaria = total / diaAtual;
+
+  const previsao = mediaDiaria * ultimoDiaMes;
+
+  previsaoFaturamentoDiv.innerHTML = `
+    <div class="cliente-card">
+
+      <strong>
+        R$ ${previsao.toFixed(2)}
+      </strong>
+
+      <p>Previsão de fechamento do mês</p>
+
+      <small>
+        Média diária: R$ ${mediaDiaria.toFixed(2)}
+      </small>
+
+      <small>
+        Baseado em ${diaAtual} dias trabalhados
+      </small>
+
+    </div>
+  `;
+
+}
+
+const lucroLiquido = total - totalComissoes;
   lucroLiquidoDiv.innerHTML = `
     <div class="cliente-card">
       <strong>R$ ${lucroLiquido.toFixed(2)}</strong>
