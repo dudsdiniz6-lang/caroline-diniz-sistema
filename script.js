@@ -631,6 +631,7 @@ const rankingDiv = document.getElementById("ranking-clientes");
       const faturamentoMensalDiv = document.getElementById("faturamento-mensal");
       const taxaFaltasDiv = document.getElementById("taxa-faltas");
       const lucroLiquidoDiv = document.getElementById("lucro-liquido");
+      const metaMensalDiv = document.getElementById("meta-mensal");
 
 if(rankingDiv){
 
