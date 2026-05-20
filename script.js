@@ -2096,14 +2096,17 @@ function carregarServicosSalao(){
 
         if(selectServico){
 
-          selectServico.innerHTML += `
-            <option value="${servico.nome}">
-              ${servico.nome}
-            </option>
-          `;
+  selectServico.innerHTML += `
+    <option 
+      value="${servico.nome}"
+      data-duracao="${servico.duracao}"
+      data-valor="${servico.valor}"
+    >
+      ${servico.nome}
+    </option>
+  `;
 
-        }
-
+}
       });
 
     });
