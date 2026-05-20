@@ -1740,3 +1740,27 @@ function gerarFechamentoMensal(){
     });
 
 }
+function enviarMensagemAniversario(nome, telefone){
+
+  if(!telefone){
+    alert("Cliente sem telefone cadastrado.");
+    return;
+  }
+
+  const numero = telefone.replace(/\D/g, "");
+
+  const mensagem = `Olá, ${nome}! 🎂✨
+
+Hoje é um dia muito especial e não poderíamos deixar de passar aqui para desejar um feliz aniversário!
+
+Que seu novo ciclo seja repleto de saúde, felicidade, autoestima e momentos incríveis. 💖
+
+Com carinho,
+Equipe Caroline Diniz`;
+
+  const link =
+    `https://wa.me/55${numero}?text=${encodeURIComponent(mensagem)}`;
+
+  window.open(link, "_blank");
+
+}
