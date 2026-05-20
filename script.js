@@ -1879,3 +1879,36 @@ function carregarHorariosAgenda(){
   });
 
 }
+function carregarClientesAgendamento(){
+
+  const selectCliente =
+    document.getElementById("cliente");
+
+  if(!selectCliente) return;
+
+  selectCliente.innerHTML = `
+    <option value="">
+      Selecione a cliente
+    </option>
+  `;
+
+  supabaseClient
+    .from("clients")
+    .select("*")
+    .then((resposta)=>{
+
+      const clientes = resposta.data || [];
+
+      clientes.forEach((cliente)=>{
+
+        selectCliente.innerHTML += `
+          <option value="${cliente.nome}">
+            ${cliente.nome}
+          </option>
+        `;
+
+      });
+
+    });
+
+}
