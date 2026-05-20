@@ -90,9 +90,8 @@ nav a:hover,
   flex:1;
   padding:30px;
   background:#f5f6fa;
-  margin-left:260px;
+  margin-left:220px;
 }
-
 .topbar{
   display:flex;
   flex-direction:column;
