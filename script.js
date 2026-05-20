@@ -6,14 +6,61 @@ const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 let dataSelecionada = new Date();
 
 const usuarios = [
-  { usuario:"eduarda", senha:"123", cargo:"dona" },
-  { usuario:"caroline", senha:"123", cargo:"dona" },
-  { usuario:"ana", senha:"123", cargo:"gerente" },
-  { usuario:"pedro", senha:"123", cargo:"funcionario" },
-  { usuario:"silamara", senha:"123", cargo:"funcionario" },
-  { usuario:"jessica", senha:"123", cargo:"funcionario" },
-  { usuario:"ssica", senha:"123", cargo:"funcionario" },
-  { usuario:"alice", senha:"123", cargo:"funcionario" }
+  {
+    usuario:"eduarda",
+    senha:"123",
+    cargo:"dona",
+    comissao:0
+  },
+
+  {
+    usuario:"caroline",
+    senha:"123",
+    cargo:"dona",
+    comissao:0
+  },
+
+  {
+    usuario:"ana",
+    senha:"123",
+    cargo:"gerente",
+    comissao:10
+  },
+
+  {
+    usuario:"pedro",
+    senha:"123",
+    cargo:"funcionario",
+    comissao:40
+  },
+
+  {
+    usuario:"silamara",
+    senha:"123",
+    cargo:"funcionario",
+    comissao:35
+  },
+
+  {
+    usuario:"jessica",
+    senha:"123",
+    cargo:"funcionario",
+    comissao:50
+  },
+
+  {
+    usuario:"ssica",
+    senha:"123",
+    cargo:"funcionario",
+    comissao:45
+  },
+
+  {
+    usuario:"alice",
+    senha:"123",
+    cargo:"funcionario",
+    comissao:30
+  }
 ];
 
 function formatarData(data){
