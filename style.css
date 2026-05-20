@@ -231,8 +231,8 @@ nav a:hover,
   min-width:250px;
   border-left:1px solid #f3f3f3;
   position:relative;
-  height:3000px;
-  padding:10px;
+  height:auto;
+  padding-bottom:0;
 }
 
 .appointment{
