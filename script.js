@@ -977,12 +977,27 @@ if(metasDiv){
       const resumo = {};
 
       comissoes.forEach((item)=>{
+        const resumoProfissionais = {};
 
         if(!resumo[item.profissional]){
           resumo[item.profissional] = 0;
         }
 
         resumo[item.profissional] += Number(item.comissao);
+        if(!resumoProfissionais[item.profissional]){
+
+  const profissionalUsuario = usuarios.find((usuario)=>{
+    return usuario.usuario.toLowerCase() === item.profissional.toLowerCase();
+  });
+
+  resumoProfissionais[item.profissional] = {
+    total:0,
+    porcentagem: profissionalUsuario?.comissao || 0
+  };
+
+}
+
+resumoProfissionais[item.profissional].total += Number(item.comissao);
 
       });
 const metas = {
