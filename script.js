@@ -158,7 +158,7 @@ function sairSistema(){
 function calcularTop(horario){
   const [hora, minuto] = horario.split(":");
   const minutosTotais = parseInt(hora) * 60 + parseInt(minuto);
-  const inicioAgenda = 14 * 60;
+  const inicioAgenda = 7 * 60;
   return ((minutosTotais - inicioAgenda) / 20) * 80;
 }
 
