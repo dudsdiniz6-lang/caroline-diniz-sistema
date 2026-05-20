@@ -1288,6 +1288,7 @@ window.onload = function(){
   carregarEstoque();
 
   carregarConsumoServicos();
+  carregarHorariosAgenda();
 
 };
 let eventoInstalacao = null;
