@@ -583,6 +583,23 @@ function carregarClientes(){
             }
 
             lista.innerHTML += `
+            ${
+  cliente.aniversario &&
+  cliente.aniversario.slice(5,10) === `${mesHoje}-${diaHoje}`
+    ? `
+      <div class="cliente-card">
+        <strong>🎂 ${cliente.nome} faz aniversário hoje</strong>
+
+        <button onclick="enviarMensagemAniversario(
+          '${cliente.nome}',
+          '${cliente.telefone}'
+        )">
+          Enviar parabéns
+        </button>
+      </div>
+    `
+    : ""
+}
               <div class="cliente-card">
                 <strong>${cliente.nome}</strong>
 
