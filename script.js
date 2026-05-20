@@ -632,6 +632,15 @@ ranking[item.cliente] += Number(item.valor);
 }
 
 rankingServicos[item.servico] += 1;
+        if(item.profissional){
+
+  if(!rankingProfissionais[item.profissional]){
+    rankingProfissionais[item.profissional] = 0;
+  }
+
+  rankingProfissionais[item.profissional] += Number(item.valor);
+
+}
         const partesData = item.data.split("/");
 
 const mesAno = `${partesData[1]}/${partesData[2]}`;
