@@ -1358,6 +1358,7 @@ window.onload = function(){
   carregarConsumoServicos();
   carregarHorariosAgenda();
   carregarClientesAgendamento();
+    carregarServicosSalao();
 
 };
 let eventoInstalacao = null;
