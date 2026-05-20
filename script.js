@@ -2055,6 +2055,15 @@ function carregarServicosSalao(){
   const selectServico =
     document.getElementById("servico");
 
+  const filtroCategoria =
+    document.getElementById("filtroCategoriaServico");
+
+  const busca =
+    document.getElementById("buscaServico")
+      ?.value
+      .toLowerCase()
+      .trim() || "";
+
   if(lista){
     lista.innerHTML = "";
   }
@@ -2070,24 +2079,78 @@ function carregarServicosSalao(){
 
       const servicos = resposta.data || [];
 
+      const categorias = [];
+
       servicos.forEach((servico)=>{
+
+        if(
+          servico.categoria &&
+          !categorias.includes(servico.categoria)
+        ){
+          categorias.push(servico.categoria);
+        }
+
+      });
+
+      if(filtroCategoria){
+
+        filtroCategoria.innerHTML = `
+          <option value="">
+            Todas as categorias
+          </option>
+        `;
+
+        categorias.forEach((categoria)=>{
+
+          filtroCategoria.innerHTML += `
+            <option value="${categoria}">
+              ${categoria}
+            </option>
+          `;
+
+        });
+
+      }
+
+      const categoriaSelecionada =
+        filtroCategoria?.value || "";
+
+      servicos.forEach((servico)=>{
+
+        if(
+          categoriaSelecionada &&
+          servico.categoria !== categoriaSelecionada
+        ){
+          return;
+        }
+
+        if(
+          busca &&
+          !servico.nome.toLowerCase().includes(busca)
+        ){
+          return;
+        }
 
         if(lista){
 
           lista.innerHTML += `
-            <div class="cliente-card">
+            <div class="linha-servico">
 
-              <strong>
+              <span>
+                ${servico.categoria || "-"}
+              </span>
+
+              <span>
                 ${servico.nome}
-              </strong>
+              </span>
 
-              <small>
+              <span>
+                ${servico.duracao} min
+              </span>
+
+              <span>
                 R$ ${Number(servico.valor).toFixed(2)}
-              </small>
-
-              <small>
-                ${servico.duracao} minutos
-              </small>
+              </span>
 
             </div>
           `;
@@ -2096,17 +2159,18 @@ function carregarServicosSalao(){
 
         if(selectServico){
 
-  selectServico.innerHTML += `
-    <option 
-      value="${servico.nome}"
-      data-duracao="${servico.duracao}"
-      data-valor="${servico.valor}"
-    >
-      ${servico.nome}
-    </option>
-  `;
+          selectServico.innerHTML += `
+            <option
+              value="${servico.nome}"
+              data-duracao="${servico.duracao}"
+              data-valor="${servico.valor}"
+            >
+              ${servico.nome}
+            </option>
+          `;
 
-}
+        }
+
       });
 
     });
