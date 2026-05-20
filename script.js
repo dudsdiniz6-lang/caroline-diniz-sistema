@@ -1289,6 +1289,7 @@ window.onload = function(){
 
   carregarConsumoServicos();
   carregarHorariosAgenda();
+  carregarClientesAgendamento();
 
 };
 let eventoInstalacao = null;
