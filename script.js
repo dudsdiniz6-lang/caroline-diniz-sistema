@@ -206,7 +206,6 @@ Pedimos que responda esta mensagem confirmando sua presença.`;
 
   const profissionalNome = ["Carol", "Jessica", "Fernanda", "Silamara"][agendamento.profissional];
 
-  const comissao = Number(valor) * 0.4;
       const profissionalUsuario = usuarios.find((usuario)=>{
   return (
     usuario.usuario.toLowerCase() === profissionalNome.toLowerCase()
