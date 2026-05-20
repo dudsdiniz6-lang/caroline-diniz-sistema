@@ -961,6 +961,7 @@ function carregarComissoes(){
 
   lista.innerHTML = "";
   const metasDiv = document.getElementById("metas-profissionais");
+  const resumoComissoesDiv = document.getElementById("resumo-comissoes");
 
 if(metasDiv){
   metasDiv.innerHTML = "";
