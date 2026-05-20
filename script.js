@@ -1812,3 +1812,26 @@ Equipe Caroline Diniz`;
   window.open(link, "_blank");
 
 }
+function enviarMensagemRetorno(nome, telefone){
+
+  if(!telefone){
+    alert("Cliente sem telefone.");
+    return;
+  }
+
+  const numero = telefone.replace(/\D/g, "");
+
+  const mensagem = `Olá, ${nome}! 💖
+
+Sentimos sua falta aqui no Caroline Diniz ✨
+
+Já faz um tempinho desde seu último atendimento e será um prazer te receber novamente para cuidar da sua autoestima e beleza.
+
+Quer agendar seu próximo horário?`;
+
+  const link =
+    `https://wa.me/55${numero}?text=${encodeURIComponent(mensagem)}`;
+
+  window.open(link, "_blank");
+
+}
