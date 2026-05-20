@@ -539,6 +539,8 @@ function carregarClientes(){
           const lista = document.getElementById("listaClientes");
           const alertaAniversariantes =
   document.getElementById("alerta-aniversariantes");
+          const clientesRetorno =
+  document.getElementById("clientes-retorno");
 
           if(!lista) return;
 
