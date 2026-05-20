@@ -75,18 +75,19 @@
 </div>
 
 <select id="filtroProfissional" onchange="carregarAgenda()">
-  <input 
-  type="text"
-  id="buscaCliente"
-  placeholder="Buscar cliente..."
-  oninput="carregarAgenda()"
-/>
   <option value="">Todos Profissionais</option>
   <option value="0">Carol</option>
   <option value="1">Jessica</option>
   <option value="2">Fernanda</option>
   <option value="3">Silamara</option>
 </select>
+
+<input 
+  type="text"
+  id="buscaCliente"
+  placeholder="Buscar cliente..."
+  oninput="carregarAgenda()"
+/>
 
 <div class="acoes-topo">
   <button class="btn" onclick="abrirModal()">Novo Agendamento</button>
