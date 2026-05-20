@@ -464,14 +464,34 @@ function carregarAgenda(){
   const agendaHeader = document.querySelector(".agenda-header");
   const agendaBody = document.querySelector(".agenda-body");
 
- colunas.forEach((coluna)=>{
+colunas.forEach((coluna, index)=>{
+
   coluna.innerHTML = "";
   coluna.style.position = "relative";
-});
 
-  if(filtro === ""){
-    agendaHeader.style.gridTemplateColumns = "80px repeat(4, 1fr)";
-    agendaBody.style.gridTemplateColumns = "80px repeat(4, 1fr)";
+  coluna.onclick = function(event){
+
+    if(event.target.classList.contains("appointment")){
+      return;
+    }
+
+    const y = event.offsetY;
+
+    const bloco = Math.floor(y / 80);
+
+    const horario = horariosAgenda[bloco];
+
+    if(!horario) return;
+
+    document.getElementById("profissional").value = index;
+
+    document.getElementById("horario").value = horario;
+
+    abrirModal();
+
+  };
+
+});
 
     colunas.forEach((coluna)=>{
       coluna.style.display = "block";
