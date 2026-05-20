@@ -458,40 +458,60 @@ function carregarAgenda(){
 
   const colunas = document.querySelectorAll(".column");
   const profissionais = document.querySelectorAll(".professional");
-  const filtro = document.getElementById("filtroProfissional")?.value || "";
-  const busca = document.getElementById("buscaCliente")?.value.toLowerCase().trim() || "";
 
-  const agendaHeader = document.querySelector(".agenda-header");
-  const agendaBody = document.querySelector(".agenda-body");
+  const filtro =
+    document.getElementById("filtroProfissional")?.value || "";
 
-colunas.forEach((coluna, index)=>{
+  const busca =
+    document.getElementById("buscaCliente")
+      ?.value
+      .toLowerCase()
+      .trim() || "";
 
-  coluna.innerHTML = "";
-  coluna.style.position = "relative";
+  const agendaHeader =
+    document.querySelector(".agenda-header");
 
-  coluna.onclick = function(event){
+  const agendaBody =
+    document.querySelector(".agenda-body");
 
-    if(event.target.classList.contains("appointment")){
-      return;
-    }
+  colunas.forEach((coluna, index)=>{
 
-    const y = event.offsetY;
+    coluna.innerHTML = "";
+    coluna.style.position = "relative";
 
-    const bloco = Math.floor(y / 80);
+    coluna.addEventListener("click", function(event){
 
-    const horario = horariosAgenda[bloco];
+      if(event.target.closest(".appointment")){
+        return;
+      }
 
-    if(!horario) return;
+      const rect = coluna.getBoundingClientRect();
 
-    document.getElementById("profissional").value = index;
+      const y = event.clientY - rect.top;
 
-    document.getElementById("horario").value = horario;
+      const bloco = Math.floor(y / 80);
 
-    abrirModal();
+      const horario = horariosAgenda[bloco];
 
-  };
+      if(!horario) return;
 
-});
+      document.getElementById("profissional").value = index;
+
+      document.getElementById("horario").value = horario;
+
+      abrirModal();
+
+    });
+
+  });
+
+  if(filtro === ""){
+
+    agendaHeader.style.gridTemplateColumns =
+      "80px repeat(4, 1fr)";
+
+    agendaBody.style.gridTemplateColumns =
+      "80px repeat(4, 1fr)";
 
     colunas.forEach((coluna)=>{
       coluna.style.display = "block";
@@ -502,16 +522,27 @@ colunas.forEach((coluna, index)=>{
     });
 
   }else{
-    agendaHeader.style.gridTemplateColumns = "80px 1fr";
-    agendaBody.style.gridTemplateColumns = "80px 1fr";
+
+    agendaHeader.style.gridTemplateColumns =
+      "80px 1fr";
+
+    agendaBody.style.gridTemplateColumns =
+      "80px 1fr";
 
     colunas.forEach((coluna, index)=>{
-      coluna.style.display = String(index) === filtro ? "block" : "none";
+      coluna.style.display =
+        String(index) === filtro
+          ? "block"
+          : "none";
     });
 
     profissionais.forEach((profissional, index)=>{
-      profissional.style.display = String(index) === filtro ? "block" : "none";
+      profissional.style.display =
+        String(index) === filtro
+          ? "block"
+          : "none";
     });
+
   }
 
   supabaseClient
@@ -520,16 +551,26 @@ colunas.forEach((coluna, index)=>{
     .eq("data", formatarData(dataSelecionada))
     .then((resposta)=>{
 
-      const agendamentos = resposta.data || [];
+      const agendamentos =
+        resposta.data || [];
 
       agendamentos.forEach((agendamento)=>{
 
-        if(filtro !== "" && agendamento.profissional != filtro){
+        if(
+          filtro !== "" &&
+          agendamento.profissional != filtro
+        ){
           return;
         }
-        if(busca !== "" && !agendamento.cliente.toLowerCase().includes(busca)){
-  return;
-}
+
+        if(
+          busca !== "" &&
+          !agendamento.cliente
+            .toLowerCase()
+            .includes(busca)
+        ){
+          return;
+        }
 
         criarCard(agendamento);
 
@@ -538,6 +579,7 @@ colunas.forEach((coluna, index)=>{
       ativarArrastar();
 
     });
+
 }
 
 function salvarCliente(){
