@@ -587,7 +587,18 @@ function carregarClientes(){
                 ${
                   cliente.aniversario &&
                   cliente.aniversario.slice(5,10) === `${mesHoje}-${diaHoje}`
-                    ? "<span class='aniversariante'>Aniversariante hoje 🎂</span>"
+                   ? `
+  <span class='aniversariante'>
+    Aniversariante hoje 🎂
+  </span>
+
+  <button onclick="enviarMensagemAniversario(
+    '${cliente.nome}',
+    '${cliente.telefone}'
+  )">
+    Enviar parabéns
+  </button>
+`
                     : ""
                 }
 ${
