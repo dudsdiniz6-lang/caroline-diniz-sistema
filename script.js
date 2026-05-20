@@ -207,6 +207,17 @@ Pedimos que responda esta mensagem confirmando sua presença.`;
   const profissionalNome = ["Carol", "Jessica", "Fernanda", "Silamara"][agendamento.profissional];
 
   const comissao = Number(valor) * 0.4;
+      const profissionalUsuario = usuarios.find((usuario)=>{
+  return (
+    usuario.usuario.toLowerCase() === profissionalNome.toLowerCase()
+  );
+});
+
+const porcentagemComissao =
+  profissionalUsuario?.comissao || 0;
+
+const comissao =
+  Number(valor) * (porcentagemComissao / 100);
 
   supabaseClient
     .from("comandas")
