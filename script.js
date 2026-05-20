@@ -1913,3 +1913,31 @@ function carregarClientesAgendamento(){
     });
 
 }
+function abrirCadastroRapidoCliente(){
+
+  const nome = prompt("Nome da cliente:");
+  if(!nome) return;
+
+  const telefone = prompt("Telefone:");
+
+  supabaseClient
+    .from("clients")
+    .insert([{
+      nome,
+      telefone
+    }])
+    .then((resposta)=>{
+
+      if(resposta.error){
+        alert("Erro ao cadastrar cliente.");
+        return;
+      }
+
+      alert("Cliente cadastrada!");
+
+      carregarClientes();
+      carregarClientesAgendamento();
+
+    });
+
+}
