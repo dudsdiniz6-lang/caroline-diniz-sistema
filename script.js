@@ -582,6 +582,33 @@ function carregarClientes(){
               diasSemVir = Math.floor(
                 (hoje - dataUltimaVisita) / (1000 * 60 * 60 * 24)
               );
+              if(
+  clientesRetorno &&
+  diasSemVir >= 20
+){
+
+  clientesRetorno.innerHTML += `
+    <div class="cliente-card">
+
+      <strong>
+        ${cliente.nome}
+      </strong>
+
+      <small>
+        ${diasSemVir} dias sem retornar
+      </small>
+
+      <button onclick="enviarMensagemRetorno(
+        '${cliente.nome}',
+        '${cliente.telefone}'
+      )">
+        Chamar cliente
+      </button>
+
+    </div>
+  `;
+
+}
             }
 
             lista.innerHTML += `
