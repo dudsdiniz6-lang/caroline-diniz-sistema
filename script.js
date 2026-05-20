@@ -1857,3 +1857,24 @@ Quer agendar seu próximo horário?`;
   window.open(link, "_blank");
 
 }
+function carregarHorariosAgenda(){
+
+  const selectHorario = document.getElementById("horario");
+
+  if(!selectHorario) return;
+
+  selectHorario.innerHTML = `
+    <option value="">Selecione o horário</option>
+  `;
+
+  horariosAgenda.forEach((horario)=>{
+
+    selectHorario.innerHTML += `
+      <option value="${horario}">
+        ${horario}
+      </option>
+    `;
+
+  });
+
+}
