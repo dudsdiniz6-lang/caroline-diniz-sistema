@@ -23,8 +23,11 @@ body{
   color:white;
   min-height:100vh;
   padding:30px 20px;
-  position:sticky;
+  position:fixed;
   top:0;
+  left:0;
+  width:220px;
+  z-index:1000;
   overflow:hidden;
   box-shadow:5px 0 25px rgba(0,0,0,0.08);
 }
