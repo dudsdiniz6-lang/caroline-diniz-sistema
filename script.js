@@ -608,6 +608,7 @@ const ultimoDiaMes = new Date(
       const ranking = {};
       const rankingServicos = {};
       const faturamentoMensal = {};
+      const rankingProfissionais = {};
       let faltas = 0;
 let totalAtendimentos = 0;
 
