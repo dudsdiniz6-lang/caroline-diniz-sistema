@@ -2046,3 +2046,65 @@ function salvarServicoSalao(){
     });
 
 }
+function carregarServicosSalao(){
+
+  const lista =
+    document.getElementById("lista-servicos-salao");
+
+  const selectServico =
+    document.getElementById("servico");
+
+  if(lista){
+    lista.innerHTML = "";
+  }
+
+  if(selectServico){
+    selectServico.innerHTML = "";
+  }
+
+  supabaseClient
+    .from("servicos_salao")
+    .select("*")
+    .then((resposta)=>{
+
+      const servicos = resposta.data || [];
+
+      servicos.forEach((servico)=>{
+
+        if(lista){
+
+          lista.innerHTML += `
+            <div class="cliente-card">
+
+              <strong>
+                ${servico.nome}
+              </strong>
+
+              <small>
+                R$ ${Number(servico.valor).toFixed(2)}
+              </small>
+
+              <small>
+                ${servico.duracao} minutos
+              </small>
+
+            </div>
+          `;
+
+        }
+
+        if(selectServico){
+
+          selectServico.innerHTML += `
+            <option value="${servico.nome}">
+              ${servico.nome}
+            </option>
+          `;
+
+        }
+
+      });
+
+    });
+
+}
