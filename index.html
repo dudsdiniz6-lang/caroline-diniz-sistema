@@ -359,7 +359,79 @@
 
     </div>
   </div>
+<div class="modal" id="modal-servico">
 
+  <div class="modal-content">
+
+    <div class="modal-header">
+      <h2>Serviço</h2>
+
+      <button class="close" onclick="fecharModalServico()">
+        X
+      </button>
+    </div>
+
+    <div class="form">
+
+      <input
+        type="text"
+        id="nomeServicoSalao"
+        placeholder="Nome do serviço"
+      >
+
+      <input
+        type="text"
+        id="categoriaServicoSalao"
+        placeholder="Categoria"
+      >
+
+      <textarea
+        id="descricaoServicoSalao"
+        placeholder="Descrição do serviço"
+      ></textarea>
+
+      <input
+        type="number"
+        id="comissaoServicoSalao"
+        placeholder="Comissão (%)"
+      >
+
+      <input
+        type="number"
+        id="duracaoServicoSalao"
+        placeholder="Duração em minutos"
+      >
+
+      <input
+        type="number"
+        id="valorServicoSalao"
+        placeholder="Preço"
+      >
+
+      <input
+        type="number"
+        id="custoServicoSalao"
+        placeholder="Valor de custos"
+      >
+
+      <input
+        type="number"
+        id="naoComissionavelServicoSalao"
+        placeholder="Valor não comissionável"
+      >
+
+      <button
+        class="save-btn"
+        onclick="salvarServicoSalao()"
+      >
+        Salvar
+      </button>
+
+    </div>
+
+  </div>
+
+</div>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
   <script src="https://cdn.jsdelivr.net/npm/interactjs/dist/interact.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
