@@ -2009,3 +2009,40 @@ function abrirCadastroRapidoCliente(){
     });
 
 }
+function salvarServicoSalao(){
+
+  const nome = document.getElementById("nomeServicoSalao").value;
+  const valor = Number(document.getElementById("valorServicoSalao").value || 0);
+  const duracao = document.getElementById("duracaoServicoSalao").value;
+
+  if(!nome){
+    alert("Informe o nome do serviço.");
+    return;
+  }
+
+  supabaseClient
+    .from("servicos_salao")
+    .insert([{
+      id: Date.now(),
+      nome,
+      valor,
+      duracao
+    }])
+    .then((resposta)=>{
+
+      if(resposta.error){
+        alert("Erro ao salvar serviço.");
+        return;
+      }
+
+      alert("Serviço salvo!");
+
+      document.getElementById("nomeServicoSalao").value = "";
+      document.getElementById("valorServicoSalao").value = "";
+      document.getElementById("duracaoServicoSalao").value = "";
+
+      carregarServicosSalao();
+
+    });
+
+}
