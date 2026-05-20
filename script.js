@@ -405,7 +405,7 @@ function salvarAgendamento(){
   const agendamento = {
     id: Date.now(),
     cliente: document.getElementById("cliente").value,
-    telefone: document.getElementById("telefoneAgendamento").value,
+    telefone: "",
     horario: document.getElementById("horario").value,
     profissional: document.getElementById("profissional").value,
     duracao: document.getElementById("duracao").value,
