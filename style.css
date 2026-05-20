@@ -26,9 +26,8 @@ body{
   position:fixed;
   top:0;
   left:0;
-  width:220px;
   z-index:1000;
-  overflow:hidden;
+  overflow-y:auto;
   box-shadow:5px 0 25px rgba(0,0,0,0.08);
 }
 
