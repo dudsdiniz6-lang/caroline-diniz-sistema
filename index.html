@@ -171,7 +171,39 @@
 
         <div id="listaClientes"></div>
       </section>
+<section class="clientes-container" id="servicos-container">
+  <div class="servicos-topo">
+    <h2>Serviços</h2>
 
+    <button class="btn-add-servico" onclick="abrirModalServico()">
+      +
+    </button>
+  </div>
+
+  <div class="servicos-filtros">
+    <select id="filtroCategoriaServico" onchange="carregarServicosSalao()">
+      <option value="">Todas as categorias</option>
+    </select>
+
+    <input 
+      type="text"
+      id="buscaServico"
+      placeholder="Procurar por serviço..."
+      oninput="carregarServicosSalao()"
+    />
+  </div>
+
+  <div class="tabela-servicos">
+    <div class="linha-servico cabecalho">
+      <span>Categoria</span>
+      <span>Serviço</span>
+      <span>Duração</span>
+      <span>Preço (R$)</span>
+    </div>
+
+    <div id="lista-servicos-salao"></div>
+  </div>
+</section>
       <section class="financeiro-container clientes-container" id="financeiro-container">
         <section class="clientes-container" id="comissoes-container">
   <h2>Comissões</h2>
