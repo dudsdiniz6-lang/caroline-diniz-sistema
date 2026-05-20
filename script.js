@@ -5,6 +5,8 @@ const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
 let dataSelecionada = new Date();
 const horariosAgenda = [
+    "07:00",
+  "07:30",
   "08:00",
   "08:30",
   "09:00",
@@ -25,7 +27,11 @@ const horariosAgenda = [
   "16:30",
   "17:00",
   "17:30",
-  "18:00"
+  "18:00",
+  "18:30",
+  "19:00",
+  "19:30",
+  "20:00"
 ];
 const usuarios = [
   {
