@@ -688,6 +688,7 @@ faturamentoMensal[mesAno] += Number(item.valor);
 const rankingDiv = document.getElementById("ranking-clientes");
       const rankingServicosDiv = document.getElementById("ranking-servicos");
       const faturamentoMensalDiv = document.getElementById("faturamento-mensal");
+      const rankingProfissionaisDiv = document.getElementById("ranking-profissionais");
       const taxaFaltasDiv = document.getElementById("taxa-faltas");
       const lucroLiquidoDiv = document.getElementById("lucro-liquido");
       const metaMensalDiv = document.getElementById("meta-mensal");
