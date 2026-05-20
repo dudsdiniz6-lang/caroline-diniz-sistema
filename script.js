@@ -1677,3 +1677,57 @@ function carregarConsumoServicos(){
     });
 
 }
+function gerarFechamentoMensal(){
+
+  const div = document.getElementById("fechamento-mensal");
+
+  if(!div) return;
+
+  div.innerHTML = "";
+
+  supabaseClient
+    .from("comissoes")
+    .select("*")
+    .then((resposta)=>{
+
+      const comissoes = resposta.data || [];
+
+      const fechamento = {};
+
+      comissoes.forEach((item)=>{
+
+        if(!fechamento[item.profissional]){
+          fechamento[item.profissional] = {
+            producao:0,
+            comissao:0
+          };
+        }
+
+        fechamento[item.profissional].producao += Number(item.valor);
+        fechamento[item.profissional].comissao += Number(item.comissao);
+
+      });
+
+      Object.keys(fechamento).forEach((profissional)=>{
+
+        const dados = fechamento[profissional];
+
+        div.innerHTML += `
+          <div class="cliente-card">
+
+            <strong>${profissional}</strong>
+
+            <p>Produção mensal: R$ ${dados.producao.toFixed(2)}</p>
+
+            <small>
+              Comissão a pagar: R$ ${dados.comissao.toFixed(2)}
+            </small>
+
+          </div>
+        `;
+
+      });
+
+    });
+
+}
