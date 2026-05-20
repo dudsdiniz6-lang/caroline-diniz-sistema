@@ -1007,6 +1007,36 @@ const metas = {
   Silamara:5000
 };
       Object.keys(resumo).forEach((profissional)=>{
+        if(resumoComissoesDiv){
+
+  resumoComissoesDiv.innerHTML = "";
+
+  Object.keys(resumoProfissionais).forEach((profissional)=>{
+
+    const dados = resumoProfissionais[profissional];
+
+    resumoComissoesDiv.innerHTML += `
+      <div class="cliente-card">
+
+        <strong>
+          ${profissional}
+        </strong>
+
+        <small>
+          Comissão: ${dados.porcentagem}%
+        </small>
+
+        <small>
+          Total a receber:
+          R$ ${dados.total.toFixed(2)}
+        </small>
+
+      </div>
+    `;
+
+  });
+
+}
 const valorMeta = metas[profissional] || 5000;
 
 const porcentagem = Math.min(
