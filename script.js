@@ -717,6 +717,33 @@ if(rankingDiv){
 }
 
 if(rankingServicosDiv){
+  if(rankingProfissionaisDiv){
+
+  rankingProfissionaisDiv.innerHTML = "";
+
+  Object.keys(rankingProfissionais)
+    .sort((a,b)=> rankingProfissionais[b] - rankingProfissionais[a])
+    .forEach((profissional)=>{
+
+      rankingProfissionaisDiv.innerHTML += `
+        <div class="cliente-card">
+
+          <strong>
+            ${profissional}
+          </strong>
+
+          <p>Faturamento produzido</p>
+
+          <small>
+            R$ ${rankingProfissionais[profissional].toFixed(2)}
+          </small>
+
+        </div>
+      `;
+
+    });
+
+}
 
   rankingServicosDiv.innerHTML = "";
 
