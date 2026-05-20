@@ -2112,3 +2112,22 @@ function carregarServicosSalao(){
     });
 
 }
+function atualizarServicoSelecionado(){
+
+  const select =
+    document.getElementById("servico");
+
+  const option =
+    select.options[select.selectedIndex];
+
+  const duracao =
+    option.getAttribute("data-duracao");
+
+  if(duracao){
+
+    document.getElementById("duracao").value =
+      duracao;
+
+  }
+
+}
