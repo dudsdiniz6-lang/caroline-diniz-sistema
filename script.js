@@ -2131,3 +2131,10 @@ function atualizarServicoSelecionado(){
   }
 
 }
+function abrirModalServico(){
+  document.getElementById("modal-servico").style.display = "flex";
+}
+
+function fecharModalServico(){
+  document.getElementById("modal-servico").style.display = "none";
+}
