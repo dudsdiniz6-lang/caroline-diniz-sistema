@@ -537,6 +537,8 @@ function carregarClientes(){
 
           const historico = financeiroResposta.data || [];
           const lista = document.getElementById("listaClientes");
+          const alertaAniversariantes =
+  document.getElementById("alerta-aniversariantes");
 
           if(!lista) return;
 
