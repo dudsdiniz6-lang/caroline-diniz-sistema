@@ -207,9 +207,8 @@ nav a:hover,
 .agenda-body{
   display:grid;
   grid-template-columns:80px repeat(4,1fr);
-  min-height:900px;
+  min-height:5200px;
 }
-
 .time-column{
   border-right:1px solid #eee;
   background:#fafafa;
