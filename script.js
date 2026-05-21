@@ -2288,11 +2288,22 @@ function carregarCategoriasServicos(){
         }
 
         if(chips){
-          chips.innerHTML += `
-            <button class="chip-categoria">
-              ${categoria.nome}
-            </button>
-          `;
+         chips.innerHTML += `
+  <div class="chip-categoria-box">
+
+    <button class="chip-categoria">
+      ${categoria.nome}
+    </button>
+
+    <button
+      class="btn-excluir-categoria"
+      onclick="excluirCategoriaServico('${categoria.id}')"
+    >
+      ×
+    </button>
+
+  </div>
+`;
         }
 
       });
