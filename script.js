@@ -2266,14 +2266,10 @@ function abrirModalServico(){
   document.getElementById("duracaoServicoSalao").value = "";
   document.getElementById("valorServicoSalao").value = "";
   document.getElementById("custoServicoSalao").value = "";
-  document.getElementById("naoComissionavelServicoSalao").value = "";
 
   document.getElementById("modal-servico").style.display = "flex";
 
 }
-  if(chips){
-    chips.innerHTML = "";
-  }
 
   supabaseClient
     .from("categorias_servicos")
