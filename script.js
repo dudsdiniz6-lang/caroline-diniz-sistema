@@ -2256,28 +2256,21 @@ function atualizarServicoSelecionado(){
   }
 }
 function abrirModalServico(){
+
+  servicoEditandoId = null;
+
+  document.getElementById("nomeServicoSalao").value = "";
+  document.getElementById("categoriaServicoSalao").value = "";
+  document.getElementById("descricaoServicoSalao").value = "";
+  document.getElementById("comissaoServicoSalao").value = "";
+  document.getElementById("duracaoServicoSalao").value = "";
+  document.getElementById("valorServicoSalao").value = "";
+  document.getElementById("custoServicoSalao").value = "";
+  document.getElementById("naoComissionavelServicoSalao").value = "";
+
   document.getElementById("modal-servico").style.display = "flex";
+
 }
-
-function fecharModalServico(){
-  document.getElementById("modal-servico").style.display = "none";
-}
-function carregarCategoriasServicos(){
-
-  const select =
-    document.getElementById("categoriaServicoSalao");
-
-  const chips =
-    document.getElementById("categorias-servicos-chips");
-
-  if(select){
-    select.innerHTML = `
-      <option value="">
-        Selecione a categoria
-      </option>
-    `;
-  }
-
   if(chips){
     chips.innerHTML = "";
   }
