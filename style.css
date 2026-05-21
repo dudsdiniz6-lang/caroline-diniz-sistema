@@ -814,3 +814,24 @@ nav a:hover,
   font-size:22px;
   cursor:pointer;
 }
+#categorias-servicos-chips{
+  display:flex;
+  gap:10px;
+  flex-wrap:wrap;
+  margin-bottom:20px;
+}
+
+.chip-categoria{
+  border:none;
+  background:#f3f4f6;
+  color:#111827;
+  padding:10px 16px;
+  border-radius:999px;
+  font-weight:700;
+  cursor:pointer;
+}
+
+.chip-categoria:hover{
+  background:#ff7a00;
+  color:white;
+}
