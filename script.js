@@ -2239,13 +2239,20 @@ function carregarCategoriasServicos(){
   const select =
     document.getElementById("categoriaServicoSalao");
 
-  if(!select) return;
+  const chips =
+    document.getElementById("categorias-servicos-chips");
 
-  select.innerHTML = `
-    <option value="">
-      Selecione a categoria
-    </option>
-  `;
+  if(select){
+    select.innerHTML = `
+      <option value="">
+        Selecione a categoria
+      </option>
+    `;
+  }
+
+  if(chips){
+    chips.innerHTML = "";
+  }
 
   supabaseClient
     .from("categorias_servicos")
@@ -2256,11 +2263,21 @@ function carregarCategoriasServicos(){
 
       categorias.forEach((categoria)=>{
 
-        select.innerHTML += `
-          <option value="${categoria.nome}">
-            ${categoria.nome}
-          </option>
-        `;
+        if(select){
+          select.innerHTML += `
+            <option value="${categoria.nome}">
+              ${categoria.nome}
+            </option>
+          `;
+        }
+
+        if(chips){
+          chips.innerHTML += `
+            <button class="chip-categoria">
+              ${categoria.nome}
+            </button>
+          `;
+        }
 
       });
 
