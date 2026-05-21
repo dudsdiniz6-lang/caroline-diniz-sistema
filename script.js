@@ -2167,7 +2167,7 @@ function carregarServicosSalao(){
         if(lista){
 
           lista.innerHTML += `
-            <div class="linha-servico">
+            <div class="linha-servico" onclick="editarServicoSalao('${servico.id}')">
 
               <span>
                 ${servico.categoria || "-"}
