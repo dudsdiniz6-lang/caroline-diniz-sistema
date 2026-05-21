@@ -731,3 +731,86 @@ nav a:hover,
   border:3px solid #fff;
   box-shadow:0 4px 12px rgba(0,0,0,0.12);
 }
+.servicos-topo{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  margin-bottom:25px;
+}
+
+.servicos-topo h2{
+  font-size:28px;
+  color:#111827;
+}
+
+.btn-add-servico{
+  background:#ff7a00;
+  color:white;
+  border:none;
+  padding:12px 20px;
+  border-radius:14px;
+  font-weight:700;
+  cursor:pointer;
+  box-shadow:0 8px 20px rgba(255,122,0,0.25);
+}
+
+.servicos-filtros{
+  display:flex;
+  gap:15px;
+  margin-bottom:25px;
+}
+
+.servicos-filtros select,
+.servicos-filtros input{
+  padding:13px 15px;
+  border:1px solid #e5e7eb;
+  border-radius:14px;
+  background:white;
+  outline:none;
+  min-width:230px;
+}
+
+.tabela-servicos{
+  background:white;
+  border-radius:20px;
+  overflow:hidden;
+  box-shadow:0 8px 25px rgba(0,0,0,0.05);
+}
+
+.linha-servico{
+  display:grid;
+  grid-template-columns:1.2fr 2fr 1fr 1fr;
+  padding:18px 22px;
+  border-bottom:1px solid #f1f1f1;
+  align-items:center;
+}
+
+.linha-servico.cabecalho{
+  background:#f9fafb;
+  font-weight:700;
+  color:#6b7280;
+}
+
+.linha-servico span{
+  font-size:14px;
+  color:#111827;
+}
+
+.categoria-servico-linha{
+  display:flex;
+  gap:10px;
+}
+
+.categoria-servico-linha select{
+  flex:1;
+}
+
+.categoria-servico-linha button{
+  width:48px;
+  border:none;
+  border-radius:14px;
+  background:#111827;
+  color:white;
+  font-size:22px;
+  cursor:pointer;
+}
