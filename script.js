@@ -2234,22 +2234,26 @@ function carregarServicosSalao(){
 }
 function atualizarServicoSelecionado(){
 
-  const select =
-    document.getElementById("servico");
+  const select = document.getElementById("servico");
+  const option = select.options[select.selectedIndex];
 
-  const option =
-    select.options[select.selectedIndex];
-
-  const duracao =
-    option.getAttribute("data-duracao");
+  const duracao = option.getAttribute("data-duracao");
+  const valor = option.getAttribute("data-valor");
 
   if(duracao){
-
-    document.getElementById("duracao").value =
-      duracao;
-
+    document.getElementById("duracao").value = duracao;
   }
 
+  const info = document.getElementById("info-servico-agendamento");
+
+  if(info && valor){
+    info.innerHTML = `
+      <div class="cliente-card">
+        <strong>Valor do serviço</strong>
+        <p>R$ ${Number(valor).toFixed(2)}</p>
+      </div>
+    `;
+  }
 }
 function abrirModalServico(){
   document.getElementById("modal-servico").style.display = "flex";
