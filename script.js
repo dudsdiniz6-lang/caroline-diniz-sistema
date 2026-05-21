@@ -2271,24 +2271,7 @@ function abrirModalServico(){
 
 }
 
-  supabaseClient
-    .from("categorias_servicos")
-    .select("*")
-    .then((resposta)=>{
-
-      const categorias = resposta.data || [];
-
-      categorias.forEach((categoria)=>{
-
-        if(select){
-          select.innerHTML += `
-            <option value="${categoria.nome}">
-              ${categoria.nome}
-            </option>
-          `;
-        }
-
-        function carregarCategoriasServicos(){
+ 
 
   const select =
     document.getElementById("categoriaServicoSalao");
