@@ -2014,40 +2014,64 @@ function abrirCadastroRapidoCliente(){
 }
 function salvarServicoSalao(){
 
-  const nome =
-    document.getElementById("nomeServicoSalao").value;
+  const nome = document.getElementById("nomeServicoSalao").value;
+  const categoria = document.getElementById("categoriaServicoSalao").value;
+  const descricao = document.getElementById("descricaoServicoSalao").value;
 
-  const categoria =
-    document.getElementById("categoriaServicoSalao").value;
+  const comissao = Number(
+    document.getElementById("comissaoServicoSalao").value || 0
+  );
 
-  const descricao =
-    document.getElementById("descricaoServicoSalao").value;
+  const duracao = document.getElementById("duracaoServicoSalao").value;
 
-  const comissao =
-    Number(
-      document.getElementById("comissaoServicoSalao").value || 0
-    );
+  const valor = Number(
+    document.getElementById("valorServicoSalao").value || 0
+  );
 
-  const duracao =
-    document.getElementById("duracaoServicoSalao").value;
+  const custo = Number(
+    document.getElementById("custoServicoSalao").value || 0
+  );
 
-  const valor =
-    Number(
-      document.getElementById("valorServicoSalao").value || 0
-    );
-
-  const custo =
-    Number(
-      document.getElementById("custoServicoSalao").value || 0
-    );
-
-  const naoComissionavel =
-    Number(
-      document.getElementById("naoComissionavelServicoSalao").value || 0
-    );
+  const naoComissionavel = Number(
+    document.getElementById("naoComissionavelServicoSalao").value || 0
+  );
 
   if(!nome){
     alert("Informe o nome do serviço.");
+    return;
+  }
+
+  const dadosServico = {
+    nome,
+    categoria,
+    descricao,
+    comissao_padrao: comissao,
+    duracao,
+    valor,
+    custo,
+    nao_comissionavel: naoComissionavel
+  };
+
+  if(servicoEditandoId){
+
+    supabaseClient
+      .from("servicos_salao")
+      .update(dadosServico)
+      .eq("id", servicoEditandoId)
+      .then((resposta)=>{
+
+        if(resposta.error){
+          alert("Erro ao atualizar serviço.");
+          return;
+        }
+
+        servicoEditandoId = null;
+        alert("Serviço atualizado!");
+        fecharModalServico();
+        carregarServicosSalao();
+
+      });
+
     return;
   }
 
@@ -2055,14 +2079,7 @@ function salvarServicoSalao(){
     .from("servicos_salao")
     .insert([{
       id: Date.now(),
-      nome,
-      categoria,
-      descricao,
-      comissao_padrao: comissao,
-      duracao,
-      valor,
-      custo,
-      nao_comissionavel: naoComissionavel
+      ...dadosServico
     }])
     .then((resposta)=>{
 
@@ -2072,9 +2089,7 @@ function salvarServicoSalao(){
       }
 
       alert("Serviço salvo!");
-
       fecharModalServico();
-
       carregarServicosSalao();
 
     });
