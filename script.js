@@ -2013,9 +2013,37 @@ function abrirCadastroRapidoCliente(){
 }
 function salvarServicoSalao(){
 
-  const nome = document.getElementById("nomeServicoSalao").value;
-  const valor = Number(document.getElementById("valorServicoSalao").value || 0);
-  const duracao = document.getElementById("duracaoServicoSalao").value;
+  const nome =
+    document.getElementById("nomeServicoSalao").value;
+
+  const categoria =
+    document.getElementById("categoriaServicoSalao").value;
+
+  const descricao =
+    document.getElementById("descricaoServicoSalao").value;
+
+  const comissao =
+    Number(
+      document.getElementById("comissaoServicoSalao").value || 0
+    );
+
+  const duracao =
+    document.getElementById("duracaoServicoSalao").value;
+
+  const valor =
+    Number(
+      document.getElementById("valorServicoSalao").value || 0
+    );
+
+  const custo =
+    Number(
+      document.getElementById("custoServicoSalao").value || 0
+    );
+
+  const naoComissionavel =
+    Number(
+      document.getElementById("naoComissionavelServicoSalao").value || 0
+    );
 
   if(!nome){
     alert("Informe o nome do serviço.");
@@ -2027,8 +2055,13 @@ function salvarServicoSalao(){
     .insert([{
       id: Date.now(),
       nome,
+      categoria,
+      descricao,
+      comissao_padrao: comissao,
+      duracao,
       valor,
-      duracao
+      custo,
+      nao_comissionavel: naoComissionavel
     }])
     .then((resposta)=>{
 
@@ -2039,9 +2072,7 @@ function salvarServicoSalao(){
 
       alert("Serviço salvo!");
 
-      document.getElementById("nomeServicoSalao").value = "";
-      document.getElementById("valorServicoSalao").value = "";
-      document.getElementById("duracaoServicoSalao").value = "";
+      fecharModalServico();
 
       carregarServicosSalao();
 
