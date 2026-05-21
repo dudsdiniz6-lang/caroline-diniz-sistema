@@ -1359,6 +1359,7 @@ window.onload = function(){
   carregarHorariosAgenda();
   carregarClientesAgendamento();
     carregarServicosSalao();
+    carregarCategoriasServicos();
 
 };
 let eventoInstalacao = null;
