@@ -2365,3 +2365,27 @@ function editarServicoSalao(id){
     });
 
 }
+function excluirCategoriaServico(id){
+
+  const confirmar = confirm(
+    "Deseja excluir esta categoria?"
+  );
+
+  if(!confirmar) return;
+
+  supabaseClient
+    .from("categorias_servicos")
+    .delete()
+    .eq("id", id)
+    .then((resposta)=>{
+
+      if(resposta.error){
+        alert("Erro ao excluir categoria.");
+        return;
+      }
+
+      carregarCategoriasServicos();
+
+    });
+
+}
