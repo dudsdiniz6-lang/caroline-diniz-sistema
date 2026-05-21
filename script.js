@@ -4,6 +4,7 @@ const SUPABASE_KEY = "sb_publishable_KQ58nMCXUZl0Nz5jEHkKKg_RbpL-QTw";
 const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
 let dataSelecionada = new Date();
+let servicoEditandoId = null;
 const horariosAgenda = [
     "07:00",
   "07:30",
