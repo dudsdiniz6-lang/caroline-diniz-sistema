@@ -2255,12 +2255,22 @@ function atualizarServicoSelecionado(){
     `;
   }
 }
-function abrirModalServico(){
+
+  function abrirModalServico(){
 
   servicoEditandoId = null;
 
   document.getElementById("nomeServicoSalao").value = "";
-  
+  document.getElementById("categoriaServicoSalao").value = "";
+  document.getElementById("descricaoServicoSalao").value = "";
+  document.getElementById("comissaoServicoSalao").value = "";
+  document.getElementById("duracaoServicoSalao").value = "";
+  document.getElementById("valorServicoSalao").value = "";
+  document.getElementById("custoServicoSalao").value = "";
+
+  document.getElementById("modal-servico").style.display = "flex";
+
+}
 function carregarCategoriasServicos(){
 
   const select = document.getElementById("categoriaServicoSalao");
