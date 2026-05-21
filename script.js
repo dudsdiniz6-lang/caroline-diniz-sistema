@@ -2036,10 +2036,18 @@ function salvarServicoSalao(){
     document.getElementById("naoComissionavelServicoSalao").value || 0
   );
 
-  if(!nome){
-    alert("Informe o nome do serviço.");
-    return;
-  }
+ if(
+  !nome ||
+  !categoria ||
+  !comissao ||
+  !duracao ||
+  !valor
+){
+  alert(
+    "Preencha todos os campos obrigatórios."
+  );
+  return;
+}
 
   const dadosServico = {
     nome,
