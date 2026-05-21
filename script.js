@@ -2202,3 +2202,61 @@ function abrirModalServico(){
 function fecharModalServico(){
   document.getElementById("modal-servico").style.display = "none";
 }
+function carregarCategoriasServicos(){
+
+  const select =
+    document.getElementById("categoriaServicoSalao");
+
+  if(!select) return;
+
+  select.innerHTML = `
+    <option value="">
+      Selecione a categoria
+    </option>
+  `;
+
+  supabaseClient
+    .from("categorias_servicos")
+    .select("*")
+    .then((resposta)=>{
+
+      const categorias = resposta.data || [];
+
+      categorias.forEach((categoria)=>{
+
+        select.innerHTML += `
+          <option value="${categoria.nome}">
+            ${categoria.nome}
+          </option>
+        `;
+
+      });
+
+    });
+
+}
+
+function adicionarCategoriaServico(){
+
+  const nome = prompt("Nome da categoria:");
+
+  if(!nome) return;
+
+  supabaseClient
+    .from("categorias_servicos")
+    .insert([{
+      id: Date.now(),
+      nome
+    }])
+    .then((resposta)=>{
+
+      if(resposta.error){
+        alert("Erro ao salvar categoria.");
+        return;
+      }
+
+      carregarCategoriasServicos();
+
+    });
+
+}
