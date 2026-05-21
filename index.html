@@ -379,11 +379,19 @@
         placeholder="Nome do serviço"
       >
 
-      <input
-        type="text"
-        id="categoriaServicoSalao"
-        placeholder="Categoria"
-      >
+      <div class="categoria-servico-linha">
+
+  <select id="categoriaServicoSalao">
+    <option value="">
+      Selecione a categoria
+    </option>
+  </select>
+
+  <button onclick="adicionarCategoriaServico()">
+    +
+  </button>
+
+</div>
 
       <textarea
         id="descricaoServicoSalao"
