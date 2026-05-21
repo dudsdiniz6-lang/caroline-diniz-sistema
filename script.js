@@ -2260,33 +2260,14 @@ function abrirModalServico(){
   servicoEditandoId = null;
 
   document.getElementById("nomeServicoSalao").value = "";
-  document.getElementById("categoriaServicoSalao").value = "";
-  document.getElementById("descricaoServicoSalao").value = "";
-  document.getElementById("comissaoServicoSalao").value = "";
-  document.getElementById("duracaoServicoSalao").value = "";
-  document.getElementById("valorServicoSalao").value = "";
-  document.getElementById("custoServicoSalao").value = "";
+  
+function carregarCategoriasServicos(){
 
-  document.getElementById("modal-servico").style.display = "flex";
-
-}
-
- 
-
-  const select =
-    document.getElementById("categoriaServicoSalao");
-
-  const chips =
-    document.getElementById("categorias-servicos-chips");
+  const select = document.getElementById("categoriaServicoSalao");
+  const chips = document.getElementById("categorias-servicos-chips");
 
   if(select){
-
-    select.innerHTML = `
-      <option value="">
-        Selecione a categoria
-      </option>
-    `;
-
+    select.innerHTML = `<option value="">Selecione a categoria</option>`;
   }
 
   if(chips){
@@ -2303,20 +2284,16 @@ function abrirModalServico(){
       categorias.forEach((categoria)=>{
 
         if(select){
-
           select.innerHTML += `
             <option value="${categoria.nome}">
               ${categoria.nome}
             </option>
           `;
-
         }
 
         if(chips){
-
           chips.innerHTML += `
             <div class="chip-categoria-box">
-
               <button class="chip-categoria">
                 ${categoria.nome}
               </button>
@@ -2327,10 +2304,8 @@ function abrirModalServico(){
               >
                 ×
               </button>
-
             </div>
           `;
-
         }
 
       });
@@ -2338,7 +2313,6 @@ function abrirModalServico(){
     });
 
 }
-
 function adicionarCategoriaServico(){
 
   const nome = prompt("Nome da categoria:");
