@@ -2359,7 +2359,6 @@ function editarServicoSalao(id){
       document.getElementById("duracaoServicoSalao").value = servico.duracao || "";
       document.getElementById("valorServicoSalao").value = servico.valor || "";
       document.getElementById("custoServicoSalao").value = servico.custo || "";
-      document.getElementById("naoComissionavelServicoSalao").value = servico.nao_comissionavel || "";
 
       abrirModalServico();
 
