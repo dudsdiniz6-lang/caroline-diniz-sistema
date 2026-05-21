@@ -2288,23 +2288,66 @@ function abrirModalServico(){
           `;
         }
 
+        function carregarCategoriasServicos(){
+
+  const select =
+    document.getElementById("categoriaServicoSalao");
+
+  const chips =
+    document.getElementById("categorias-servicos-chips");
+
+  if(select){
+
+    select.innerHTML = `
+      <option value="">
+        Selecione a categoria
+      </option>
+    `;
+
+  }
+
+  if(chips){
+    chips.innerHTML = "";
+  }
+
+  supabaseClient
+    .from("categorias_servicos")
+    .select("*")
+    .then((resposta)=>{
+
+      const categorias = resposta.data || [];
+
+      categorias.forEach((categoria)=>{
+
+        if(select){
+
+          select.innerHTML += `
+            <option value="${categoria.nome}">
+              ${categoria.nome}
+            </option>
+          `;
+
+        }
+
         if(chips){
-         chips.innerHTML += `
-  <div class="chip-categoria-box">
 
-    <button class="chip-categoria">
-      ${categoria.nome}
-    </button>
+          chips.innerHTML += `
+            <div class="chip-categoria-box">
 
-    <button
-      class="btn-excluir-categoria"
-      onclick="excluirCategoriaServico('${categoria.id}')"
-    >
-      ×
-    </button>
+              <button class="chip-categoria">
+                ${categoria.nome}
+              </button>
 
-  </div>
-`;
+              <button
+                class="btn-excluir-categoria"
+                onclick="excluirCategoriaServico('${categoria.id}')"
+              >
+                ×
+              </button>
+
+            </div>
+          `;
+
         }
 
       });
