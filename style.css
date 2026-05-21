@@ -835,3 +835,20 @@ nav a:hover,
   background:#ff7a00;
   color:white;
 }
+.chip-categoria-box{
+  display:flex;
+  align-items:center;
+  gap:5px;
+}
+
+.btn-excluir-categoria{
+  border:none;
+  background:#ef4444;
+  color:white;
+  width:24px;
+  height:24px;
+  border-radius:999px;
+  cursor:pointer;
+  font-size:14px;
+  font-weight:bold;
+}
