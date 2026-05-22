@@ -2513,7 +2513,14 @@ function salvarPacote(){
 
   const status =
     document.getElementById("statusPacote").value;
+const sessoes =
+  document.getElementById("sessoesPacote").value;
 
+const validade =
+  document.getElementById("validadePacote").value;
+
+const estender =
+  document.getElementById("estenderPacote").value;
   if(
     !nome ||
     !servicos ||
