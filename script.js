@@ -2615,39 +2615,38 @@ function salvarPacote(){
 }
 
   supabaseClient
-    .from("pacotes")
-    .insert([{
-      id: Date.now(),
-      nome,
-      servicos: servicosPacote.join(", "),
-      valor: valorTotal,
-      sessoes,
-      validade_dias: validade,
-      permite_estender: estender,
-      status
-    }])
-    .then((resposta)=>{
+  .from("pacotes")
+  .insert([{
+    id: Date.now(),
+    nome,
+    servicos: servicosPacote.join(", "),
+    valor: valorTotal,
+    sessoes,
+    validade_dias: validade,
+    permite_estender: estender,
+    status
+  }])
+  .then((resposta)=>{
 
-      if(resposta.error){
-        alert(
-          "Erro ao salvar pacote: " +
-          resposta.error.message
-        );
-        return;
-      }
+    if(resposta.error){
+      alert(
+        "Erro ao salvar pacote: " +
+        resposta.error.message
+      );
+      return;
+    }
 
-      alert("Pacote salvo!");
+    alert("Pacote salvo!");
 
-      servicosPacote = [];
+    servicosPacote = [];
 
-      fecharModalPacote();
+    fecharModalPacote();
 
-      carregarPacotes();
+    carregarPacotes();
 
-    });
+  });
 
 }
-
 function carregarPacotes(){
 
   const lista =
