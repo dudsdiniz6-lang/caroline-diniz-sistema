@@ -1357,10 +1357,16 @@ window.onload = function(){
   carregarEstoque();
 
   carregarConsumoServicos();
+
   carregarHorariosAgenda();
+
   carregarClientesAgendamento();
-    carregarServicosSalao();
-    carregarCategoriasServicos();
+
+  carregarServicosSalao();
+
+  carregarCategoriasServicos();
+
+  carregarPacotes();
 
 };
 let eventoInstalacao = null;
