@@ -2504,26 +2504,31 @@ function salvarPacote(){
   const nome =
     document.getElementById("nomePacote").value;
 
-  const servicos =
-    document.getElementById("servicosPacote").value;
+  const sessoes = Number(
+    document.getElementById("sessoesPacote").value || 0
+  );
 
-  const valor =
-    document.getElementById("valorPacote").value;
+  const valorSessao = Number(
+    document.getElementById("valorSessaoPacote").value || 0
+  );
+
+  const validade =
+    document.getElementById("validadePacote").value;
+
+  const estender =
+    document.getElementById("estenderPacote").value;
 
   const status =
     document.getElementById("statusPacote").value;
-const sessoes =
-  document.getElementById("sessoesPacote").value;
 
-const validade =
-  document.getElementById("validadePacote").value;
+  const valorTotal =
+    sessoes * valorSessao;
 
-const estender =
-  document.getElementById("estenderPacote").value;
   if(
     !nome ||
-    !servicos ||
-    !valor
+    servicosPacote.length === 0 ||
+    !sessoes ||
+    !valorSessao
   ){
     alert("Preencha os campos.");
     return;
@@ -2534,18 +2539,26 @@ const estender =
     .insert([{
       id: Date.now(),
       nome,
-      servicos,
-      valor,
+      servicos: servicosPacote.join(", "),
+      valor: valorTotal,
+      sessoes,
+      validade_dias: validade,
+      permite_estender: estender,
       status
     }])
     .then((resposta)=>{
 
       if(resposta.error){
-        alert("Erro ao salvar pacote.");
+        alert(
+          "Erro ao salvar pacote: " +
+          resposta.error.message
+        );
         return;
       }
 
       alert("Pacote salvo!");
+
+      servicosPacote = [];
 
       fecharModalPacote();
 
