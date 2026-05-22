@@ -350,117 +350,65 @@
   </div>
 <div class="modal" id="modal-servico">
 
-  <div class="modal-content">
+  <div class="modal-content modal-servico-content">
 
     <div class="modal-header">
       <h2>Serviço</h2>
 
       <button class="close" onclick="fecharModalServico()">
-        X
+        ×
       </button>
     </div>
 
-    <div class="form">
+    <div class="form-servico">
 
-      <input
-        type="text"
-        id="nomeServicoSalao"
-        placeholder="Nome do serviço"
-      >
+      <input type="text" id="nomeServicoSalao" placeholder="Nome do serviço">
 
       <div class="categoria-servico-linha">
+        <select id="categoriaServicoSalao">
+          <option value="">Selecione a categoria</option>
+        </select>
 
-  <select id="categoriaServicoSalao">
-    <option value="">
-      Selecione a categoria
-    </option>
-  </select>
+        <button onclick="abrirModalCategoria()">+</button>
+      </div>
 
-  <button onclick="abrirModalCategoria()">
-  Nova Categoria
-</button>
+      <textarea id="descricaoServicoSalao" placeholder="Descrição do serviço"></textarea>
 
-</div>
+      <input type="number" id="comissaoServicoSalao" placeholder="Comissão (%)">
 
-      <textarea
-        id="descricaoServicoSalao"
-        placeholder="Descrição do serviço"
-      ></textarea>
+      <select id="duracaoServicoSalao">
+        <option value="">Duração</option>
+        <option value="10">10 min</option>
+        <option value="20">20 min</option>
+        <option value="30">30 min</option>
+        <option value="40">40 min</option>
+        <option value="50">50 min</option>
+        <option value="60">1h</option>
+        <option value="70">1h10</option>
+        <option value="80">1h20</option>
+        <option value="90">1h30</option>
+        <option value="100">1h40</option>
+        <option value="110">1h50</option>
+        <option value="120">2h</option>
+        <option value="150">2h30</option>
+        <option value="180">3h</option>
+        <option value="240">4h</option>
+        <option value="300">5h</option>
+      </select>
 
-      <input
-        type="number"
-        id="comissaoServicoSalao"
-        placeholder="Comissão (%)"
-      >
+      <input type="number" step="0.01" id="valorServicoSalao" placeholder="Preço (R$)">
 
-     <select id="duracaoServicoSalao">
-  
-</select>
-<option value="">Duração</option>
+      <input type="number" step="0.01" id="custoServicoSalao" placeholder="Valor de custos">
 
-<option value="10">10 min</option>
-<option value="20">20 min</option>
-<option value="30">30 min</option>
-<option value="40">40 min</option>
-<option value="50">50 min</option>
-
-<option value="60">1h</option>
-<option value="70">1h10</option>
-<option value="80">1h20</option>
-<option value="90">1h30</option>
-<option value="100">1h40</option>
-<option value="110">1h50</option>
-
-<option value="120">2h</option>
-<option value="130">2h10</option>
-<option value="140">2h20</option>
-<option value="150">2h30</option>
-<option value="160">2h40</option>
-<option value="170">2h50</option>
-
-<option value="180">3h</option>
-<option value="190">3h10</option>
-<option value="200">3h20</option>
-<option value="210">3h30</option>
-<option value="220">3h40</option>
-<option value="230">3h50</option>
-
-<option value="240">4h</option>
-<option value="250">4h10</option>
-<option value="260">4h20</option>
-<option value="270">4h30</option>
-<option value="280">4h40</option>
-<option value="290">4h50</option>
-
-<option value="300">5h</option>
-      <input
-        type="number"
-        id="valorServicoSalao"
-        placeholder="Preço"
-      >
-
-      <input
-        type="number"
-        id="custoServicoSalao"
-        placeholder="Valor de custos"
-      >
-
-      <input
-        type="number"
-        id="naoComissionavelServicoSalao"
-        placeholder="Valor não comissionável"
-      >
-
-      <button
-        class="save-btn"
-        onclick="salvarServicoSalao()"
-      >
+      <button class="save-btn" onclick="salvarServicoSalao()">
         Salvar
       </button>
 
     </div>
 
   </div>
+
+</div>
 
 </div>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
