@@ -2448,7 +2448,6 @@ function fecharModalCategoria(){
 function abrirModalPacote(){
 
   document.getElementById("nomePacote").value = "";
-  document.getElementById("valorPacote").value = "";
 
   document.getElementById(
     "modal-pacote"
