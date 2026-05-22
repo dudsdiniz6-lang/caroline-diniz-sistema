@@ -443,36 +443,23 @@
         placeholder="Nome do pacote"
       >
 
-      <select id="servicosPacote">
-        <option value="">
-          Selecione o serviço
-        </option>
-      </select>
+    <div id="itensPacote"></div>
 
-  <div id="servicosPacoteSelecionados"></div>
-
-<button type="button" onclick="adicionarServicoAoPacote()">
-  + Adicionar serviço ao pacote
+<button
+  type="button"
+  onclick="adicionarLinhaItemPacote()"
+>
+  ADICIONAR MAIS ITENS
 </button>
 
-<input
-  type="number"
-  id="sessoesPacote"
-  placeholder="Quantidade de sessões"
-  oninput="calcularValorPacote()"
->
-
-<input
-  type="number"
-  step="0.01"
-  id="valorSessaoPacote"
-  placeholder="Valor de cada sessão"
-  oninput="calcularValorPacote()"
->
-
 <div class="cliente-card">
+
   <strong>Valor total do pacote</strong>
-  <p id="valorTotalPacote">R$ 0,00</p>
+
+  <p id="valorTotalPacote">
+    R$ 0,00
+  </p>
+
 </div>
       <input
   type="number"
