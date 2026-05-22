@@ -2415,3 +2415,22 @@ function carregarCategoriasServicos(){
     });
 
 }
+function abrirModalCategoria(){
+
+  document.getElementById(
+    "novaCategoriaServico"
+  ).value = "";
+
+  document.getElementById(
+    "modal-categoria"
+  ).style.display = "flex";
+
+}
+
+function fecharModalCategoria(){
+
+  document.getElementById(
+    "modal-categoria"
+  ).style.display = "none";
+
+}
