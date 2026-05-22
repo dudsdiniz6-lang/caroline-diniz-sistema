@@ -878,3 +878,39 @@ nav a:hover,
   outline:none;
   font-size:14px;
 }
+.modal-servico-content{
+  max-width:460px;
+  max-height:90vh;
+  overflow-y:auto;
+}
+
+.form-servico{
+  display:flex;
+  flex-direction:column;
+  gap:12px;
+}
+
+.form-servico input,
+.form-servico select,
+.form-servico textarea{
+  width:100%;
+  height:46px;
+  padding:0 14px;
+  border:1px solid #e5e7eb;
+  border-radius:12px;
+  font-size:14px;
+  background:white;
+}
+
+.form-servico textarea{
+  height:80px;
+  padding-top:12px;
+  resize:none;
+}
+
+.modal-header{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  margin-bottom:18px;
+}
