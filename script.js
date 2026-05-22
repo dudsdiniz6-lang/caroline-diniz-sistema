@@ -2742,27 +2742,38 @@ function adicionarLinhaItemPacote(){
 
     <div class="item-pacote">
 
-      <select class="servico-item-pacote">
-
+      <select
+        class="servico-item-pacote"
+      >
         <option value="">
           Escolha o serviço
         </option>
-
       </select>
 
       <input
         type="number"
         class="valor-item-pacote"
-        placeholder="Valor Unitário (R$)"
+        placeholder="Valor sessão"
         oninput="calcularValorPacote()"
       >
 
       <input
         type="number"
         class="qtd-item-pacote"
-        placeholder="Qtd."
+        placeholder="Sessões"
         oninput="calcularValorPacote()"
       >
+
+      <span class="subtotal-item">
+        R$ 0,00
+      </span>
+
+      <button
+        type="button"
+        onclick="this.parentElement.remove(); calcularValorPacote();"
+      >
+        ×
+      </button>
 
     </div>
 
