@@ -2504,14 +2504,6 @@ function salvarPacote(){
   const nome =
     document.getElementById("nomePacote").value;
 
-  const sessoes = Number(
-    document.getElementById("sessoesPacote").value || 0
-  );
-
-  const valorSessao = Number(
-    document.getElementById("valorSessaoPacote").value || 0
-  );
-
   const validade =
     document.getElementById("validadePacote").value;
 
@@ -2521,18 +2513,106 @@ function salvarPacote(){
   const status =
     document.getElementById("statusPacote").value;
 
-  const valorTotal =
-    sessoes * valorSessao;
+  const itens = [];
+
+  let valorTotal = 0;
+
+  document
+    .querySelectorAll(".item-pacote")
+    .forEach((item)=>{
+
+      const servico =
+        item.querySelector(
+          ".servico-item-pacote"
+        ).value;
+
+      const valor = Number(
+        item.querySelector(
+          ".valor-item-pacote"
+        ).value || 0
+      );
+
+      const qtd = Number(
+        item.querySelector(
+          ".qtd-item-pacote"
+        ).value || 0
+      );
+
+      if(
+        servico &&
+        valor &&
+        qtd
+      ){
+
+        itens.push({
+          servico,
+          valor,
+          qtd
+        });
+
+        valorTotal += valor * qtd;
+
+      }
+
+    });
 
   if(
     !nome ||
-    servicosPacote.length === 0 ||
-    !sessoes ||
-    !valorSessao
+    itens.length === 0
   ){
-    alert("Preencha os campos.");
+    alert(
+      "Adicione pelo menos um serviço."
+    );
     return;
   }
+
+  supabaseClient
+    .from("pacotes")
+    .insert([{
+
+      id: Date.now(),
+
+      nome,
+
+      itens: JSON.stringify(itens),
+
+      servicos:
+        itens
+          .map(i=>i.servico)
+          .join(", "),
+
+      valor: valorTotal,
+
+      validade_dias: validade,
+
+      permite_estender: estender,
+
+      status
+
+    }])
+
+    .then((resposta)=>{
+
+      if(resposta.error){
+
+        alert(
+          "Erro: " +
+          resposta.error.message
+        );
+
+        return;
+
+      }
+
+      alert("Pacote salvo!");
+
+      fecharModalPacote();
+
+      carregarPacotes();
+
+    });
+
+}
 
   supabaseClient
     .from("pacotes")
