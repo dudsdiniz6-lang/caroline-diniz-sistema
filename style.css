@@ -852,3 +852,19 @@ nav a:hover,
   font-size:14px;
   font-weight:bold;
 }
+.close{
+  width:36px;
+  height:36px;
+  border:none;
+  border-radius:50%;
+  background:#f3f4f6;
+  color:#111827;
+  font-size:18px;
+  font-weight:700;
+  cursor:pointer;
+}
+
+.close:hover{
+  background:#ef4444;
+  color:white;
+}
