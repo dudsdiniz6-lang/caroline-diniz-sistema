@@ -2273,9 +2273,15 @@ function atualizarServicoSelecionado(){
 }
 function adicionarCategoriaServico(){
 
-  const nome = prompt("Nome da categoria:");
+  const nome =
+    document.getElementById(
+      "novaCategoriaServico"
+    ).value;
 
-  if(!nome) return;
+  if(!nome){
+    alert("Digite o nome da categoria.");
+    return;
+  }
 
   supabaseClient
     .from("categorias_servicos")
@@ -2289,6 +2295,8 @@ function adicionarCategoriaServico(){
         alert("Erro ao salvar categoria.");
         return;
       }
+
+      fecharModalCategoria();
 
       carregarCategoriasServicos();
 
