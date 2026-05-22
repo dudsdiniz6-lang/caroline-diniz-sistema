@@ -2032,9 +2032,7 @@ function salvarServicoSalao(){
     document.getElementById("custoServicoSalao").value || 0
   );
 
-  const naoComissionavel = Number(
-    document.getElementById("naoComissionavelServicoSalao").value || 0
-  );
+ 
 
  if(
   !nome ||
@@ -2057,7 +2055,6 @@ function salvarServicoSalao(){
     duracao,
     valor,
     custo,
-    nao_comissionavel: naoComissionavel
   };
 
   if(servicoEditandoId){
