@@ -2439,3 +2439,152 @@ function fecharModalCategoria(){
   ).style.display = "none";
 
 }
+function abrirModalPacote(){
+
+  document.getElementById("nomePacote").value = "";
+  document.getElementById("valorPacote").value = "";
+
+  document.getElementById(
+    "modal-pacote"
+  ).style.display = "flex";
+
+  carregarServicosPacote();
+
+}
+
+function fecharModalPacote(){
+
+  document.getElementById(
+    "modal-pacote"
+  ).style.display = "none";
+
+}
+
+function carregarServicosPacote(){
+
+  const select =
+    document.getElementById("servicosPacote");
+
+  if(!select) return;
+
+  select.innerHTML = `
+    <option value="">
+      Selecione o serviço
+    </option>
+  `;
+
+  supabaseClient
+    .from("servicos_salao")
+    .select("*")
+    .then((resposta)=>{
+
+      const servicos = resposta.data || [];
+
+      servicos.forEach((servico)=>{
+
+        select.innerHTML += `
+          <option value="${servico.nome}">
+            ${servico.nome}
+          </option>
+        `;
+
+      });
+
+    });
+
+}
+
+function salvarPacote(){
+
+  const nome =
+    document.getElementById("nomePacote").value;
+
+  const servicos =
+    document.getElementById("servicosPacote").value;
+
+  const valor =
+    document.getElementById("valorPacote").value;
+
+  const status =
+    document.getElementById("statusPacote").value;
+
+  if(
+    !nome ||
+    !servicos ||
+    !valor
+  ){
+    alert("Preencha os campos.");
+    return;
+  }
+
+  supabaseClient
+    .from("pacotes")
+    .insert([{
+      id: Date.now(),
+      nome,
+      servicos,
+      valor,
+      status
+    }])
+    .then((resposta)=>{
+
+      if(resposta.error){
+        alert("Erro ao salvar pacote.");
+        return;
+      }
+
+      alert("Pacote salvo!");
+
+      fecharModalPacote();
+
+      carregarPacotes();
+
+    });
+
+}
+
+function carregarPacotes(){
+
+  const lista =
+    document.getElementById("lista-pacotes");
+
+  if(!lista) return;
+
+  lista.innerHTML = "";
+
+  supabaseClient
+    .from("pacotes")
+    .select("*")
+    .then((resposta)=>{
+
+      const pacotes = resposta.data || [];
+
+      pacotes.forEach((pacote)=>{
+
+        lista.innerHTML += `
+          <div class="linha-servico">
+
+            <span>
+              ${pacote.nome}
+            </span>
+
+            <span>
+              ${pacote.servicos}
+            </span>
+
+            <span>
+              R$ ${Number(pacote.valor).toFixed(2)}
+            </span>
+
+            <span>
+              ${pacote.status}
+            </span>
+
+          </div>
+        `;
+
+      });
+
+    });
+
+}
