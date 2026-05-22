@@ -427,74 +427,54 @@
 
     <div class="modal-header">
 
-      <h2>Novo Pacote</h2>
+     <h2>Novo Pacote</h2>
 
-      <button class="close" onclick="fecharModalPacote()">
-        ×
-      </button>
+<button class="close" onclick="fecharModalPacote()">
+  ×
+</button>
 
-    </div>
+</div>
 
-    <div class="form-servico">
+<div class="form-servico">
 
-      <input
-        type="text"
-        id="nomePacote"
-        placeholder="Nome do pacote"
-      >
+<input
+  type="text"
+  id="nomePacote"
+  placeholder="Nome do pacote"
+>
 
-    <div id="itensPacote"></div>
+<div class="cliente-card">
+  <strong>Valor total do pacote</strong>
+  <p id="valorTotalPacote">R$ 0,00</p>
+</div>
+
+<input
+  type="number"
+  id="validadePacote"
+  placeholder="Validade do pacote em dias"
+>
+
+<div id="itensPacote"></div>
 
 <button
   type="button"
   onclick="adicionarLinhaItemPacote()"
 >
-  ADICIONAR MAIS ITENS
+  + Adicionar serviço
 </button>
 
-<div class="cliente-card">
-
-  <strong>Valor total do pacote</strong>
-
-  <p id="valorTotalPacote">
-    R$ 0,00
-  </p>
-
-</div>
-      <input
-  type="number"
-  id="sessoesPacote"
-  placeholder="Quantidade de sessões"
->
-
-<input
-  type="number"
-  id="validadePacote"
-  placeholder="Validade em dias"
->
-
-<select id="estenderPacote">
-  <option value="Sim">
-    Permite estender validade
-  </option>
-
-  <option value="Não">
-    Não permite estender
-  </option>
+<select id="statusPacote">
+  <option value="Ativo">Ativo</option>
+  <option value="Inativo">Inativo</option>
 </select>
 
-      <select id="statusPacote">
-        <option value="Ativo">Ativo</option>
-        <option value="Inativo">Inativo</option>
-      </select>
+<button onclick="salvarPacote()">
+  Salvar Pacote
+</button>
 
-      <button onclick="salvarPacote()">
-        Salvar Pacote
-      </button>
+</div>
 
-    </div>
-
-  </div>
+</div>
 
 </div>
 </body>
