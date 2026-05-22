@@ -2685,3 +2685,112 @@ function calcularValorPacote(){
     `R$ ${total.toFixed(2)}`;
 
 }
+let itensPacote = [];
+
+function adicionarLinhaItemPacote(){
+
+  const container =
+    document.getElementById("itensPacote");
+
+  container.innerHTML += `
+
+    <div class="item-pacote">
+
+      <select class="servico-item-pacote">
+
+        <option value="">
+          Escolha o serviço
+        </option>
+
+      </select>
+
+      <input
+        type="number"
+        class="valor-item-pacote"
+        placeholder="Valor Unitário (R$)"
+        oninput="calcularValorPacote()"
+      >
+
+      <input
+        type="number"
+        class="qtd-item-pacote"
+        placeholder="Qtd."
+        oninput="calcularValorPacote()"
+      >
+
+    </div>
+
+  `;
+
+  carregarServicosItensPacote();
+
+}
+
+function carregarServicosItensPacote(){
+
+  supabaseClient
+    .from("servicos_salao")
+    .select("*")
+    .then((resposta)=>{
+
+      const servicos =
+        resposta.data || [];
+
+      document
+        .querySelectorAll(
+          ".servico-item-pacote"
+        )
+        .forEach((select)=>{
+
+          if(
+            select.options.length > 1
+          ) return;
+
+          servicos.forEach((servico)=>{
+
+            select.innerHTML += `
+              <option
+                value="${servico.nome}"
+              >
+                ${servico.nome}
+              </option>
+            `;
+
+          });
+
+        });
+
+    });
+
+}
+
+function calcularValorPacote(){
+
+  let total = 0;
+
+  document
+    .querySelectorAll(".item-pacote")
+    .forEach((item)=>{
+
+      const valor = Number(
+        item.querySelector(
+          ".valor-item-pacote"
+        ).value || 0
+      );
+
+      const qtd = Number(
+        item.querySelector(
+          ".qtd-item-pacote"
+        ).value || 0
+      );
+
+      total += valor * qtd;
+
+    });
+
+  document.getElementById(
+    "valorTotalPacote"
+  ).innerText =
+    `R$ ${total.toFixed(2)}`;
+
+}
