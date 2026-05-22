@@ -2659,59 +2659,6 @@ function carregarPacotes(){
     });
 
 }
-let servicosPacote = [];
-
-function adicionarServicoAoPacote(){
-
-  const select =
-    document.getElementById("servicosPacote");
-
-  const option =
-    select.options[select.selectedIndex];
-
-  const nome = option.value;
-
-  if(!nome){
-    alert("Selecione um serviço.");
-    return;
-  }
-
-  servicosPacote.push(nome);
-
-  renderizarServicosPacote();
-
-}
-
-function renderizarServicosPacote(){
-
-  const div =
-    document.getElementById(
-      "servicosPacoteSelecionados"
-    );
-
-  if(!div) return;
-
-  div.innerHTML = "";
-
-  servicosPacote.forEach((servico)=>{
-
-    div.innerHTML += `
-      <div class="chip-categoria-box">
-
-        <button class="chip-categoria">
-          ${servico}
-        </button>
-
-      </div>
-    `;
-
-  });
-
-}
-
-  carregarServicosItensPacote();
-
-}
 
 function carregarServicosItensPacote(){
 
