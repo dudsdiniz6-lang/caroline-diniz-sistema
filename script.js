@@ -2318,6 +2318,8 @@ function editarServicoSalao(id){
 
       servicoEditandoId = id;
 
+      document.getElementById("modal-servico").style.display = "flex";
+
       document.getElementById("nomeServicoSalao").value = servico.nome || "";
       document.getElementById("categoriaServicoSalao").value = servico.categoria || "";
       document.getElementById("descricaoServicoSalao").value = servico.descricao || "";
@@ -2325,8 +2327,6 @@ function editarServicoSalao(id){
       document.getElementById("duracaoServicoSalao").value = servico.duracao || "";
       document.getElementById("valorServicoSalao").value = servico.valor || "";
       document.getElementById("custoServicoSalao").value = servico.custo || "";
-
-      abrirModalServico();
 
     });
 
