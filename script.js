@@ -2614,39 +2614,6 @@ function salvarPacote(){
 
 }
 
-  supabaseClient
-  .from("pacotes")
-  .insert([{
-    id: Date.now(),
-    nome,
-    servicos: servicosPacote.join(", "),
-    valor: valorTotal,
-    sessoes,
-    validade_dias: validade,
-    permite_estender: estender,
-    status
-  }])
-  .then((resposta)=>{
-
-    if(resposta.error){
-      alert(
-        "Erro ao salvar pacote: " +
-        resposta.error.message
-      );
-      return;
-    }
-
-    alert("Pacote salvo!");
-
-    servicosPacote = [];
-
-    fecharModalPacote();
-
-    carregarPacotes();
-
-  });
-
-}
 function carregarPacotes(){
 
   const lista =
