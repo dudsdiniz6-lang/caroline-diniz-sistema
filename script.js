@@ -2760,18 +2760,26 @@ function calcularValorPacote(){
     .forEach((item)=>{
 
       const valor = Number(
-        item.querySelector(
-          ".valor-item-pacote"
-        ).value || 0
+        item.querySelector(".valor-item-pacote").value || 0
       );
 
       const qtd = Number(
-        item.querySelector(
-          ".qtd-item-pacote"
-        ).value || 0
+        item.querySelector(".qtd-item-pacote").value || 0
       );
 
-      total += valor * qtd;
+      const subtotal = valor * qtd;
+
+      total += subtotal;
+
+      const subtotalSpan =
+        item.querySelector(".subtotal-item");
+
+      if(subtotalSpan){
+
+        subtotalSpan.innerText =
+          `R$ ${subtotal.toFixed(2)}`;
+
+      }
 
     });
 
