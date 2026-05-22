@@ -2600,3 +2600,75 @@ function carregarPacotes(){
     });
 
 }
+let servicosPacote = [];
+
+function adicionarServicoAoPacote(){
+
+  const select =
+    document.getElementById("servicosPacote");
+
+  const option =
+    select.options[select.selectedIndex];
+
+  const nome = option.value;
+
+  if(!nome){
+    alert("Selecione um serviço.");
+    return;
+  }
+
+  servicosPacote.push(nome);
+
+  renderizarServicosPacote();
+
+}
+
+function renderizarServicosPacote(){
+
+  const div =
+    document.getElementById(
+      "servicosPacoteSelecionados"
+    );
+
+  if(!div) return;
+
+  div.innerHTML = "";
+
+  servicosPacote.forEach((servico)=>{
+
+    div.innerHTML += `
+      <div class="chip-categoria-box">
+
+        <button class="chip-categoria">
+          ${servico}
+        </button>
+
+      </div>
+    `;
+
+  });
+
+}
+
+function calcularValorPacote(){
+
+  const sessoes = Number(
+    document.getElementById(
+      "sessoesPacote"
+    ).value || 0
+  );
+
+  const valorSessao = Number(
+    document.getElementById(
+      "valorSessaoPacote"
+    ).value || 0
+  );
+
+  const total = sessoes * valorSessao;
+
+  document.getElementById(
+    "valorTotalPacote"
+  ).innerText =
+    `R$ ${total.toFixed(2)}`;
+
+}
