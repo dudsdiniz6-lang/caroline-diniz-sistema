@@ -2585,8 +2585,6 @@ function salvarPacote(){
 
       validade_dias: validade,
 
-      permite_estender: estender,
-
       status
 
     }])
