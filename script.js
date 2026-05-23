@@ -2751,37 +2751,46 @@ function calcularValorPacote(){
 
   let total = 0;
 
-  document
-    .querySelectorAll(".item-pacote")
-    .forEach((item)=>{
+  document.querySelectorAll(".item-pacote").forEach((item)=>{
 
-      const valor = Number(
-        item.querySelector(".valor-item-pacote").value || 0
-      );
+    const valorCampo =
+      item.querySelector(".valor-item-pacote");
 
-      const qtd = Number(
-        item.querySelector(".qtd-item-pacote").value || 0
-      );
+    const qtdCampo =
+      item.querySelector(".qtd-item-pacote");
 
-      const subtotal = valor * qtd;
+    const subtotalSpan =
+      item.querySelector(".subtotal-item");
 
-      total += subtotal;
+    const valor =
+      Number(valorCampo?.value || 0);
 
-      const subtotalSpan =
-        item.querySelector(".subtotal-item");
+    const qtd =
+      Number(qtdCampo?.value || 0);
 
-      if(subtotalSpan){
+    const subtotal = valor * qtd;
 
-        subtotalSpan.innerText =
-          `R$ ${subtotal.toFixed(2)}`;
+    total += subtotal;
 
-      }
+    if(subtotalSpan){
 
-    });
+      subtotalSpan.innerText =
+        `R$ ${subtotal.toFixed(2)}`;
 
-  document.getElementById(
-    "valorTotalPacote"
-  ).innerText =
-    `R$ ${total.toFixed(2)}`;
+    }
+
+  });
+
+  const totalPacote =
+    document.getElementById(
+      "valorTotalPacote"
+    );
+
+  if(totalPacote){
+
+    totalPacote.innerText =
+      `R$ ${total.toFixed(2)}`;
+
+  }
 
 }
