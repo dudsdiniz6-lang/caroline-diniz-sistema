@@ -2510,9 +2510,6 @@ function salvarPacote(){
   const validade =
     document.getElementById("validadePacote").value;
 
-  const estender =
-    document.getElementById("estenderPacote").value;
-
   const status =
     document.getElementById("statusPacote").value;
 
