@@ -2448,12 +2448,14 @@ function fecharModalCategoria(){
 function abrirModalPacote(){
 
   document.getElementById("nomePacote").value = "";
+  document.getElementById("validadePacote").value = "";
+  document.getElementById("valorTotalPacote").innerText = "R$ 0,00";
 
-  document.getElementById(
-    "modal-pacote"
-  ).style.display = "flex";
+  document.getElementById("itensPacote").innerHTML = "";
 
-  carregarServicosPacote();
+  document.getElementById("modal-pacote").style.display = "flex";
+
+  adicionarLinhaItemPacote();
 
 }
 
