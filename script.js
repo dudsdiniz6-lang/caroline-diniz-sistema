@@ -2445,6 +2445,7 @@ function fecharModalCategoria(){
   ).style.display = "none";
 
 }
+
 function abrirModalPacote(){
 
   document.getElementById("nomePacote").value = "";
