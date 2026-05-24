@@ -991,3 +991,29 @@ nav a:hover,
   font-size:13px;
 
 }
+.appointment small{
+
+  display:block;
+
+  margin-top:6px;
+
+  font-size:12px;
+
+  font-weight:700;
+
+  color:#ff6a00;
+
+  letter-spacing:0.5px;
+
+}
+.appointment span{
+
+  display:block;
+
+  margin-top:4px;
+
+  color:#777;
+
+  font-size:13px;
+
+}
