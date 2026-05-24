@@ -2666,7 +2666,10 @@ function adicionarLinhaItemPacote(){
 
     <div class="item-pacote">
 
-      <select class="servico-item-pacote">
+      <select
+  class="servico-item-pacote"
+  onchange="preencherValorItemPacote(this)"
+>
         <option value="">
           Escolha o serviço
         </option>
