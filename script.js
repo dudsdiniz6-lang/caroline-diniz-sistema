@@ -2728,10 +2728,11 @@ function carregarServicosItensPacote(){
 
             select.innerHTML += `
               <option
-                value="${servico.nome}"
-              >
-                ${servico.nome}
-              </option>
+  value="${servico.nome}"
+  data-valor="${servico.valor}"
+>
+  ${servico.nome}
+</option>
             `;
 
           });
