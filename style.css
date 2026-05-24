@@ -914,3 +914,12 @@ nav a:hover,
   align-items:center;
   margin-bottom:18px;
 }
+.column{
+  background-image:
+    linear-gradient(to bottom, rgba(0,0,0,0.08) 1px, transparent 1px),
+    linear-gradient(to right, rgba(0,0,0,0.05) 1px, transparent 1px);
+
+  background-size:
+    100% 40px,
+    40px 100%;
+}
