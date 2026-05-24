@@ -923,3 +923,22 @@ nav a:hover,
     100% 40px,
     40px 100%;
 }
+#linha-horario-atual{
+
+  position:absolute;
+
+  left:0;
+
+  right:0;
+
+  height:2px;
+
+  background:#ff4d2d;
+
+  z-index:999;
+
+  pointer-events:none;
+
+  box-shadow:0 0 10px rgba(255,77,45,0.5);
+
+}
