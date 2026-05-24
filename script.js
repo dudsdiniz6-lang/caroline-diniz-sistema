@@ -2793,3 +2793,33 @@ function calcularValorPacote(){
   }
 
 }
+function preencherValorItemPacote(select){
+
+  const option =
+    select.options[select.selectedIndex];
+
+  const valor =
+    option.getAttribute("data-valor");
+
+  const linha =
+    select.closest(".item-pacote");
+
+  if(!linha) return;
+
+  const inputValor =
+    linha.querySelector(
+      ".valor-item-pacote"
+    );
+
+  if(
+    inputValor &&
+    valor
+  ){
+
+    inputValor.value = valor;
+
+    calcularValorPacote();
+
+  }
+
+}
