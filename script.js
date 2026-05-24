@@ -189,13 +189,48 @@ function criarCard(agendamento){
   const altura = ((agendamento.duracao || 20) / 20) * 80;
   card.style.height = `${altura - 10}px`;
 
-  card.innerHTML = `
-    <strong>${agendamento.cliente}</strong>
-    <span>${agendamento.servico || "Novo Atendimento"}</span>
-    <small>${agendamento.horario}</small>
-    <em>${agendamento.status || "Agendado"}</em>
-  `;
+  const [hora, minuto] =
+  agendamento.horario.split(":");
 
+const inicioMinutos =
+  Number(hora)*60 + Number(minuto);
+
+const fimMinutos =
+  inicioMinutos +
+  Number(agendamento.duracao || 20);
+
+const horaFim =
+  String(
+    Math.floor(fimMinutos/60)
+  ).padStart(2,"0");
+
+const minutoFim =
+  String(
+    fimMinutos % 60
+  ).padStart(2,"0");
+
+const horarioFim =
+  `${horaFim}:${minutoFim}`;
+
+card.innerHTML = `
+  <strong>
+    ${agendamento.cliente}
+  </strong>
+
+  <span>
+    ${agendamento.servico || "Novo Atendimento"}
+  </span>
+
+  <small>
+    ${agendamento.horario}
+    •
+    ${horarioFim}
+  </small>
+
+  <em>
+    ${agendamento.status || "Agendado"}
+  </em>
+`;
   card.onclick = function(){
 
   const acao = prompt(
