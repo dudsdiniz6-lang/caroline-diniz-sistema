@@ -1367,6 +1367,12 @@ window.onload = function(){
   carregarCategoriasServicos();
 
   carregarPacotes();
+    atualizarLinhaHorarioAtual();
+
+setInterval(
+  atualizarLinhaHorarioAtual,
+  60000
+);
 
 };
 let eventoInstalacao = null;
