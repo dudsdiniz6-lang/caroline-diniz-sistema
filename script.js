@@ -2823,3 +2823,41 @@ function preencherValorItemPacote(select){
   }
 
 }
+function atualizarLinhaHorarioAtual(){
+
+  const agenda =
+    document.querySelector(".agenda-body");
+
+  if(!agenda) return;
+
+  let linha =
+    document.getElementById(
+      "linha-horario-atual"
+    );
+
+  if(!linha){
+
+    linha = document.createElement("div");
+
+    linha.id =
+      "linha-horario-atual";
+
+    agenda.appendChild(linha);
+
+  }
+
+  const agora = new Date();
+
+  const minutosAgora =
+    (agora.getHours() * 60)
+    + agora.getMinutes();
+
+  const inicioAgenda = 7 * 60;
+
+  const top =
+    ((minutosAgora - inicioAgenda)
+    / 20) * 80;
+
+  linha.style.top = `${top}px`;
+
+}
