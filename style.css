@@ -237,15 +237,27 @@ nav a:hover,
 }
 
 .appointment{
+
   position:absolute;
+
   left:8px;
+
   right:8px;
+
   border-radius:16px;
+
   padding:14px;
+
   cursor:pointer;
+
   box-shadow:0 4px 15px rgba(0,0,0,0.06);
+
   transition:0.2s;
+
   overflow:hidden;
+
+  border-left:3px solid #ff6a00;
+
 }
 
 .appointment:hover{
