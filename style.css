@@ -972,3 +972,22 @@ nav a:hover,
     100% 80px;
 
 }
+.appointment strong{
+
+  display:block;
+
+  font-size:14px;
+
+  margin-bottom:4px;
+
+}
+
+.appointment span{
+
+  display:block;
+
+  color:#666;
+
+  font-size:13px;
+
+}
