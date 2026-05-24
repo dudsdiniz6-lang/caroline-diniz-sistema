@@ -297,8 +297,19 @@ nav a:hover,
 }
 
 .appointment small{
-  color:#ff7a00;
-  font-weight:bold;
+
+  display:block;
+
+  margin-top:6px;
+
+  font-size:12px;
+
+  font-weight:600;
+
+  color:#ff6a00;
+
+  letter-spacing:0.3px;
+
 }
 
 .corte{
