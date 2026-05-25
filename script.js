@@ -2027,16 +2027,12 @@ function carregarHorariosAgenda(){
 }
 function carregarClientesAgendamento(){
 
-  const selectCliente =
-    document.getElementById("cliente");
+  const lista =
+    document.getElementById("listaClientesAgendamento");
 
-  if(!selectCliente) return;
+  if(!lista) return;
 
-  selectCliente.innerHTML = `
-    <option value="">
-      Selecione a cliente
-    </option>
-  `;
+  lista.innerHTML = "";
 
   supabaseClient
     .from("clients")
@@ -2047,10 +2043,8 @@ function carregarClientesAgendamento(){
 
       clientes.forEach((cliente)=>{
 
-        selectCliente.innerHTML += `
+        lista.innerHTML += `
           <option value="${cliente.nome}">
-            ${cliente.nome}
-          </option>
         `;
 
       });
