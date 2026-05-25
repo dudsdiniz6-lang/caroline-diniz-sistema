@@ -3109,26 +3109,28 @@ function renderizarServicosSeletor(){
 
     })
 
-    .forEach((servico)=>{
+  .forEach((servico)=>{
 
-      lista.innerHTML += `
+  const item =
+    document.createElement("div");
 
-        <div
-          class="item-servico-seletor"
-          onclick="selecionarServicoAgenda(this.dataset.nome)"
-data-nome="${servico.nome}"
-        >
+  item.className =
+    "item-servico-seletor";
 
-          ${servico.nome}
+  item.innerText =
+    servico.nome;
 
-        </div>
+  item.onclick = function(){
 
-      `;
+    selecionarServicoAgenda(
+      servico.nome
+    );
 
-    });
+  };
 
-}
+  lista.appendChild(item);
 
+});
 function selecionarServicoAgenda(nome){
 
   const servicoInput =
