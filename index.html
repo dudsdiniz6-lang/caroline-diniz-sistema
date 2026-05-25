@@ -333,23 +333,17 @@
   <div id="info-servico-agendamento"></div>
 
   <div class="campo-busca-cliente">
+  <span>🔎</span>
 
-    <span>🔎</span>
+  <input
+    type="text"
+    id="cliente"
+    list="listaClientesAgendamento"
+    placeholder="Digite o nome da cliente"
+  >
 
-    <input
-      type="text"
-      id="buscaClienteAgendamento"
-      placeholder="Buscar cliente"
-      oninput="filtrarClientesAgendamento()"
-    >
-
-  </div>
-
-  <select id="cliente">
-    <option value="">
-      Selecione a cliente
-    </option>
-  </select>
+  <datalist id="listaClientesAgendamento"></datalist>
+</div>
 
   <button onclick="abrirCadastroRapidoCliente()">
     + Nova cliente
