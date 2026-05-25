@@ -1017,3 +1017,20 @@ nav a:hover,
   font-size:13px;
 
 }
+.barra-progresso-atendimento{
+
+  position:absolute;
+
+  left:0;
+
+  bottom:0;
+
+  height:4px;
+
+  background:#ff6a00;
+
+  border-radius:0 8px 8px 0;
+
+  transition:0.5s;
+
+}
