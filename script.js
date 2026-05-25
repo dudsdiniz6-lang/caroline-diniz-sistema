@@ -180,8 +180,19 @@ function criarCard(agendamento){
   card.classList.add(`status-${statusClasse}`);
 
   if(agendamento.servico){
-    card.classList.add(agendamento.servico);
-  }
+
+  const classeServico =
+    agendamento.servico
+      .toLowerCase()
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g,"")
+      .replaceAll(" ","-");
+
+  card.classList.add(
+    classeServico
+  );
+
+}
 
   card.dataset.id = agendamento.id;
   card.style.top = `${calcularTop(agendamento.horario)}px`;
