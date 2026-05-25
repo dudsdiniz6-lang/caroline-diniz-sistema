@@ -3077,60 +3077,55 @@ function carregarSeletorServico(){
 
 function renderizarServicosSeletor(){
 
-  const busca =
-    document.getElementById(
-      "buscaServicoSeletor"
-    ).value
+  const busca = document
+    .getElementById("buscaServicoSeletor")
+    .value
     .toLowerCase();
 
-  const lista =
-    document.getElementById(
-      "lista-seletor-servicos"
-    );
+  const lista = document
+    .getElementById("lista-seletor-servicos");
 
   lista.innerHTML = "";
 
   (window.servicosAgenda || [])
-
     .filter((servico)=>{
 
       const categoriaOk =
-        !categoriaSelecionadaServico
-        ||
-        servico.categoria
-        === categoriaSelecionadaServico;
+        !categoriaSelecionadaServico ||
+        servico.categoria === categoriaSelecionadaServico;
 
       const buscaOk =
-        servico.nome
-          .toLowerCase()
-          .includes(busca);
+        servico.nome.toLowerCase().includes(busca);
 
       return categoriaOk && buscaOk;
 
     })
+    .forEach((servico)=>{
 
-  .forEach((servico)=>{
+      const item = document.createElement("div");
 
-  const item =
-    document.createElement("div");
+      item.className = "item-servico-seletor";
+      item.innerText = servico.nome;
 
-  item.className =
-    "item-servico-seletor";
+      item.onclick = function(){
+        selecionarServicoAgenda(servico.nome);
+      };
 
-  item.innerText =
-    servico.nome;
+      lista.appendChild(item);
 
-  item.onclick = function(){
+    });
 
-    selecionarServicoAgenda(
-      servico.nome
-    );
+}
 
-  };
+function selecionarServicoAgenda(nome){
 
-  lista.appendChild(item);
+  document.getElementById("servico").value = nome;
 
-});
+  document.getElementById("servicoSelecionadoTexto").innerText = nome;
+
+  fecharSeletorServico();
+
+}
 function selecionarServicoAgenda(nome){
 
   const servicoInput =
