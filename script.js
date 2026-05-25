@@ -2923,30 +2923,4 @@ function atualizarLinhaHorarioAtual(){
   linha.style.top = `${top}px`;
 
 }
-function filtrarClientesAgendamento(){
 
-  const busca =
-    document.getElementById(
-      "buscaClienteAgendamento"
-    ).value.toLowerCase();
-
-  const select =
-    document.getElementById(
-      "cliente"
-    );
-
-  Array.from(select.options)
-    .forEach((option)=>{
-
-      if(!option.value) return;
-
-      const texto =
-        option.text
-        .toLowerCase();
-
-      option.hidden =
-        !texto.includes(busca);
-
-    });
-
-}
