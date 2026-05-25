@@ -3018,7 +3018,6 @@ function abrirSeletorServico(){
   ).style.display = "flex";
 
   carregarSeletorServico();
-
 }
 
 function fecharSeletorServico(){
