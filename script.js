@@ -2557,11 +2557,26 @@ function carregarServicosPacote(){
 
       servicos.forEach((servico)=>{
 
-        select.innerHTML += `
-          <option value="${servico.nome}">
-            ${servico.nome}
-          </option>
-        `;
+    if(
+  selectServico &&
+  selectServico.tagName === "SELECT"
+){
+
+  selectServico.innerHTML += `
+    <option value="${servico.nome}">
+      ${servico.nome}
+    </option>
+  `;
+
+}
+
+if(listaServicosAgendamento){
+
+  listaServicosAgendamento.innerHTML += `
+    <option value="${servico.nome}">
+  `;
+
+}
 
       });
 
