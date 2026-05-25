@@ -315,20 +315,19 @@
     <option value="3">Silamara</option>
   </select>
 
-  <select
+<div class="campo-busca-cliente">
+  <span>🔎</span>
+
+  <input
+    type="text"
     id="servico"
+    list="listaServicosAgendamento"
+    placeholder="Digite o serviço"
     onchange="atualizarServicoSelecionado()"
   >
-    <option value="">
-      Selecione o serviço
-    </option>
 
-    <option value="corte">Corte</option>
-    <option value="escova">Escova</option>
-    <option value="unha">Unha</option>
-    <option value="progressiva">Progressiva</option>
-
-  </select>
+  <datalist id="listaServicosAgendamento"></datalist>
+</div>
 
   <div id="info-servico-agendamento"></div>
 
