@@ -482,13 +482,6 @@ const clienteExiste = Array.from(
   document.getElementById("listaClientesAgendamento").options
 ).some((option)=> option.value === clienteDigitado);
 
-const servicoExiste = (window.servicosAgenda || [])
-  .some((servico)=> servico.nome === servicoDigitado);
-
-if(!clienteExiste){
-  alert("Selecione uma cliente cadastrada.");
-  return;
-}
 
 if(!servicoExiste){
   alert("Selecione um serviço cadastrado.");
