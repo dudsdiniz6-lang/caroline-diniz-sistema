@@ -1034,3 +1034,50 @@ nav a:hover,
   transition:0.5s;
 
 }
+.campo-selecionar-servico{
+  border:1px solid #e5e7eb;
+  border-radius:14px;
+  padding:12px 14px;
+  background:white;
+  cursor:pointer;
+}
+
+.campo-selecionar-servico span{
+  display:block;
+  font-size:11px;
+  color:#888;
+  margin-bottom:4px;
+}
+
+.campo-selecionar-servico strong{
+  font-size:14px;
+  color:#111;
+}
+
+#categorias-seletor-servico{
+  display:flex;
+  gap:8px;
+  flex-wrap:wrap;
+  margin:14px 0;
+}
+
+#categorias-seletor-servico button{
+  border:none;
+  border-radius:999px;
+  padding:8px 12px;
+  background:#f3f4f6;
+  cursor:pointer;
+  font-weight:600;
+}
+
+.item-servico-seletor{
+  padding:14px;
+  border-bottom:1px solid #eee;
+  cursor:pointer;
+  font-weight:600;
+}
+
+.item-servico-seletor:hover{
+  background:#fff4ec;
+  color:#ff6a00;
+}
