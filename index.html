@@ -306,21 +306,79 @@
         <button class="close" onclick="fecharModal()">X</button>
       </div>
 
-      <div class="form">
-       <select id="cliente">
-  <option value="">Selecione a cliente</option>
-</select>
+     <div class="form">
 
-<button onclick="abrirCadastroRapidoCliente()">
-  + Nova cliente
-</button>
-        
-        <select id="profissional">
-          <option value="0">Carol</option>
-          <option value="1">Jessica</option>
-          <option value="2">Fernanda</option>
-          <option value="3">Silamara</option>
-        </select>
+  <select id="profissional">
+    <option value="0">Carol</option>
+    <option value="1">Jessica</option>
+    <option value="2">Fernanda</option>
+    <option value="3">Silamara</option>
+  </select>
+
+  <select
+    id="servico"
+    onchange="atualizarServicoSelecionado()"
+  >
+    <option value="">
+      Selecione o serviço
+    </option>
+
+    <option value="corte">Corte</option>
+    <option value="escova">Escova</option>
+    <option value="unha">Unha</option>
+    <option value="progressiva">Progressiva</option>
+
+  </select>
+
+  <div id="info-servico-agendamento"></div>
+
+  <div class="campo-busca-cliente">
+
+    <span>🔎</span>
+
+    <input
+      type="text"
+      id="buscaClienteAgendamento"
+      placeholder="Buscar cliente"
+      oninput="filtrarClientesAgendamento()"
+    >
+
+  </div>
+
+  <select id="cliente">
+    <option value="">
+      Selecione a cliente
+    </option>
+  </select>
+
+  <button onclick="abrirCadastroRapidoCliente()">
+    + Nova cliente
+  </button>
+
+  <select id="duracao">
+
+    <option value="20">20 minutos</option>
+    <option value="40">40 minutos</option>
+    <option value="60">1 hora</option>
+    <option value="80">1h20</option>
+    <option value="120">2 horas</option>
+
+  </select>
+
+  <select id="horario">
+    <option value="">
+      Selecione o horário
+    </option>
+  </select>
+
+  <button
+    class="save-btn"
+    onclick="salvarAgendamento()"
+  >
+    Salvar Agendamento
+  </button>
+
+</div>
 
         <select id="duracao">
           <option value="20">20 minutos</option>
