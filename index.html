@@ -315,34 +315,23 @@
     <option value="3">Silamara</option>
   </select>
 
-<div class="campo-busca-cliente">
-  <span>🔎</span>
+<div
+  class="campo-selecionar-servico"
+  onclick="abrirSeletorServico()"
+>
 
-  <input
-    type="text"
-    id="servico"
-    list="listaServicosAgendamento"
-    placeholder="Digite o serviço"
-    onchange="atualizarServicoSelecionado()"
-  >
+  <span>Serviço</span>
 
-  <datalist id="listaServicosAgendamento"></datalist>
+  <strong id="servicoSelecionadoTexto">
+    Selecione o serviço
+  </strong>
+
 </div>
 
-  <div id="info-servico-agendamento"></div>
-
-  <div class="campo-busca-cliente">
-  <span>🔎</span>
-
-  <input
-    type="text"
-    id="cliente"
-    list="listaClientesAgendamento"
-    placeholder="Digite o nome da cliente"
-  >
-
-  <datalist id="listaClientesAgendamento"></datalist>
-</div>
+<input
+  type="hidden"
+  id="servico"
+>
 
   <button onclick="abrirCadastroRapidoCliente()">
     + Nova cliente
