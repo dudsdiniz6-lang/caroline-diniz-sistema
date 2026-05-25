@@ -3009,3 +3009,142 @@ function carregarServicosAgendamento(){
     });
 
 }
+let categoriaSelecionadaServico = "";
+
+function abrirSeletorServico(){
+
+  document.getElementById(
+    "modal-seletor-servico"
+  ).style.display = "flex";
+
+  carregarSeletorServico();
+
+}
+
+function fecharSeletorServico(){
+
+  document.getElementById(
+    "modal-seletor-servico"
+  ).style.display = "none";
+
+}
+
+function carregarSeletorServico(){
+
+  supabaseClient
+    .from("servicos_salao")
+    .select("*")
+    .then((resposta)=>{
+
+      window.servicosAgenda =
+        resposta.data || [];
+
+      const categorias =
+        [...new Set(
+          window.servicosAgenda.map(
+            s=>s.categoria
+          )
+        )];
+
+      const divCategorias =
+        document.getElementById(
+          "categorias-seletor-servico"
+        );
+
+      divCategorias.innerHTML = "";
+
+      categorias.forEach((categoria)=>{
+
+        divCategorias.innerHTML += `
+
+          <button
+            onclick="
+              categoriaSelecionadaServico='${categoria}';
+              renderizarServicosSeletor();
+            "
+          >
+            ${categoria}
+          </button>
+
+        `;
+
+      });
+
+      renderizarServicosSeletor();
+
+    });
+
+}
+
+function renderizarServicosSeletor(){
+
+  const busca =
+    document.getElementById(
+      "buscaServicoSeletor"
+    ).value
+    .toLowerCase();
+
+  const lista =
+    document.getElementById(
+      "lista-seletor-servicos"
+    );
+
+  lista.innerHTML = "";
+
+  (window.servicosAgenda || [])
+
+    .filter((servico)=>{
+
+      const categoriaOk =
+        !categoriaSelecionadaServico
+        ||
+        servico.categoria
+        === categoriaSelecionadaServico;
+
+      const buscaOk =
+        servico.nome
+          .toLowerCase()
+          .includes(busca);
+
+      return categoriaOk && buscaOk;
+
+    })
+
+    .forEach((servico)=>{
+
+      lista.innerHTML += `
+
+        <div
+          class="item-servico-seletor"
+          onclick="
+            selecionarServicoAgenda(
+              '${servico.nome}'
+            )
+          "
+        >
+
+          ${servico.nome}
+
+        </div>
+
+      `;
+
+    });
+
+}
+
+function selecionarServicoAgenda(nome){
+
+  document.getElementById(
+    "servico"
+  ).value = nome;
+
+  document.getElementById(
+    "servicoSelecionadoTexto"
+  ).innerText = nome;
+
+  atualizarServicoSelecionado();
+
+  fecharSeletorServico();
+
+}
