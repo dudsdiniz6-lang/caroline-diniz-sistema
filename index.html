@@ -370,13 +370,44 @@
           <option value="120">2 horas</option>
         </select>
 
-       <select id="servico" onchange="atualizarServicoSelecionado()">
-         <div id="info-servico-agendamento"></div>
-          <option value="corte">Corte</option>
-          <option value="escova">Escova</option>
-          <option value="unha">Unha</option>
-          <option value="progressiva">Progressiva</option>
-        </select>
+       <div
+  class="campo-selecionar-servico"
+  onclick="abrirSeletorServico()"
+>
+
+  <span>Serviço</span>
+
+  <strong id="servicoSelecionadoTexto">
+    Selecione o serviço
+  </strong>
+
+</div>
+
+<input
+  type="hidden"
+  id="servico"
+>
+
+<div id="info-servico-agendamento"></div>
+
+<div class="campo-busca-cliente">
+
+  <span>🔎</span>
+
+  <input
+    type="text"
+    id="cliente"
+    list="listaClientesAgendamento"
+    placeholder="Digite o nome da cliente"
+  >
+
+  <datalist id="listaClientesAgendamento"></datalist>
+
+</div>
+
+<button onclick="abrirCadastroRapidoCliente()">
+  + Nova cliente
+</button>
 
         <select id="horario">
   <option value="">Selecione o horário</option>
