@@ -3132,15 +3132,19 @@ data-nome="${servico.nome}"
 
 function selecionarServicoAgenda(nome){
 
-  document.getElementById(
-    "servico"
-  ).value = nome;
+  const servicoInput =
+    document.getElementById(
+      "servico"
+    );
 
-  document.getElementById(
-    "servicoSelecionadoTexto"
-  ).innerText = nome;
+  const textoServico =
+    document.getElementById(
+      "servicoSelecionadoTexto"
+    );
 
-  atualizarServicoSelecionado();
+  servicoInput.value = nome;
+
+  textoServico.innerText = nome;
 
   fecharSeletorServico();
 
