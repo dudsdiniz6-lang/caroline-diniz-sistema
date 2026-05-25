@@ -3116,11 +3116,8 @@ function renderizarServicosSeletor(){
 
         <div
           class="item-servico-seletor"
-          onclick="
-            selecionarServicoAgenda(
-              '${servico.nome}'
-            )
-          "
+          onclick="selecionarServicoAgenda(this.dataset.nome)"
+data-nome="${servico.nome}"
         >
 
           ${servico.nome}
