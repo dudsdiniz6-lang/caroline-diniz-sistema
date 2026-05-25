@@ -517,6 +517,38 @@
 </div>
 
 </div>
+  <div class="modal" id="modal-seletor-servico">
+
+  <div class="modal-content modal-servico-content">
+
+    <div class="modal-header">
+
+      <h2>Selecione o serviço</h2>
+
+      <button class="close" onclick="fecharSeletorServico()">
+        ×
+      </button>
+
+    </div>
+
+    <div class="campo-busca-cliente">
+      <span>🔎</span>
+
+      <input
+        type="text"
+        id="buscaServicoSeletor"
+        placeholder="Pesquisar serviço"
+        oninput="renderizarServicosSeletor()"
+      >
+    </div>
+
+    <div id="categorias-seletor-servico"></div>
+
+    <div id="lista-seletor-servicos"></div>
+
+  </div>
+
+</div>
 </body>
 </html>
 <div class="modal" id="modal-categoria">
