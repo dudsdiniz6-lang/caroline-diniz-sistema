@@ -464,7 +464,26 @@ function atualizarStatus(agendamento, status){
 }
 
 function salvarAgendamento(){
+const clienteDigitado = document.getElementById("cliente").value;
+const servicoDigitado = document.getElementById("servico").value;
 
+const clienteExiste = Array.from(
+  document.getElementById("listaClientesAgendamento").options
+).some((option)=> option.value === clienteDigitado);
+
+const servicoExiste = Array.from(
+  document.getElementById("listaServicosAgendamento").options
+).some((option)=> option.value === servicoDigitado);
+
+if(!clienteExiste){
+  alert("Selecione uma cliente cadastrada.");
+  return;
+}
+
+if(!servicoExiste){
+  alert("Selecione um serviço cadastrado.");
+  return;
+}
   const agendamento = {
     id: Date.now(),
     cliente: document.getElementById("cliente").value,
