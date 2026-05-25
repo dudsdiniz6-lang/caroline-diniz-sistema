@@ -2963,3 +2963,30 @@ function atualizarLinhaHorarioAtual(){
 
 }
 
+function carregarServicosAgendamento(){
+
+  const lista =
+    document.getElementById("listaServicosAgendamento");
+
+  if(!lista) return;
+
+  lista.innerHTML = "";
+
+  supabaseClient
+    .from("servicos_salao")
+    .select("*")
+    .then((resposta)=>{
+
+      const servicos = resposta.data || [];
+
+      servicos.forEach((servico)=>{
+
+        lista.innerHTML += `
+          <option value="${servico.nome}">
+        `;
+
+      });
+
+    });
+
+}
