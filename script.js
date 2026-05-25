@@ -212,10 +212,32 @@ const minutoFim =
 const horarioFim =
   `${horaFim}:${minutoFim}`;
 
+const agora = new Date();
+
+const minutosAgora =
+  (agora.getHours()*60)
+  + agora.getMinutes();
+
+const duracaoTotal =
+  fimMinutos - inicioMinutos;
+
+const progresso =
+  Math.max(
+    0,
+    Math.min(
+      100,
+      (
+        (
+          minutosAgora
+          - inicioMinutos
+        )
+        / duracaoTotal
+      ) * 100
+    )
+  );
+
 card.innerHTML = `
-  <strong>
-    ${agendamento.cliente}
-  </strong>
+  <strong>${agendamento.cliente}</strong>
 
   <span>
     ${agendamento.servico || "Novo Atendimento"}
@@ -230,6 +252,11 @@ card.innerHTML = `
   <em>
     ${agendamento.status || "Agendado"}
   </em>
+
+  <div
+    class="barra-progresso-atendimento"
+    style="width:${progresso}%"
+  ></div>
 `;
   card.onclick = function(){
 
