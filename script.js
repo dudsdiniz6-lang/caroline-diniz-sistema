@@ -2175,6 +2175,8 @@ function carregarServicosSalao(){
 
   const selectServico =
     document.getElementById("servico");
+    const listaServicosAgendamento =
+  document.getElementById("listaServicosAgendamento");
 
   const filtroCategoria =
     document.getElementById("filtroCategoriaServico");
@@ -2189,10 +2191,13 @@ function carregarServicosSalao(){
     lista.innerHTML = "";
   }
 
-  if(selectServico){
-    selectServico.innerHTML = "";
-  }
+ if(selectServico && selectServico.tagName === "SELECT"){
+  selectServico.innerHTML = "";
+}
 
+if(listaServicosAgendamento){
+  listaServicosAgendamento.innerHTML = "";
+}
   supabaseClient
     .from("servicos_salao")
     .select("*")
