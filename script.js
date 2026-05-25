@@ -3119,28 +3119,28 @@ function renderizarServicosSeletor(){
 
 function selecionarServicoAgenda(nome){
 
-  document.getElementById("servico").value = nome;
+  const servico = (window.servicosAgenda || [])
+    .find((item)=> item.nome === nome);
 
+  document.getElementById("servico").value = nome;
   document.getElementById("servicoSelecionadoTexto").innerText = nome;
 
-  fecharSeletorServico();
+  if(servico){
 
-}
-function selecionarServicoAgenda(nome){
+    document.getElementById("duracao").value = servico.duracao;
 
-  const servicoInput =
-    document.getElementById(
-      "servico"
-    );
+    const info = document.getElementById("info-servico-agendamento");
 
-  const textoServico =
-    document.getElementById(
-      "servicoSelecionadoTexto"
-    );
+    if(info){
+      info.innerHTML = `
+        <div class="cliente-card">
+          <strong>Valor do serviço</strong>
+          <p>R$ ${Number(servico.valor).toFixed(2)}</p>
+        </div>
+      `;
+    }
 
-  servicoInput.value = nome;
-
-  textoServico.innerText = nome;
+  }
 
   fecharSeletorServico();
 
