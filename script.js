@@ -2966,7 +2966,9 @@ function atualizarLinhaHorarioAtual(){
 function carregarServicosAgendamento(){
 
   const lista =
-    document.getElementById("listaServicosAgendamento");
+    document.getElementById(
+      "listaServicosAgendamento"
+    );
 
   if(!lista) return;
 
@@ -2977,7 +2979,13 @@ function carregarServicosAgendamento(){
     .select("*")
     .then((resposta)=>{
 
-      const servicos = resposta.data || [];
+      console.log(
+        "SERVIÇOS:",
+        resposta.data
+      );
+
+      const servicos =
+        resposta.data || [];
 
       servicos.forEach((servico)=>{
 
