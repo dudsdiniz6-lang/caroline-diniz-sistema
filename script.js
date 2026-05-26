@@ -473,70 +473,57 @@ function atualizarStatus(agendamento, status){
       carregarAgenda();
     });
 }
-
 function salvarAgendamento(){
-const clienteDigitado = document.getElementById("cliente").value;
-const servicoDigitado = document.getElementById("servico").value;
 
-const clienteExiste = Array.from(
-  document.getElementById("listaClientesAgendamento").options
-).some((option)=> option.value === clienteDigitado);
+  const cliente = document.getElementById("cliente").value;
+  const servico = document.getElementById("servico").value;
+  const horario = document.getElementById("horario").value;
+  const profissional = document.getElementById("profissional").value;
+  const duracao = document.getElementById("duracao").value;
 
+  if(!cliente){
+    alert("Selecione uma cliente.");
+    return;
+  }
 
-if(!servicoExiste){
-  alert("Selecione um serviço cadastrado.");
-  return;
-}
+  if(!servico){
+    alert("Selecione um serviço.");
+    return;
+  }
+
+  if(!horario){
+    alert("Selecione um horário.");
+    return;
+  }
+
   const agendamento = {
     id: Date.now(),
-    cliente: document.getElementById("cliente").value,
+    cliente,
     telefone: "",
-    horario: document.getElementById("horario").value,
-    profissional: document.getElementById("profissional").value,
-    duracao: document.getElementById("duracao").value,
-    servico: document.getElementById("servico").value,
+    horario,
+    profissional,
+    duracao,
+    servico,
     status: "Agendado",
     data: formatarData(dataSelecionada)
   };
 
   supabaseClient
-  .from("Agendamentos")
-  .select("*")
-  .eq("data", agendamento.data)
-  .eq("horario", agendamento.horario)
-  .eq("profissional", agendamento.profissional)
-  .then((verificacao)=>{
+    .from("Agendamentos")
+    .insert([agendamento])
+    .then((resposta)=>{
 
-    const conflito = verificacao.data || [];
-
-    if(conflito.length > 0){
-
-      const continuar = confirm(
-        "Já existe cliente neste horário. Deseja continuar mesmo assim?"
-      );
-
-      if(!continuar){
+      if(resposta.error){
+        alert("Erro ao salvar agendamento: " + resposta.error.message);
         return;
       }
 
-    }
+      criarCard(agendamento);
+      fecharModal();
+      carregarAgenda();
 
-    supabaseClient
-      .from("Agendamentos")
-      .insert([agendamento])
-      .then((resposta)=>{
+    });
 
-        if(resposta.error){
-          alert("Erro ao salvar agendamento: " + resposta.error.message);
-          return;
-        }
-
-        criarCard(agendamento);
-        fecharModal();
-
-      });
-
-  });
 }
 
 function carregarAgenda(){
