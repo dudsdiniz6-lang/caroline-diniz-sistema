@@ -221,7 +221,8 @@ function criarCard(agendamento){
   card.dataset.id = agendamento.id;
   card.style.top = `${calcularTop(agendamento.horario)}px`;
 
-  const altura = ((agendamento.duracao || 20) / 20) * 80;
+  const altura =
+  ((agendamento.duracao || 30) / 30) * 80;
   card.style.height = `${altura - 10}px`;
 
   const [hora, minuto] =
