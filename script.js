@@ -2945,9 +2945,9 @@ function atualizarLinhaHorarioAtual(){
 
   const inicioAgenda = 7 * 60;
 
-  const top =
-    ((minutosAgora - inicioAgenda)
-    / 20) * 80;
+ const top =
+  ((minutosAgora - inicioAgenda)
+  / 30) * 80;
 
   linha.style.top = `${top}px`;
 
