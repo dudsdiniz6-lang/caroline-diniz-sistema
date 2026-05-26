@@ -522,9 +522,17 @@ function salvarAgendamento(){
     return;
   }
 
-  const dataSalvar = dataCampo
-    ? new Date(dataCampo).toLocaleDateString("pt-BR")
-    : formatarData(dataSelecionada);
+  if(dataCampo){
+    const partes = dataCampo.split("-");
+
+    dataSelecionada = new Date(
+      Number(partes[0]),
+      Number(partes[1]) - 1,
+      Number(partes[2])
+    );
+
+    atualizarDataAgenda();
+  }
 
   const agendamento = {
     cliente,
@@ -534,7 +542,7 @@ function salvarAgendamento(){
     duracao,
     servico,
     status: "Agendado",
-    data: dataSalvar
+    data: formatarData(dataSelecionada)
   };
 
   supabaseClient
