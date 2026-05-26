@@ -3222,6 +3222,7 @@ function selecionarServicoAgenda(nome){
 
       precoCampo.value =
         servico.valor || 0;
+        calcularResumoAgendamento();
 
     }
 
