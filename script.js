@@ -157,10 +157,16 @@ function sairSistema(){
 }
 
 function calcularTop(horario){
+
   const [hora, minuto] = horario.split(":");
-  const minutosTotais = parseInt(hora) * 60 + parseInt(minuto);
+
+  const minutosTotais =
+    Number(hora) * 60 + Number(minuto);
+
   const inicioAgenda = 7 * 60;
-  return ((minutosTotais - inicioAgenda) / 20) * 80;
+
+  return ((minutosTotais - inicioAgenda) / 30) * 80;
+
 }
 
 function criarCard(agendamento){
