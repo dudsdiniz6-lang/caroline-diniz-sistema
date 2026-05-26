@@ -1483,8 +1483,11 @@ function ativarArrastar(){
         target.setAttribute("data-x", 0);
         target.setAttribute("data-y", 0);
 
-        const minutosDesdeInicio = (encaixado / 80) * 20;
-        const minutosTotais = (14 * 60) + minutosDesdeInicio;
+        const minutosDesdeInicio =
+  (encaixado / 80) * 30;
+
+const minutosTotais =
+  (7 * 60) + minutosDesdeInicio;
 
         const hora = Math.floor(minutosTotais / 60);
         const minuto = minutosTotais % 60;
