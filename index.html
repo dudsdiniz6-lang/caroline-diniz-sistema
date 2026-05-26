@@ -592,11 +592,24 @@ Salvar Agendamento
         ⌁
       </span>
 
-      <input
-        type="number"
-        id="descontoAgendamento"
-        placeholder="Desconto"
-      >
+      <div class="desconto-linha">
+
+  <input
+    type="number"
+    id="descontoAgendamento"
+    placeholder="Desconto"
+    oninput="calcularResumoAgendamento()"
+  >
+
+  <select
+    id="tipoDescontoAgendamento"
+    onchange="calcularResumoAgendamento()"
+  >
+    <option value="valor">R$</option>
+    <option value="porcentagem">%</option>
+  </select>
+
+</div>
 
     </div>
 
