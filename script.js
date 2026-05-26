@@ -120,7 +120,25 @@ function irParaHoje(){
 }
 
 function abrirModal(){
-  document.getElementById("modal").style.display = "flex";
+
+  document.getElementById(
+    "modal"
+  ).style.display = "flex";
+
+  const campoData =
+    document.getElementById(
+      "dataAgendamento"
+    );
+
+  if(campoData){
+
+    campoData.value =
+      dataSelecionada
+        .toISOString()
+        .split("T")[0];
+
+  }
+
 }
 
 function fecharModal(){
