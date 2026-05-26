@@ -3616,19 +3616,25 @@ function renderizarHorarioDia(dia){
   horariosProfissionalConfig[dia].forEach((horario, index)=>{
 
     div.innerHTML += `
-      <div class="linha-atendimento dupla">
+      <div class="linha-horario-profissional">
 
-        <input
-          type="time"
-          value="${horario.inicio}"
-          onchange="atualizarHorarioDia('${dia}', ${index}, 'inicio', this.value)"
-        >
+        <label>
+          Entrada
+          <input
+            type="time"
+            value="${horario.inicio}"
+            onchange="atualizarHorarioDia('${dia}', ${index}, 'inicio', this.value)"
+          >
+        </label>
 
-        <input
-          type="time"
-          value="${horario.fim}"
-          onchange="atualizarHorarioDia('${dia}', ${index}, 'fim', this.value)"
-        >
+        <label>
+          Saída
+          <input
+            type="time"
+            value="${horario.fim}"
+            onchange="atualizarHorarioDia('${dia}', ${index}, 'fim', this.value)"
+          >
+        </label>
 
         <button type="button" onclick="removerHorarioDia('${dia}', ${index})">
           ×
@@ -3640,7 +3646,6 @@ function renderizarHorarioDia(dia){
   });
 
 }
-
 function confirmarHorariosProfissional(){
 
   document.getElementById("horariosProfissional").value =
