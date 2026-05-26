@@ -399,6 +399,238 @@ Salvar Agendamento
 
   </div>
 </div>
+  <div class="modal" id="modal">
+
+  <div class="modal-content atendimento99">
+
+    <div class="atendimento-header">
+
+      <button
+        class="btn-voltar-modal"
+        onclick="fecharModal()"
+      >
+        ←
+      </button>
+
+      <h2>Atendimento</h2>
+
+    </div>
+
+    <div
+      class="linha-atendimento"
+      onclick="abrirSeletorCliente()"
+    >
+
+      <span class="icone-atendimento">
+        👤
+      </span>
+
+      <div class="campo-selecionar-servico campo-servico99">
+
+        <span>Cliente</span>
+
+        <strong id="clienteSelecionadoTexto">
+          Selecione a cliente
+        </strong>
+
+      </div>
+
+    </div>
+
+    <input
+      type="hidden"
+      id="cliente"
+    >
+
+    <div class="linha-atendimento">
+
+      <span class="icone-atendimento">
+        📅
+      </span>
+
+      <div class="campo-com-label">
+
+        <label>Data</label>
+
+        <input
+          type="date"
+          id="dataAgendamento"
+        >
+
+      </div>
+
+    </div>
+
+    <div class="linha-atendimento">
+
+      <span class="icone-atendimento">
+        👥
+      </span>
+
+      <div class="campo-com-label">
+
+        <label>Profissional</label>
+
+        <select id="profissional">
+
+          <option value="0">
+            Carol
+          </option>
+
+          <option value="1">
+            Jessica
+          </option>
+
+          <option value="2">
+            Fernanda
+          </option>
+
+          <option value="3">
+            Silamara
+          </option>
+
+        </select>
+
+      </div>
+
+    </div>
+
+    <div
+      class="linha-atendimento"
+      onclick="abrirSeletorServico()"
+    >
+
+      <span class="icone-atendimento">
+        ▦
+      </span>
+
+      <div class="campo-selecionar-servico campo-servico99">
+
+        <span>Serviço</span>
+
+        <strong id="servicoSelecionadoTexto">
+          Selecione o serviço
+        </strong>
+
+      </div>
+
+    </div>
+
+    <input
+      type="hidden"
+      id="servico"
+    >
+
+    <div id="info-servico-agendamento"></div>
+
+    <div class="linha-atendimento dupla">
+
+      <span class="icone-atendimento">
+        🕒
+      </span>
+
+      <div class="campo-com-label">
+
+        <label>Horário</label>
+
+        <select id="horario">
+
+          <option value="">
+            Selecione o horário
+          </option>
+
+        </select>
+
+      </div>
+
+      <div class="campo-com-label">
+
+        <label>Duração</label>
+
+        <select id="duracao">
+
+          <option value="20">
+            20 minutos
+          </option>
+
+          <option value="40">
+            40 minutos
+          </option>
+
+          <option value="60">
+            1 hora
+          </option>
+
+          <option value="80">
+            1h20
+          </option>
+
+          <option value="120">
+            2 horas
+          </option>
+
+        </select>
+
+      </div>
+
+    </div>
+
+    <div class="linha-atendimento">
+
+      <span class="icone-atendimento">
+        $
+      </span>
+
+      <input
+        type="number"
+        id="precoAgendamento"
+        placeholder="Preço (R$)"
+      >
+
+    </div>
+
+    <div class="linha-atendimento">
+
+      <span class="icone-atendimento">
+        ⌁
+      </span>
+
+      <input
+        type="number"
+        id="descontoAgendamento"
+        placeholder="Desconto"
+      >
+
+    </div>
+
+    <div class="linha-atendimento">
+
+      <span class="icone-atendimento">
+        🏷
+      </span>
+
+      <input
+        type="text"
+        id="observacaoAgendamento"
+        placeholder="Observação"
+      >
+
+    </div>
+
+    <div class="rodape-atendimento">
+
+      <button
+        class="save-btn"
+        onclick="salvarAgendamento()"
+      >
+        SALVAR
+      </button>
+
+    </div>
+
+  </div>
+
+</div>
 <div class="modal" id="modal-pacote">
   <div class="modal-content modal-servico-content">
 
