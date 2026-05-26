@@ -464,7 +464,62 @@
 
   </div>
 </div>
-    
+    <div class="modal" id="modal-pacote">
+
+  <div class="modal-content modal-servico-content">
+
+    <div class="modal-header">
+
+      <h2>Novo Pacote</h2>
+
+      <button class="close" onclick="fecharModalPacote()">
+        ×
+      </button>
+
+    </div>
+
+    <div class="form-servico">
+
+      <input
+        type="text"
+        id="nomePacote"
+        placeholder="Nome do pacote"
+      >
+
+      <div class="cliente-card">
+        <strong>Valor total do pacote</strong>
+        <p id="valorTotalPacote">R$ 0,00</p>
+      </div>
+
+      <input
+        type="number"
+        id="validadePacote"
+        placeholder="Validade em dias"
+      >
+
+      <div id="itensPacote"></div>
+
+      <button
+        type="button"
+        onclick="adicionarLinhaItemPacote()"
+      >
+        + Adicionar serviço
+      </button>
+
+      <select id="statusPacote">
+        <option value="Ativo">Ativo</option>
+        <option value="Inativo">Inativo</option>
+      </select>
+
+      <button onclick="salvarPacote()">
+        Salvar Pacote
+      </button>
+
+    </div>
+
+  </div>
+
+</div>
 <div class="modal" id="modal-seletor-servico">
 
   <div class="modal-content modal-servico-content">
