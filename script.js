@@ -3328,3 +3328,117 @@ function calcularResumoAgendamento(){
   }
 
 }
+function abrirModalProfissional(){
+
+  document.getElementById("nomeProfissional").value = "";
+  document.getElementById("telefoneProfissional").value = "";
+  document.getElementById("especialidadeProfissional").value = "";
+  document.getElementById("categoriasProfissional").value = "";
+  document.getElementById("diasProfissional").value = "";
+  document.getElementById("horaInicioProfissional").value = "";
+  document.getElementById("horaFimProfissional").value = "";
+  document.getElementById("comissaoProfissional").value = "";
+
+  document.getElementById("modal-profissional").style.display = "flex";
+
+}
+
+function fecharModalProfissional(){
+
+  document.getElementById("modal-profissional").style.display = "none";
+
+}
+
+function salvarProfissional(){
+
+  const profissional = {
+    nome: document.getElementById("nomeProfissional").value,
+    telefone: document.getElementById("telefoneProfissional").value,
+    especialidade: document.getElementById("especialidadeProfissional").value,
+    categorias: document.getElementById("categoriasProfissional").value,
+    dias_atendimento: document.getElementById("diasProfissional").value,
+    hora_inicio: document.getElementById("horaInicioProfissional").value,
+    hora_fim: document.getElementById("horaFimProfissional").value,
+    percentual_comis: Number(document.getElementById("comissaoProfissional").value || 0),
+    ativo: true
+  };
+
+  if(!profissional.nome){
+    alert("Digite o nome do profissional.");
+    return;
+  }
+
+  supabaseClient
+    .from("profissionais")
+    .insert([profissional])
+    .then((resposta)=>{
+
+      if(resposta.error){
+        alert("Erro ao salvar profissional: " + resposta.error.message);
+        console.log(resposta.error);
+        return;
+      }
+
+      alert("Profissional salvo!");
+
+      fecharModalProfissional();
+
+      carregarProfissionais();
+
+    });
+
+}
+
+function carregarProfissionais(){
+
+  const lista = document.getElementById("lista-profissionais");
+
+  if(!lista) return;
+
+  lista.innerHTML = "";
+
+  supabaseClient
+    .from("profissionais")
+    .select("*")
+    .order("nome", { ascending:true })
+    .then((resposta)=>{
+
+      const profissionais = resposta.data || [];
+
+      profissionais.forEach((profissional)=>{
+
+        lista.innerHTML += `
+          <div class="cliente-card">
+
+            <strong>${profissional.nome}</strong>
+
+            <p>${profissional.especialidade || "Sem especialidade"}</p>
+
+            <small>
+              Telefone: ${profissional.telefone || "-"}
+            </small>
+
+            <small>
+              Dias: ${profissional.dias_atendimento || "-"}
+            </small>
+
+            <small>
+              Horário: ${profissional.hora_inicio || "-"} às ${profissional.hora_fim || "-"}
+            </small>
+
+            <small>
+              Categorias: ${profissional.categorias || "-"}
+            </small>
+
+            <small>
+              Comissão: ${profissional.percentual_comis || 0}%
+            </small>
+
+          </div>
+        `;
+
+      });
+
+    });
+
+}
