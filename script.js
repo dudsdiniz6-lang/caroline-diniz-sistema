@@ -527,13 +527,12 @@ function salvarAgendamento(){
     : formatarData(dataSelecionada);
 
   const agendamento = {
-    id: Date.now(),
-    cliente: cliente,
+    cliente,
     telefone: "",
-    horario: horario,
-    profissional: profissional,
-    duracao: duracao,
-    servico: servico,
+    horario,
+    profissional,
+    duracao,
+    servico,
     status: "Agendado",
     data: dataSalvar
   };
@@ -551,7 +550,6 @@ function salvarAgendamento(){
 
       fecharModal();
       carregarAgenda();
-
       alert("Agendamento salvo!");
 
     });
