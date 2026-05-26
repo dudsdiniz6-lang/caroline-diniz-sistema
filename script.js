@@ -500,46 +500,13 @@ function atualizarStatus(agendamento, status){
 }
 function salvarAgendamento(){
 
-  const cliente =
-    document.getElementById("cliente").value.trim();
-
-  const servico =
-    document.getElementById("servico").value.trim();
-
-  const horario =
-    document.getElementById("horario").value;
-
-  const profissional =
-    document.getElementById("profissional").value;
-
-  const duracao =
-    Number(
-      document.getElementById("duracao").value
-    );
-
-  const preco =
-    Number(
-      document.getElementById(
-        "precoAgendamento"
-      )?.value || 0
-    );
-
-  const desconto =
-    Number(
-      document.getElementById(
-        "descontoAgendamento"
-      )?.value || 0
-    );
-
-  const observacao =
-    document.getElementById(
-      "observacaoAgendamento"
-    )?.value || "";
-
-  const dataCampo =
-    document.getElementById(
-      "dataAgendamento"
-    )?.value;
+  const cliente = document.getElementById("cliente").value.trim();
+  const servico = document.getElementById("servico").value.trim();
+  const horario = document.getElementById("horario").value;
+  const profissional = document.getElementById("profissional").value;
+  const duracao = Number(document.getElementById("duracao").value);
+  const preco = Number(document.getElementById("precoAgendamento")?.value || 0);
+  const dataCampo = document.getElementById("dataAgendamento")?.value;
 
   if(!cliente){
     alert("Selecione uma cliente.");
@@ -556,68 +523,40 @@ function salvarAgendamento(){
     return;
   }
 
-  const dataSalvar =
-    dataCampo
-      ? new Date(dataCampo)
-          .toLocaleDateString("pt-BR")
-      : formatarData(dataSelecionada);
+  const dataSalvar = dataCampo
+    ? new Date(dataCampo).toLocaleDateString("pt-BR")
+    : formatarData(dataSelecionada);
 
   const agendamento = {
-
     id: Date.now(),
-
     cliente,
-
-    telefone:"",
-
+    telefone: "",
     horario,
-
     profissional,
-
     duracao,
-
     servico,
-
-    preco,
-
-    desconto,
-
-    observacao,
-
-    status:"Agendado",
-
-    data:dataSalvar
-
+    valor: preco,
+    status: "Agendado",
+    data: dataSalvar
   };
 
   supabaseClient
     .from("Agendamentos")
     .insert([agendamento])
-
     .then((resposta)=>{
 
       if(resposta.error){
-
-        alert(
-          "Erro ao salvar: "
-          + resposta.error.message
-        );
-
+        alert("Erro ao salvar: " + resposta.error.message);
         return;
       }
 
       fecharModal();
-
       carregarAgenda();
-
-      alert(
-        "Agendamento salvo!"
-      );
+      alert("Agendamento salvo!");
 
     });
 
 }
-
 function carregarAgenda(){
 
   const colunas = document.querySelectorAll(".column");
