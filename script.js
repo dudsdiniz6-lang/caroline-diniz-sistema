@@ -3393,8 +3393,6 @@ function salvarProfissional(){
     categorias: categoriasSelecionadasProfissional.join(", "),
     categorias_json: JSON.stringify(categoriasSelecionadasProfissional),
     horarios_json: JSON.stringify(horariosProfissionalConfig),
-    percentual_comis: Number(document.getElementById("comissaoProfissional").value || 0),
-    ativo: true
   };
 
   if(!profissional.nome){
