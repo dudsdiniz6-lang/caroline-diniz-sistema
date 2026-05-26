@@ -609,6 +609,43 @@ Salvar Agendamento
       </button>
 
     </div>
+    <div class="modal" id="modal-seletor-cliente">
+
+  <div class="modal-content">
+
+    <div class="modal-header">
+
+      <h2>
+        Selecione a cliente
+      </h2>
+
+      <button
+        class="close"
+        onclick="fecharSeletorCliente()"
+      >
+        ×
+      </button>
+
+    </div>
+
+    <div class="campo-busca-cliente">
+
+      <span>🔎</span>
+
+      <input
+        type="text"
+        id="buscaClienteSeletor"
+        placeholder="Pesquisar cliente"
+        oninput="renderizarClientesSeletor()"
+      >
+
+    </div>
+
+    <div id="lista-seletor-clientes"></div>
+
+  </div>
+
+</div>
 
     <div class="campo-busca-cliente">
       <span>🔎</span>
