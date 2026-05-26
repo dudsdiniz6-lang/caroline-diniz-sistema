@@ -3341,3 +3341,44 @@ function selecionarClienteAgenda(nome){
   fecharSeletorCliente();
 
 }
+function calcularResumoAgendamento(){
+
+  const preco =
+    Number(
+      document.getElementById("precoAgendamento")?.value || 0
+    );
+
+  const desconto =
+    Number(
+      document.getElementById("descontoAgendamento")?.value || 0
+    );
+
+  const tipo =
+    document.getElementById("tipoDescontoAgendamento")?.value || "valor";
+
+  let valorDesconto = 0;
+
+  if(tipo === "porcentagem"){
+    valorDesconto = preco * (desconto / 100);
+  }else{
+    valorDesconto = desconto;
+  }
+
+  const total =
+    Math.max(preco - valorDesconto, 0);
+
+  const subtotal =
+    document.getElementById("subtotalAgendamento");
+
+  const totalCampo =
+    document.getElementById("totalAgendamento");
+
+  if(subtotal){
+    subtotal.innerText = `R$ ${preco.toFixed(2)}`;
+  }
+
+  if(totalCampo){
+    totalCampo.innerText = `R$ ${total.toFixed(2)}`;
+  }
+
+}
