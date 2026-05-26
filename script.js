@@ -1334,16 +1334,14 @@ function mostrarSecao(secao){
 
   document.querySelector(".agenda-container").style.display = "none";
 
-  const secoes = document.querySelectorAll(".clientes-container");
-
-  secoes.forEach((item)=>{
+  document.querySelectorAll(".clientes-container").forEach((item)=>{
     item.style.display = "none";
   });
 
-  const secaoSelecionada = document.getElementById(secao);
+  const selecionada = document.getElementById(secao);
 
-  if(secaoSelecionada){
-    secaoSelecionada.style.display = "block";
+  if(selecionada){
+    selecionada.style.display = "block";
   }
 
   if(secao === "clientes-container"){
@@ -1356,6 +1354,18 @@ function mostrarSecao(secao){
 
   if(secao === "comissoes-container"){
     carregarComissoes();
+  }
+
+  if(secao === "profissionais-container"){
+    carregarProfissionais();
+  }
+
+  if(secao === "servicos-container"){
+    carregarServicosSalao();
+  }
+
+  if(secao === "pacotes-container"){
+    carregarPacotes();
   }
 
 }
