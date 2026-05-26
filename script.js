@@ -3189,25 +3189,61 @@ function renderizarServicosSeletor(){
 
 function selecionarServicoAgenda(nome){
 
-  const servico = (window.servicosAgenda || [])
-    .find((item)=> item.nome === nome);
+  const servico =
+    (window.servicosAgenda || [])
+      .find(
+        (item)=> item.nome === nome
+      );
 
-  document.getElementById("servico").value = nome;
-  document.getElementById("servicoSelecionadoTexto").innerText = nome;
+  document.getElementById(
+    "servico"
+  ).value = nome;
+
+  document.getElementById(
+    "servicoSelecionadoTexto"
+  ).innerText = nome;
 
   if(servico){
 
-    document.getElementById("duracao").value = servico.duracao;
+    document.getElementById(
+      "duracao"
+    ).value = servico.duracao || 30;
 
-    const info = document.getElementById("info-servico-agendamento");
+    const precoCampo =
+      document.getElementById(
+        "precoAgendamento"
+      );
+
+    if(precoCampo){
+
+      precoCampo.value =
+        servico.valor || 0;
+
+    }
+
+    const info =
+      document.getElementById(
+        "info-servico-agendamento"
+      );
 
     if(info){
+
       info.innerHTML = `
         <div class="cliente-card">
-          <strong>Valor do serviço</strong>
-          <p>R$ ${Number(servico.valor).toFixed(2)}</p>
+
+          <strong>
+            Valor do serviço
+          </strong>
+
+          <p>
+            R$ ${Number(
+              servico.valor || 0
+            ).toFixed(2)}
+          </p>
+
         </div>
       `;
+
     }
 
   }
