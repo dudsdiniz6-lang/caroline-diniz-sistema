@@ -3401,7 +3401,7 @@ function salvarProfissional(){
   }
 
   supabaseClient
-    .from("profissionais")
+    .from("profissionais_salao")
     .insert([profissional])
     .then((resposta)=>{
 
