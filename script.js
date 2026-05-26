@@ -505,7 +505,6 @@ function salvarAgendamento(){
   const horario = document.getElementById("horario").value;
   const profissional = document.getElementById("profissional").value;
   const duracao = Number(document.getElementById("duracao").value);
-  const preco = Number(document.getElementById("precoAgendamento")?.value || 0);
   const dataCampo = document.getElementById("dataAgendamento")?.value;
 
   if(!cliente){
@@ -529,13 +528,12 @@ function salvarAgendamento(){
 
   const agendamento = {
     id: Date.now(),
-    cliente,
+    cliente: cliente,
     telefone: "",
-    horario,
-    profissional,
-    duracao,
-    servico,
-    valor: preco,
+    horario: horario,
+    profissional: profissional,
+    duracao: duracao,
+    servico: servico,
     status: "Agendado",
     data: dataSalvar
   };
@@ -547,11 +545,13 @@ function salvarAgendamento(){
 
       if(resposta.error){
         alert("Erro ao salvar: " + resposta.error.message);
+        console.log(resposta.error);
         return;
       }
 
       fecharModal();
       carregarAgenda();
+
       alert("Agendamento salvo!");
 
     });
