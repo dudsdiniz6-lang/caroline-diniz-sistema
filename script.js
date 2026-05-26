@@ -3354,7 +3354,6 @@ function abrirModalProfissional(){
   document.getElementById("nomeProfissional").value = "";
   document.getElementById("telefoneProfissional").value = "";
   document.getElementById("especialidadeProfissional").value = "";
-  document.getElementById("comissaoProfissional").value = "";
 
   categoriasSelecionadasProfissional = [];
 
