@@ -607,23 +607,64 @@
 </div>
 <div class="modal" id="modal-profissional">
 
-  <div class="modal-content modal-servico-content">
+  <div class="modal-content atendimento99">
 
-    <div class="modal-header">
-
-      <h2>
-        Profissional
-      </h2>
-
-      <button
-        class="close"
-        onclick="fecharModalProfissional()"
-      >
-        ×
-      </button>
-
+    <div class="atendimento-header">
+      <button class="btn-voltar-modal" onclick="fecharModalProfissional()">←</button>
+      <h2>Profissional</h2>
     </div>
 
+    <div class="linha-atendimento">
+      <span class="icone-atendimento">👤</span>
+      <input type="text" id="nomeProfissional" placeholder="Nome do profissional">
+    </div>
+
+    <div class="linha-atendimento">
+      <span class="icone-atendimento">📞</span>
+      <input type="text" id="telefoneProfissional" placeholder="Telefone">
+    </div>
+
+    <div class="linha-atendimento">
+      <span class="icone-atendimento">✨</span>
+      <input type="text" id="especialidadeProfissional" placeholder="Especialidade">
+    </div>
+
+    <div class="linha-atendimento" onclick="abrirSeletorCategoriasProfissional()">
+      <span class="icone-atendimento">▦</span>
+
+      <div class="campo-selecionar-servico campo-servico99">
+        <span>Categorias que atende</span>
+        <strong id="categoriasProfissionalTexto">Selecionar categorias</strong>
+      </div>
+    </div>
+
+    <input type="hidden" id="categoriasProfissional">
+
+    <div class="linha-atendimento" onclick="abrirModalHorariosProfissional()">
+      <span class="icone-atendimento">🕒</span>
+
+      <div class="campo-selecionar-servico campo-servico99">
+        <span>Horários de atendimento</span>
+        <strong id="horariosProfissionalTexto">Configurar horários</strong>
+      </div>
+    </div>
+
+    <input type="hidden" id="horariosProfissional">
+
+    <div class="linha-atendimento">
+      <span class="icone-atendimento">%</span>
+      <input type="number" id="comissaoProfissional" placeholder="% comissão">
+    </div>
+
+    <div class="rodape-atendimento">
+      <button class="save-btn" onclick="salvarProfissional()">
+        SALVAR
+      </button>
+    </div>
+
+  </div>
+
+</div>
     <div class="form-servico">
 
       <input
