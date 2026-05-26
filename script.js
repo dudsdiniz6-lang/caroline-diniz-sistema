@@ -3338,25 +3338,51 @@ function calcularResumoAgendamento(){
   }
 
 }
+let categoriasSelecionadasProfissional = [];
+let horariosProfissionalConfig = {
+  segunda: [],
+  terca: [],
+  quarta: [],
+  quinta: [],
+  sexta: [],
+  sabado: [],
+  domingo: []
+};
+
 function abrirModalProfissional(){
 
   document.getElementById("nomeProfissional").value = "";
   document.getElementById("telefoneProfissional").value = "";
   document.getElementById("especialidadeProfissional").value = "";
-  document.getElementById("categoriasProfissional").value = "";
-  document.getElementById("diasProfissional").value = "";
-  document.getElementById("horaInicioProfissional").value = "";
-  document.getElementById("horaFimProfissional").value = "";
   document.getElementById("comissaoProfissional").value = "";
+
+  categoriasSelecionadasProfissional = [];
+
+  horariosProfissionalConfig = {
+    segunda: [],
+    terca: [],
+    quarta: [],
+    quinta: [],
+    sexta: [],
+    sabado: [],
+    domingo: []
+  };
+
+  document.getElementById("categoriasProfissional").value = "";
+  document.getElementById("horariosProfissional").value = "";
+
+  document.getElementById("categoriasProfissionalTexto").innerText =
+    "Selecionar categorias";
+
+  document.getElementById("horariosProfissionalTexto").innerText =
+    "Configurar horários";
 
   document.getElementById("modal-profissional").style.display = "flex";
 
 }
 
 function fecharModalProfissional(){
-
   document.getElementById("modal-profissional").style.display = "none";
-
 }
 
 function salvarProfissional(){
@@ -3365,10 +3391,9 @@ function salvarProfissional(){
     nome: document.getElementById("nomeProfissional").value,
     telefone: document.getElementById("telefoneProfissional").value,
     especialidade: document.getElementById("especialidadeProfissional").value,
-    categorias: document.getElementById("categoriasProfissional").value,
-    dias_atendimento: document.getElementById("diasProfissional").value,
-    hora_inicio: document.getElementById("horaInicioProfissional").value,
-    hora_fim: document.getElementById("horaFimProfissional").value,
+    categorias: categoriasSelecionadasProfissional.join(", "),
+    categorias_json: JSON.stringify(categoriasSelecionadasProfissional),
+    horarios_json: JSON.stringify(horariosProfissionalConfig),
     percentual_comis: Number(document.getElementById("comissaoProfissional").value || 0),
     ativo: true
   };
@@ -3390,9 +3415,7 @@ function salvarProfissional(){
       }
 
       alert("Profissional salvo!");
-
       fecharModalProfissional();
-
       carregarProfissionais();
 
     });
@@ -3424,25 +3447,11 @@ function carregarProfissionais(){
 
             <p>${profissional.especialidade || "Sem especialidade"}</p>
 
-            <small>
-              Telefone: ${profissional.telefone || "-"}
-            </small>
+            <small>Telefone: ${profissional.telefone || "-"}</small>
 
-            <small>
-              Dias: ${profissional.dias_atendimento || "-"}
-            </small>
+            <small>Categorias: ${profissional.categorias || "-"}</small>
 
-            <small>
-              Horário: ${profissional.hora_inicio || "-"} às ${profissional.hora_fim || "-"}
-            </small>
-
-            <small>
-              Categorias: ${profissional.categorias || "-"}
-            </small>
-
-            <small>
-              Comissão: ${profissional.percentual_comis || 0}%
-            </small>
+            <small>Comissão: ${profissional.percentual_comis || 0}%</small>
 
           </div>
         `;
