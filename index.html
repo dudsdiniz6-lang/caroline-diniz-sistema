@@ -309,13 +309,23 @@ Salvar Agendamento
 
     <div class="linha-atendimento">
       <span class="icone-atendimento">👤</span>
-      <input
-        type="text"
-        id="cliente"
-        list="listaClientesAgendamento"
-        placeholder="Cliente"
-      >
-      <datalist id="listaClientesAgendamento"></datalist>
+     <div
+  class="campo-selecionar-servico campo-servico99"
+  onclick="abrirSeletorCliente()"
+>
+
+  <span>Cliente</span>
+
+  <strong id="clienteSelecionadoTexto">
+    Selecione a cliente
+  </strong>
+
+</div>
+
+<input
+  type="hidden"
+  id="cliente"
+>
     </div>
 
     <div class="linha-atendimento">
