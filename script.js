@@ -3461,3 +3461,194 @@ function carregarProfissionais(){
     });
 
 }
+function abrirSeletorCategoriasProfissional(){
+
+  document.getElementById("modal-categorias-profissional").style.display = "flex";
+
+  const lista = document.getElementById("lista-categorias-profissional");
+
+  lista.innerHTML = "";
+
+  supabaseClient
+    .from("categorias_servicos")
+    .select("*")
+    .then((resposta)=>{
+
+      const categorias = resposta.data || [];
+
+      categorias.forEach((categoria)=>{
+
+        const marcada =
+          categoriasSelecionadasProfissional.includes(categoria.nome)
+            ? "checked"
+            : "";
+
+        lista.innerHTML += `
+          <label class="cliente-card">
+            <input
+              type="checkbox"
+              value="${categoria.nome}"
+              ${marcada}
+              onchange="alternarCategoriaProfissional(this)"
+            >
+            ${categoria.nome}
+          </label>
+        `;
+
+      });
+
+    });
+
+}
+
+function fecharSeletorCategoriasProfissional(){
+  document.getElementById("modal-categorias-profissional").style.display = "none";
+}
+
+function alternarCategoriaProfissional(input){
+
+  if(input.checked){
+    categoriasSelecionadasProfissional.push(input.value);
+  }else{
+    categoriasSelecionadasProfissional =
+      categoriasSelecionadasProfissional.filter((item)=> item !== input.value);
+  }
+
+}
+
+function confirmarCategoriasProfissional(){
+
+  document.getElementById("categoriasProfissional").value =
+    categoriasSelecionadasProfissional.join(", ");
+
+  document.getElementById("categoriasProfissionalTexto").innerText =
+    categoriasSelecionadasProfissional.length
+      ? categoriasSelecionadasProfissional.join(", ")
+      : "Selecionar categorias";
+
+  fecharSeletorCategoriasProfissional();
+
+}
+
+function abrirModalHorariosProfissional(){
+
+  document.getElementById("modal-horarios-profissional").style.display = "flex";
+
+  renderizarHorariosProfissional();
+
+}
+
+function fecharModalHorariosProfissional(){
+  document.getElementById("modal-horarios-profissional").style.display = "none";
+}
+
+function renderizarHorariosProfissional(){
+
+  const lista = document.getElementById("lista-horarios-profissional");
+
+  const dias = {
+    segunda:"Segunda",
+    terca:"Terça",
+    quarta:"Quarta",
+    quinta:"Quinta",
+    sexta:"Sexta",
+    sabado:"Sábado",
+    domingo:"Domingo"
+  };
+
+  lista.innerHTML = "";
+
+  Object.keys(dias).forEach((dia)=>{
+
+    lista.innerHTML += `
+      <div class="cliente-card">
+        <strong>${dias[dia]}</strong>
+
+        <div id="horarios-${dia}"></div>
+
+        <button type="button" onclick="adicionarHorarioDia('${dia}')">
+          + Adicionar horário
+        </button>
+      </div>
+    `;
+
+  });
+
+  Object.keys(dias).forEach((dia)=>{
+    renderizarHorarioDia(dia);
+  });
+
+}
+
+function adicionarHorarioDia(dia){
+
+  horariosProfissionalConfig[dia].push({
+    inicio:"08:00",
+    fim:"18:00"
+  });
+
+  renderizarHorarioDia(dia);
+
+}
+
+function removerHorarioDia(dia, index){
+
+  horariosProfissionalConfig[dia].splice(index, 1);
+
+  renderizarHorarioDia(dia);
+
+}
+
+function atualizarHorarioDia(dia, index, campo, valor){
+
+  horariosProfissionalConfig[dia][index][campo] = valor;
+
+}
+
+function renderizarHorarioDia(dia){
+
+  const div = document.getElementById(`horarios-${dia}`);
+
+  if(!div) return;
+
+  div.innerHTML = "";
+
+  horariosProfissionalConfig[dia].forEach((horario, index)=>{
+
+    div.innerHTML += `
+      <div class="linha-atendimento dupla">
+
+        <input
+          type="time"
+          value="${horario.inicio}"
+          onchange="atualizarHorarioDia('${dia}', ${index}, 'inicio', this.value)"
+        >
+
+        <input
+          type="time"
+          value="${horario.fim}"
+          onchange="atualizarHorarioDia('${dia}', ${index}, 'fim', this.value)"
+        >
+
+        <button type="button" onclick="removerHorarioDia('${dia}', ${index})">
+          ×
+        </button>
+
+      </div>
+    `;
+
+  });
+
+}
+
+function confirmarHorariosProfissional(){
+
+  document.getElementById("horariosProfissional").value =
+    JSON.stringify(horariosProfissionalConfig);
+
+  document.getElementById("horariosProfissionalTexto").innerText =
+    "Horários configurados";
+
+  fecharModalHorariosProfissional();
+
+}
