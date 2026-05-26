@@ -1081,3 +1081,196 @@ nav a:hover,
   background:#fff4ec;
   color:#ff6a00;
 }
+.atendimento99{
+  width:520px;
+  max-width:95vw;
+  max-height:92vh;
+  overflow-y:auto;
+  border-radius:28px;
+  padding:28px 32px;
+  background:#fff;
+  border:1px solid #ead7ca;
+}
+
+.atendimento-header{
+  display:flex;
+  align-items:center;
+  gap:14px;
+  margin-bottom:28px;
+}
+
+.atendimento-header h2{
+  margin:0;
+  font-size:22px;
+}
+
+.btn-voltar-modal{
+  border:none;
+  background:transparent;
+  font-size:26px;
+  cursor:pointer;
+}
+
+.linha-atendimento{
+  display:grid;
+  grid-template-columns:24px 1fr;
+  gap:14px;
+  align-items:center;
+  margin-bottom:14px;
+}
+
+.linha-atendimento.dupla{
+  grid-template-columns:24px 1fr 1fr;
+}
+
+.icone-atendimento{
+  font-size:18px;
+  text-align:center;
+  color:#111;
+}
+
+.linha-atendimento input,
+.linha-atendimento select,
+.campo-com-label,
+.campo-servico99{
+  width:100%;
+  min-height:48px;
+  border:1px solid #ddd;
+  border-radius:4px;
+  background:#fff;
+  padding:8px 10px;
+  box-sizing:border-box;
+}
+
+.campo-com-label label,
+.campo-servico99 span{
+  display:block;
+  font-size:11px;
+  color:#777;
+  margin-bottom:3px;
+}
+
+.campo-com-label input,
+.campo-com-label select{
+  border:none;
+  padding:0;
+  min-height:auto;
+  outline:none;
+}
+
+.campo-servico99 strong{
+  font-size:14px;
+  color:#222;
+}
+
+.titulo-servico-modal{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  margin:22px 0 12px 36px;
+}
+
+.titulo-servico-modal::after{
+  content:"";
+  flex:1;
+  height:1px;
+  background:#ccc;
+}
+
+.link-laranja{
+  border:none;
+  background:transparent;
+  color:#ff4d1d;
+  font-weight:600;
+  margin:6px 0 18px 36px;
+  cursor:pointer;
+}
+
+.resumo-atendimento99{
+  margin:18px 0 18px 36px;
+  font-size:14px;
+}
+
+.resumo-atendimento99 .resumo-titulo{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  margin-bottom:12px;
+}
+
+.resumo-atendimento99 .resumo-titulo span{
+  flex:1;
+  height:1px;
+  background:#ccc;
+}
+
+.resumo-atendimento99 div:not(.resumo-titulo){
+  display:flex;
+  justify-content:space-between;
+  margin:4px 0;
+}
+
+.repetir-atendimento{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  margin:18px 0 24px 36px;
+  color:#ff4d1d;
+}
+
+.switch{
+  margin-left:auto;
+  position:relative;
+  width:36px;
+  height:20px;
+}
+
+.switch input{
+  display:none;
+}
+
+.switch span{
+  position:absolute;
+  inset:0;
+  background:#bbb;
+  border-radius:999px;
+}
+
+.switch span::before{
+  content:"";
+  position:absolute;
+  width:16px;
+  height:16px;
+  left:2px;
+  top:2px;
+  background:white;
+  border-radius:50%;
+  transition:.2s;
+}
+
+.switch input:checked + span{
+  background:#ff4d1d;
+}
+
+.switch input:checked + span::before{
+  transform:translateX(16px);
+}
+
+.aviso-atendimento{
+  display:block;
+  margin:18px 0 22px 36px;
+  font-size:11px;
+  color:#555;
+  line-height:1.4;
+}
+
+.rodape-atendimento{
+  display:flex;
+  justify-content:flex-end;
+}
+
+.rodape-atendimento .save-btn{
+  width:auto;
+  padding:12px 24px;
+  border-radius:4px;
+}
