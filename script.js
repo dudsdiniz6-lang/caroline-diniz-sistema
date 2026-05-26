@@ -3255,3 +3255,89 @@ function selecionarServicoAgenda(nome){
   fecharSeletorServico();
 
 }
+function abrirSeletorCliente(){
+
+  document.getElementById(
+    "modal-seletor-cliente"
+  ).style.display = "flex";
+
+  carregarSeletorCliente();
+
+}
+
+function fecharSeletorCliente(){
+
+  document.getElementById(
+    "modal-seletor-cliente"
+  ).style.display = "none";
+
+}
+
+function carregarSeletorCliente(){
+
+  supabaseClient
+    .from("clients")
+    .select("*")
+    .then((resposta)=>{
+
+      window.clientesAgenda =
+        resposta.data || [];
+
+      renderizarClientesSeletor();
+
+    });
+
+}
+
+function renderizarClientesSeletor(){
+
+  const busca =
+    document.getElementById(
+      "buscaClienteSeletor"
+    ).value.toLowerCase();
+
+  const lista =
+    document.getElementById(
+      "lista-seletor-clientes"
+    );
+
+  lista.innerHTML = "";
+
+  (window.clientesAgenda || [])
+    .filter((cliente)=>
+      cliente.nome
+        .toLowerCase()
+        .includes(busca)
+    )
+    .forEach((cliente)=>{
+
+      const item =
+        document.createElement("div");
+
+      item.className =
+        "item-servico-seletor";
+
+      item.innerText =
+        cliente.nome;
+
+      item.onclick = function(){
+        selecionarClienteAgenda(cliente.nome);
+      };
+
+      lista.appendChild(item);
+
+    });
+
+}
+
+function selecionarClienteAgenda(nome){
+
+  document.getElementById("cliente").value = nome;
+
+  document.getElementById(
+    "clienteSelecionadoTexto"
+  ).innerText = nome;
+
+  fecharSeletorCliente();
+
+}
