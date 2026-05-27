@@ -3387,13 +3387,16 @@ function fecharModalProfissional(){
 function salvarProfissional(){
 
   const profissional = {
-    nome: document.getElementById("nomeProfissional").value,
-    telefone: document.getElementById("telefoneProfissional").value,
-    especialidade: document.getElementById("especialidadeProfissional").value,
-    categorias: categoriasSelecionadasProfissional.join(", "),
-    categorias_json: JSON.stringify(categoriasSelecionadasProfissional),
-    horarios_json: JSON.stringify(horariosProfissionalConfig),
-  };
+  nome: document.getElementById("nomeProfissional").value,
+  telefone: document.getElementById("telefoneProfissional").value,
+  especialidade: document.getElementById("especialidadeProfissional").value,
+  categorias: categoriasSelecionadasProfissional.join(", "),
+  dias_atendimento: JSON.stringify(horariosProfissionalConfig),
+  hora_inicio: "",
+  hora_fim: "",
+  intervalo_minutos: 30,
+  ativo: true
+};
 
   if(!profissional.nome){
     alert("Digite o nome do profissional.");
