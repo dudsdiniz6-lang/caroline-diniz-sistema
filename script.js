@@ -119,7 +119,7 @@ function irParaHoje(){
   carregarAgenda();
 }
 
-function abrirModal(){
+async function abrirModal(){
 
   document.getElementById(
     "modal"
@@ -136,6 +136,40 @@ function abrirModal(){
       dataSelecionada
         .toISOString()
         .split("T")[0];
+
+  }
+
+  const selectProfissional =
+    document.getElementById(
+      "profissional"
+    );
+
+  if(selectProfissional){
+
+    selectProfissional.innerHTML =
+      '<option value="">Selecione</option>';
+
+    const resposta =
+      await supabaseClient
+        .from("profissionais_salao")
+        .select("*")
+        .eq("ativo", true)
+        .order("nome");
+
+    const profissionais =
+      resposta.data || [];
+
+    profissionais.forEach((profissional)=>{
+
+      selectProfissional.innerHTML += `
+
+        <option value="${profissional.id}">
+          ${profissional.nome}
+        </option>
+
+      `;
+
+    });
 
   }
 
