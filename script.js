@@ -3391,7 +3391,7 @@ function salvarProfissional(){
   telefone: document.getElementById("telefoneProfissional").value,
   especialidade: document.getElementById("especialidadeProfissional").value,
 
-  categorias: categoriasSelecionadasProfissional.join(", "),
+  categorias: categoriasSelecionadasProfissional,
   categorias_json: JSON.stringify(categoriasSelecionadasProfissional),
 
   dias_atendimento: JSON.stringify(horariosProfissionalConfig),
