@@ -1524,6 +1524,8 @@ window.onload = function(){
   carregarPacotes();
     atualizarLinhaHorarioAtual();
 
+    carregarProfissionaisAgenda();
+
 setInterval(
   atualizarLinhaHorarioAtual,
   60000
