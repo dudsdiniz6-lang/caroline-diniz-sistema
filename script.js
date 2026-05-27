@@ -3386,15 +3386,22 @@ function fecharModalProfissional(){
 
 function salvarProfissional(){
 
-  const profissional = {
+ const profissional = {
   nome: document.getElementById("nomeProfissional").value,
   telefone: document.getElementById("telefoneProfissional").value,
   especialidade: document.getElementById("especialidadeProfissional").value,
+
   categorias: categoriasSelecionadasProfissional.join(", "),
+  categorias_json: JSON.stringify(categoriasSelecionadasProfissional),
+
   dias_atendimento: JSON.stringify(horariosProfissionalConfig),
+  horarios_json: JSON.stringify(horariosProfissionalConfig),
+
   hora_inicio: "",
   hora_fim: "",
   intervalo_minutos: 30,
+
+  percentual_comis: 0,
   ativo: true
 };
 
