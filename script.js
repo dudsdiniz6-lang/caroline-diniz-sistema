@@ -3386,24 +3386,22 @@ function fecharModalProfissional(){
 
 function salvarProfissional(){
 
- const profissional = {
-  nome: document.getElementById("nomeProfissional").value,
-  telefone: document.getElementById("telefoneProfissional").value,
-  especialidade: document.getElementById("especialidadeProfissional").value,
+  const profissional = {
+    nome: document.getElementById("nomeProfissional").value,
+    telefone: document.getElementById("telefoneProfissional").value,
+    especialidade: document.getElementById("especialidadeProfissional").value,
 
-  categorias: categoriasSelecionadasProfissional,
-  categorias_json: JSON.stringify(categoriasSelecionadasProfissional),
+    categorias: categoriasSelecionadasProfissional,
+    categorias_json: JSON.stringify(categoriasSelecionadasProfissional),
 
-  dias_atendimento: JSON.stringify(horariosProfissionalConfig),
-  horarios_json: JSON.stringify(horariosProfissionalConfig),
+    horarios_json: JSON.stringify(horariosProfissionalConfig),
 
-  hora_inicio: "",
-  hora_fim: "",
-  intervalo_minutos: 30,
-
-  percentual_comis: 0,
-  ativo: true
-};
+    hora_inicio: "",
+    hora_fim: "",
+    intervalo_minutos: 30,
+    percentual_comis: 0,
+    ativo: true
+  };
 
   if(!profissional.nome){
     alert("Digite o nome do profissional.");
@@ -3411,7 +3409,7 @@ function salvarProfissional(){
   }
 
   supabaseClient
-.from("profissionais_salao")
+    .from("profissionais_salao")
     .insert([profissional])
     .then((resposta)=>{
 
