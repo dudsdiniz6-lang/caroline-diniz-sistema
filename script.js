@@ -3394,7 +3394,7 @@ function salvarProfissional(){
     categorias: categoriasSelecionadasProfissional,
     categorias_json: JSON.stringify(categoriasSelecionadasProfissional),
 
-    horarios_json: JSON.stringify(horariosProfissionalConfig),
+    horarios_json: [JSON.stringify(horariosProfissionalConfig)],
 
     hora_inicio: "",
     hora_fim: "",
