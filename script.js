@@ -3696,3 +3696,45 @@ function confirmarHorariosProfissional(){
   fecharModalHorariosProfissional();
 
 }
+async function carregarProfissionaisAgenda(){
+
+  const filtro = document.getElementById("filtroProfissional");
+  const select = document.getElementById("profissional");
+
+  const resposta = await supabaseClient
+    .from("profissionais_salao")
+    .select("*")
+    .eq("ativo", true)
+    .order("nome");
+
+  const profissionais = resposta.data || [];
+
+  if(filtro){
+    filtro.innerHTML = `<option value="">Todos Profissionais</option>`;
+  }
+
+  if(select){
+    select.innerHTML = `<option value="">Selecione</option>`;
+  }
+
+  profissionais.forEach((profissional)=>{
+
+    if(filtro){
+      filtro.innerHTML += `
+        <option value="${profissional.id}">
+          ${profissional.nome}
+        </option>
+      `;
+    }
+
+    if(select){
+      select.innerHTML += `
+        <option value="${profissional.id}">
+          ${profissional.nome}
+        </option>
+      `;
+    }
+
+  });
+
+}
