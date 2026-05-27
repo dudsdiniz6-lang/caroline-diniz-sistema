@@ -3411,7 +3411,7 @@ function salvarProfissional(){
   }
 
   supabaseClient
-.from("profissionais_salao")
+.from("profissionais")
     .insert([profissional])
     .then((resposta)=>{
 
@@ -3438,7 +3438,7 @@ function carregarProfissionais(){
   lista.innerHTML = "";
 
   supabaseClient
-   .from("profissionais_salao")
+  .from("profissionais")
     .select("*")
     .order("nome", { ascending:true })
     .then((resposta)=>{
