@@ -3701,16 +3701,18 @@ function confirmarHorariosProfissional(){
 }
 async function carregarProfissionaisAgenda(){
 
-  const filtro = document.getElementById("filtroProfissional");
-  const select = document.getElementById("profissional");
-
   const resposta = await supabaseClient
     .from("profissionais_salao")
     .select("*")
     .eq("ativo", true)
     .order("nome");
 
-  const profissionais = resposta.data || [];
+  window.profissionaisAgendaSistema = resposta.data || [];
+
+  const filtro = document.getElementById("filtroProfissional");
+  const select = document.getElementById("profissional");
+  const agendaHeader = document.querySelector(".agenda-header");
+  const agendaBody = document.querySelector(".agenda-body");
 
   if(filtro){
     filtro.innerHTML = `<option value="">Todos Profissionais</option>`;
@@ -3720,7 +3722,19 @@ async function carregarProfissionaisAgenda(){
     select.innerHTML = `<option value="">Selecione</option>`;
   }
 
-  profissionais.forEach((profissional)=>{
+  if(agendaHeader){
+    agendaHeader.innerHTML = `<div class="time-column"></div>`;
+  }
+
+  if(agendaBody){
+    agendaBody.innerHTML = `
+      <div class="time-column">
+        ${horariosAgenda.map(horario => `<div aula="tempo">${horario}</div>`).join("")}
+      </div>
+    `;
+  }
+
+  window.profissionaisAgendaSistema.forEach((profissional)=>{
 
     if(filtro){
       filtro.innerHTML += `
@@ -3738,6 +3752,32 @@ async function carregarProfissionaisAgenda(){
       `;
     }
 
+    if(agendaHeader){
+      agendaHeader.innerHTML += `
+        <div class="professional">
+          ${profissional.nome}
+        </div>
+      `;
+    }
+
+    if(agendaBody){
+      agendaBody.innerHTML += `
+        <div class="column" data-profissional-id="${profissional.id}"></div>
+      `;
+    }
+
   });
+
+  const quantidade = window.profissionaisAgendaSistema.length || 1;
+
+  if(agendaHeader){
+    agendaHeader.style.gridTemplateColumns = `80px repeat(${quantidade}, 1fr)`;
+  }
+
+  if(agendaBody){
+    agendaBody.style.gridTemplateColumns = `80px repeat(${quantidade}, 1fr)`;
+  }
+
+  carregarAgenda();
 
 }
