@@ -1403,6 +1403,7 @@ function mostrarSecao(secao){
 
   if(secao === "profissionais-container"){
     carregarProfissionais();
+      
   }
 
   if(secao === "servicos-container"){
@@ -3478,7 +3479,7 @@ function fecharModalProfissional(){
 }
 
 function salvarProfissional(){
-
+    
   const profissional = {
     nome: document.getElementById("nomeProfissional").value,
     telefone: document.getElementById("telefoneProfissional").value,
@@ -3522,41 +3523,39 @@ function salvarProfissional(){
 
 function carregarProfissionais(){
 
-  const lista = document.getElementById("lista-profissionais");
+  ...
 
-  if(!lista) return;
+}
+← TERMINOU carregarProfissionais
 
-  lista.innerHTML = "";
 
-  supabaseClient
- .from("profissionais_salao")
-    .select("*")
-    .order("nome", { ascending:true })
-    .then((resposta)=>{
 
-      const profissionais = resposta.data || [];
+async function editarProfissional(id){
 
-      profissionais.forEach((profissional)=>{
+  const resposta =
+    await supabaseClient
+      .from("profissionais_salao")
+      .select("*")
+      .eq("id", id)
+      .single();
 
-        lista.innerHTML += `
-          <div class="cliente-card">
+  const profissional =
+    resposta.data;
 
-            <strong>${profissional.nome}</strong>
+  if(!profissional) return;
 
-            <p>${profissional.especialidade || "Sem especialidade"}</p>
+  window.profissionalEditando = id;
 
-            <small>Telefone: ${profissional.telefone || "-"}</small>
+  abrirModalProfissional();
 
-            <small>Categorias: ${profissional.categorias || "-"}</small>
+  document.getElementById("nomeProfissional").value =
+    profissional.nome || "";
 
-            <small>Comissão: ${profissional.percentual_comis || 0}%</small>
+  document.getElementById("telefoneProfissional").value =
+    profissional.telefone || "";
 
-          </div>
-        `;
-
-      });
-
-    });
+  document.getElementById("especialidadeProfissional").value =
+    profissional.especialidade || "";
 
 }
 function abrirSeletorCategoriasProfissional(){
