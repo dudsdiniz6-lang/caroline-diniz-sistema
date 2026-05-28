@@ -3549,9 +3549,7 @@ function salvarProfissional(){
     });
 
 }
-    return;
-  }
-
+    
   supabaseClient
     .from("profissionais_salao")
     .insert([profissional])
