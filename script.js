@@ -4059,3 +4059,39 @@ function salvarMovimentoCaixa(){
     });
 
 }
+setTimeout(()=>{
+
+  const caixaDiv =
+    document.getElementById("caixa-diario");
+
+  if(!caixaDiv) return;
+
+  if(
+    document.getElementById(
+      "btn-novo-movimento-caixa"
+    )
+  ) return;
+
+  caixaDiv.insertAdjacentHTML(
+    "afterbegin",
+    `
+      <button
+        id="btn-novo-movimento-caixa"
+        onclick="abrirModalCaixa()"
+        style="
+          background:#111;
+          color:#fff;
+          border:none;
+          padding:14px 18px;
+          border-radius:14px;
+          font-weight:700;
+          cursor:pointer;
+          margin-bottom:18px;
+        "
+      >
+        + Novo movimento
+      </button>
+    `
+  );
+
+},1500);
