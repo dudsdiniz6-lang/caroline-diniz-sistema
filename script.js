@@ -3939,3 +3939,123 @@ async function editarProfissional(id){
       : "Selecionar categorias";
 
 }
+function abrirModalCaixa(){
+
+  let modal = document.getElementById("modal-caixa-completo");
+
+  if(!modal){
+
+    modal = document.createElement("div");
+    modal.id = "modal-caixa-completo";
+
+    modal.style.cssText = `
+      position:fixed;
+      inset:0;
+      background:rgba(0,0,0,.45);
+      display:none;
+      align-items:center;
+      justify-content:center;
+      z-index:9999;
+    `;
+
+    modal.innerHTML = `
+      <div style="
+        background:#fff;
+        width:460px;
+        max-width:92%;
+        border-radius:26px;
+        padding:30px;
+        box-shadow:0 24px 70px rgba(0,0,0,.22);
+        display:flex;
+        flex-direction:column;
+        gap:14px;
+        font-family:inherit;
+      ">
+
+        <div>
+          <h2 style="margin:0;font-size:24px;font-weight:700;color:#222;">
+            Movimento de caixa
+          </h2>
+          <p style="margin:6px 0 0;color:#777;font-size:14px;">
+            Registre entradas e saídas do dia.
+          </p>
+        </div>
+
+        <select id="tipoMovimentoCaixa" style="padding:14px;border:1px solid #e2e2e2;border-radius:14px;font-size:14px;background:#fff;">
+          <option value="entrada">Entrada</option>
+          <option value="saida">Saída</option>
+        </select>
+
+        <input id="valorMovimentoCaixa" type="number" placeholder="Valor R$" style="padding:14px;border:1px solid #e2e2e2;border-radius:14px;font-size:14px;">
+
+        <input id="descricaoMovimentoCaixa" placeholder="Descrição" style="padding:14px;border:1px solid #e2e2e2;border-radius:14px;font-size:14px;">
+
+        <div style="display:flex;gap:10px;margin-top:10px;">
+          <button onclick="fecharModalCaixa()" style="flex:1;padding:14px;border:none;border-radius:14px;background:#f1f1f1;color:#333;font-weight:600;">
+            Cancelar
+          </button>
+
+          <button onclick="salvarMovimentoCaixa()" style="flex:1;padding:14px;border:none;border-radius:14px;background:#111;color:#fff;font-weight:700;">
+            Salvar
+          </button>
+        </div>
+
+      </div>
+    `;
+
+    document.body.appendChild(modal);
+
+  }
+
+  document.getElementById("valorMovimentoCaixa").value = "";
+  document.getElementById("descricaoMovimentoCaixa").value = "";
+
+  modal.style.display = "flex";
+
+}
+
+function fecharModalCaixa(){
+
+  document.getElementById("modal-caixa-completo").style.display = "none";
+
+}
+
+function salvarMovimentoCaixa(){
+
+  const tipo = document.getElementById("tipoMovimentoCaixa").value;
+  const valor = Number(document.getElementById("valorMovimentoCaixa").value || 0);
+  const descricao = document.getElementById("descricaoMovimentoCaixa").value || "";
+
+  if(!valor){
+    alert("Digite o valor.");
+    return;
+  }
+
+  const movimento = {
+    id: Date.now(),
+    entrada: tipo === "entrada" ? valor : 0,
+    despesa: tipo === "saida" ? valor : 0,
+    descricao,
+    tipo,
+    data: new Date().toLocaleDateString("pt-BR")
+  };
+
+  supabaseClient
+    .from("caixa")
+    .insert([movimento])
+    .then((resposta)=>{
+
+      if(resposta.error){
+        alert("Erro ao salvar caixa: " + resposta.error.message);
+        return;
+      }
+
+      fecharModalCaixa();
+
+      carregarCaixa();
+
+      alert("Movimento salvo!");
+
+    });
+
+}
