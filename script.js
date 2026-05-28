@@ -1813,50 +1813,94 @@ function salvarCaixa(){
 }
 function carregarCaixa(){
 
-  const caixaDiv = document.getElementById("caixa-diario");
+  const caixaDiv =
+    document.getElementById(
+      "caixa-diario"
+    );
 
   if(!caixaDiv) return;
 
-  caixaDiv.innerHTML = "";
+  caixaDiv.innerHTML =
+    `<h2 style="
+      margin-bottom:24px;
+      font-size:26px;
+      font-weight:700;
+    ">
+      Controle de Caixa
+    </h2>`;
 
   supabaseClient
     .from("caixa")
     .select("*")
+    .order("data",{ascending:false})
     .then((resposta)=>{
 
-      const caixas = resposta.data || [];
-
-      let totalEntrada = 0;
-      let totalDespesa = 0;
+      const caixas =
+        resposta.data || [];
 
       caixas.forEach((item)=>{
 
-        totalEntrada += Number(item.entrada || 0);
-        totalDespesa += Number(item.despesa || 0);
+        const saldo =
+          Number(item.entrada||0)
+          -
+          Number(item.despesa||0);
+
+        caixaDiv.innerHTML += `
+
+          <div style="
+            display:grid;
+            grid-template-columns:
+            1fr 1fr 1fr 1fr 1fr;
+            padding:18px 12px;
+            border-bottom:
+            1px solid #eee;
+            align-items:center;
+            gap:10px;
+          ">
+
+            <span>
+              ${item.data || "-"}
+            </span>
+
+            <strong>
+              ${item.descricao || "Movimento"}
+            </strong>
+
+            <span>
+              ${
+                Number(item.entrada||0)>0
+                ? "Entrada"
+                : "Saída"
+              }
+            </span>
+
+            <span>
+              R$
+              ${Math.abs(saldo)
+                .toFixed(2)}
+            </span>
+
+            <span style="
+              color:
+              ${
+                saldo>=0
+                ? "#1a9b45"
+                : "#d63031"
+              };
+              font-weight:700;
+            ">
+              ${
+                saldo>=0
+                ? "ABERTO"
+                : "SAÍDA"
+              }
+            </span>
+
+          </div>
+
+        `;
 
       });
-
-      const saldo = totalEntrada - totalDespesa;
-
-      caixaDiv.innerHTML = `
-        <div class="cliente-card">
-
-          <strong>
-            R$ ${saldo.toFixed(2)}
-          </strong>
-
-          <p>Saldo do caixa</p>
-
-          <small>
-            Entradas: R$ ${totalEntrada.toFixed(2)}
-          </small>
-
-          <small>
-            Despesas: R$ ${totalDespesa.toFixed(2)}
-          </small>
-
-        </div>
-      `;
 
     });
 
