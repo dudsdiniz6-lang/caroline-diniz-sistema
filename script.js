@@ -143,7 +143,9 @@ async function abrirModal(){
     document.getElementById(
       "profissional"
     );
-
+if(window.profissionalPreSelecionado){
+  selectProfissional.value = window.profissionalPreSelecionado;
+}
   if(selectProfissional){
 
     selectProfissional.innerHTML =
@@ -643,6 +645,9 @@ function carregarAgenda(){
 
      window.profissionalPreSelecionado =
   coluna.dataset.profissionalId || "";
+
+window.profissionalPreSelecionado =
+  coluna.getAttribute("data-profissional-id") || "";
 
 document.getElementById("horario").value = horario;
 
