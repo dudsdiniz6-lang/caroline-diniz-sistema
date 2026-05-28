@@ -2210,13 +2210,15 @@ function salvarServicoSalao(){
 
  
 
- if(
+if(
   !nome ||
   !categoria ||
-  !comissao ||
-  !duracao ||
-  !valor
+  duracao === "" ||
+  valor === ""
 ){
+  alert("Preencha todos os campos obrigatórios.");
+  return;
+}
   alert(
     "Preencha todos os campos obrigatórios."
   );
@@ -3511,13 +3513,11 @@ function salvarProfissional(){
       .then((resposta)=>{
 
         if(resposta.error){
-          alert("Erro ao atualizar: " + resposta.error.message);
+          alert(resposta.error.message);
           return;
         }
 
         window.profissionalEditando = null;
-
-        alert("Profissional atualizado!");
 
         fecharModalProfissional();
 
@@ -3525,33 +3525,36 @@ function salvarProfissional(){
 
         carregarProfissionaisAgenda();
 
+        alert("Profissional atualizado!");
+
       });
 
-    return;
+  }else{
+
+    supabaseClient
+      .from("profissionais_salao")
+      .insert([profissional])
+      .then((resposta)=>{
+
+        if(resposta.error){
+          alert(resposta.error.message);
+          return;
+        }
+
+        fecharModalProfissional();
+
+        carregarProfissionais();
+
+        carregarProfissionaisAgenda();
+
+        alert("Profissional salvo!");
+
+      });
 
   }
 
-  supabaseClient
-    .from("profissionais_salao")
-    .insert([profissional])
-    .then((resposta)=>{
-
-      if(resposta.error){
-        alert("Erro ao salvar profissional: " + resposta.error.message);
-        return;
-      }
-
-      alert("Profissional salvo!");
-
-      fecharModalProfissional();
-
-      carregarProfissionais();
-
-      carregarProfissionaisAgenda();
-
-    });
-
 }
+
 function carregarProfissionais(){
 
   ...
