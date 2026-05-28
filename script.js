@@ -2429,19 +2429,19 @@ function atualizarServicoSelecionado(){
   }
 }
 
- function abrirModalServico(){
+function abrirModalServico(){
 
   servicoEditandoId = null;
 
-  document.getElementById("nomeServicoSalao").value = "";
-  document.getElementById("categoriaServicoSalao").value = "";
-  document.getElementById("descricaoServicoSalao").value = "";
-  document.getElementById("comissaoServicoSalao").value = "";
-  document.getElementById("duracaoServicoSalao").value = "";
-  document.getElementById("valorServicoSalao").value = "";
-  document.getElementById("custoServicoSalao").value = "";
-
-  document.getElementById("modal-servico").style.display = "flex";
+  console.log(
+    document.getElementById("nomeServicoSalao"),
+    document.getElementById("categoriaServicoSalao"),
+    document.getElementById("descricaoServicoSalao"),
+    document.getElementById("comissaoServicoSalao"),
+    document.getElementById("duracaoServicoSalao"),
+    document.getElementById("valorServicoSalao"),
+    document.getElementById("custoServicoSalao")
+  );
 
 }
 function adicionarCategoriaServico(){
