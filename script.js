@@ -1522,14 +1522,15 @@ window.onload = function(){
   carregarCategoriasServicos();
 
   carregarPacotes();
-    atualizarLinhaHorarioAtual();
 
-    carregarProfissionaisAgenda();
+  atualizarLinhaHorarioAtual();
 
-setInterval(
-  atualizarLinhaHorarioAtual,
-  60000
-);
+  carregarProfissionaisAgenda();
+
+  setInterval(
+    atualizarLinhaHorarioAtual,
+    60000
+  );
 
 };
 let eventoInstalacao = null;
