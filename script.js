@@ -2208,14 +2208,16 @@ function salvarServicoSalao(){
     document.getElementById("custoServicoSalao").value || 0
   );
 
- 
-
-if(
+ if(
   !nome ||
   !categoria ||
   duracao === "" ||
   valor === ""
 ){
+  alert("Preencha todos os campos obrigatórios.");
+  return;
+}
+    
   alert("Preencha todos os campos obrigatórios.");
   return;
 }
