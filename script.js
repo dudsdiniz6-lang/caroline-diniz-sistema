@@ -3869,3 +3869,35 @@ async function carregarProfissionaisAgenda(){
   carregarAgenda();
 
 }
+function carregarProfissionais(){
+
+  const lista = document.getElementById("lista-profissionais");
+
+  if(!lista) return;
+
+  lista.innerHTML = "";
+
+  supabaseClient
+    .from("profissionais_salao")
+    .select("*")
+    .order("nome", { ascending:true })
+    .then((resposta)=>{
+
+      const profissionais = resposta.data || [];
+
+      profissionais.forEach((profissional)=>{
+
+        lista.innerHTML += `
+          <div class="cliente-card" onclick="editarProfissional('${profissional.id}')">
+            <strong>${profissional.nome}</strong>
+            <p>${profissional.especialidade || "Sem especialidade"}</p>
+            <small>Telefone: ${profissional.telefone || "-"}</small>
+            <small>Categorias: ${profissional.categorias || "-"}</small>
+          </div>
+        `;
+
+      });
+
+    });
+
+}
