@@ -4095,3 +4095,46 @@ setTimeout(()=>{
   );
 
 },1500);
+setTimeout(()=>{
+
+  const nav = document.querySelector("nav");
+
+  if(!nav) return;
+
+  if(document.getElementById("menu-caixa")) return;
+
+  nav.insertAdjacentHTML(
+    "beforeend",
+    `
+      <a
+        id="menu-caixa"
+        href="#"
+        onclick="mostrarSecao('caixa-container')"
+      >
+        Caixa
+      </a>
+    `
+  );
+
+},1000);
+setTimeout(()=>{
+
+  if(document.getElementById("caixa-container")) return;
+
+  const container = document.createElement("div");
+
+  container.id = "caixa-container";
+  container.className = "clientes-container";
+  container.style.display = "none";
+
+  container.innerHTML = `
+    <h2>Caixa</h2>
+
+    <div id="caixa-diario"></div>
+  `;
+
+  document.body.appendChild(container);
+
+  carregarCaixa();
+
+},1000);
