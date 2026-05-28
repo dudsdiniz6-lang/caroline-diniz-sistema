@@ -2443,7 +2443,10 @@ function abrirModalServico(){
     document.getElementById("custoServicoSalao")
   );
 
+  document.getElementById("modal-servico").style.display = "flex";
+
 }
+
 function adicionarCategoriaServico(){
 
   const nome =
