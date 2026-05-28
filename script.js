@@ -3548,15 +3548,6 @@ function salvarProfissional(){
 
 }
 
-function carregarProfissionais(){
-
-  ...
-
-}
-← TERMINOU carregarProfissionais
-
-
-
 async function editarProfissional(id){
 
   const resposta =
