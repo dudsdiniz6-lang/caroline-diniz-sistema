@@ -160,6 +160,9 @@ async function abrirModal(){
       resposta.data || [];
 
     profissionais.forEach((profissional)=>{
+        if(window.profissionalPreSelecionado){
+  selectProfissional.value = window.profissionalPreSelecionado;
+}
 
       selectProfissional.innerHTML += `
 
@@ -638,11 +641,12 @@ function carregarAgenda(){
 
       if(!horario) return;
 
-      document.getElementById("profissional").value = index;
+     window.profissionalPreSelecionado =
+  coluna.dataset.profissionalId || "";
 
-      document.getElementById("horario").value = horario;
+document.getElementById("horario").value = horario;
 
-      abrirModal();
+abrirModal();
 
     });
 
