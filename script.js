@@ -3901,3 +3901,41 @@ function carregarProfissionais(){
     });
 
 }
+async function editarProfissional(id){
+
+  const resposta =
+    await supabaseClient
+      .from("profissionais_salao")
+      .select("*")
+      .eq("id", id)
+      .single();
+
+  const profissional = resposta.data;
+
+  if(!profissional){
+    alert("Profissional não encontrado.");
+    return;
+  }
+
+  window.profissionalEditando = id;
+
+  abrirModalProfissional();
+
+  document.getElementById("nomeProfissional").value =
+    profissional.nome || "";
+
+  document.getElementById("telefoneProfissional").value =
+    profissional.telefone || "";
+
+  document.getElementById("especialidadeProfissional").value =
+    profissional.especialidade || "";
+
+  categoriasSelecionadasProfissional =
+    profissional.categorias || [];
+
+  document.getElementById("categoriasProfissionalTexto").innerText =
+    categoriasSelecionadasProfissional.length
+      ? categoriasSelecionadasProfissional.join(", ")
+      : "Selecionar categorias";
+
+}
