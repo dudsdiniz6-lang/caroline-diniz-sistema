@@ -3527,7 +3527,10 @@ function salvarProfissional(){
 
       });
 
-   
+    return;
+
+  }
+
   supabaseClient
     .from("profissionais_salao")
     .insert([profissional])
@@ -3549,31 +3552,6 @@ function salvarProfissional(){
     });
 
 }
-    
-  supabaseClient
-    .from("profissionais_salao")
-    .insert([profissional])
-    .then((resposta)=>{
-
-      if(resposta.error){
-        alert("Erro ao salvar profissional: " + resposta.error.message);
-        return;
-      }
-
-      alert("Profissional salvo!");
-
-      fecharModalProfissional();
-
-      carregarProfissionais();
-
-      carregarProfissionaisAgenda();
-
-       });
-
-  }
-
-}
-
 function carregarProfissionais(){
 
   ...
