@@ -2449,55 +2449,59 @@ function abrirModalServico(){
   z-index: 9999;
 `;
 
-    modal.innerHTML = `
-      <div style="
-  background:#fff;
-  width:420px;
-  max-width:90%;
-  border-radius:22px;
-  padding:28px;
-  box-shadow:0 20px 60px rgba(0,0,0,.25);
-  display:flex;
-  flex-direction:column;
-  gap:14px;
-">
-       <h2 style="
-  margin:0 0 10px 0;
-  font-size:22px;
-  font-weight:700;
-">
-  Serviço
-</h2>
+   modal.innerHTML = `
+  <div style="
+    background:#fff;
+    width:460px;
+    max-width:92%;
+    border-radius:26px;
+    padding:30px;
+    box-shadow:0 24px 70px rgba(0,0,0,.22);
+    display:flex;
+    flex-direction:column;
+    gap:14px;
+    font-family:inherit;
+  ">
 
-        <input
-  id="nomeServicoSalao"
-  placeholder="Nome do serviço"
-  style="
-    padding:14px;
-    border:1px solid #ddd;
-    border-radius:12px;
-    font-size:14px;
-  "
->
+    <div style="margin-bottom:6px;">
+      <h2 style="margin:0;font-size:24px;font-weight:700;color:#222;">
+        Novo serviço
+      </h2>
+      <p style="margin:6px 0 0;color:#777;font-size:14px;">
+        Cadastre um procedimento do salão.
+      </p>
+    </div>
 
-        <select id="categoriaServicoSalao">
-          <option value="">Selecione a categoria</option>
-        </select>
+    <input id="nomeServicoSalao" placeholder="Nome do serviço" style="padding:14px;border:1px solid #e2e2e2;border-radius:14px;font-size:14px;">
 
-        <textarea id="descricaoServicoSalao" placeholder="Descrição"></textarea>
+    <select id="categoriaServicoSalao" style="padding:14px;border:1px solid #e2e2e2;border-radius:14px;font-size:14px;background:#fff;">
+      <option value="">Selecione a categoria</option>
+    </select>
 
-        <input id="comissaoServicoSalao" type="number" placeholder="Comissão (%)">
+    <textarea id="descricaoServicoSalao" placeholder="Descrição" style="padding:14px;border:1px solid #e2e2e2;border-radius:14px;font-size:14px;min-height:80px;"></textarea>
 
-        <input id="duracaoServicoSalao" type="number" placeholder="Duração em minutos">
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+      <input id="duracaoServicoSalao" type="number" placeholder="Duração min." style="padding:14px;border:1px solid #e2e2e2;border-radius:14px;font-size:14px;">
+      <input id="valorServicoSalao" type="number" placeholder="Valor R$" style="padding:14px;border:1px solid #e2e2e2;border-radius:14px;font-size:14px;">
+    </div>
 
-        <input id="valorServicoSalao" type="number" placeholder="Valor">
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+      <input id="comissaoServicoSalao" type="number" placeholder="Comissão %" style="padding:14px;border:1px solid #e2e2e2;border-radius:14px;font-size:14px;">
+      <input id="custoServicoSalao" type="number" placeholder="Custo R$" style="padding:14px;border:1px solid #e2e2e2;border-radius:14px;font-size:14px;">
+    </div>
 
-        <input id="custoServicoSalao" type="number" placeholder="Custo">
+    <div style="display:flex;gap:10px;margin-top:10px;">
+      <button onclick="fecharModalServico()" style="flex:1;padding:14px;border:none;border-radius:14px;background:#f1f1f1;color:#333;font-weight:600;">
+        Cancelar
+      </button>
 
-        <button onclick="salvarServicoSalao()">Salvar</button>
-        <button onclick="fecharModalServico()">Fechar</button>
-      </div>
-    `;
+      <button onclick="salvarServicoSalao()" style="flex:1;padding:14px;border:none;border-radius:14px;background:#111;color:#fff;font-weight:700;">
+        Salvar serviço
+      </button>
+    </div>
+
+  </div>
+`;
 
     document.body.appendChild(modal);
 
