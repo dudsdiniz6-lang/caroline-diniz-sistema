@@ -2439,13 +2439,46 @@ function abrirModalServico(){
 
     modal = document.createElement("div");
     modal.id = "modal-servico";
-    modal.className = "modal";
+   modal.style.cssText = `
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.45);
+  display: none;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+`;
 
     modal.innerHTML = `
-      <div class="modal-content">
-        <h2>Serviço</h2>
+      <div style="
+  background:#fff;
+  width:420px;
+  max-width:90%;
+  border-radius:22px;
+  padding:28px;
+  box-shadow:0 20px 60px rgba(0,0,0,.25);
+  display:flex;
+  flex-direction:column;
+  gap:14px;
+">
+       <h2 style="
+  margin:0 0 10px 0;
+  font-size:22px;
+  font-weight:700;
+">
+  Serviço
+</h2>
 
-        <input id="nomeServicoSalao" placeholder="Nome do serviço">
+        <input
+  id="nomeServicoSalao"
+  placeholder="Nome do serviço"
+  style="
+    padding:14px;
+    border:1px solid #ddd;
+    border-radius:12px;
+    font-size:14px;
+  "
+>
 
         <select id="categoriaServicoSalao">
           <option value="">Selecione a categoria</option>
