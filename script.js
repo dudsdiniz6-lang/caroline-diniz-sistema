@@ -4095,6 +4095,3 @@ setTimeout(()=>{
   );
 
 },1500);
-abrirModalCaixa()
-fecharModalCaixa()
-salvarMovimentoCaixa()
