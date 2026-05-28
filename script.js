@@ -3479,7 +3479,7 @@ function fecharModalProfissional(){
 }
 
 function salvarProfissional(){
-    
+
   const profissional = {
     nome: document.getElementById("nomeProfissional").value,
     telefone: document.getElementById("telefoneProfissional").value,
@@ -3502,6 +3502,34 @@ function salvarProfissional(){
     return;
   }
 
+  if(window.profissionalEditando){
+
+    supabaseClient
+      .from("profissionais_salao")
+      .update(profissional)
+      .eq("id", window.profissionalEditando)
+      .then((resposta)=>{
+
+        if(resposta.error){
+          alert("Erro ao atualizar: " + resposta.error.message);
+          return;
+        }
+
+        window.profissionalEditando = null;
+
+        alert("Profissional atualizado!");
+
+        fecharModalProfissional();
+
+        carregarProfissionais();
+
+        carregarProfissionaisAgenda();
+
+      });
+
+    return;
+  }
+
   supabaseClient
     .from("profissionais_salao")
     .insert([profissional])
@@ -3509,13 +3537,16 @@ function salvarProfissional(){
 
       if(resposta.error){
         alert("Erro ao salvar profissional: " + resposta.error.message);
-        console.log(resposta.error);
         return;
       }
 
       alert("Profissional salvo!");
+
       fecharModalProfissional();
+
       carregarProfissionais();
+
+      carregarProfissionaisAgenda();
 
     });
 
