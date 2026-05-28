@@ -3077,13 +3077,41 @@ function carregarServicosAgendamento(){
 }
 let categoriaSelecionadaServico = "";
 
-function abrirSeletorServico(){
+async function abrirSeletorServico(){
+
+  const idProfissional =
+    document.getElementById(
+      "profissional"
+    ).value;
+
+  if(!idProfissional){
+
+    alert(
+      "Selecione um profissional primeiro."
+    );
+
+    return;
+  }
+
+  const resposta =
+    await supabaseClient
+      .from("profissionais_salao")
+      .select("*")
+      .eq("id", idProfissional)
+      .single();
+
+  const profissional =
+    resposta.data;
+
+  window.categoriasPermitidasAgendamento =
+    profissional?.categorias || [];
 
   document.getElementById(
     "modal-seletor-servico"
   ).style.display = "flex";
 
   carregarSeletorServico();
+
 }
 
 function fecharSeletorServico(){
@@ -3103,6 +3131,23 @@ function carregarSeletorServico(){
 
       window.servicosAgenda =
         resposta.data || [];
+        if(
+  window.categoriasPermitidasAgendamento &&
+  window.categoriasPermitidasAgendamento.length
+){
+
+  window.servicosAgenda =
+    window.servicosAgenda.filter(
+      servico => {
+
+        return window
+          .categoriasPermitidasAgendamento
+          .includes(servico.categoria);
+
+      }
+    );
+
+}
 
       const categorias =
         [...new Set(
