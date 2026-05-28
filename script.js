@@ -2433,84 +2433,55 @@ function abrirModalServico(){
 
   servicoEditandoId = null;
 
-  const modal =
-    document.getElementById("modal-servico");
+  let modal = document.getElementById("modal-servico");
 
   if(!modal){
 
-    alert(
-      "Não encontrei o modal de serviço.\n\nProcure no seu arquivo por:\nmodal-servico"
-    );
+    modal = document.createElement("div");
+    modal.id = "modal-servico";
+    modal.className = "modal";
 
-    return;
+    modal.innerHTML = `
+      <div class="modal-content">
+        <h2>Serviço</h2>
 
+        <input id="nomeServicoSalao" placeholder="Nome do serviço">
+
+        <select id="categoriaServicoSalao">
+          <option value="">Selecione a categoria</option>
+        </select>
+
+        <textarea id="descricaoServicoSalao" placeholder="Descrição"></textarea>
+
+        <input id="comissaoServicoSalao" type="number" placeholder="Comissão (%)">
+
+        <input id="duracaoServicoSalao" type="number" placeholder="Duração em minutos">
+
+        <input id="valorServicoSalao" type="number" placeholder="Valor">
+
+        <input id="custoServicoSalao" type="number" placeholder="Custo">
+
+        <button onclick="salvarServicoSalao()">Salvar</button>
+        <button onclick="fecharModalServico()">Fechar</button>
+      </div>
+    `;
+
+    document.body.appendChild(modal);
+
+    carregarCategoriasServicos();
   }
 
-  document.getElementById("modal-servico")
-    .style.display = "flex";
+  document.getElementById("nomeServicoSalao").value = "";
+  document.getElementById("descricaoServicoSalao").value = "";
+  document.getElementById("comissaoServicoSalao").value = "";
+  document.getElementById("duracaoServicoSalao").value = "";
+  document.getElementById("valorServicoSalao").value = "";
+  document.getElementById("custoServicoSalao").value = "";
+
+  modal.style.display = "flex";
 
 }
 
-function adicionarCategoriaServico(){
-
-  const nome =
-    document.getElementById(
-      "novaCategoriaServico"
-    ).value;
-
-  if(!nome){
-    alert("Digite o nome da categoria.");
-    return;
-  }
-
-  supabaseClient
-    .from("categorias_servicos")
-    .insert([{
-      id: Date.now(),
-      nome
-    }])
-    .then((resposta)=>{
-
-      if(resposta.error){
-        alert("Erro ao salvar categoria.");
-        return;
-      }
-
-      fecharModalCategoria();
-
-      carregarCategoriasServicos();
-
-    });
-
-}
-function editarServicoSalao(id){
-
-  supabaseClient
-    .from("servicos_salao")
-    .select("*")
-    .eq("id", id)
-    .single()
-    .then((resposta)=>{
-
-      const servico = resposta.data;
-
-      if(!servico) return;
-
-      servicoEditandoId = id;
-
-      document.getElementById("modal-servico").style.display = "flex";
-
-      document.getElementById("nomeServicoSalao").value = servico.nome || "";
-      document.getElementById("categoriaServicoSalao").value = servico.categoria || "";
-      document.getElementById("descricaoServicoSalao").value = servico.descricao || "";
-      document.getElementById("comissaoServicoSalao").value = servico.comissao_padrao || "";
-      document.getElementById("duracaoServicoSalao").value = servico.duracao || "";
-      document.getElementById("valorServicoSalao").value = servico.valor || "";
-      document.getElementById("custoServicoSalao").value = servico.custo || "";
-
-    });
-
-}
 function excluirCategoriaServico(id){
 
   const confirmar = confirm(
