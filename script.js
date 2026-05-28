@@ -2433,17 +2433,21 @@ function abrirModalServico(){
 
   servicoEditandoId = null;
 
-  console.log(
-    document.getElementById("nomeServicoSalao"),
-    document.getElementById("categoriaServicoSalao"),
-    document.getElementById("descricaoServicoSalao"),
-    document.getElementById("comissaoServicoSalao"),
-    document.getElementById("duracaoServicoSalao"),
-    document.getElementById("valorServicoSalao"),
-    document.getElementById("custoServicoSalao")
-  );
+  const modal =
+    document.getElementById("modal-servico");
 
-  document.getElementById("modal-servico").style.display = "flex";
+  if(!modal){
+
+    alert(
+      "Não encontrei o modal de serviço.\n\nProcure no seu arquivo por:\nmodal-servico"
+    );
+
+    return;
+
+  }
+
+  document.getElementById("modal-servico")
+    .style.display = "flex";
 
 }
 
