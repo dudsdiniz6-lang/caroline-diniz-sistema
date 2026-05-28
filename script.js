@@ -143,9 +143,7 @@ async function abrirModal(){
     document.getElementById(
       "profissional"
     );
-if(window.profissionalPreSelecionado){
-  selectProfissional.value = window.profissionalPreSelecionado;
-}
+    
   if(selectProfissional){
 
     selectProfissional.innerHTML =
@@ -158,25 +156,27 @@ if(window.profissionalPreSelecionado){
         .eq("ativo", true)
         .order("nome");
 
-    const profissionais =
-      resposta.data || [];
+  const profissionais =
+  resposta.data || [];
 
-    profissionais.forEach((profissional)=>{
-        if(window.profissionalPreSelecionado){
-  selectProfissional.value = window.profissionalPreSelecionado;
+profissionais.forEach((profissional)=>{
+
+  selectProfissional.innerHTML += `
+
+    <option value="${profissional.id}">
+      ${profissional.nome}
+    </option>
+
+  `;
+
+});
+
+if(window.profissionalPreSelecionado){
+
+  selectProfissional.value =
+    window.profissionalPreSelecionado;
+
 }
-
-      selectProfissional.innerHTML += `
-
-        <option value="${profissional.id}">
-          ${profissional.nome}
-        </option>
-
-      `;
-
-    });
-
-  }
 
 }
 
@@ -228,7 +228,10 @@ function calcularTop(horario){
 
 function criarCard(agendamento){
   const colunas = document.querySelectorAll(".column");
-  const coluna = colunas[agendamento.profissional];
+  const coluna =
+  document.querySelector(
+    `.column[data-profissional-id="${agendamento.profissional}"]`
+  );
 
   if(!coluna) return;
 
@@ -645,9 +648,6 @@ function carregarAgenda(){
 
      window.profissionalPreSelecionado =
   coluna.dataset.profissionalId || "";
-
-window.profissionalPreSelecionado =
-  coluna.getAttribute("data-profissional-id") || "";
 
 document.getElementById("horario").value = horario;
 
