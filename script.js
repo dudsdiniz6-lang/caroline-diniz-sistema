@@ -179,7 +179,9 @@ if(window.profissionalPreSelecionado){
 }
 
 }
-    
+
+}
+
 function fecharModal(){
   document.getElementById("modal").style.display = "none";
 }
