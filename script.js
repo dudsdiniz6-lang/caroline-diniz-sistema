@@ -2217,15 +2217,6 @@ function salvarServicoSalao(){
   alert("Preencha todos os campos obrigatórios.");
   return;
 }
-    
-  alert("Preencha todos os campos obrigatórios.");
-  return;
-}
-  alert(
-    "Preencha todos os campos obrigatórios."
-  );
-  return;
-}
 
   const dadosServico = {
     nome,
