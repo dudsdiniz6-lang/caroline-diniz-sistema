@@ -3548,7 +3548,9 @@ function salvarProfissional(){
 
       carregarProfissionaisAgenda();
 
-    });
+       });
+
+  }
 
 }
 
