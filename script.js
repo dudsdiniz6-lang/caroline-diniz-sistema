@@ -1820,13 +1820,21 @@ function carregarCaixa(){
 
   if(!caixaDiv) return;
 
-  caixaDiv.innerHTML += `
-
-  <div style="
+  caixaDiv.innerHTML =
+  `<div style="
     display:flex;
-    justify-content:flex-end;
+    justify-content:space-between;
+    align-items:center;
     margin-bottom:24px;
   ">
+
+    <h2 style="
+      margin:0;
+      font-size:26px;
+      font-weight:700;
+    ">
+      Controle de Caixa
+    </h2>
 
     <button
       onclick="abrirNovoCaixa()"
@@ -1844,9 +1852,7 @@ function carregarCaixa(){
       + Novo Caixa
     </button>
 
-  </div>
-
-`;
+  </div>`;
 
   supabaseClient
     .from("caixa")
