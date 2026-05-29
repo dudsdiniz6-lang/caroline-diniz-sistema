@@ -4182,3 +4182,127 @@ setTimeout(()=>{
   carregarCaixa();
 
 },1000);
+function abrirNovoCaixa(){
+
+  let modal = document.getElementById("modal-novo-caixa");
+
+  if(!modal){
+
+    modal = document.createElement("div");
+    modal.id = "modal-novo-caixa";
+    modal.style.cssText = `
+      position:fixed;
+      inset:0;
+      background:rgba(0,0,0,.35);
+      display:none;
+      align-items:center;
+      justify-content:center;
+      z-index:9999;
+    `;
+
+    modal.innerHTML = `
+      <div style="
+        background:#fff;
+        width:560px;
+        max-width:92%;
+        border-radius:26px;
+        padding:34px 42px;
+        box-shadow:0 24px 70px rgba(0,0,0,.18);
+        display:flex;
+        flex-direction:column;
+        gap:18px;
+      ">
+
+        <h2 style="margin:0;font-size:22px;">
+          ← Abrir Caixa
+        </h2>
+
+        <select id="tipoNovoCaixa" style="padding:14px;border:0;font-size:16px;">
+          <option value="compartilhado">Caixa Compartilhado</option>
+          <option value="individual">Caixa Individual</option>
+        </select>
+
+        <small style="color:#999;">
+          Todos os colaboradores com permissão podem manipular o caixa.
+        </small>
+
+        <label>Data do caixa</label>
+        <input id="dataNovoCaixa" type="date" style="padding:14px;border:1px solid #ddd;border-radius:6px;">
+
+        <input id="donoNovoCaixa" placeholder="Colaborador dono do caixa" style="padding:14px;border:1px solid #ddd;border-radius:6px;">
+
+        <small style="color:#777;">
+          Deixe este campo em branco para tornar o caixa geral e sem dono.
+        </small>
+
+        <input id="valorAberturaCaixa" type="number" placeholder="Valor Abertura (R$)" style="padding:14px;border:1px solid #ddd;border-radius:6px;">
+
+        <label style="display:flex;gap:10px;align-items:center;">
+          <input id="usarUltimoCaixa" type="checkbox">
+          Utilizar o valor do último caixa aberto
+        </label>
+
+        <input id="observacaoNovoCaixa" placeholder="Observações" style="padding:14px;border:1px solid #ddd;border-radius:6px;">
+
+        <div style="display:flex;justify-content:flex-end;gap:18px;margin-top:10px;">
+          <button onclick="fecharNovoCaixa()" style="border:none;background:transparent;font-weight:700;">
+            Cancelar
+          </button>
+
+          <button onclick="salvarNovoCaixa()" style="border:none;background:#ff5a1f;color:#fff;padding:13px 28px;border-radius:6px;font-weight:700;">
+            Salvar
+          </button>
+        </div>
+
+      </div>
+    `;
+
+    document.body.appendChild(modal);
+
+  }
+
+  document.getElementById("dataNovoCaixa").value =
+    new Date().toISOString().split("T")[0];
+
+  modal.style.display = "flex";
+
+}
+
+function fecharNovoCaixa(){
+  document.getElementById("modal-novo-caixa").style.display = "none";
+}
+
+function salvarNovoCaixa(){
+
+  const tipo = document.getElementById("tipoNovoCaixa").value;
+  const data = document.getElementById("dataNovoCaixa").value;
+  const dono = document.getElementById("donoNovoCaixa").value;
+  const valor = Number(document.getElementById("valorAberturaCaixa").value || 0);
+  const observacao = document.getElementById("observacaoNovoCaixa").value;
+
+  supabaseClient
+    .from("caixa")
+    .insert([{
+      id: Date.now(),
+      tipo,
+      descricao: dono || "Caixa Geral",
+      entrada: valor,
+      despesa: 0,
+      observacao,
+      data: data.split("-").reverse().join("/")
+    }])
+    .then((resposta)=>{
+
+      if(resposta.error){
+        alert("Erro ao abrir caixa: " + resposta.error.message);
+        return;
+      }
+
+      fecharNovoCaixa();
+      carregarCaixa();
+
+      alert("Caixa aberto!");
+
+    });
+
+}
