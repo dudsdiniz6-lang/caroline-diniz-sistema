@@ -4132,7 +4132,7 @@ function salvarMovimentoCaixa(){
 setTimeout(()=>{
 
   const caixaDiv =
-    document.getElementById("caixa-diario");
+ document.getElementById("caixa-lateral")
 
   if(!caixaDiv) return;
 
