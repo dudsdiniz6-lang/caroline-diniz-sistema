@@ -4305,6 +4305,8 @@ function salvarNovoCaixa(){
 }
 setTimeout(()=>{
 
+  setTimeout(()=>{
+
   const nav = document.querySelector("nav");
 
   if(nav && !document.getElementById("menu-caixa")){
@@ -4324,24 +4326,23 @@ setTimeout(()=>{
 
   }
 
-if(!document.getElementById("caixa-container")){
+  if(!document.getElementById("caixa-container")){
 
-  const container = document.createElement("div");
+    const container = document.createElement("div");
 
-  container.id = "caixa-container";
-  container.className = "clientes-container";
-  container.style.display = "none";
+    container.id = "caixa-container";
+    container.className = "clientes-container";
+    container.style.display = "none";
 
- container.innerHTML = `
-  <div id="caixa-lateral"></div>
-`;
+    container.innerHTML = `
+      <div id="caixa-lateral"></div>
+    `;
 
-  document.body.appendChild(container);
+    document.body.appendChild(container);
 
-  carregarCaixa();
+    carregarCaixa();
 
-}
-
+  }
 
 },1000);
 function carregarProfissionaisNovoCaixa(){
