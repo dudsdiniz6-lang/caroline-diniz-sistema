@@ -4286,10 +4286,10 @@ function salvarNovoCaixa(){
     .insert([{
       id: Date.now(),
       tipo,
-      descricao: dono || "Caixa Geral",
+      caixa: dono || "Caixa Geral",
       entrada: valor,
       despesa: 0,
-      observacao,
+     observacoes: observacao,
       data: data.split("-").reverse().join("/")
     }])
     .then((resposta)=>{
