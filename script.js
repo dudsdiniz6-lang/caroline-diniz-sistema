@@ -4277,19 +4277,17 @@ function salvarNovoCaixa(){
 
   const tipo = document.getElementById("tipoNovoCaixa").value;
   const data = document.getElementById("dataNovoCaixa").value;
-  const dono = document.getElementById("donoNovoCaixa").value;
   const valor = Number(document.getElementById("valorAberturaCaixa").value || 0);
-  const observacao = document.getElementById("observacaoNovoCaixa").value;
 
   supabaseClient
     .from("caixa")
     .insert([{
-  id: Date.now(),
-  tipo,
-  entrada: valor,
-  despesa: 0,
-  data: data.split("-").reverse().join("/")
-}])
+      id: Date.now(),
+      tipo,
+      entrada: valor,
+      despesa: 0,
+      data: data.split("-").reverse().join("/")
+    }])
     .then((resposta)=>{
 
       if(resposta.error){
