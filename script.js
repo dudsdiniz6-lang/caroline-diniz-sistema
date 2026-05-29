@@ -4305,21 +4305,23 @@ setTimeout(()=>{
 
   }
 
-  if(!document.getElementById("caixa-container")){
+if(!document.getElementById("caixa-container")){
 
-    const container = document.createElement("div");
+  const container = document.createElement("div");
 
-    container.id = "caixa-container";
-    container.className = "clientes-container";
-    container.style.display = "none";
+  container.id = "caixa-container";
+  container.className = "clientes-container";
+  container.style.display = "none";
 
-    container.innerHTML = `
-      <h2>Caixa</h2>
-      <div id="caixa-diario"></div>
-    `;
+  container.innerHTML = `
+    <div id="caixa-diario"></div>
+  `;
 
-    document.body.appendChild(container);
+  document.body.appendChild(container);
 
-  }
+  carregarCaixa();
+
+}
+
 
 },1000);
