@@ -4103,7 +4103,6 @@ function salvarMovimentoCaixa(){
     });
 
 }
-setTimeout(()=>{
 
   const caixaDiv =
     document.getElementById("caixa-diario");
