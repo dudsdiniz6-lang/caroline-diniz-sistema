@@ -4121,7 +4121,7 @@ setTimeout(()=>{
     `
       <button
         id="btn-novo-movimento-caixa"
-        onclick="abrirModalCaixa()"
+       onclick="abrirNovoCaixa()"
         style="
           background:#111;
           color:#fff;
