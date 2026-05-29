@@ -1814,9 +1814,9 @@ function salvarCaixa(){
 function carregarCaixa(){
 
   const caixaDiv =
-    document.getElementById(
-      "caixa-diario"
-    );
+  document.getElementById(
+    "caixa-lateral"
+  );
 
   if(!caixaDiv) return;
 
@@ -4338,9 +4338,9 @@ if(!document.getElementById("caixa-container")){
   container.className = "clientes-container";
   container.style.display = "none";
 
-  container.innerHTML = `
-    <div id="caixa-diario"></div>
-  `;
+ container.innerHTML = `
+  <div id="caixa-lateral"></div>
+`;
 
   document.body.appendChild(container);
 
