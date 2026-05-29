@@ -4282,12 +4282,11 @@ function salvarNovoCaixa(){
   supabaseClient
     .from("caixa")
     .insert([{
-      id: Date.now(),
-      tipo,
-      entrada: valor,
-      despesa: 0,
-      data: data.split("-").reverse().join("/")
-    }])
+  id: Date.now(),
+  entrada: valor,
+  despesa: 0,
+  data: data.split("-").reverse().join("/")
+}])
     .then((resposta)=>{
 
       if(resposta.error){
