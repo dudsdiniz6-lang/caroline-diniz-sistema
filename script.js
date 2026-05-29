@@ -4232,18 +4232,15 @@ function abrirNovoCaixa(){
         <label>Data do caixa</label>
         <input id="dataNovoCaixa" type="date" style="padding:14px;border:1px solid #ddd;border-radius:6px;">
 
-        <input id="donoNovoCaixa" placeholder="Colaborador dono do caixa" style="padding:14px;border:1px solid #ddd;border-radius:6px;">
-
+<select id="donoNovoCaixa" style="padding:14px;border:1px solid #ddd;border-radius:6px;background:#fff;">
+  <option value="">Caixa Geral / Sem dono</option>
+</select>
         <small style="color:#777;">
           Deixe este campo em branco para tornar o caixa geral e sem dono.
         </small>
 
         <input id="valorAberturaCaixa" type="number" placeholder="Valor Abertura (R$)" style="padding:14px;border:1px solid #ddd;border-radius:6px;">
 
-        <label style="display:flex;gap:10px;align-items:center;">
-          <input id="usarUltimoCaixa" type="checkbox">
-          Utilizar o valor do último caixa aberto
-        </label>
 
         <input id="observacaoNovoCaixa" placeholder="Observações" style="padding:14px;border:1px solid #ddd;border-radius:6px;">
 
@@ -4267,7 +4264,8 @@ function abrirNovoCaixa(){
   document.getElementById("dataNovoCaixa").value =
     new Date().toISOString().split("T")[0];
 
-  modal.style.display = "flex";
+  carregarProfissionaisNovoCaixa();
+    modal.style.display = "flex";
 
 }
 
@@ -4350,3 +4348,35 @@ if(!document.getElementById("caixa-container")){
 
 
 },1000);
+function carregarProfissionaisNovoCaixa(){
+
+  const select = document.getElementById("donoNovoCaixa");
+
+  if(!select) return;
+
+  select.innerHTML = `
+    <option value="">Caixa Geral / Sem dono</option>
+  `;
+
+  supabaseClient
+    .from("profissionais_salao")
+    .select("*")
+    .eq("ativo", true)
+    .order("nome")
+    .then((resposta)=>{
+
+      const profissionais = resposta.data || [];
+
+      profissionais.forEach((profissional)=>{
+
+        select.innerHTML += `
+          <option value="${profissional.nome}">
+            ${profissional.nome}
+          </option>
+        `;
+
+      });
+
+    });
+
+}
