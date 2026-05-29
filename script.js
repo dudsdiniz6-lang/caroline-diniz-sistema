@@ -1820,14 +1820,33 @@ function carregarCaixa(){
 
   if(!caixaDiv) return;
 
-  caixaDiv.innerHTML =
-    `<h2 style="
-      margin-bottom:24px;
-      font-size:26px;
-      font-weight:700;
-    ">
-      Controle de Caixa
-    </h2>`;
+  caixaDiv.innerHTML += `
+
+  <div style="
+    display:flex;
+    justify-content:flex-end;
+    margin-bottom:24px;
+  ">
+
+    <button
+      onclick="abrirNovoCaixa()"
+      style="
+        background:#111;
+        color:#fff;
+        border:none;
+        padding:14px 22px;
+        border-radius:16px;
+        font-weight:700;
+        cursor:pointer;
+        font-size:14px;
+      "
+    >
+      + Novo Caixa
+    </button>
+
+  </div>
+
+`;
 
   supabaseClient
     .from("caixa")
