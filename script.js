@@ -4139,28 +4139,27 @@ setTimeout(()=>{
     `
   );
 
-},1500);
 
+if(document.getElementById("caixa-container")) return;
 
-  if(document.getElementById("caixa-container")) return;
+const container = document.createElement("div");
 
-  const container = document.createElement("div");
+container.id = "caixa-container";
+container.className = "clientes-container";
+container.style.display = "none";
 
-  container.id = "caixa-container";
-  container.className = "clientes-container";
-  container.style.display = "none";
+container.innerHTML = `
+  <h2>Caixa</h2>
 
-  container.innerHTML = `
-    <h2>Caixa</h2>
+  <div id="caixa-diario"></div>
+`;
 
-    <div id="caixa-diario"></div>
-  `;
+document.body.appendChild(container);
 
-  document.body.appendChild(container);
-
-  carregarCaixa();
+carregarCaixa();
 
 },1000);
+
 function abrirNovoCaixa(){
 
   let modal = document.getElementById("modal-novo-caixa");
