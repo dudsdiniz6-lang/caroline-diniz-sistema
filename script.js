@@ -4104,6 +4104,8 @@ function salvarMovimentoCaixa(){
 
 }
 
+setTimeout(()=>{
+
   const caixaDiv =
     document.getElementById("caixa-diario");
 
@@ -4120,7 +4122,7 @@ function salvarMovimentoCaixa(){
     `
       <button
         id="btn-novo-movimento-caixa"
-       onclick="abrirNovoCaixa()"
+        onclick="abrirNovoCaixa()"
         style="
           background:#111;
           color:#fff;
@@ -4132,35 +4134,13 @@ function salvarMovimentoCaixa(){
           margin-bottom:18px;
         "
       >
-        + Novo movimento
+        + Novo Caixa
       </button>
     `
   );
 
 },1500);
-setTimeout(()=>{
 
-  const nav = document.querySelector("nav");
-
-  if(!nav) return;
-
-  if(document.getElementById("menu-caixa")) return;
-
-  nav.insertAdjacentHTML(
-    "beforeend",
-    `
-      <a
-        id="menu-caixa"
-        href="#"
-        onclick="mostrarSecao('caixa-container')"
-      >
-        Caixa
-      </a>
-    `
-  );
-
-},1000);
-setTimeout(()=>{
 
   if(document.getElementById("caixa-container")) return;
 
