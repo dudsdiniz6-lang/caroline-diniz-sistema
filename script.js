@@ -4131,60 +4131,42 @@ function salvarMovimentoCaixa(){
 
 setTimeout(()=>{
 
-  const caixaDiv =
- document.getElementById("caixa-lateral")
+  const nav = document.querySelector("nav");
 
-  if(!caixaDiv) return;
+  if(nav && !document.getElementById("menu-caixa")){
 
-  if(
-    document.getElementById(
-      "btn-novo-movimento-caixa"
-    )
-  ) return;
+    nav.insertAdjacentHTML(
+      "beforeend",
+      `
+        <a
+          id="menu-caixa"
+          href="#"
+          onclick="mostrarSecao('caixa-container'); carregarCaixa();"
+        >
+          Caixa
+        </a>
+      `
+    );
 
-  caixaDiv.insertAdjacentHTML(
-    "afterbegin",
-    `
-      <button
-        id="btn-novo-movimento-caixa"
-        onclick="abrirNovoCaixa()"
-        style="
-          background:#111;
-          color:#fff;
-          border:none;
-          padding:14px 18px;
-          border-radius:14px;
-          font-weight:700;
-          cursor:pointer;
-          margin-bottom:18px;
-        "
-      >
-        + Novo Caixa
-      </button>
-    `
-  );
+  }
 
+  if(!document.getElementById("caixa-container")){
 
-if(document.getElementById("caixa-container")) return;
+    const container = document.createElement("div");
 
-const container = document.createElement("div");
+    container.id = "caixa-container";
+    container.className = "clientes-container";
+    container.style.display = "none";
 
-container.id = "caixa-container";
-container.className = "clientes-container";
-container.style.display = "none";
+    container.innerHTML = `
+      <div id="caixa-lateral"></div>
+    `;
 
-container.innerHTML = `
-  <h2>Caixa</h2>
+    document.body.appendChild(container);
 
-  <div id="caixa-diario"></div>
-`;
-
-document.body.appendChild(container);
-
-carregarCaixa();
+  }
 
 },1000);
-
 function abrirNovoCaixa(){
 
   let modal = document.getElementById("modal-novo-caixa");
@@ -4303,8 +4285,6 @@ function salvarNovoCaixa(){
 
 }
 setTimeout(()=>{
-
-  setTimeout(()=>{
 
   const nav = document.querySelector("nav");
 
