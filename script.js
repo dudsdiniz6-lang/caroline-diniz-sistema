@@ -4701,56 +4701,6 @@ function criarPainelAgendaProfissionais(){
 
 }
 
-function criarPainelAgendaProfissionais(){
-
-  const antigo = document.getElementById("painel-profissionais-agenda");
-  if(antigo) antigo.remove();
-
-  const painel = document.createElement("div");
-
-  painel.id = "painel-profissionais-agenda";
-
-  painel.style.cssText = `
-    position:fixed;
-    left:260px;
-    top:0;
-    width:280px;
-    height:100vh;
-    background:#fff;
-    z-index:20;
-    box-shadow:4px 0 24px rgba(0,0,0,.10);
-    padding:24px 18px;
-    overflow:auto;
-    transform:translateX(-250px);
-    transition:.25s ease;
-  `;
-
-  painel.onmouseenter = function(){
-    painel.style.transform = "translateX(0)";
-  };
-
-  painel.onmouseleave = function(){
-    painel.style.transform = "translateX(-250px)";
-  };
-
-  painel.innerHTML = `
-    <h3 style="margin:0 0 28px 0;font-size:16px;font-weight:700;">
-      Configurações
-    </h3>
-
-    <p style="font-size:13px;color:#777;margin-bottom:14px;">
-      Profissionais
-    </p>
-
-    <div id="lista-profissionais-painel-agenda"></div>
-  `;
-
-  document.body.appendChild(painel);
-
-  carregarProfissionaisPainelAgenda();
-
-}
-
 function carregarProfissionaisPainelAgenda(){
 
   const lista = document.getElementById("lista-profissionais-painel-agenda");
