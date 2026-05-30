@@ -1814,115 +1814,87 @@ function salvarCaixa(){
 function carregarCaixa(){
 
   const caixaDiv =
-  document.getElementById(
-    "caixa-lateral"
-  );
+    document.getElementById("caixa-lateral");
 
   if(!caixaDiv) return;
 
-  caixaDiv.innerHTML =
-  `<div style="
-    display:flex;
-    justify-content:space-between;
-    align-items:center;
-    margin-bottom:24px;
-  ">
-
-    <h2 style="
-      margin:0;
-      font-size:26px;
-      font-weight:700;
+  caixaDiv.innerHTML = `
+    <div style="
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      margin-bottom:28px;
     ">
-      Controle de Caixa
-    </h2>
+      <h2 style="margin:0;font-size:26px;font-weight:700;">
+        Controle de Caixa
+      </h2>
 
-    <button
-      onclick="abrirNovoCaixa()"
-      style="
-        background:#111;
-        color:#fff;
-        border:none;
-        padding:14px 22px;
-        border-radius:16px;
-        font-weight:700;
-        cursor:pointer;
-        font-size:14px;
-      "
-    >
-      + Novo Caixa
-    </button>
+      <button
+        onclick="abrirNovoCaixa()"
+        style="
+          background:#111;
+          color:#fff;
+          border:none;
+          padding:14px 22px;
+          border-radius:16px;
+          font-weight:700;
+          cursor:pointer;
+        "
+      >
+        + Novo Caixa
+      </button>
+    </div>
 
-  </div>`;
+    <div style="
+      display:grid;
+      grid-template-columns:1fr 2fr 1fr 1fr 1fr;
+      padding:12px;
+      font-size:13px;
+      font-weight:700;
+      color:#555;
+      border-bottom:1px solid #ddd;
+    ">
+      <span>Data</span>
+      <span>Dono</span>
+      <span>Tipo</span>
+      <span>Abertura</span>
+      <span>Status</span>
+    </div>
+  `;
 
   supabaseClient
     .from("caixa")
     .select("*")
-    .order("data",{ascending:false})
+    .order("id",{ascending:false})
     .then((resposta)=>{
 
-      const caixas =
-        resposta.data || [];
+      const caixas = resposta.data || [];
 
-      caixas.forEach((item)=>{
-
-        const saldo =
-          Number(item.entrada||0)
-          -
-          Number(item.despesa||0);
+      caixas.forEach((caixa)=>{
 
         caixaDiv.innerHTML += `
-
-          <div style="
-            display:grid;
-            grid-template-columns:
-            1fr 1fr 1fr 1fr 1fr;
-            padding:18px 12px;
-            border-bottom:
-            1px solid #eee;
-            align-items:center;
-            gap:10px;
-          ">
-
-            <span>
-              ${item.data || "-"}
-            </span>
-
-            <strong>
-              ${item.descricao || "Movimento"}
-            </strong>
-
-            <span>
-              ${
-                Number(item.entrada||0)>0
-                ? "Entrada"
-                : "Saída"
-              }
-            </span>
-
-            <span>
-              R$
-              ${Math.abs(saldo)
-                .toFixed(2)}
-            </span>
-
+          <div
+            onclick="abrirDetalhesCaixa('${caixa.id}')"
+            style="
+              display:grid;
+              grid-template-columns:1fr 2fr 1fr 1fr 1fr;
+              padding:18px 12px;
+              border-bottom:1px solid #eee;
+              align-items:center;
+              cursor:pointer;
+            "
+          >
+            <span>${caixa.data || "-"}</span>
+            <strong>${caixa.dono || "Caixa Geral"}</strong>
+            <span>${caixa.tipo || "Compartilhado"}</span>
+            <span>R$ ${Number(caixa.abertura || caixa.entrada || 0).toFixed(2)}</span>
             <span style="
-              color:
-              ${
-                saldo>=0
-                ? "#1a9b45"
-                : "#d63031"
-              };
+              color:${caixa.status === "Fechado" ? "#777" : "#ff5a1f"};
               font-weight:700;
             ">
-              ${
-                saldo>=0
-                ? "ABERTO"
-                : "SAÍDA"
-              }
+              ${caixa.status || "Aberto"}
             </span>
-
           </div>
-
         `;
 
       });
