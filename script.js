@@ -1538,6 +1538,7 @@ window.onload = function(){
   atualizarLinhaHorarioAtual();
 
   carregarProfissionaisAgenda();
+    criarPainelProfissionaisAgenda();
 
   setInterval(
     atualizarLinhaHorarioAtual,
@@ -4641,6 +4642,192 @@ function fecharCaixa(caixaId){
 
       fecharDetalhesCaixa();
       carregarCaixa();
+
+    });
+
+}
+let profissionaisVisiveisAgenda = [];
+
+function criarPainelProfissionaisAgenda(){
+
+  if(document.getElementById("painel-profissionais-agenda")) return;
+
+  const painel = document.createElement("div");
+
+  painel.id = "painel-profissionais-agenda";
+
+  painel.style.cssText = `
+    position:fixed;
+    left:180px;
+    top:0;
+    width:260px;
+    height:100vh;
+    background:#fff;
+    z-index:999;
+    box-shadow:4px 0 24px rgba(0,0,0,.08);
+    padding:24px 18px;
+    overflow:auto;
+    transform:translateX(-260px);
+    transition:.3s;
+  `;
+
+  painel.innerHTML = `
+    <button
+      onclick="alternarPainelProfissionaisAgenda()"
+      style="
+        position:absolute;
+        right:-38px;
+        top:120px;
+        width:38px;
+        height:48px;
+        border:none;
+        background:#fff;
+        box-shadow:4px 0 14px rgba(0,0,0,.12);
+        border-radius:0 12px 12px 0;
+        cursor:pointer;
+        font-size:20px;
+      "
+    >
+      ›
+    </button>
+
+    <h3 style="margin:0 0 22px 0;">
+      Configurações
+    </h3>
+
+    <p style="font-size:13px;color:#777;margin-bottom:12px;">
+      Profissionais
+    </p>
+
+    <div id="lista-profissionais-painel-agenda"></div>
+  `;
+
+  document.body.appendChild(painel);
+
+  carregarProfissionaisPainelAgenda();
+
+}
+
+function alternarPainelProfissionaisAgenda(){
+
+  const painel =
+    document.getElementById("painel-profissionais-agenda");
+
+  if(!painel) return;
+
+  const aberto =
+    painel.dataset.aberto === "true";
+
+  painel.dataset.aberto = aberto ? "false" : "true";
+
+  painel.style.transform =
+    aberto
+      ? "translateX(-260px)"
+      : "translateX(0)";
+
+}
+
+function carregarProfissionaisPainelAgenda(){
+
+  const lista =
+    document.getElementById("lista-profissionais-painel-agenda");
+
+  if(!lista) return;
+
+  lista.innerHTML = "";
+
+  supabaseClient
+    .from("profissionais_salao")
+    .select("*")
+    .eq("ativo", true)
+    .order("nome")
+    .then((resposta)=>{
+
+      const profissionais = resposta.data || [];
+
+      if(profissionaisVisiveisAgenda.length === 0){
+        profissionaisVisiveisAgenda =
+          profissionais.map(p=>String(p.id));
+      }
+
+      profissionais.forEach((profissional)=>{
+
+        const checked =
+          profissionaisVisiveisAgenda.includes(String(profissional.id))
+            ? "checked"
+            : "";
+
+        lista.innerHTML += `
+          <label style="
+            display:flex;
+            align-items:center;
+            gap:10px;
+            margin-bottom:14px;
+            font-size:14px;
+            cursor:pointer;
+          ">
+            <input
+              type="checkbox"
+              value="${profissional.id}"
+              ${checked}
+              onchange="alternarProfissionalAgenda(this)"
+            >
+            ${profissional.nome}
+          </label>
+        `;
+
+      });
+
+    });
+
+}
+
+function alternarProfissionalAgenda(input){
+
+  const id = String(input.value);
+
+  if(input.checked){
+
+    if(!profissionaisVisiveisAgenda.includes(id)){
+      profissionaisVisiveisAgenda.push(id);
+    }
+
+  }else{
+
+    profissionaisVisiveisAgenda =
+      profissionaisVisiveisAgenda.filter(item=>item !== id);
+
+  }
+
+  aplicarFiltroProfissionaisAgenda();
+
+}
+
+function aplicarFiltroProfissionaisAgenda(){
+
+  document
+    .querySelectorAll(".professional")
+    .forEach((header)=>{
+
+      const id = header.dataset.profissionalId;
+
+      header.style.display =
+        profissionaisVisiveisAgenda.includes(String(id))
+          ? "block"
+          : "none";
+
+    });
+
+  document
+    .querySelectorAll(".column")
+    .forEach((coluna)=>{
+
+      const id = coluna.dataset.profissionalId;
+
+      coluna.style.display =
+        profissionaisVisiveisAgenda.includes(String(id))
+          ? "block"
+          : "none";
 
     });
 
