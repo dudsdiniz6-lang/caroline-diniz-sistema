@@ -1539,6 +1539,7 @@ window.onload = function(){
 
   carregarProfissionaisAgenda();
     criarPainelProfissionaisAgenda();
+setTimeout(ajustarPainelAgendaEstiloSalao99, 1800);
 
   setInterval(
     atualizarLinhaHorarioAtual,
@@ -4646,6 +4647,7 @@ function fecharCaixa(caixaId){
     });
 
 }
+
 let profissionaisVisiveisAgenda = [];
 
 function criarPainelProfissionaisAgenda(){
@@ -4830,5 +4832,88 @@ function aplicarFiltroProfissionaisAgenda(){
           : "none";
 
     });
+
+}
+function ajustarPainelAgendaEstiloSalao99(){
+
+  const painel = document.getElementById("painel-profissionais-agenda");
+
+  if(!painel) return;
+
+  painel.style.left = "180px";
+  painel.style.top = "0";
+  painel.style.width = "260px";
+  painel.style.transform = "translateX(0)";
+  painel.dataset.aberto = "true";
+
+  painel.innerHTML = `
+    <div style="
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      margin-bottom:28px;
+    ">
+      <h3 style="margin:0;font-size:16px;">
+        Configurações
+      </h3>
+
+      <button
+        onclick="alternarPainelProfissionaisAgenda()"
+        style="
+          border:none;
+          background:transparent;
+          font-size:26px;
+          cursor:pointer;
+          color:#777;
+        "
+      >
+        ‹
+      </button>
+    </div>
+
+    <p style="font-size:13px;color:#777;margin-bottom:14px;">
+      Profissionais
+    </p>
+
+    <div id="lista-profissionais-painel-agenda"></div>
+  `;
+
+  carregarProfissionaisPainelAgenda();
+
+}
+
+function alternarPainelProfissionaisAgenda(){
+
+  const painel = document.getElementById("painel-profissionais-agenda");
+
+  if(!painel) return;
+
+  const aberto = painel.dataset.aberto === "true";
+
+  painel.dataset.aberto = aberto ? "false" : "true";
+
+  painel.style.width = aberto ? "42px" : "260px";
+  painel.style.padding = aberto ? "24px 8px" : "24px 18px";
+
+  painel.innerHTML = aberto
+    ? `
+      <button
+        onclick="ajustarPainelAgendaEstiloSalao99()"
+        style="
+          border:none;
+          background:transparent;
+          font-size:26px;
+          cursor:pointer;
+          color:#777;
+        "
+      >
+        ›
+      </button>
+    `
+    : "";
+
+  if(!aberto){
+    ajustarPainelAgendaEstiloSalao99();
+  }
 
 }
