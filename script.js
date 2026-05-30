@@ -1539,7 +1539,7 @@ window.onload = function(){
 
   carregarProfissionaisAgenda();
     criarPainelProfissionaisAgenda();
-setTimeout(ajustarPainelAgendaEstiloSalao99, 1800);
+setTimeout(criarPainelAgendaProfissionais, 1800);
 
   setInterval(
     atualizarLinhaHorarioAtual,
@@ -4731,8 +4731,7 @@ function alternarPainelProfissionaisAgenda(){
 
 function carregarProfissionaisPainelAgenda(){
 
-  const lista =
-    document.getElementById("lista-profissionais-painel-agenda");
+  const lista = document.getElementById("lista-profissionais-painel-agenda");
 
   if(!lista) return;
 
@@ -4747,15 +4746,17 @@ function carregarProfissionaisPainelAgenda(){
 
       const profissionais = resposta.data || [];
 
-      if(profissionaisVisiveisAgenda.length === 0){
-        profissionaisVisiveisAgenda =
-          profissionais.map(p=>String(p.id));
+      if(!window.profissionaisVisiveisAgenda){
+        window.profissionaisVisiveisAgenda =
+          profissionais.map(p => String(p.id));
       }
 
       profissionais.forEach((profissional)=>{
 
-        const checked =
-          profissionaisVisiveisAgenda.includes(String(profissional.id))
+        const id = String(profissional.id);
+
+        const marcado =
+          window.profissionaisVisiveisAgenda.includes(id)
             ? "checked"
             : "";
 
@@ -4767,18 +4768,26 @@ function carregarProfissionaisPainelAgenda(){
             margin-bottom:14px;
             font-size:14px;
             cursor:pointer;
+            color:#222;
           ">
             <input
               type="checkbox"
-              value="${profissional.id}"
-              ${checked}
+              value="${id}"
+              ${marcado}
               onchange="alternarProfissionalAgenda(this)"
+              style="
+                width:16px;
+                height:16px;
+                accent-color:#111;
+              "
             >
-            ${profissional.nome}
+            <span>${profissional.nome}</span>
           </label>
         `;
 
       });
+
+      aplicarFiltroProfissionaisAgenda();
 
     });
 
@@ -4788,16 +4797,20 @@ function alternarProfissionalAgenda(input){
 
   const id = String(input.value);
 
+  if(!window.profissionaisVisiveisAgenda){
+    window.profissionaisVisiveisAgenda = [];
+  }
+
   if(input.checked){
 
-    if(!profissionaisVisiveisAgenda.includes(id)){
-      profissionaisVisiveisAgenda.push(id);
+    if(!window.profissionaisVisiveisAgenda.includes(id)){
+      window.profissionaisVisiveisAgenda.push(id);
     }
 
   }else{
 
-    profissionaisVisiveisAgenda =
-      profissionaisVisiveisAgenda.filter(item=>item !== id);
+    window.profissionaisVisiveisAgenda =
+      window.profissionaisVisiveisAgenda.filter(item => item !== id);
 
   }
 
@@ -4807,31 +4820,27 @@ function alternarProfissionalAgenda(input){
 
 function aplicarFiltroProfissionaisAgenda(){
 
-  document
-    .querySelectorAll(".professional")
-    .forEach((header)=>{
+  document.querySelectorAll(".professional").forEach((header)=>{
 
-      const id = header.dataset.profissionalId;
+    const id = String(header.dataset.profissionalId || "");
 
-      header.style.display =
-        profissionaisVisiveisAgenda.includes(String(id))
-          ? "block"
-          : "none";
+    header.style.display =
+      window.profissionaisVisiveisAgenda.includes(id)
+        ? "block"
+        : "none";
 
-    });
+  });
 
-  document
-    .querySelectorAll(".column")
-    .forEach((coluna)=>{
+  document.querySelectorAll(".column").forEach((coluna)=>{
 
-      const id = coluna.dataset.profissionalId;
+    const id = String(coluna.dataset.profissionalId || "");
 
-      coluna.style.display =
-        profissionaisVisiveisAgenda.includes(String(id))
-          ? "block"
-          : "none";
+    coluna.style.display =
+      window.profissionaisVisiveisAgenda.includes(id)
+        ? "block"
+        : "none";
 
-    });
+  });
 
 }
 function ajustarPainelAgendaEstiloSalao99(){
@@ -4915,5 +4924,72 @@ function alternarPainelProfissionaisAgenda(){
   if(!aberto){
     ajustarPainelAgendaEstiloSalao99();
   }
+
+}
+function criarPainelAgendaProfissionais(){
+
+  const antigo = document.getElementById("painel-profissionais-agenda");
+  if(antigo) antigo.remove();
+
+  const painel = document.createElement("div");
+
+  painel.id = "painel-profissionais-agenda";
+
+  painel.style.cssText = `
+    position:fixed;
+    left:178px;
+    top:0;
+    width:280px;
+    height:100vh;
+    background:#fff;
+    z-index:9999;
+    box-shadow:4px 0 24px rgba(0,0,0,.10);
+    padding:24px 18px;
+    overflow:auto;
+    transform:translateX(-250px);
+    transition:.25s ease;
+  `;
+
+  painel.onmouseenter = function(){
+    painel.style.transform = "translateX(0)";
+  };
+
+  painel.onmouseleave = function(){
+    painel.style.transform = "translateX(-250px)";
+  };
+
+  painel.innerHTML = `
+    <div style="
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      margin-bottom:28px;
+    ">
+      <h3 style="margin:0;font-size:16px;font-weight:700;">
+        Configurações
+      </h3>
+
+      <span style="
+        font-size:24px;
+        color:#777;
+      ">
+        ‹
+      </span>
+    </div>
+
+    <p style="
+      font-size:13px;
+      color:#777;
+      margin-bottom:14px;
+    ">
+      Profissionais
+    </p>
+
+    <div id="lista-profissionais-painel-agenda"></div>
+  `;
+
+  document.body.appendChild(painel);
+
+  carregarProfissionaisPainelAgenda();
 
 }
