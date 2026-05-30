@@ -3284,7 +3284,36 @@ function renderizarServicosSeletor(){
       const item = document.createElement("div");
 
       item.className = "item-servico-seletor";
-      item.innerText = servico.nome;
+
+item.innerHTML = `
+
+  <div style="
+    display:flex;
+    flex-direction:column;
+    gap:4px;
+  ">
+
+    <span style="
+      font-size:16px;
+      font-weight:600;
+      color:#222;
+    ">
+      ${servico.nome}
+    </span>
+
+    <span style="
+      font-size:13px;
+      color:#ff5a1f;
+      font-weight:500;
+    ">
+      R$ ${Number(servico.valor || 0).toFixed(2)}
+      •
+      ${servico.duracao || 0}min
+    </span>
+
+  </div>
+
+`;
 
       item.onclick = function(){
         selecionarServicoAgenda(servico.nome);
