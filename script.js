@@ -5042,3 +5042,16 @@ function aplicarFiltroProfissionaisAgenda(){
   }
 
 }
+setTimeout(()=>{
+
+  const painel =
+    document.getElementById("painel-profissionais-agenda");
+
+  if(!painel) return;
+
+  painel.style.left = "260px";
+  painel.style.top = "0";
+  painel.style.zIndex = "20";
+  painel.style.transform = "translateX(-250px)";
+
+},2500);
