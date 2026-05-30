@@ -1538,7 +1538,7 @@ window.onload = function(){
   atualizarLinhaHorarioAtual();
 
   carregarProfissionaisAgenda();
-    criarPainelProfissionaisAgenda();
+  
 setTimeout(criarPainelAgendaProfissionais, 1800);
 
   setInterval(
@@ -3885,9 +3885,12 @@ async function carregarProfissionaisAgenda(){
 
     if(agendaHeader){
       agendaHeader.innerHTML += `
-        <div class="professional">
-          ${profissional.nome}
-        </div>
+      <div
+  class="professional"
+  data-profissional-id="${profissional.id}"
+>
+  ${profissional.nome}
+</div>
       `;
     }
 
@@ -4991,5 +4994,52 @@ function criarPainelAgendaProfissionais(){
   document.body.appendChild(painel);
 
   carregarProfissionaisPainelAgenda();
+
+}
+function aplicarFiltroProfissionaisAgenda(){
+
+  const visiveis =
+    window.profissionaisVisiveisAgenda || [];
+
+  document.querySelectorAll(".professional").forEach((header)=>{
+
+    const id = String(header.dataset.profissionalId || "");
+
+    header.style.display =
+      visiveis.includes(id)
+        ? "block"
+        : "none";
+
+  });
+
+  document.querySelectorAll(".column").forEach((coluna)=>{
+
+    const id = String(coluna.dataset.profissionalId || "");
+
+    coluna.style.display =
+      visiveis.includes(id)
+        ? "block"
+        : "none";
+
+  });
+
+  const quantidade =
+    visiveis.length || 1;
+
+  const agendaHeader =
+    document.querySelector(".agenda-header");
+
+  const agendaBody =
+    document.querySelector(".agenda-body");
+
+  if(agendaHeader){
+    agendaHeader.style.gridTemplateColumns =
+      `80px repeat(${quantidade}, 1fr)`;
+  }
+
+  if(agendaBody){
+    agendaBody.style.gridTemplateColumns =
+      `80px repeat(${quantidade}, 1fr)`;
+  }
 
 }
