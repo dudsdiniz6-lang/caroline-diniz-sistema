@@ -2405,33 +2405,6 @@ if(listaServicosAgendamento){
 
         if(lista){
 
-         lista.innerHTML += `
-  <div style="
-    padding:14px 18px;
-    border-bottom:1px solid #eee;
-    cursor:pointer;
-  ">
-
-    <div style="
-      font-size:15px;
-      font-weight:500;
-      color:#222;
-      margin-bottom:4px;
-    ">
-      ${servico.nome}
-    </div>
-
-    <div style="
-      font-size:13px;
-      color:#ff5a1f;
-      font-weight:500;
-    ">
-      ${servico.duracao || "-"} min, R$ ${Number(servico.valor || 0).toFixed(2)}
-    </div>
-
-  </div>
-`;
-
         if(selectServico){
 
           selectServico.innerHTML += `
