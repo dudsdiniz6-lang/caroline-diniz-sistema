@@ -4649,3 +4649,652 @@ function fecharCaixa(caixaId){
 
 }
 }
+/* =========================
+   MÓDULO CAIXA COMPLETO
+========================= */
+
+function garantirAbaCaixa(){
+
+  const nav = document.querySelector("nav");
+
+  if(nav && !document.getElementById("menu-caixa")){
+
+    nav.insertAdjacentHTML(
+      "beforeend",
+      `
+        <a
+          id="menu-caixa"
+          href="#"
+          onclick="mostrarSecao('caixa-container'); carregarCaixa();"
+        >
+          Caixa
+        </a>
+      `
+    );
+
+  }
+
+  if(!document.getElementById("caixa-container")){
+
+    const container = document.createElement("div");
+
+    container.id = "caixa-container";
+    container.className = "clientes-container";
+    container.style.display = "none";
+
+    container.innerHTML = `
+      <div id="caixa-lateral"></div>
+    `;
+
+    document.body.appendChild(container);
+
+  }
+
+}
+
+function carregarCaixa(){
+
+  garantirAbaCaixa();
+
+  const caixaDiv = document.getElementById("caixa-lateral");
+
+  if(!caixaDiv) return;
+
+  caixaDiv.innerHTML = `
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:28px;">
+      <h2 style="margin:0;font-size:26px;font-weight:700;">
+        Controle de Caixa
+      </h2>
+
+      <button onclick="abrirNovoCaixa()" style="background:#111;color:#fff;border:none;padding:14px 22px;border-radius:16px;font-weight:700;cursor:pointer;">
+        + Novo Caixa
+      </button>
+    </div>
+
+    <div style="display:grid;grid-template-columns:1fr 2fr 1fr 1fr 1fr;padding:12px;font-size:13px;font-weight:700;color:#555;border-bottom:1px solid #ddd;">
+      <span>Data</span>
+      <span>Dono</span>
+      <span>Tipo</span>
+      <span>Abertura</span>
+      <span>Status</span>
+    </div>
+  `;
+
+  supabaseClient
+    .from("caixa")
+    .select("*")
+    .order("id",{ascending:false})
+    .then((resposta)=>{
+
+      const caixas = resposta.data || [];
+
+      caixas.forEach((caixa)=>{
+
+        caixaDiv.innerHTML += `
+          <div onclick="abrirDetalhesCaixa('${caixa.id}')" style="display:grid;grid-template-columns:1fr 2fr 1fr 1fr 1fr;padding:18px 12px;border-bottom:1px solid #eee;align-items:center;cursor:pointer;">
+            <span>${caixa.data || "-"}</span>
+            <strong>${caixa.dono || "Caixa Geral"}</strong>
+            <span>${caixa.tipo || "Compartilhado"}</span>
+            <span>R$ ${Number(caixa.abertura || caixa.entrada || 0).toFixed(2)}</span>
+            <span style="color:${caixa.status === "Fechado" ? "#777" : "#ff5a1f"};font-weight:700;">
+              ${caixa.status || "Aberto"}
+            </span>
+          </div>
+        `;
+
+      });
+
+    });
+
+}
+
+function abrirNovoCaixa(){
+
+  let modal = document.getElementById("modal-novo-caixa");
+
+  if(!modal){
+
+    modal = document.createElement("div");
+    modal.id = "modal-novo-caixa";
+
+    modal.style.cssText = `
+      position:fixed;
+      inset:0;
+      background:rgba(0,0,0,.35);
+      display:none;
+      align-items:center;
+      justify-content:center;
+      z-index:9999;
+    `;
+
+    modal.innerHTML = `
+      <div style="background:#fff;width:560px;max-width:92%;border-radius:26px;padding:34px 42px;box-shadow:0 24px 70px rgba(0,0,0,.18);display:flex;flex-direction:column;gap:18px;">
+
+        <h2 style="margin:0;font-size:22px;">← Abrir Caixa</h2>
+
+        <select id="tipoNovoCaixa" style="padding:14px;border:1px solid #ddd;border-radius:8px;font-size:16px;background:#fff;">
+          <option value="Compartilhado">Caixa Compartilhado</option>
+          <option value="Individual">Caixa Individual</option>
+        </select>
+
+        <small style="color:#999;">
+          Todos os colaboradores com permissão podem manipular o caixa.
+        </small>
+
+        <label>Data do caixa</label>
+
+        <input id="dataNovoCaixa" type="date" style="padding:14px;border:1px solid #ddd;border-radius:8px;">
+
+        <select id="donoNovoCaixa" style="padding:14px;border:1px solid #ddd;border-radius:8px;background:#fff;">
+          <option value="">Caixa Geral / Sem dono</option>
+        </select>
+
+        <small style="color:#777;">
+          Selecione o profissional dono do caixa ou deixe como geral.
+        </small>
+
+        <input id="valorAberturaCaixa" type="number" placeholder="Valor Abertura (R$)" style="padding:14px;border:1px solid #ddd;border-radius:8px;">
+
+        <input id="observacaoNovoCaixa" placeholder="Observações" style="padding:14px;border:1px solid #ddd;border-radius:8px;">
+
+        <div style="display:flex;justify-content:flex-end;gap:18px;margin-top:10px;">
+          <button onclick="fecharNovoCaixa()" style="border:none;background:transparent;font-weight:700;">
+            Cancelar
+          </button>
+
+          <button onclick="salvarNovoCaixa()" style="border:none;background:#ff5a1f;color:#fff;padding:13px 28px;border-radius:8px;font-weight:700;">
+            Salvar
+          </button>
+        </div>
+
+      </div>
+    `;
+
+    document.body.appendChild(modal);
+
+  }
+
+  document.getElementById("dataNovoCaixa").value =
+    new Date().toISOString().split("T")[0];
+
+  carregarProfissionaisNovoCaixa();
+
+  modal.style.display = "flex";
+
+}
+
+function fecharNovoCaixa(){
+  document.getElementById("modal-novo-caixa").style.display = "none";
+}
+
+function carregarProfissionaisNovoCaixa(){
+
+  const select = document.getElementById("donoNovoCaixa");
+
+  if(!select) return;
+
+  select.innerHTML = `
+    <option value="">Caixa Geral / Sem dono</option>
+  `;
+
+  supabaseClient
+    .from("profissionais_salao")
+    .select("*")
+    .eq("ativo", true)
+    .order("nome")
+    .then((resposta)=>{
+
+      const profissionais = resposta.data || [];
+
+      profissionais.forEach((profissional)=>{
+
+        select.innerHTML += `
+          <option value="${profissional.nome}">
+            ${profissional.nome}
+          </option>
+        `;
+
+      });
+
+    });
+
+}
+
+function salvarNovoCaixa(){
+
+  const tipo = document.getElementById("tipoNovoCaixa").value;
+  const data = document.getElementById("dataNovoCaixa").value;
+  const dono = document.getElementById("donoNovoCaixa").value;
+  const abertura = Number(document.getElementById("valorAberturaCaixa").value || 0);
+  const observacao = document.getElementById("observacaoNovoCaixa").value || "";
+
+  supabaseClient
+    .from("caixa")
+    .insert([{
+      id: Date.now(),
+      data: data.split("-").reverse().join("/"),
+      dono: dono || "Caixa Geral",
+      tipo,
+      abertura,
+      entrada: abertura,
+      despesa: 0,
+      status: "Aberto",
+      observacao
+    }])
+    .then((resposta)=>{
+
+      if(resposta.error){
+        alert("Erro ao abrir caixa: " + resposta.error.message);
+        return;
+      }
+
+      fecharNovoCaixa();
+      carregarCaixa();
+
+      alert("Caixa aberto!");
+
+    });
+
+}
+
+function abrirDetalhesCaixa(caixaId){
+
+  let tela = document.getElementById("detalhes-caixa");
+
+  if(!tela){
+
+    tela = document.createElement("div");
+    tela.id = "detalhes-caixa";
+
+    tela.style.cssText = `
+      position:fixed;
+      inset:0;
+      background:#fff;
+      z-index:99999;
+      overflow:auto;
+      padding:40px;
+    `;
+
+    document.body.appendChild(tela);
+
+  }
+
+  supabaseClient
+    .from("caixa")
+    .select("*")
+    .eq("id", caixaId)
+    .single()
+    .then((resposta)=>{
+
+      const caixa = resposta.data;
+
+      if(!caixa) return;
+
+      tela.innerHTML = `
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:30px;">
+          <div>
+            <h1 style="margin:0;font-size:30px;">Caixa</h1>
+            <p style="color:#777;margin-top:10px;">
+              ${caixa.data} • ${caixa.dono || "Caixa Geral"}
+            </p>
+          </div>
+
+          <button onclick="fecharDetalhesCaixa()" style="background:#111;color:#fff;border:none;padding:12px 18px;border-radius:14px;cursor:pointer;">
+            Fechar
+          </button>
+        </div>
+
+        <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:18px;margin-bottom:30px;">
+          <div class="cliente-card">
+            <strong>R$ ${Number(caixa.abertura || caixa.entrada || 0).toFixed(2)}</strong>
+            <p>Abertura</p>
+          </div>
+
+          <div class="cliente-card">
+            <strong id="saldo-atual-caixa">R$ 0,00</strong>
+            <p>Saldo Atual</p>
+          </div>
+
+          <div class="cliente-card">
+            <strong>${caixa.status || "Aberto"}</strong>
+            <p>Status</p>
+          </div>
+
+          <div class="cliente-card">
+            <strong>${caixa.tipo || "-"}</strong>
+            <p>Tipo</p>
+          </div>
+        </div>
+
+        <div style="display:flex;gap:12px;margin-bottom:28px;">
+          <button onclick="adicionarMovimentoCaixa('${caixa.id}','Reforço')" style="background:#ff5a1f;color:#fff;border:none;padding:14px 18px;border-radius:14px;">
+            + Reforço
+          </button>
+
+          <button onclick="adicionarMovimentoCaixa('${caixa.id}','Sangria')" style="background:#111;color:#fff;border:none;padding:14px 18px;border-radius:14px;">
+            Sangria
+          </button>
+
+          <button onclick="fecharCaixa('${caixa.id}')" style="background:#d63031;color:#fff;border:none;padding:14px 18px;border-radius:14px;">
+            Fechar Caixa
+          </button>
+        </div>
+
+        <div id="movimentacoes-caixa"></div>
+      `;
+
+      carregarMovimentacoesCaixa(caixa.id);
+
+    });
+
+}
+
+function fecharDetalhesCaixa(){
+
+  const tela = document.getElementById("detalhes-caixa");
+
+  if(tela) tela.remove();
+
+}
+
+function carregarMovimentacoesCaixa(caixaId){
+
+  const lista = document.getElementById("movimentacoes-caixa");
+
+  if(!lista) return;
+
+  lista.innerHTML = `<h2 style="margin-bottom:18px;">Movimentações</h2>`;
+
+  supabaseClient
+    .from("caixa_movimentacoes")
+    .select("*")
+    .eq("caixa_id", caixaId)
+    .order("id",{ascending:false})
+    .then((resposta)=>{
+
+      const movimentos = resposta.data || [];
+
+      let saldo = 0;
+
+      movimentos.forEach((mov)=>{
+
+        saldo += Number(mov.entrada || 0);
+        saldo -= Number(mov.saida || 0);
+
+        lista.innerHTML += `
+          <div class="cliente-card">
+            <strong>${mov.tipo || "Movimento"}</strong>
+            <p>${mov.descricao || "-"}</p>
+            <small>Forma: ${mov.forma_pagamento || "-"}</small>
+            <small>Data: ${mov.data || "-"}</small>
+            <small>Entrada: R$ ${Number(mov.entrada || 0).toFixed(2)}</small>
+            <small>Saída: R$ ${Number(mov.saida || 0).toFixed(2)}</small>
+          </div>
+        `;
+
+      });
+
+      const saldoEl = document.getElementById("saldo-atual-caixa");
+
+      if(saldoEl){
+        saldoEl.innerText = `R$ ${saldo.toFixed(2)}`;
+      }
+
+    });
+
+}
+
+function adicionarMovimentoCaixa(caixaId, tipo){
+
+  const valor = Number(prompt(`Valor do ${tipo}:`) || 0);
+
+  if(!valor) return;
+
+  supabaseClient
+    .from("caixa_movimentacoes")
+    .insert([{
+      id: Date.now(),
+      caixa_id: Number(caixaId),
+      data: new Date().toLocaleDateString("pt-BR"),
+      tipo,
+      forma_pagamento: "Manual",
+      descricao: tipo,
+      entrada: tipo === "Reforço" ? valor : 0,
+      saida: tipo === "Sangria" ? valor : 0,
+      origem: "manual"
+    }])
+    .then((resposta)=>{
+
+      if(resposta.error){
+        alert("Erro: " + resposta.error.message);
+        return;
+      }
+
+      carregarMovimentacoesCaixa(caixaId);
+      carregarCaixa();
+
+    });
+
+}
+
+function fecharCaixa(caixaId){
+
+  const confirmar = confirm("Deseja fechar este caixa?");
+
+  if(!confirmar) return;
+
+  supabaseClient
+    .from("caixa")
+    .update({
+      status: "Fechado",
+      fechado_em: new Date().toLocaleString("pt-BR")
+    })
+    .eq("id", caixaId)
+    .then((resposta)=>{
+
+      if(resposta.error){
+        alert("Erro ao fechar caixa: " + resposta.error.message);
+        return;
+      }
+
+      alert("Caixa fechado!");
+
+      fecharDetalhesCaixa();
+      carregarCaixa();
+
+    });
+
+}
+
+/* =========================
+   PAINEL PROFISSIONAIS AGENDA
+========================= */
+
+window.profissionaisVisiveisAgendaFinal = [];
+
+function criarPainelAgendaProfissionais(){
+
+  const antigo = document.getElementById("painel-profissionais-agenda");
+
+  if(antigo) antigo.remove();
+
+  const painel = document.createElement("div");
+
+  painel.id = "painel-profissionais-agenda";
+
+  painel.style.cssText = `
+    position:fixed;
+    left:260px;
+    top:0;
+    width:280px;
+    height:100vh;
+    background:#fff;
+    z-index:20;
+    box-shadow:4px 0 24px rgba(0,0,0,.10);
+    padding:24px 18px;
+    overflow:auto;
+    transform:translateX(-250px);
+    transition:.25s ease;
+  `;
+
+  painel.onmouseenter = function(){
+    painel.style.transform = "translateX(0)";
+  };
+
+  painel.onmouseleave = function(){
+    painel.style.transform = "translateX(-250px)";
+  };
+
+  painel.innerHTML = `
+    <h3 style="margin:0 0 28px 0;font-size:16px;font-weight:700;">
+      Configurações
+    </h3>
+
+    <p style="font-size:13px;color:#777;margin-bottom:14px;">
+      Profissionais
+    </p>
+
+    <div id="lista-profissionais-painel-agenda"></div>
+  `;
+
+  document.body.appendChild(painel);
+
+  carregarProfissionaisPainelAgenda();
+
+}
+
+function carregarProfissionaisPainelAgenda(){
+
+  const lista = document.getElementById("lista-profissionais-painel-agenda");
+
+  if(!lista) return;
+
+  lista.innerHTML = "";
+
+  supabaseClient
+    .from("profissionais_salao")
+    .select("*")
+    .eq("ativo", true)
+    .order("nome")
+    .then((resposta)=>{
+
+      const profissionais = resposta.data || [];
+
+      document.querySelectorAll(".professional").forEach((header,index)=>{
+        if(profissionais[index]){
+          header.dataset.profissionalId = profissionais[index].id;
+        }
+      });
+
+      document.querySelectorAll(".column").forEach((coluna,index)=>{
+        if(profissionais[index]){
+          coluna.dataset.profissionalId = profissionais[index].id;
+        }
+      });
+
+      if(window.profissionaisVisiveisAgendaFinal.length === 0){
+        window.profissionaisVisiveisAgendaFinal =
+          profissionais.map(p => String(p.id));
+      }
+
+      profissionais.forEach((profissional)=>{
+
+        const id = String(profissional.id);
+
+        const marcado =
+          window.profissionaisVisiveisAgendaFinal.includes(id)
+            ? "checked"
+            : "";
+
+        lista.innerHTML += `
+          <label style="display:flex;align-items:center;gap:10px;margin-bottom:14px;font-size:14px;cursor:pointer;">
+            <input
+              type="checkbox"
+              value="${id}"
+              ${marcado}
+              onchange="alternarProfissionalAgenda(this)"
+              style="width:16px;height:16px;accent-color:#111;"
+            >
+            <span>${profissional.nome}</span>
+          </label>
+        `;
+
+      });
+
+      aplicarFiltroProfissionaisAgenda();
+
+    });
+
+}
+
+function alternarProfissionalAgenda(input){
+
+  const id = String(input.value);
+
+  if(input.checked){
+
+    if(!window.profissionaisVisiveisAgendaFinal.includes(id)){
+      window.profissionaisVisiveisAgendaFinal.push(id);
+    }
+
+  }else{
+
+    window.profissionaisVisiveisAgendaFinal =
+      window.profissionaisVisiveisAgendaFinal.filter(item => item !== id);
+
+  }
+
+  aplicarFiltroProfissionaisAgenda();
+
+}
+
+function aplicarFiltroProfissionaisAgenda(){
+
+  const visiveis = window.profissionaisVisiveisAgendaFinal || [];
+
+  document.querySelectorAll(".professional").forEach((header)=>{
+
+    const id = String(header.dataset.profissionalId || "");
+
+    header.style.display =
+      visiveis.includes(id)
+        ? "block"
+        : "none";
+
+  });
+
+  document.querySelectorAll(".column").forEach((coluna)=>{
+
+    const id = String(coluna.dataset.profissionalId || "");
+
+    coluna.style.display =
+      visiveis.includes(id)
+        ? "block"
+        : "none";
+
+  });
+
+  const quantidade = visiveis.length || 1;
+
+  const agendaHeader = document.querySelector(".agenda-header");
+  const agendaBody = document.querySelector(".agenda-body");
+
+  if(agendaHeader){
+    agendaHeader.style.gridTemplateColumns =
+      `80px repeat(${quantidade}, 1fr)`;
+  }
+
+  if(agendaBody){
+    agendaBody.style.gridTemplateColumns =
+      `80px repeat(${quantidade}, 1fr)`;
+  }
+
+}
+
+setTimeout(()=>{
+
+  garantirAbaCaixa();
+  carregarCaixa();
+  criarPainelAgendaProfissionais();
+
+},2000);
