@@ -5373,3 +5373,61 @@ function ajustarHorariosLateraisAgenda(){
 }
 
 setTimeout(ajustarHorariosLateraisAgenda, 2200);
+function salvarCliente(){
+
+  const cliente = {
+    nome: document.getElementById("nomeCliente").value,
+    telefone: document.getElementById("telefoneCliente").value,
+    aniversario: document.getElementById("aniversarioCliente")?.value || "",
+    preferencia: document.getElementById("preferenciaCliente")?.value || "",
+    alergias: document.getElementById("alergiasCliente")?.value || "",
+    foto: document.getElementById("fotoCliente")?.value || "",
+    observacoes: document.getElementById("observacaoCliente")?.value || ""
+  };
+
+  if(!cliente.nome){
+    alert("Digite o nome da cliente.");
+    return;
+  }
+
+  supabaseClient
+    .from("clients")
+    .insert([cliente])
+    .then((resposta)=>{
+
+      if(resposta.error){
+        alert("Erro ao salvar cliente: " + resposta.error.message);
+        return;
+      }
+
+      alert("Cliente salva!");
+
+      document.getElementById("nomeCliente").value = "";
+      document.getElementById("telefoneCliente").value = "";
+
+      if(document.getElementById("aniversarioCliente")){
+        document.getElementById("aniversarioCliente").value = "";
+      }
+
+      if(document.getElementById("preferenciaCliente")){
+        document.getElementById("preferenciaCliente").value = "";
+      }
+
+      if(document.getElementById("alergiasCliente")){
+        document.getElementById("alergiasCliente").value = "";
+      }
+
+      if(document.getElementById("fotoCliente")){
+        document.getElementById("fotoCliente").value = "";
+      }
+
+      if(document.getElementById("observacaoCliente")){
+        document.getElementById("observacaoCliente").value = "";
+      }
+
+      carregarClientes();
+      carregarClientesAgendamento();
+
+    });
+
+}
