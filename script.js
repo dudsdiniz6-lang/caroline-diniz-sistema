@@ -3912,6 +3912,25 @@ async function carregarProfissionaisAgenda(){
   }
 
   carregarAgenda();
+    if(agendaBody){
+
+  const colunaTempo =
+    agendaBody.querySelector(".time-column");
+
+  if(colunaTempo){
+
+    colunaTempo.innerHTML =
+      horariosAgenda
+        .map(horario => `
+          <div class="tempo">
+            ${horario}
+          </div>
+        `)
+        .join("");
+
+  }
+
+}
 
 }
 function carregarProfissionais(){
