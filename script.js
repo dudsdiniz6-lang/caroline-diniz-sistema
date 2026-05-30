@@ -2386,44 +2386,71 @@ if(listaServicosAgendamento){
 
       const categoriaSelecionada =
         filtroCategoria?.value || "";
+        servicos.forEach((servico)=>{
 
-      servicos.forEach((servico)=>{
+  if(
+    categoriaSelecionada &&
+    servico.categoria !== categoriaSelecionada
+  ){
+    return;
+  }
 
-        if(
-          categoriaSelecionada &&
-          servico.categoria !== categoriaSelecionada
-        ){
-          return;
-        }
+  if(
+    busca &&
+    !servico.nome.toLowerCase().includes(busca)
+  ){
+    return;
+  }
 
-        if(
-          busca &&
-          !servico.nome.toLowerCase().includes(busca)
-        ){
-          return;
-        }
+  if(lista){
 
-        if(lista){
+    lista.innerHTML += `
+      <div
+        class="linha-servico"
+        onclick="editarServicoSalao('${servico.id}')"
+      >
 
-        if(selectServico){
+        <span>
+          ${servico.categoria || "-"}
+        </span>
 
-          selectServico.innerHTML += `
-            <option
-              value="${servico.nome}"
-              data-duracao="${servico.duracao}"
-              data-valor="${servico.valor}"
-            >
-              ${servico.nome}
-            </option>
-          `;
+        <span>
+          ${servico.nome}
+        </span>
 
-        }
+        <span>
+          ${servico.duracao || 0} min
+        </span>
 
-      });
+        <span>
+          R$ ${Number(servico.valor || 0).toFixed(2)}
+        </span>
+
+      </div>
+    `;
+
+  }
+
+  if(selectServico){
+
+    selectServico.innerHTML += `
+      <option
+        value="${servico.nome}"
+        data-duracao="${servico.duracao}"
+        data-valor="${servico.valor}"
+      >
+        ${servico.nome}
+      </option>
+  `;
+
+  }
+
+});
 
     });
 
 }
+
 function atualizarServicoSelecionado(){
 
   const select = document.getElementById("servico");
