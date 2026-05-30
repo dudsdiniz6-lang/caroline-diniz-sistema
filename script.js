@@ -4819,32 +4819,6 @@ function alternarProfissionalAgenda(input){
 
 }
 
-function aplicarFiltroProfissionaisAgenda(){
-
-  document.querySelectorAll(".professional").forEach((header)=>{
-
-    const id = String(header.dataset.profissionalId || "");
-
-    header.style.display =
-      window.profissionaisVisiveisAgenda.includes(id)
-        ? "block"
-        : "none";
-
-  });
-
-  document.querySelectorAll(".column").forEach((coluna)=>{
-
-    const id = String(coluna.dataset.profissionalId || "");
-
-    coluna.style.display =
-      window.profissionaisVisiveisAgenda.includes(id)
-        ? "block"
-        : "none";
-
-  });
-
-}
-
 function alternarPainelProfissionaisAgenda(){
 
   const painel = document.getElementById("painel-profissionais-agenda");
