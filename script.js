@@ -3912,38 +3912,7 @@ async function carregarProfissionaisAgenda(){
   }
 
   carregarAgenda();
-   if(agendaBody){
-
-  const colunaTempo =
-    agendaBody.querySelector(".time-column");
-
-  if(colunaTempo){
-
-    colunaTempo.innerHTML =
-      horariosAgenda
-        .map(horario => `
-
-          <div style="
-            height:80px;
-            display:flex;
-            align-items:flex-start;
-            justify-content:center;
-            padding-top:6px;
-            box-sizing:border-box;
-            border-bottom:1px solid #eee;
-            font-size:12px;
-            color:#666;
-            font-weight:600;
-          ">
-            ${horario}
-          </div>
-
-        `)
-        .join("");
-
-  }
-
-}
+  
 function carregarProfissionais(){
 
   const lista = document.getElementById("lista-profissionais");
