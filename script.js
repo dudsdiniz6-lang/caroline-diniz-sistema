@@ -5298,3 +5298,46 @@ setTimeout(()=>{
   criarPainelAgendaProfissionais();
 
 },2000);
+function ajustarHorariosLateraisAgenda(){
+
+  const agendaBody = document.querySelector(".agenda-body");
+
+  if(!agendaBody) return;
+
+  let colunaTempo = agendaBody.querySelector(".time-column");
+
+  if(!colunaTempo){
+
+    colunaTempo = document.createElement("div");
+    colunaTempo.className = "time-column";
+    agendaBody.prepend(colunaTempo);
+
+  }
+
+  colunaTempo.innerHTML = "";
+
+  horariosAgenda.forEach((horario)=>{
+
+    colunaTempo.innerHTML += `
+      <div style="
+        height:80px;
+        min-height:80px;
+        box-sizing:border-box;
+        border-bottom:1px solid #eee;
+        display:flex;
+        align-items:flex-start;
+        justify-content:center;
+        padding-top:6px;
+        font-size:12px;
+        color:#666;
+        font-weight:600;
+      ">
+        ${horario}
+      </div>
+    `;
+
+  });
+
+}
+
+setTimeout(ajustarHorariosLateraisAgenda, 2200);
