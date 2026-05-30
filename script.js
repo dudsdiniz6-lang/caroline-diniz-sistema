@@ -1537,8 +1537,8 @@ window.onload = function(){
 
   atualizarLinhaHorarioAtual();
 
-  carregarProfissionaisAgenda();
-  
+carregarProfissionaisAgenda();
+
 setTimeout(criarPainelAgendaProfissionais, 1800);
 
   setInterval(
@@ -3883,17 +3883,16 @@ async function carregarProfissionaisAgenda(){
       `;
     }
 
-    if(agendaHeader){
-      agendaHeader.innerHTML += `
-      <div
-  class="professional"
-  data-profissional-id="${profissional.id}"
->
-  ${profissional.nome}
-</div>
-      `;
-    }
-
+   if(agendaHeader){
+  agendaHeader.innerHTML += `
+    <div
+      class="professional"
+      data-profissional-id="${profissional.id}"
+    >
+      ${profissional.nome}
+    </div>
+  `;
+}
     if(agendaBody){
       agendaBody.innerHTML += `
         <div class="column" data-profissional-id="${profissional.id}"></div>
