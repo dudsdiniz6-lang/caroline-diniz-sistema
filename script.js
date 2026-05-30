@@ -4328,3 +4328,206 @@ function carregarProfissionaisNovoCaixa(){
     });
 
 }
+function abrirDetalhesCaixa(caixaId){
+
+  let tela =
+    document.getElementById(
+      "detalhes-caixa"
+    );
+
+  if(!tela){
+
+    tela = document.createElement("div");
+
+    tela.id = "detalhes-caixa";
+
+    tela.style.cssText = `
+      position:fixed;
+      inset:0;
+      background:#fff;
+      z-index:99999;
+      overflow:auto;
+      padding:40px;
+    `;
+
+    document.body.appendChild(tela);
+
+  }
+
+  supabaseClient
+    .from("caixa")
+    .select("*")
+    .eq("id", caixaId)
+    .single()
+    .then((resposta)=>{
+
+      const caixa =
+        resposta.data;
+
+      if(!caixa) return;
+
+      tela.innerHTML = `
+
+        <div style="
+          display:flex;
+          justify-content:space-between;
+          align-items:center;
+          margin-bottom:30px;
+        ">
+
+          <div>
+
+            <h1 style="
+              margin:0;
+              font-size:30px;
+            ">
+              Caixa
+            </h1>
+
+            <p style="
+              color:#777;
+              margin-top:10px;
+            ">
+              ${caixa.data}
+              •
+              ${caixa.dono || "Caixa Geral"}
+            </p>
+
+          </div>
+
+          <button
+            onclick="fecharDetalhesCaixa()"
+            style="
+              background:#111;
+              color:#fff;
+              border:none;
+              padding:12px 18px;
+              border-radius:14px;
+              cursor:pointer;
+            "
+          >
+            Fechar
+          </button>
+
+        </div>
+
+        <div style="
+          display:grid;
+          grid-template-columns:
+          repeat(4,1fr);
+          gap:18px;
+          margin-bottom:30px;
+        ">
+
+          <div class="cliente-card">
+            <strong>
+              R$ ${Number(caixa.abertura || caixa.entrada || 0).toFixed(2)}
+            </strong>
+            <p>Abertura</p>
+          </div>
+
+          <div class="cliente-card">
+            <strong id="saldo-atual-caixa">
+              R$ 0,00
+            </strong>
+            <p>Saldo Atual</p>
+          </div>
+
+          <div class="cliente-card">
+            <strong>
+              ${caixa.status || "Aberto"}
+            </strong>
+            <p>Status</p>
+          </div>
+
+          <div class="cliente-card">
+            <strong>
+              ${caixa.tipo || "-"}
+            </strong>
+            <p>Tipo</p>
+          </div>
+
+        </div>
+
+        <div style="
+          display:flex;
+          gap:12px;
+          margin-bottom:28px;
+        ">
+
+          <button
+            onclick="
+              adicionarMovimentoCaixa(
+                '${caixa.id}',
+                'Reforço'
+              )
+            "
+            style="
+              background:#ff5a1f;
+              color:#fff;
+              border:none;
+              padding:14px 18px;
+              border-radius:14px;
+            "
+          >
+            + Reforço
+          </button>
+
+          <button
+            onclick="
+              adicionarMovimentoCaixa(
+                '${caixa.id}',
+                'Sangria'
+              )
+            "
+            style="
+              background:#111;
+              color:#fff;
+              border:none;
+              padding:14px 18px;
+              border-radius:14px;
+            "
+          >
+            Sangria
+          </button>
+
+          <button
+            onclick="
+              fecharCaixa(
+                '${caixa.id}'
+              )
+            "
+            style="
+              background:#d63031;
+              color:#fff;
+              border:none;
+              padding:14px 18px;
+              border-radius:14px;
+            "
+          >
+            Fechar Caixa
+          </button>
+
+        </div>
+
+        <div id="movimentacoes-caixa"></div>
+
+      `;
+
+      carregarMovimentacoesCaixa(
+        caixa.id
+      );
+
+    });
+
+}
+
+function fecharDetalhesCaixa(){
+
+  document
+    .getElementById(
+      "detalhes-caixa"
+    )
+    .remove();
+
+}
