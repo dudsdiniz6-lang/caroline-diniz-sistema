@@ -4701,8 +4701,6 @@ function criarPainelAgendaProfissionais(){
 
 }
 
-let profissionaisVisiveisAgenda = [];
-
 function criarPainelAgendaProfissionais(){
 
   const antigo = document.getElementById("painel-profissionais-agenda");
