@@ -4651,9 +4651,10 @@ function fecharCaixa(caixaId){
 
 let profissionaisVisiveisAgenda = [];
 
-function criarPainelProfissionaisAgenda(){
+function criarPainelAgendaProfissionais(){
 
-  if(document.getElementById("painel-profissionais-agenda")) return;
+  const antigo = document.getElementById("painel-profissionais-agenda");
+  if(antigo) antigo.remove();
 
   const painel = document.createElement("div");
 
@@ -4661,44 +4662,33 @@ function criarPainelProfissionaisAgenda(){
 
   painel.style.cssText = `
     position:fixed;
-    left:180px;
+    left:260px;
     top:0;
-    width:260px;
+    width:280px;
     height:100vh;
     background:#fff;
-    z-index:999;
-    box-shadow:4px 0 24px rgba(0,0,0,.08);
+    z-index:20;
+    box-shadow:4px 0 24px rgba(0,0,0,.10);
     padding:24px 18px;
     overflow:auto;
-    transform:translateX(-260px);
-    transition:.3s;
+    transform:translateX(-250px);
+    transition:.25s ease;
   `;
 
-  painel.innerHTML = `
-    <button
-      onclick="alternarPainelProfissionaisAgenda()"
-      style="
-        position:absolute;
-        right:-38px;
-        top:120px;
-        width:38px;
-        height:48px;
-        border:none;
-        background:#fff;
-        box-shadow:4px 0 14px rgba(0,0,0,.12);
-        border-radius:0 12px 12px 0;
-        cursor:pointer;
-        font-size:20px;
-      "
-    >
-      ›
-    </button>
+  painel.onmouseenter = function(){
+    painel.style.transform = "translateX(0)";
+  };
 
-    <h3 style="margin:0 0 22px 0;">
+  painel.onmouseleave = function(){
+    painel.style.transform = "translateX(-250px)";
+  };
+
+  painel.innerHTML = `
+    <h3 style="margin:0 0 28px 0;font-size:16px;font-weight:700;">
       Configurações
     </h3>
 
-    <p style="font-size:13px;color:#777;margin-bottom:12px;">
+    <p style="font-size:13px;color:#777;margin-bottom:14px;">
       Profissionais
     </p>
 
@@ -4708,25 +4698,6 @@ function criarPainelProfissionaisAgenda(){
   document.body.appendChild(painel);
 
   carregarProfissionaisPainelAgenda();
-
-}
-
-function alternarPainelProfissionaisAgenda(){
-
-  const painel =
-    document.getElementById("painel-profissionais-agenda");
-
-  if(!painel) return;
-
-  const aberto =
-    painel.dataset.aberto === "true";
-
-  painel.dataset.aberto = aberto ? "false" : "true";
-
-  painel.style.transform =
-    aberto
-      ? "translateX(-260px)"
-      : "translateX(0)";
 
 }
 
@@ -4747,9 +4718,8 @@ function carregarProfissionaisPainelAgenda(){
 
       const profissionais = resposta.data || [];
 
-      if(!window.profissionaisVisiveisAgenda){
-        window.profissionaisVisiveisAgenda =
-          profissionais.map(p => String(p.id));
+      if(profissionaisVisiveisAgenda.length === 0){
+        profissionaisVisiveisAgenda = profissionais.map(p => String(p.id));
       }
 
       profissionais.forEach((profissional)=>{
@@ -4757,30 +4727,18 @@ function carregarProfissionaisPainelAgenda(){
         const id = String(profissional.id);
 
         const marcado =
-          window.profissionaisVisiveisAgenda.includes(id)
+          profissionaisVisiveisAgenda.includes(id)
             ? "checked"
             : "";
 
         lista.innerHTML += `
-          <label style="
-            display:flex;
-            align-items:center;
-            gap:10px;
-            margin-bottom:14px;
-            font-size:14px;
-            cursor:pointer;
-            color:#222;
-          ">
+          <label style="display:flex;align-items:center;gap:10px;margin-bottom:14px;font-size:14px;cursor:pointer;">
             <input
               type="checkbox"
               value="${id}"
               ${marcado}
               onchange="alternarProfissionalAgenda(this)"
-              style="
-                width:16px;
-                height:16px;
-                accent-color:#111;
-              "
+              style="width:16px;height:16px;accent-color:#111;"
             >
             <span>${profissional.nome}</span>
           </label>
@@ -4798,20 +4756,16 @@ function alternarProfissionalAgenda(input){
 
   const id = String(input.value);
 
-  if(!window.profissionaisVisiveisAgenda){
-    window.profissionaisVisiveisAgenda = [];
-  }
-
   if(input.checked){
 
-    if(!window.profissionaisVisiveisAgenda.includes(id)){
-      window.profissionaisVisiveisAgenda.push(id);
+    if(!profissionaisVisiveisAgenda.includes(id)){
+      profissionaisVisiveisAgenda.push(id);
     }
 
   }else{
 
-    window.profissionaisVisiveisAgenda =
-      window.profissionaisVisiveisAgenda.filter(item => item !== id);
+    profissionaisVisiveisAgenda =
+      profissionaisVisiveisAgenda.filter(item => item !== id);
 
   }
 
@@ -4819,112 +4773,9 @@ function alternarProfissionalAgenda(input){
 
 }
 
-function alternarPainelProfissionaisAgenda(){
-
-  const painel = document.getElementById("painel-profissionais-agenda");
-
-  if(!painel) return;
-
-  const aberto = painel.dataset.aberto === "true";
-
-  painel.dataset.aberto = aberto ? "false" : "true";
-
-  painel.style.width = aberto ? "42px" : "260px";
-  painel.style.padding = aberto ? "24px 8px" : "24px 18px";
-
-  painel.innerHTML = aberto
-    ? `
-      <button
-        onclick="ajustarPainelAgendaEstiloSalao99()"
-        style="
-          border:none;
-          background:transparent;
-          font-size:26px;
-          cursor:pointer;
-          color:#777;
-        "
-      >
-        ›
-      </button>
-    `
-    : "";
-
-  if(!aberto){
-    ajustarPainelAgendaEstiloSalao99();
-  }
-
-}
-function criarPainelAgendaProfissionais(){
-
-  const antigo = document.getElementById("painel-profissionais-agenda");
-  if(antigo) antigo.remove();
-
-  const painel = document.createElement("div");
-
-  painel.id = "painel-profissionais-agenda";
-
-  painel.style.cssText = `
-    position:fixed;
-    left:178px;
-    top:0;
-    width:280px;
-    height:100vh;
-    background:#fff;
-    z-index:9999;
-    box-shadow:4px 0 24px rgba(0,0,0,.10);
-    padding:24px 18px;
-    overflow:auto;
-    transform:translateX(-250px);
-    transition:.25s ease;
-  `;
-
-  painel.onmouseenter = function(){
-    painel.style.transform = "translateX(0)";
-  };
-
-  painel.onmouseleave = function(){
-    painel.style.transform = "translateX(-250px)";
-  };
-
-  painel.innerHTML = `
-    <div style="
-      display:flex;
-      justify-content:space-between;
-      align-items:center;
-      margin-bottom:28px;
-    ">
-      <h3 style="margin:0;font-size:16px;font-weight:700;">
-        Configurações
-      </h3>
-
-      <span style="
-        font-size:24px;
-        color:#777;
-      ">
-        ‹
-      </span>
-    </div>
-
-    <p style="
-      font-size:13px;
-      color:#777;
-      margin-bottom:14px;
-    ">
-      Profissionais
-    </p>
-
-    <div id="lista-profissionais-painel-agenda"></div>
-  `;
-
-  document.body.appendChild(painel);
-
-  carregarProfissionaisPainelAgenda();
-
-}
 function aplicarFiltroProfissionaisAgenda(){
 
-  const visiveis =
-    window.profissionaisVisiveisAgenda || [];
+  const visiveis = profissionaisVisiveisAgenda || [];
 
   document.querySelectorAll(".professional").forEach((header)=>{
 
@@ -4948,14 +4799,10 @@ function aplicarFiltroProfissionaisAgenda(){
 
   });
 
-  const quantidade =
-    visiveis.length || 1;
+  const quantidade = visiveis.length || 1;
 
-  const agendaHeader =
-    document.querySelector(".agenda-header");
-
-  const agendaBody =
-    document.querySelector(".agenda-body");
+  const agendaHeader = document.querySelector(".agenda-header");
+  const agendaBody = document.querySelector(".agenda-body");
 
   if(agendaHeader){
     agendaHeader.style.gridTemplateColumns =
@@ -4968,16 +4815,4 @@ function aplicarFiltroProfissionaisAgenda(){
   }
 
 }
-setTimeout(()=>{
-
-  const painel =
-    document.getElementById("painel-profissionais-agenda");
-
-  if(!painel) return;
-
-  painel.style.left = "260px";
-  painel.style.top = "0";
-  painel.style.zIndex = "20";
-  painel.style.transform = "translateX(-250px)";
-
-},2500);
+    
