@@ -4531,3 +4531,117 @@ function fecharDetalhesCaixa(){
     .remove();
 
 }
+function carregarMovimentacoesCaixa(caixaId){
+
+  const lista = document.getElementById("movimentacoes-caixa");
+
+  if(!lista) return;
+
+  lista.innerHTML = `
+    <h2 style="margin-bottom:18px;">Movimentações</h2>
+  `;
+
+  supabaseClient
+    .from("caixa_movimentacoes")
+    .select("*")
+    .eq("caixa_id", caixaId)
+    .order("id",{ascending:false})
+    .then((resposta)=>{
+
+      const movimentos = resposta.data || [];
+
+      let saldo = 0;
+
+      movimentos.forEach((mov)=>{
+
+        saldo += Number(mov.entrada || 0);
+        saldo -= Number(mov.saida || 0);
+
+        lista.innerHTML += `
+          <div class="cliente-card">
+            <strong>${mov.tipo || "Movimento"}</strong>
+            <p>${mov.descricao || "-"}</p>
+            <small>${mov.forma_pagamento || "-"}</small>
+            <small>${mov.data || "-"}</small>
+            <small>
+              Entrada: R$ ${Number(mov.entrada || 0).toFixed(2)}
+            </small>
+            <small>
+              Saída: R$ ${Number(mov.saida || 0).toFixed(2)}
+            </small>
+          </div>
+        `;
+
+      });
+
+      const saldoEl = document.getElementById("saldo-atual-caixa");
+
+      if(saldoEl){
+        saldoEl.innerText = `R$ ${saldo.toFixed(2)}`;
+      }
+
+    });
+
+}
+
+function adicionarMovimentoCaixa(caixaId, tipo){
+
+  const valor = Number(prompt(`Valor do ${tipo}:`) || 0);
+
+  if(!valor) return;
+
+  supabaseClient
+    .from("caixa_movimentacoes")
+    .insert([{
+      id: Date.now(),
+      caixa_id: Number(caixaId),
+      data: new Date().toLocaleDateString("pt-BR"),
+      tipo,
+      forma_pagamento: "Manual",
+      descricao: tipo,
+      entrada: tipo === "Reforço" ? valor : 0,
+      saida: tipo === "Sangria" ? valor : 0,
+      origem: "manual"
+    }])
+    .then((resposta)=>{
+
+      if(resposta.error){
+        alert("Erro: " + resposta.error.message);
+        return;
+      }
+
+      carregarMovimentacoesCaixa(caixaId);
+      carregarCaixa();
+
+    });
+
+}
+
+function fecharCaixa(caixaId){
+
+  const confirmar = confirm("Deseja fechar este caixa?");
+
+  if(!confirmar) return;
+
+  supabaseClient
+    .from("caixa")
+    .update({
+      status: "Fechado",
+      fechado_em: new Date().toLocaleString("pt-BR")
+    })
+    .eq("id", caixaId)
+    .then((resposta)=>{
+
+      if(resposta.error){
+        alert("Erro ao fechar caixa: " + resposta.error.message);
+        return;
+      }
+
+      alert("Caixa fechado!");
+
+      fecharDetalhesCaixa();
+      carregarCaixa();
+
+    });
+
+}
