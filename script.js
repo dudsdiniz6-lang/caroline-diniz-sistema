@@ -3912,7 +3912,7 @@ async function carregarProfissionaisAgenda(){
   }
 
   carregarAgenda();
-    if(agendaBody){
+   if(agendaBody){
 
   const colunaTempo =
     agendaBody.querySelector(".time-column");
