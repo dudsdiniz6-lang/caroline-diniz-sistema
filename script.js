@@ -6195,3 +6195,22 @@ function excluirFormaPagamento(id){
     });
 
 }
+function controlarPainelProfissionaisPorTela(){
+
+  const painel =
+    document.getElementById("painel-profissionais-agenda");
+
+  const agenda =
+    document.querySelector(".agenda-container");
+
+  if(!painel || !agenda) return;
+
+  const agendaVisivel =
+    agenda.style.display !== "none";
+
+  painel.style.display =
+    agendaVisivel ? "block" : "none";
+
+}
+
+setInterval(controlarPainelProfissionaisPorTela, 500);
