@@ -5493,3 +5493,35 @@ function garantirBotaoSalvarCliente(){
 }
 
 setTimeout(garantirBotaoSalvarCliente, 2000);
+function garantirBotaoNovaCategoriaServico(){
+
+  const select =
+    document.getElementById("categoriaServicoSalao");
+
+  if(!select) return;
+
+  if(document.getElementById("btn-nova-categoria-servico")) return;
+
+  const botao = document.createElement("button");
+
+  botao.id = "btn-nova-categoria-servico";
+  botao.innerText = "+ Nova categoria";
+  botao.onclick = abrirModalCategoria;
+
+  botao.style.cssText = `
+    width:100%;
+    background:#111;
+    color:#fff;
+    border:none;
+    padding:13px;
+    border-radius:12px;
+    font-weight:700;
+    cursor:pointer;
+    margin:10px 0 16px;
+  `;
+
+  select.insertAdjacentElement("afterend", botao);
+
+}
+
+setInterval(garantirBotaoNovaCategoriaServico, 1000);
