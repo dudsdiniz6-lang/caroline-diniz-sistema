@@ -5536,3 +5536,35 @@ function recarregarPainelProfissionaisAgenda(){
 }
 
 setInterval(recarregarPainelProfissionaisAgenda, 3000);
+
+function carregarProfissionais(){
+
+  const lista = document.getElementById("lista-profissionais");
+
+  if(!lista) return;
+
+  lista.innerHTML = "";
+
+  supabaseClient
+    .from("profissionais_salao")
+    .select("*")
+    .order("nome")
+    .then((resposta)=>{
+
+      const profissionais = resposta.data || [];
+
+      profissionais.forEach((profissional)=>{
+
+        lista.innerHTML += `
+          <div class="cliente-card" onclick="editarProfissional('${profissional.id}')">
+            <strong>${profissional.nome || "Sem nome"}</strong>
+            <small>${profissional.telefone || ""}</small>
+            <small>${profissional.especialidade || ""}</small>
+          </div>
+        `;
+
+      });
+
+    });
+
+}
