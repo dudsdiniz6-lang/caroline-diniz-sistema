@@ -6198,28 +6198,48 @@ function excluirFormaPagamento(id){
 function controlarPainelProfissionaisPorTela(){
 
   const painel =
-    document.getElementById("painel-profissionais-agenda");
-
-  const agenda =
-    document.querySelector(".agenda-container");
+    document.getElementById(
+      "painel-profissionais-agenda"
+    );
 
   if(!painel) return;
 
-  const agendaVisivel =
-    agenda &&
-    agenda.style.display !== "none";
+  const agendaAberta =
+    document.querySelector(".agenda-container")
+      ?.style.display !== "none";
 
-  if(agendaVisivel){
+  if(agendaAberta){
 
     painel.style.display = "block";
+
+    document.body.style.marginLeft = "";
 
   }else{
 
     painel.style.display = "none";
-    painel.remove();
+
+    document.body.style.marginLeft = "0px";
+
+    const containerPrincipal =
+      document.querySelector(
+        ".main-content"
+      );
+
+    if(containerPrincipal){
+
+      containerPrincipal.style.marginLeft =
+        "0px";
+
+      containerPrincipal.style.width =
+        "calc(100% - 140px)";
+
+    }
 
   }
 
 }
 
-setInterval(controlarPainelProfissionaisPorTela,500);
+setInterval(
+  controlarPainelProfissionaisPorTela,
+  500
+);
