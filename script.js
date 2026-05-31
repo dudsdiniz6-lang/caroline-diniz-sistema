@@ -6033,3 +6033,157 @@ function excluirBloqueioAgenda(id){
     });
 
 }
+function abrirConfiguracoes(){
+
+  mostrarSecao("configuracoes-container");
+
+  let container =
+    document.getElementById("configuracoes-container");
+
+  if(!container){
+
+    container = document.createElement("div");
+    container.id = "configuracoes-container";
+    container.className = "clientes-container";
+    container.style.display = "block";
+
+    document.body.appendChild(container);
+
+  }
+
+  container.innerHTML = `
+    <h2 style="margin-bottom:24px;">
+      Configurações
+    </h2>
+
+    <div
+      onclick="abrirFormasPagamento()"
+      class="cliente-card"
+      style="cursor:pointer;"
+    >
+      <strong>Formas de pagamento</strong>
+      <p>Cadastre Pix, dinheiro, cartão de crédito, débito e outras formas.</p>
+    </div>
+  `;
+
+}
+
+function abrirFormasPagamento(){
+
+  const container =
+    document.getElementById("configuracoes-container");
+
+  container.innerHTML = `
+    <button onclick="abrirConfiguracoes()">
+      ← Voltar
+    </button>
+
+    <h2 style="margin:22px 0;">
+      Formas de pagamento
+    </h2>
+
+    <div class="cliente-card">
+      <input
+        id="novaFormaPagamento"
+        placeholder="Ex: Pix, Dinheiro, Crédito, Débito"
+      >
+
+      <button onclick="salvarFormaPagamento()">
+        Salvar forma
+      </button>
+    </div>
+
+    <div id="lista-formas-pagamento"></div>
+  `;
+
+  carregarFormasPagamento();
+
+}
+
+function salvarFormaPagamento(){
+
+  const campo =
+    document.getElementById("novaFormaPagamento");
+
+  const nome = campo.value.trim();
+
+  if(!nome){
+    alert("Digite a forma de pagamento.");
+    return;
+  }
+
+  supabaseClient
+    .from("formas_pagamento")
+    .insert([{
+      id: Date.now(),
+      nome,
+      ativo: true,
+      criado_em: new Date().toLocaleString("pt-BR")
+    }])
+    .then((resposta)=>{
+
+      if(resposta.error){
+        alert("Erro ao salvar forma: " + resposta.error.message);
+        return;
+      }
+
+      campo.value = "";
+      carregarFormasPagamento();
+
+    });
+
+}
+
+function carregarFormasPagamento(){
+
+  const lista =
+    document.getElementById("lista-formas-pagamento");
+
+  if(!lista) return;
+
+  lista.innerHTML = "";
+
+  supabaseClient
+    .from("formas_pagamento")
+    .select("*")
+    .order("nome")
+    .then((resposta)=>{
+
+      const formas = resposta.data || [];
+
+      formas.forEach((forma)=>{
+
+        lista.innerHTML += `
+          <div class="cliente-card">
+            <strong>${forma.nome}</strong>
+
+            <button onclick="excluirFormaPagamento('${forma.id}')">
+              Excluir
+            </button>
+          </div>
+        `;
+
+      });
+
+    });
+
+}
+
+function excluirFormaPagamento(id){
+
+  const confirmar =
+    confirm("Deseja excluir esta forma de pagamento?");
+
+  if(!confirmar) return;
+
+  supabaseClient
+    .from("formas_pagamento")
+    .delete()
+    .eq("id", Number(id))
+    .then(()=>{
+
+      carregarFormasPagamento();
+
+    });
+
+}
