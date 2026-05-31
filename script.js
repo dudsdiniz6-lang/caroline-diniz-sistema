@@ -5573,3 +5573,38 @@ function carregarProfissionais(){
     });
 
 }
+function adicionarCategoriaServico(){
+
+  const campo =
+    document.getElementById("novaCategoriaServico");
+
+  const nome = campo?.value?.trim();
+
+  if(!nome){
+    alert("Digite o nome da categoria.");
+    return;
+  }
+
+  supabaseClient
+    .from("categorias_servicos")
+    .insert([{
+      id: Date.now(),
+      nome
+    }])
+    .then((resposta)=>{
+
+      if(resposta.error){
+        alert("Erro ao salvar categoria: " + resposta.error.message);
+        return;
+      }
+
+      alert("Categoria salva!");
+
+      campo.value = "";
+
+      fecharModalCategoria();
+      carregarCategoriasServicos();
+
+    });
+
+}
