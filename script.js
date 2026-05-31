@@ -5454,3 +5454,42 @@ function salvarCliente(){
     });
 
 }
+function garantirBotaoSalvarCliente(){
+
+  const nomeCliente =
+    document.getElementById("nomeCliente");
+
+  if(!nomeCliente) return;
+
+  if(document.getElementById("btn-salvar-cliente")) return;
+
+  const botao = document.createElement("button");
+
+  botao.id = "btn-salvar-cliente";
+  botao.innerText = "Salvar Cliente";
+  botao.onclick = salvarCliente;
+
+  botao.style.cssText = `
+    width:100%;
+    background:#ff7a00;
+    color:#fff;
+    border:none;
+    padding:16px;
+    border-radius:12px;
+    font-weight:700;
+    cursor:pointer;
+    margin:16px 0;
+  `;
+
+  const telefoneCliente =
+    document.getElementById("telefoneCliente");
+
+  if(telefoneCliente){
+    telefoneCliente.insertAdjacentElement("afterend", botao);
+  }else{
+    nomeCliente.insertAdjacentElement("afterend", botao);
+  }
+
+}
+
+setTimeout(garantirBotaoSalvarCliente, 2000);
