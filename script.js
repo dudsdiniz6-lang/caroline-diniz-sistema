@@ -5229,7 +5229,6 @@ function carregarProfissionaisPainelAgenda(){
   supabaseClient
     .from("profissionais_salao")
     .select("*")
-    .eq("ativo", true)
     .order("nome")
     .then((resposta)=>{
 
