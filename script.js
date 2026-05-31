@@ -6063,9 +6063,11 @@ function abrirConfiguracoes(){
 
   // mostrarSecao("configuracoes-container");
 
-  container.style.display = "block";
-  container.style.marginLeft = "180px";
-  container.style.width = "calc(100% - 180px)";
+ container.style.display = "block";
+container.style.marginLeft = "0";
+container.style.paddingLeft = "220px";
+container.style.width = "100%";
+container.style.boxSizing = "border-box";
 
   container.innerHTML = `
     <h2>Configurações</h2>
