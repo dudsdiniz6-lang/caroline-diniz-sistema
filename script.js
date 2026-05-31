@@ -1421,6 +1421,22 @@ function mostrarSecao(secao){
   if(secao === "pacotes-container"){
     carregarPacotes();
   }
+    if(secao === "configuracoes-container"){
+
+  const config =
+    document.getElementById("configuracoes-container");
+
+  if(config){
+
+    config.style.display = "block";
+    config.style.marginLeft = "180px";
+    config.style.width = "calc(100% - 180px)";
+    config.style.padding = "40px";
+    config.style.boxSizing = "border-box";
+
+  }
+
+}
 
 }
 
@@ -6061,13 +6077,7 @@ function abrirConfiguracoes(){
 
   }
 
-  // mostrarSecao("configuracoes-container");
-
- container.style.display = "block";
-container.style.marginLeft = "0";
-container.style.paddingLeft = "220px";
-container.style.width = "100%";
-container.style.boxSizing = "border-box";
+  mostrarSecao("configuracoes-container");
 
   container.innerHTML = `
     <h2>Configurações</h2>
@@ -6089,6 +6099,7 @@ container.style.boxSizing = "border-box";
   `;
 
 }
+
 function abrirFormasPagamento(){
 
   const container =
