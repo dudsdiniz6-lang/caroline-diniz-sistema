@@ -4054,7 +4054,7 @@ function abrirModalCaixa(){
       display:none;
       align-items:center;
       justify-content:center;
-     z-index:999999;
+    modal.style.zIndex = "999999";
     `;
 
     modal.innerHTML = `
