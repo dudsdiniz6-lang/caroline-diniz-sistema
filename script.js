@@ -1033,7 +1033,12 @@ faturamentoMensal[mesAno] += Number(item.valor);
         const nomes = historico.map((item)=> item.cliente);
 
         if(window.graficoFinanceiro){
-          window.graficoFinanceiro.destroy();
+         if(
+  window.graficoFinanceiro &&
+  typeof window.graficoFinanceiro.destroy === "function"
+){
+  window.graficoFinanceiro.destroy();
+}
         }
 
         window.graficoFinanceiro = new Chart(ctx,{
