@@ -2530,9 +2530,11 @@ function atualizarServicoSelecionado(){
   }
 }
 
-function abrirModalServico(){
+function abrirModalServico(modoEdicao = false){
 
-  servicoEditandoId = null;
+  if(!modoEdicao){
+    servicoEditandoId = null;
+  }
 
   let modal = document.getElementById("modal-servico");
 
@@ -6309,4 +6311,34 @@ function corrigirTelaConfiguracoes(){
 
 setInterval(corrigirTelaConfiguracoes, 700);
 
+function editarServicoSalao(id){
 
+  supabaseClient
+    .from("servicos_salao")
+    .select("*")
+    .eq("id", id)
+    .single()
+    .then((resposta)=>{
+
+      if(resposta.error){
+        alert("Erro ao buscar serviço.");
+        return;
+      }
+
+      const servico = resposta.data;
+
+      servicoEditandoId = id;
+
+      abrirModalServico(true);
+
+      document.getElementById("nomeServicoSalao").value = servico.nome || "";
+      document.getElementById("categoriaServicoSalao").value = servico.categoria || "";
+      document.getElementById("descricaoServicoSalao").value = servico.descricao || "";
+      document.getElementById("comissaoServicoSalao").value = servico.comissao_padrao || "";
+      document.getElementById("duracaoServicoSalao").value = servico.duracao || "";
+      document.getElementById("valorServicoSalao").value = servico.valor || "";
+      document.getElementById("custoServicoSalao").value = servico.custo || "";
+
+    });
+
+}
