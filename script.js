@@ -6243,3 +6243,29 @@ setInterval(
   controlarPainelProfissionaisPorTela,
   500
 );
+
+function restaurarLayoutPrincipal(){
+
+  const principal =
+    document.querySelector(".agenda-container")?.parentElement;
+
+  if(principal){
+    principal.style.marginLeft = "";
+    principal.style.paddingLeft = "";
+    principal.style.width = "";
+  }
+
+  const painel =
+    document.getElementById("painel-profissionais-agenda");
+
+  if(painel){
+    painel.style.position = "fixed";
+    painel.style.left = "180px";
+    painel.style.transform = "translateX(-250px)";
+    painel.style.zIndex = "20";
+  }
+
+}
+
+setTimeout(restaurarLayoutPrincipal, 1000);
+setInterval(restaurarLayoutPrincipal, 3000);
