@@ -6269,3 +6269,18 @@ function restaurarLayoutPrincipal(){
 
 setTimeout(restaurarLayoutPrincipal, 1000);
 setInterval(restaurarLayoutPrincipal, 3000);
+function corrigirTelaConfiguracoes(){
+
+  const config =
+    document.getElementById("configuracoes-container");
+
+  if(!config) return;
+
+  config.style.marginLeft = "0px";
+  config.style.paddingLeft = "40px";
+  config.style.width = "100%";
+  config.style.boxSizing = "border-box";
+
+}
+
+setInterval(corrigirTelaConfiguracoes, 700);
