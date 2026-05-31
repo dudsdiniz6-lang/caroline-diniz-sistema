@@ -5525,3 +5525,15 @@ function garantirBotaoNovaCategoriaServico(){
 }
 
 setInterval(garantirBotaoNovaCategoriaServico, 1000);
+function recarregarPainelProfissionaisAgenda(){
+
+  const painel =
+    document.getElementById("painel-profissionais-agenda");
+
+  if(!painel) return;
+
+  carregarProfissionaisPainelAgenda();
+
+}
+
+setInterval(recarregarPainelProfissionaisAgenda, 3000);
