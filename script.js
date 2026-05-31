@@ -6001,3 +6001,29 @@ if(!window.carregarAgendaOriginalBloqueio){
   };
 
 }
+function excluirBloqueioAgenda(id){
+
+  const confirmar = confirm(
+    "Deseja excluir este bloqueio de horário?"
+  );
+
+  if(!confirmar) return;
+
+  supabaseClient
+    .from("bloqueios_agenda")
+    .delete()
+    .eq("id", Number(id))
+    .then((resposta)=>{
+
+      if(resposta.error){
+        alert("Erro ao excluir bloqueio: " + resposta.error.message);
+        return;
+      }
+
+      alert("Bloqueio excluído!");
+
+      carregarAgenda();
+
+    });
+
+}
