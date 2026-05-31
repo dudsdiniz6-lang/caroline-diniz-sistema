@@ -5226,11 +5226,11 @@ function carregarProfissionaisPainelAgenda(){
 
   lista.innerHTML = "";
 
-  supabaseClient
-    .from("profissionais_salao")
-    .select("*")
-    .order("nome")
-    .then((resposta)=>{
+ supabaseClient
+  .from("profissionais_salao")
+  .select("*")
+  .order("nome")
+  .then((resposta)=>{
 
       const profissionais = resposta.data || [];
 
