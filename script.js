@@ -5916,3 +5916,88 @@ function abrirBloqueioPeloMenu(profissionalId, horario){
   abrirModalBloqueioHorario(profissionalId, horario);
 
 }
+function carregarBloqueiosAgenda(){
+
+  document
+    .querySelectorAll(".bloqueio-agenda")
+    .forEach(item => item.remove());
+
+  supabaseClient
+    .from("bloqueios_agenda")
+    .select("*")
+    .eq("data", formatarData(dataSelecionada))
+    .then((resposta)=>{
+
+      const bloqueios = resposta.data || [];
+
+      bloqueios.forEach((bloqueio)=>{
+
+        const coluna = document.querySelector(
+          `.column[data-profissional-id="${bloqueio.profissional_id}"]`
+        );
+
+        if(!coluna) return;
+
+        const card = document.createElement("div");
+
+        card.className = "bloqueio-agenda";
+
+        const inicio = bloqueio.horario_inicio;
+        const fim = bloqueio.horario_fim;
+
+        card.style.cssText = `
+          position:absolute;
+          top:${calcularTop(inicio)}px;
+          left:4px;
+          right:4px;
+          height:${calcularAlturaBloqueio(inicio, fim)}px;
+          background:#ddd;
+          border-left:5px solid #999;
+          border-radius:8px;
+          padding:8px;
+          font-size:12px;
+          color:#111;
+          z-index:4;
+          box-sizing:border-box;
+        `;
+
+        card.innerHTML = `
+          <strong>${inicio} - ${fim}</strong><br>
+          ${bloqueio.descricao || "fechado"}
+        `;
+
+        coluna.appendChild(card);
+
+      });
+
+    });
+
+}
+
+function calcularAlturaBloqueio(inicio, fim){
+
+  const [hi, mi] = inicio.split(":").map(Number);
+  const [hf, mf] = fim.split(":").map(Number);
+
+  const minutosInicio = hi * 60 + mi;
+  const minutosFim = hf * 60 + mf;
+
+  const duracao = minutosFim - minutosInicio;
+
+  return Math.max((duracao / 30) * 80 - 8, 40);
+
+}
+
+if(!window.carregarAgendaOriginalBloqueio){
+
+  window.carregarAgendaOriginalBloqueio = carregarAgenda;
+
+  carregarAgenda = function(){
+
+    window.carregarAgendaOriginalBloqueio();
+
+    setTimeout(carregarBloqueiosAgenda, 800);
+
+  };
+
+}
