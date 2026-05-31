@@ -1681,6 +1681,14 @@ function aplicarPermissoes(){
       }
 
     }
+      if(texto === "Configurações"){
+
+  link.setAttribute(
+  "onclick",
+  "abrirConfiguracoes(); return false;"
+);
+
+}
 
   });
 
