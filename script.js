@@ -5855,3 +5855,64 @@ function salvarBloqueioHorario(){
     });
 
 }
+function abrirEscolhaHorario(profissionalId, horario){
+
+  const antigo = document.getElementById("menu-escolha-horario");
+  if(antigo) antigo.remove();
+
+  const menu = document.createElement("div");
+
+  menu.id = "menu-escolha-horario";
+
+  menu.style.cssText = `
+    position:fixed;
+    left:50%;
+    top:50%;
+    transform:translate(-50%,-50%);
+    background:#fff;
+    border-radius:4px;
+    box-shadow:0 8px 30px rgba(0,0,0,.25);
+    z-index:999999;
+    min-width:190px;
+    padding:8px 0;
+  `;
+
+  menu.innerHTML = `
+    <div onclick="abrirAgendamentoPeloMenu('${profissionalId}','${horario}')" style="padding:12px 18px;cursor:pointer;">
+      Novo Atendimento
+    </div>
+
+    <div onclick="alert('Nova venda será configurada depois.')" style="padding:12px 18px;cursor:pointer;">
+      Nova Venda
+    </div>
+
+    <div onclick="abrirBloqueioPeloMenu('${profissionalId}','${horario}')" style="padding:12px 18px;cursor:pointer;">
+      Bloqueio de Horário
+    </div>
+  `;
+
+  document.body.appendChild(menu);
+
+}
+
+function abrirAgendamentoPeloMenu(profissionalId, horario){
+
+  const menu = document.getElementById("menu-escolha-horario");
+  if(menu) menu.remove();
+
+  window.profissionalPreSelecionado = profissionalId;
+
+  document.getElementById("horario").value = horario;
+
+  abrirModal();
+
+}
+
+function abrirBloqueioPeloMenu(profissionalId, horario){
+
+  const menu = document.getElementById("menu-escolha-horario");
+  if(menu) menu.remove();
+
+  abrirModalBloqueioHorario(profissionalId, horario);
+
+}
