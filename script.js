@@ -6041,9 +6041,14 @@ function excluirBloqueioAgenda(id){
     });
 
 }
+
 function abrirConfiguracoes(){
 
-  mostrarSecao("configuracoes-container");
+  document.querySelector(".agenda-container").style.display = "none";
+
+  document.querySelectorAll(".clientes-container").forEach((item)=>{
+    item.style.display = "none";
+  });
 
   let container =
     document.getElementById("configuracoes-container");
@@ -6053,24 +6058,47 @@ function abrirConfiguracoes(){
     container = document.createElement("div");
     container.id = "configuracoes-container";
     container.className = "clientes-container";
-    container.style.display = "block";
-
     document.body.appendChild(container);
 
   }
 
+  container.style.cssText = `
+    display:block;
+    position:fixed;
+    left:180px;
+    top:0;
+    width:calc(100vw - 180px);
+    height:100vh;
+    overflow:auto;
+    background:#f5f6fb;
+    padding:40px;
+    box-sizing:border-box;
+    z-index:5;
+  `;
+
   container.innerHTML = `
-    <h2 style="margin-bottom:24px;">
+    <h2 style="margin:0 0 24px;font-size:28px;">
       Configurações
     </h2>
 
     <div
       onclick="abrirFormasPagamento()"
-      class="cliente-card"
-      style="cursor:pointer;"
+      style="
+        background:#fff;
+        border-radius:18px;
+        padding:24px;
+        box-shadow:0 8px 24px rgba(0,0,0,.06);
+        cursor:pointer;
+        max-width:520px;
+      "
     >
-      <strong>Formas de pagamento</strong>
-      <p>Cadastre Pix, dinheiro, cartão de crédito, débito e outras formas.</p>
+      <strong style="font-size:18px;">
+        Formas de pagamento
+      </strong>
+
+      <p style="color:#777;margin-top:8px;">
+        Cadastre Pix, dinheiro, cartão de crédito, débito e outras formas.
+      </p>
     </div>
   `;
 
