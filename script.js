@@ -6310,12 +6310,14 @@ function corrigirTelaConfiguracoes(){
 setInterval(corrigirTelaConfiguracoes, 700);
 function adicionarSetasOrdemProfissionais(){
 
-  const headers = Array.from(document.querySelectorAll(".professional"));
-  const colunas = Array.from(document.querySelectorAll(".column"));
+  const headers =
+    Array.from(document.querySelectorAll(".professional"));
 
-  headers.forEach((header, index)=>{
+  headers.forEach((header)=>{
 
     if(header.querySelector(".setas-ordem-profissional")) return;
+
+    const id = header.dataset.profissionalId;
 
     const box = document.createElement("span");
     box.className = "setas-ordem-profissional";
@@ -6328,8 +6330,8 @@ function adicionarSetasOrdemProfissionais(){
     `;
 
     box.innerHTML = `
-      <button onclick="moverProfissionalAgenda(${index}, -1); event.stopPropagation();" style="border:none;background:#eee;border-radius:6px;cursor:pointer;">←</button>
-      <button onclick="moverProfissionalAgenda(${index}, 1); event.stopPropagation();" style="border:none;background:#eee;border-radius:6px;cursor:pointer;">→</button>
+      <button onclick="moverProfissionalAgendaPorId('${id}', -1); event.stopPropagation();" style="border:none;background:#eee;border-radius:6px;cursor:pointer;">←</button>
+      <button onclick="moverProfissionalAgendaPorId('${id}', 1); event.stopPropagation();" style="border:none;background:#eee;border-radius:6px;cursor:pointer;">→</button>
     `;
 
     header.appendChild(box);
@@ -6338,32 +6340,53 @@ function adicionarSetasOrdemProfissionais(){
 
 }
 
-function moverProfissionalAgenda(index, direcao){
+function moverProfissionalAgendaPorId(id, direcao){
 
   const agendaHeader = document.querySelector(".agenda-header");
   const agendaBody = document.querySelector(".agenda-body");
 
-  const headers = Array.from(document.querySelectorAll(".professional"));
-  const colunas = Array.from(document.querySelectorAll(".column"));
+  const headerAtual =
+    document.querySelector(`.professional[data-profissional-id="${id}"]`);
 
-  const novoIndex = index + direcao;
+  const colunaAtual =
+    document.querySelector(`.column[data-profissional-id="${id}"]`);
+
+  if(!agendaHeader || !agendaBody || !headerAtual || !colunaAtual) return;
+
+  const headers =
+    Array.from(document.querySelectorAll(".professional"));
+
+  const indexAtual = headers.indexOf(headerAtual);
+  const novoIndex = indexAtual + direcao;
 
   if(novoIndex < 0 || novoIndex >= headers.length) return;
 
+  const headerAlvo = headers[novoIndex];
+
+  const idAlvo = headerAlvo.dataset.profissionalId;
+
+  const colunaAlvo =
+    document.querySelector(`.column[data-profissional-id="${idAlvo}"]`);
+
+  if(!colunaAlvo) return;
+
   if(direcao === -1){
 
-    agendaHeader.insertBefore(headers[index], headers[novoIndex]);
-    agendaBody.insertBefore(colunas[index], colunas[novoIndex]);
+    agendaHeader.insertBefore(headerAtual, headerAlvo);
+    agendaBody.insertBefore(colunaAtual, colunaAlvo);
 
   }else{
 
-    agendaHeader.insertBefore(headers[novoIndex], headers[index]);
-    agendaBody.insertBefore(colunas[novoIndex], colunas[index]);
+    agendaHeader.insertBefore(headerAlvo, headerAtual);
+    agendaBody.insertBefore(colunaAlvo, colunaAtual);
 
   }
 
-  setTimeout(adicionarSetasOrdemProfissionais, 300);
+  setTimeout(()=>{
+    adicionarSetasOrdemProfissionais();
+    carregarAgenda();
+  },300);
 
 }
 
-setInterval(adicionarSetasOrdemProfissionais, 1000);
+setInterval(adicionarSetasOrdemProfissionais,1000);
