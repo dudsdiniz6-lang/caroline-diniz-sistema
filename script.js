@@ -648,12 +648,15 @@ function carregarAgenda(){
 
       if(!horario) return;
 
-     window.profissionalPreSelecionado =
+    window.profissionalPreSelecionado =
   coluna.dataset.profissionalId || "";
 
 document.getElementById("horario").value = horario;
 
-abrirModal();
+abrirEscolhaHorario(
+  coluna.dataset.profissionalId || "",
+  horario
+);
 
     });
 
