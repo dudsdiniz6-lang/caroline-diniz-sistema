@@ -6308,6 +6308,5 @@ function corrigirTelaConfiguracoes(){
 }
 
 setInterval(corrigirTelaConfiguracoes, 700);
-let servicoEditandoId = null;
 
 
