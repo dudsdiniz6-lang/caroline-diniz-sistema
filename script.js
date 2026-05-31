@@ -2739,17 +2739,23 @@ function fecharModalCategoria(){
 
 }
 
-function abrirModalPacote(){
+function abrirModalPacote(modoEdicao = false){
 
-  document.getElementById("nomePacote").value = "";
-  document.getElementById("validadePacote").value = "";
-  document.getElementById("valorTotalPacote").innerText = "R$ 0,00";
+  if(!modoEdicao){
 
-  document.getElementById("itensPacote").innerHTML = "";
+    window.pacoteEditandoId = null;
+
+    document.getElementById("nomePacote").value = "";
+    document.getElementById("validadePacote").value = "";
+    document.getElementById("valorTotalPacote").innerText = "R$ 0,00";
+
+    document.getElementById("itensPacote").innerHTML = "";
+
+    adicionarLinhaItemPacote();
+
+  }
 
   document.getElementById("modal-pacote").style.display = "flex";
-
-  adicionarLinhaItemPacote();
 
 }
 
@@ -2830,27 +2836,17 @@ function salvarPacote(){
     .forEach((item)=>{
 
       const servico =
-        item.querySelector(
-          ".servico-item-pacote"
-        ).value;
+        item.querySelector(".servico-item-pacote").value;
 
       const valor = Number(
-        item.querySelector(
-          ".valor-item-pacote"
-        ).value || 0
+        item.querySelector(".valor-item-pacote").value || 0
       );
 
       const qtd = Number(
-        item.querySelector(
-          ".qtd-item-pacote"
-        ).value || 0
+        item.querySelector(".qtd-item-pacote").value || 0
       );
 
-      if(
-        servico &&
-        valor &&
-        qtd
-      ){
+      if(servico && valor && qtd){
 
         itens.push({
           servico,
@@ -2864,62 +2860,66 @@ function salvarPacote(){
 
     });
 
-  if(
-    !nome ||
-    itens.length === 0
-  ){
-    alert(
-      "Adicione pelo menos um serviço."
-    );
+  if(!nome || itens.length === 0){
+    alert("Adicione pelo menos um serviço.");
+    return;
+  }
+
+  const dadosPacote = {
+    nome,
+    itens: JSON.stringify(itens),
+    servicos: itens.map(i=>i.servico).join(", "),
+    valor: valorTotal,
+    validade_dias: validade,
+    status
+  };
+
+  if(window.pacoteEditandoId){
+
+    supabaseClient
+      .from("pacotes")
+      .update(dadosPacote)
+      .eq("id", window.pacoteEditandoId)
+      .then((resposta)=>{
+
+        if(resposta.error){
+          alert("Erro ao atualizar pacote: " + resposta.error.message);
+          return;
+        }
+
+        alert("Pacote atualizado!");
+
+        window.pacoteEditandoId = null;
+
+        fecharModalPacote();
+        carregarPacotes();
+
+      });
+
     return;
   }
 
   supabaseClient
     .from("pacotes")
     .insert([{
-
       id: Date.now(),
-
-      nome,
-
-      itens: JSON.stringify(itens),
-
-      servicos:
-        itens
-          .map(i=>i.servico)
-          .join(", "),
-
-      valor: valorTotal,
-
-      validade_dias: validade,
-
-      status
-
+      ...dadosPacote
     }])
-
     .then((resposta)=>{
 
       if(resposta.error){
-
-        alert(
-          "Erro: " +
-          resposta.error.message
-        );
-
+        alert("Erro: " + resposta.error.message);
         return;
-
       }
 
       alert("Pacote salvo!");
 
       fecharModalPacote();
-
       carregarPacotes();
 
     });
 
 }
-
 function carregarPacotes(){
 
   const lista =
@@ -2939,7 +2939,7 @@ function carregarPacotes(){
       pacotes.forEach((pacote)=>{
 
         lista.innerHTML += `
-          <div class="linha-servico">
+          <div class="linha-servico" onclick="editarPacote('${pacote.id}')">
 
             <span>
               ${pacote.nome}
@@ -6338,6 +6338,71 @@ function editarServicoSalao(id){
       document.getElementById("duracaoServicoSalao").value = servico.duracao || "";
       document.getElementById("valorServicoSalao").value = servico.valor || "";
       document.getElementById("custoServicoSalao").value = servico.custo || "";
+
+    });
+
+}
+function editarPacote(id){
+
+  supabaseClient
+    .from("pacotes")
+    .select("*")
+    .eq("id", id)
+    .single()
+    .then((resposta)=>{
+
+      if(resposta.error){
+        alert("Erro ao buscar pacote: " + resposta.error.message);
+        return;
+      }
+
+      const pacote = resposta.data;
+
+      if(!pacote){
+        alert("Pacote não encontrado.");
+        return;
+      }
+
+      window.pacoteEditandoId = id;
+
+      abrirModalPacote(true);
+
+      document.getElementById("nomePacote").value = pacote.nome || "";
+      document.getElementById("validadePacote").value = pacote.validade_dias || "";
+      document.getElementById("statusPacote").value = pacote.status || "";
+
+      document.getElementById("itensPacote").innerHTML = "";
+
+      let itens = [];
+
+      try{
+        itens = JSON.parse(pacote.itens || "[]");
+      }catch(e){
+        itens = [];
+      }
+
+      itens.forEach((item)=>{
+
+        adicionarLinhaItemPacote();
+
+        const linhas =
+          document.querySelectorAll(".item-pacote");
+
+        const linha =
+          linhas[linhas.length - 1];
+
+        linha.querySelector(".servico-item-pacote").value =
+          item.servico || "";
+
+        linha.querySelector(".valor-item-pacote").value =
+          item.valor || "";
+
+        linha.querySelector(".qtd-item-pacote").value =
+          item.qtd || "";
+
+      });
+
+      calcularValorPacote();
 
     });
 
