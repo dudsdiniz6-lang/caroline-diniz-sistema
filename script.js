@@ -5961,10 +5961,16 @@ function carregarBloqueiosAgenda(){
           box-sizing:border-box;
         `;
 
-        card.innerHTML = `
-          <strong>${inicio} - ${fim}</strong><br>
-          ${bloqueio.descricao || "fechado"}
-        `;
+        card.onclick = function(event){
+  event.stopPropagation();
+
+  excluirBloqueioAgenda(bloqueio.id);
+};
+
+card.innerHTML = `
+  <strong>${inicio} - ${fim}</strong><br>
+  ${bloqueio.descricao || "fechado"}
+`;
 
         coluna.appendChild(card);
 
