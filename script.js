@@ -5608,3 +5608,247 @@ function adicionarCategoriaServico(){
     });
 
 }
+function abrirEscolhaHorario(profissionalId, horario){
+
+  const acao = confirm(
+    "Clique em OK para criar um novo agendamento.\n\nClique em Cancelar para bloquear este horário."
+  );
+
+  if(acao){
+
+    window.profissionalPreSelecionado = profissionalId;
+
+    document.getElementById("horario").value = horario;
+
+    abrirModal();
+
+  }else{
+
+    abrirModalBloqueioHorario(profissionalId, horario);
+
+  }
+
+}
+
+function abrirModalBloqueioHorario(profissionalId, horarioInicio){
+
+  let modal = document.getElementById("modal-bloqueio-horario");
+
+  if(!modal){
+
+    modal = document.createElement("div");
+    modal.id = "modal-bloqueio-horario";
+
+    modal.style.cssText = `
+      position:fixed;
+      inset:0;
+      background:rgba(0,0,0,.35);
+      display:none;
+      align-items:center;
+      justify-content:center;
+      z-index:99999;
+    `;
+
+    modal.innerHTML = `
+      <div style="
+        background:#fff;
+        width:560px;
+        max-width:92%;
+        border-radius:26px;
+        padding:34px 42px;
+        box-shadow:0 24px 70px rgba(0,0,0,.18);
+        display:flex;
+        flex-direction:column;
+        gap:18px;
+      ">
+
+        <div style="display:flex;justify-content:space-between;align-items:center;">
+          <h2 style="margin:0;font-size:22px;">
+            ← Bloqueio de horário
+          </h2>
+
+          <button
+            onclick="salvarBloqueioHorario()"
+            style="
+              border:none;
+              background:transparent;
+              font-weight:700;
+              cursor:pointer;
+            "
+          >
+            SALVAR
+          </button>
+        </div>
+
+        <input id="bloqueioProfissionalId" type="hidden">
+
+        <input
+          id="bloqueioProfissionalNome"
+          placeholder="Colaborador"
+          readonly
+          style="padding:14px;border:1px solid #ddd;border-radius:8px;"
+        >
+
+        <input
+          id="bloqueioData"
+          type="date"
+          style="padding:14px;border:1px solid #ddd;border-radius:8px;"
+        >
+
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;">
+          <input
+            id="bloqueioInicio"
+            type="time"
+            style="padding:14px;border:1px solid #ddd;border-radius:8px;"
+          >
+
+          <input
+            id="bloqueioFim"
+            type="time"
+            style="padding:14px;border:1px solid #ddd;border-radius:8px;"
+          >
+        </div>
+
+        <input
+          id="bloqueioDescricao"
+          placeholder="Descrição"
+          style="padding:14px;border:1px solid #ddd;border-radius:8px;"
+        >
+
+        <label style="
+          display:flex;
+          align-items:center;
+          justify-content:space-between;
+          color:#ff5a1f;
+          font-weight:600;
+          margin-top:10px;
+        ">
+          Repetir Bloqueio de Horário
+          <input id="bloqueioRepetir" type="checkbox">
+        </label>
+
+        <div style="display:flex;justify-content:flex-end;gap:18px;margin-top:18px;">
+          <button
+            onclick="fecharModalBloqueioHorario()"
+            style="border:none;background:transparent;font-weight:700;"
+          >
+            Cancelar
+          </button>
+
+          <button
+            onclick="salvarBloqueioHorario()"
+            style="
+              border:none;
+              background:#ff5a1f;
+              color:#fff;
+              padding:13px 28px;
+              border-radius:8px;
+              font-weight:700;
+            "
+          >
+            Salvar
+          </button>
+        </div>
+
+      </div>
+    `;
+
+    document.body.appendChild(modal);
+
+  }
+
+  const profissionalNome =
+    document
+      .querySelector(`.professional[data-profissional-id="${profissionalId}"]`)
+      ?.innerText || "Profissional";
+
+  document.getElementById("bloqueioProfissionalId").value = profissionalId;
+  document.getElementById("bloqueioProfissionalNome").value = profissionalNome;
+
+  document.getElementById("bloqueioData").value =
+    dataSelecionada.toISOString().split("T")[0];
+
+  document.getElementById("bloqueioInicio").value = horarioInicio;
+
+  const partes = horarioInicio.split(":");
+  const fim = new Date();
+  fim.setHours(Number(partes[0]));
+  fim.setMinutes(Number(partes[1]) + 30);
+
+  document.getElementById("bloqueioFim").value =
+    String(fim.getHours()).padStart(2,"0") +
+    ":" +
+    String(fim.getMinutes()).padStart(2,"0");
+
+  document.getElementById("bloqueioDescricao").value = "";
+  document.getElementById("bloqueioRepetir").checked = false;
+
+  modal.style.display = "flex";
+
+}
+
+function fecharModalBloqueioHorario(){
+
+  const modal =
+    document.getElementById("modal-bloqueio-horario");
+
+  if(modal) modal.style.display = "none";
+
+}
+
+function salvarBloqueioHorario(){
+
+  const profissionalId =
+    document.getElementById("bloqueioProfissionalId").value;
+
+  const profissionalNome =
+    document.getElementById("bloqueioProfissionalNome").value;
+
+  const dataCampo =
+    document.getElementById("bloqueioData").value;
+
+  const inicio =
+    document.getElementById("bloqueioInicio").value;
+
+  const fim =
+    document.getElementById("bloqueioFim").value;
+
+  const descricao =
+    document.getElementById("bloqueioDescricao").value || "fechado";
+
+  const repetir =
+    document.getElementById("bloqueioRepetir").checked;
+
+  if(!profissionalId || !dataCampo || !inicio || !fim){
+    alert("Preencha os dados do bloqueio.");
+    return;
+  }
+
+  supabaseClient
+    .from("bloqueios_agenda")
+    .insert([{
+      id: Date.now(),
+      profissional_id: profissionalId,
+      profissional_nome: profissionalNome,
+      data: dataCampo.split("-").reverse().join("/"),
+      horario_inicio: inicio,
+      horario_fim: fim,
+      descricao,
+      repetir,
+      criado_em: new Date().toLocaleString("pt-BR")
+    }])
+    .then((resposta)=>{
+
+      if(resposta.error){
+        alert("Erro ao salvar bloqueio: " + resposta.error.message);
+        return;
+      }
+
+      fecharModalBloqueioHorario();
+      carregarAgenda();
+
+      alert("Horário bloqueado!");
+
+    });
+
+}
