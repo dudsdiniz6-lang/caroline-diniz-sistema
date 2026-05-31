@@ -1682,41 +1682,7 @@ function aplicarPermissoes(){
   });
 
 }
-function salvarFotoCliente(){
 
-  const imagem = document.getElementById("fotoAntesDepois").value;
-  const descricao = document.getElementById("descricaoFoto").value;
-
-  const clienteId = prompt(
-    "Digite o ID da cliente para salvar a foto:"
-  );
-
-  if(!clienteId || !imagem) return;
-
-  supabaseClient
-    .from("fotos_clientes")
-    .insert([{
-      id: Date.now(),
-      cliente_id: clienteId,
-      imagem: imagem,
-      descricao: descricao,
-      data: new Date().toLocaleDateString("pt-BR")
-    }])
-    .then((resposta)=>{
-
-      if(resposta.error){
-        alert("Erro ao salvar foto.");
-        return;
-      }
-
-      alert("Foto salva com sucesso!");
-
-      document.getElementById("fotoAntesDepois").value = "";
-      document.getElementById("descricaoFoto").value = "";
-
-    });
-
-}
 function salvarFotoCliente(){
 
   const imagem = document.getElementById("fotoAntesDepois").value;
