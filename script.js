@@ -6064,12 +6064,12 @@ function abrirConfiguracoes(){
   mostrarSecao("configuracoes-container");
 
   container.style.display = "block";
-    container.style.marginLeft = "180px";
-container.style.width = "calc(100% - 180px)";
-  container.style.marginLeft = "0";
+  container.style.marginLeft = "180px";
+  container.style.width = "calc(100% - 180px)";
   container.style.padding = "40px";
   container.style.background = "#f5f6fb";
   container.style.minHeight = "100vh";
+  container.style.boxSizing = "border-box";
 
   container.innerHTML = `
     <h2>Configurações</h2>
