@@ -6061,15 +6061,11 @@ function abrirConfiguracoes(){
 
   }
 
-  mostrarSecao("configuracoes-container");
+  // mostrarSecao("configuracoes-container");
 
   container.style.display = "block";
   container.style.marginLeft = "180px";
   container.style.width = "calc(100% - 180px)";
-  container.style.padding = "40px";
-  container.style.background = "#f5f6fb";
-  container.style.minHeight = "100vh";
-  container.style.boxSizing = "border-box";
 
   container.innerHTML = `
     <h2>Configurações</h2>
@@ -6080,7 +6076,13 @@ function abrirConfiguracoes(){
       style="cursor:pointer;"
     >
       <strong>Formas de pagamento</strong>
-      <p>Cadastre Pix, dinheiro, cartão de crédito, débito e outras formas.</p>
+
+      <p>
+        Cadastre Pix, dinheiro,
+        cartão de crédito, débito
+        e outras formas.
+      </p>
+
     </div>
   `;
 
