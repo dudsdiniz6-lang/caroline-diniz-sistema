@@ -6203,14 +6203,23 @@ function controlarPainelProfissionaisPorTela(){
   const agenda =
     document.querySelector(".agenda-container");
 
-  if(!painel || !agenda) return;
+  if(!painel) return;
 
   const agendaVisivel =
+    agenda &&
     agenda.style.display !== "none";
 
-  painel.style.display =
-    agendaVisivel ? "block" : "none";
+  if(agendaVisivel){
+
+    painel.style.display = "block";
+
+  }else{
+
+    painel.style.display = "none";
+    painel.remove();
+
+  }
 
 }
 
-setInterval(controlarPainelProfissionaisPorTela, 500);
+setInterval(controlarPainelProfissionaisPorTela,500);
