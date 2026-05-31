@@ -6308,3 +6308,62 @@ function corrigirTelaConfiguracoes(){
 }
 
 setInterval(corrigirTelaConfiguracoes, 700);
+function adicionarSetasOrdemProfissionais(){
+
+  const headers = Array.from(document.querySelectorAll(".professional"));
+  const colunas = Array.from(document.querySelectorAll(".column"));
+
+  headers.forEach((header, index)=>{
+
+    if(header.querySelector(".setas-ordem-profissional")) return;
+
+    const box = document.createElement("span");
+    box.className = "setas-ordem-profissional";
+
+    box.style.cssText = `
+      margin-left:8px;
+      display:inline-flex;
+      gap:4px;
+      vertical-align:middle;
+    `;
+
+    box.innerHTML = `
+      <button onclick="moverProfissionalAgenda(${index}, -1); event.stopPropagation();" style="border:none;background:#eee;border-radius:6px;cursor:pointer;">←</button>
+      <button onclick="moverProfissionalAgenda(${index}, 1); event.stopPropagation();" style="border:none;background:#eee;border-radius:6px;cursor:pointer;">→</button>
+    `;
+
+    header.appendChild(box);
+
+  });
+
+}
+
+function moverProfissionalAgenda(index, direcao){
+
+  const agendaHeader = document.querySelector(".agenda-header");
+  const agendaBody = document.querySelector(".agenda-body");
+
+  const headers = Array.from(document.querySelectorAll(".professional"));
+  const colunas = Array.from(document.querySelectorAll(".column"));
+
+  const novoIndex = index + direcao;
+
+  if(novoIndex < 0 || novoIndex >= headers.length) return;
+
+  if(direcao === -1){
+
+    agendaHeader.insertBefore(headers[index], headers[novoIndex]);
+    agendaBody.insertBefore(colunas[index], colunas[novoIndex]);
+
+  }else{
+
+    agendaHeader.insertBefore(headers[novoIndex], headers[index]);
+    agendaBody.insertBefore(colunas[novoIndex], colunas[index]);
+
+  }
+
+  setTimeout(adicionarSetasOrdemProfissionais, 300);
+
+}
+
+setInterval(adicionarSetasOrdemProfissionais, 1000);
