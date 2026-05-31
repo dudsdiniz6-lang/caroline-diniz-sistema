@@ -2686,9 +2686,14 @@ function abrirModalCategoria(){
     "novaCategoriaServico"
   ).value = "";
 
-  document.getElementById(
-    "modal-categoria"
-  ).style.display = "flex";
+  const modal =
+    document.getElementById(
+      "modal-categoria"
+    );
+
+  modal.style.display = "flex";
+  modal.style.zIndex = "1000000";
+  modal.style.position = "fixed";
 
 }
 
