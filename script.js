@@ -411,7 +411,11 @@ supabaseClient
 
     data: formatarData(dataSelecionada),
 
-    forma_pagamento: formaPagamento,
+   forma_pagamento:
+  formaPagamento &&
+  String(formaPagamento).trim() !== ""
+    ? formaPagamento
+    : "EM ABERTO",
 
     profissional: profissionalNome,
 
