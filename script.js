@@ -7049,33 +7049,73 @@ function confirmarBaixaVenda(id){
 
   supabaseClient
     .from("comandas")
-    .update({
-      forma_pagamento: forma,
-      status: "FECHADO",
-      pago_em: new Date().toISOString()
-    })
-    .match({
-      id: id
-    })
-    .then((resposta)=>{
+    .select("*")
+    .eq("id", id)
+    .single()
+    .then((busca)=>{
 
-      if(resposta.error){
-
-        console.error(resposta);
-
-        alert(
-          "Erro ao atualizar venda."
-        );
-
+      if(busca.error || !busca.data){
+        alert("Erro ao buscar venda.");
         return;
-
       }
 
-      fecharModalBaixaVenda();
+      const venda = busca.data;
 
-      carregarVendas();
+      supabaseClient
+        .from("comandas")
+        .update({
+          forma_pagamento: forma,
+          status: "FECHADO",
+          pago_em: new Date().toISOString()
+        })
+        .eq("id", id)
+        .then((resposta)=>{
 
-      alert("Venda fechada!");
+          if(resposta.error){
+
+            console.error(resposta);
+
+            alert("Erro ao atualizar venda.");
+
+            return;
+
+          }
+
+          supabaseClient
+            .from("financeiro")
+            .insert([{
+              id: Date.now(),
+              tipo: "entrada",
+              descricao:
+                "Venda fechada - " +
+                (venda.cliente || ""),
+              valor: Number(venda.valor || 0),
+              data: new Date().toLocaleDateString("pt-BR"),
+              forma_pagamento: forma
+            }])
+            .then((financeiroResposta)=>{
+
+              if(financeiroResposta.error){
+                alert(
+                  "Venda fechada, mas erro ao enviar ao financeiro."
+                );
+              }else{
+                alert(
+                  "Venda fechada e enviada ao faturamento!"
+                );
+              }
+
+              fecharModalBaixaVenda();
+
+              carregarVendas();
+
+              if(typeof carregarHistoricoFinanceiro === "function"){
+                carregarHistoricoFinanceiro();
+              }
+
+            });
+
+        });
 
     });
 
