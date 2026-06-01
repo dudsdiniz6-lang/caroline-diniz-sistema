@@ -416,9 +416,9 @@ supabaseClient
 
     horario: agendamento.horario,
 
-   status:
+  status:
   formaPagamento &&
-  formaPagamento !== "EM ABERTO"
+  String(formaPagamento).trim() !== ""
     ? "FECHADO"
     : "EM ABERTO"
 
