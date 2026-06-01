@@ -444,7 +444,16 @@ forma_pagamento:
 
     horario: agendamento.horario,
 
-status: "EM ABERTO",
+status:
+  (
+    window.pagamentosFaturamento
+      ?.reduce((s,p)=>{
+        return s + Number(p.valor || 0);
+      },0)
+    >= Number(valor)
+  )
+    ? "FECHADO"
+    : "EM ABERTO",
 
   }])
 
