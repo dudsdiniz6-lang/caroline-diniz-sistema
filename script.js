@@ -387,7 +387,7 @@ const porcentagemComissao =
 const comissao =
   Number(valor) * (porcentagemComissao / 100);
 
-  supabaseClient
+supabaseClient
   .from("comandas")
   .insert([{
     id: Date.now(),
@@ -402,22 +402,44 @@ const comissao =
     valor: Number(valor),
 
     data: formatarData(dataSelecionada),
+
     forma_pagamento: formaPagamento,
+
     profissional: profissionalNome,
-    horario: agendamento.horario
+
+    horario: agendamento.horario,
+
+    status:
+      formaPagamento === "EM ABERTO"
+        ? "EM ABERTO"
+        : "FECHADO"
+
   }])
-  .then(()=>{
-     supabaseClient
-  .from("comissoes")
-  .insert([{
-    id: Date.now(),
-    profissional: profissionalNome,
-    cliente: agendamento.cliente,
-    servico: agendamento.servico || "Novo Atendimento",
-    valor: Number(valor),
-    comissao: comissao,
-    data: formatarData(dataSelecionada)
-  }]);
+
+  .then((respostaComanda)=>{
+
+    if(respostaComanda.error){
+
+      alert(
+        "Erro ao salvar venda: " +
+        respostaComanda.error.message
+      );
+
+      return;
+
+    }
+
+    supabaseClient
+      .from("comissoes")
+      .insert([{
+        id: Date.now(),
+        profissional: profissionalNome,
+        cliente: agendamento.cliente,
+        servico: agendamento.servico || "Novo Atendimento",
+        valor: Number(valor),
+        comissao: comissao,
+        data: formatarData(dataSelecionada)
+      }]);
 
 supabaseClient
   .from("consumo_servicos")
@@ -454,18 +476,36 @@ supabaseClient
 
     });
 
-    carregarEstoque();
+  carregarEstoque();
 
   });
 
+if(formaPagamento !== "EM ABERTO"){
+
+  supabaseClient
+    .from("financeiro")
+    .insert([{
+      id: Date.now() + 1,
+      tipo: "entrada",
+      descricao: "Venda fechada - " + agendamento.cliente,
+      valor: Number(valor),
+      data: formatarData(dataSelecionada),
+      forma_pagamento: formaPagamento
+    }]);
+
+}
+
 carregarHistoricoFinanceiro();
+
+if(typeof carregarVendas === "function"){
+  carregarVendas();
+}
 
 card.style.opacity = "0.6";
 
 alert("Atendimento faturado!");
 
     });
-
   return;
   });
 
