@@ -6612,13 +6612,14 @@ function abrirModalFaturamento(agendamento, callback){
               </label>
             `;
 
-          });
+       });
 
           atualizarTotalFaturamento();
 
         });
 
     });
+
 
   supabaseClient
     .from("formas_pagamento")
@@ -6662,21 +6663,13 @@ function abrirModalFaturamento(agendamento, callback){
     const total =
       servicosSelecionados.reduce((soma,item)=> soma + item.valor, 0);
 
-    const pago =
-      window.pagamentosFaturamento.reduce((soma,item)=>{
-        return soma + Number(item.valor || 0);
-      },0);
-
-    if(pago < total){
-      alert("Ainda falta pagar R$ " + (total - pago).toFixed(2));
-      return;
-    }
-
     modal.style.display = "none";
 
     callback(
       total,
-      JSON.stringify(window.pagamentosFaturamento),
+      window.pagamentosFaturamento.length
+        ? JSON.stringify(window.pagamentosFaturamento)
+        : "EM ABERTO",
       servicosSelecionados
     );
 
@@ -6685,19 +6678,34 @@ function abrirModalFaturamento(agendamento, callback){
   modal.style.display = "flex";
 
 }
+function atualizarTotalFaturamento(){
+
+  const checks =
+    document.querySelectorAll(".check-servico-faturamento:checked");
+
+  let total = 0;
+
+  checks.forEach((check)=>{
+    total += Number(check.dataset.valor || 0);
+  });
+
+  const totalEl = document.getElementById("total-faturamento");
+
+  if(totalEl){
+    totalEl.innerText = "Total: R$ " + total.toFixed(2);
+  }
+
+  atualizarPagamentosFaturamento();
+
+}
+
 function adicionarPagamentoFaturamento(){
 
-  const valorCampo =
-    document.getElementById("valorParcialFaturamento");
+  const valorCampo = document.getElementById("valorParcialFaturamento");
+  const formaCampo = document.getElementById("formaPagamentoFaturamento");
 
-  const formaCampo =
-    document.getElementById("formaPagamentoFaturamento");
-
-  const valor =
-    Number(valorCampo.value || 0);
-
-  const forma =
-    formaCampo.value;
+  const valor = Number(valorCampo.value || 0);
+  const forma = formaCampo.value;
 
   if(!valor || !forma){
     alert("Informe valor e forma de pagamento.");
@@ -6711,8 +6719,7 @@ function adicionarPagamentoFaturamento(){
       .replace("Total: R$ ","")
       .replace(",",".");
 
-  const total =
-    Number(totalTexto || 0);
+  const total = Number(totalTexto || 0);
 
   const jaPago =
     window.pagamentosFaturamento.reduce((soma,item)=>{
@@ -6738,11 +6745,10 @@ function adicionarPagamentoFaturamento(){
 
 function atualizarPagamentosFaturamento(){
 
-  const lista =
-    document.getElementById("lista-pagamentos-faturamento");
+  const lista = document.getElementById("lista-pagamentos-faturamento");
+  const restanteEl = document.getElementById("restante-faturamento");
 
-  const restanteEl =
-    document.getElementById("restante-faturamento");
+  if(!lista || !restanteEl) return;
 
   const totalTexto =
     document
@@ -6751,21 +6757,17 @@ function atualizarPagamentosFaturamento(){
       .replace("Total: R$ ","")
       .replace(",",".");
 
-  const total =
-    Number(totalTexto || 0);
+  const total = Number(totalTexto || 0);
 
   const pago =
     window.pagamentosFaturamento.reduce((soma,item)=>{
       return soma + Number(item.valor || 0);
     },0);
 
-  const restante =
-    total - pago;
+  const restante = total - pago;
 
-  if(restanteEl){
-    restanteEl.innerText =
-      "Restante: R$ " + restante.toFixed(2);
-  }
+  restanteEl.innerText =
+    "Restante: R$ " + restante.toFixed(2);
 
   lista.innerHTML = "";
 
@@ -6800,5 +6802,13 @@ function atualizarPagamentosFaturamento(){
     `;
 
   });
+
+}
+
+function removerPagamentoFaturamento(index){
+
+  window.pagamentosFaturamento.splice(index,1);
+
+  atualizarPagamentosFaturamento();
 
 }
