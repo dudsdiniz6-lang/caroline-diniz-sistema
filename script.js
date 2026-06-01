@@ -7432,3 +7432,107 @@ function abrirHistoricoVenda(id){
     });
 
 }
+function adicionarPagamentoVenda(id){
+
+  const valor =
+    Number(
+      document
+        .getElementById("valorNovoPagamento")
+        .value || 0
+    );
+
+  const forma =
+    document
+      .getElementById("formaNovoPagamento")
+      .value;
+
+  if(!valor || !forma){
+    alert("Informe valor e forma.");
+    return;
+  }
+
+  supabaseClient
+    .from("comandas")
+    .select("*")
+    .eq("id", id)
+    .single()
+    .then((resposta)=>{
+
+      const venda = resposta.data;
+
+      let pagamentos = [];
+
+      try{
+
+        pagamentos =
+          JSON.parse(
+            venda.forma_pagamento || "[]"
+          );
+
+      }catch{
+
+        pagamentos = [];
+
+      }
+
+      pagamentos.push({
+        valor,
+        forma,
+        data:
+          new Date()
+            .toLocaleDateString("pt-BR")
+      });
+
+      const totalPago =
+        pagamentos.reduce((soma,item)=>{
+          return soma + Number(item.valor || 0);
+        },0);
+
+      const restante =
+        Number(venda.valor || 0)
+        - totalPago;
+
+      const status =
+        restante <= 0
+          ? "FECHADO"
+          : "EM ABERTO";
+
+      supabaseClient
+        .from("comandas")
+        .update({
+          forma_pagamento:
+            JSON.stringify(pagamentos),
+
+          status
+        })
+        .eq("id", id)
+        .then(()=>{
+
+          alert("Pagamento lançado!");
+
+          carregarVendas();
+
+          document
+            .querySelectorAll(
+              "body > div"
+            )
+            .forEach(el=>{
+
+              if(
+                el.innerText
+                  ?.includes(
+                    "Histórico da venda"
+                  )
+              ){
+                el.remove();
+              }
+
+            });
+
+          abrirHistoricoVenda(id);
+
+        });
+
+    });
+
+}
