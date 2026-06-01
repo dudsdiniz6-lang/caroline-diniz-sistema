@@ -6812,3 +6812,105 @@ function removerPagamentoFaturamento(index){
   atualizarPagamentosFaturamento();
 
 }
+function garantirAbaVendas(){
+
+  const nav = document.querySelector("nav");
+
+  if(nav && !document.getElementById("menu-vendas")){
+
+    nav.insertAdjacentHTML(
+      "beforeend",
+      `
+        <a
+          id="menu-vendas"
+          href="#"
+          onclick="mostrarSecao('vendas-container'); carregarVendas(); return false;"
+        >
+          Vendas
+        </a>
+      `
+    );
+
+  }
+
+  if(!document.getElementById("vendas-container")){
+
+    const container = document.createElement("div");
+
+    container.id = "vendas-container";
+    container.className = "clientes-container";
+    container.style.display = "none";
+
+    container.innerHTML = `
+      <h2>Vendas</h2>
+      <div id="lista-vendas"></div>
+    `;
+
+    document.body.appendChild(container);
+
+  }
+
+}
+
+function carregarVendas(){
+
+  garantirAbaVendas();
+
+  const lista =
+    document.getElementById("lista-vendas");
+
+  if(!lista) return;
+
+  lista.innerHTML = `
+    <div style="
+      display:grid;
+      grid-template-columns:1.5fr 2fr 1fr 1fr 1fr;
+      padding:12px;
+      font-weight:700;
+      border-bottom:1px solid #ddd;
+      color:#555;
+    ">
+      <span>Cliente</span>
+      <span>Serviços</span>
+      <span>Valor</span>
+      <span>Pagamento</span>
+      <span>Data</span>
+    </div>
+  `;
+
+  supabaseClient
+    .from("comandas")
+    .select("*")
+    .order("id",{ascending:false})
+    .then((resposta)=>{
+
+      const vendas = resposta.data || [];
+
+      vendas.forEach((venda)=>{
+
+        lista.innerHTML += `
+          <div style="
+            display:grid;
+            grid-template-columns:1.5fr 2fr 1fr 1fr 1fr;
+            padding:16px 12px;
+            border-bottom:1px solid #eee;
+            align-items:center;
+            gap:10px;
+          ">
+            <strong>${venda.cliente || "-"}</strong>
+            <span>${venda.servico || "-"}</span>
+            <span>R$ ${Number(venda.valor || 0).toFixed(2)}</span>
+            <span>${venda.forma_pagamento || "EM ABERTO"}</span>
+            <span>${venda.data || "-"}</span>
+          </div>
+        `;
+
+      });
+
+    });
+
+}
+
+setTimeout(()=>{
+  garantirAbaVendas();
+},1500);
