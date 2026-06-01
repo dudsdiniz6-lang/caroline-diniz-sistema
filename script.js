@@ -7261,3 +7261,174 @@ function cancelarVenda(id){
     });
 
 }
+function abrirHistoricoVenda(id){
+
+  supabaseClient
+    .from("comandas")
+    .select("*")
+    .eq("id", id)
+    .single()
+    .then((resposta)=>{
+
+      const venda = resposta.data;
+
+      if(!venda){
+        alert("Venda não encontrada.");
+        return;
+      }
+
+      let pagamentos = [];
+
+      try{
+        pagamentos =
+          JSON.parse(
+            venda.forma_pagamento || "[]"
+          );
+      }catch{
+        pagamentos = [];
+      }
+
+      const totalPago =
+        pagamentos.reduce((soma,item)=>{
+          return soma + Number(item.valor || 0);
+        },0);
+
+      const restante =
+        Number(venda.valor || 0) - totalPago;
+
+      let htmlPagamentos = "";
+
+      pagamentos.forEach((p)=>{
+
+        htmlPagamentos += `
+          <div style="
+            padding:10px 0;
+            border-bottom:1px solid #eee;
+          ">
+            ${p.data || "-"}
+            <br>
+            ${p.forma} — R$ ${Number(p.valor).toFixed(2)}
+          </div>
+        `;
+
+      });
+
+      const modal = document.createElement("div");
+
+      modal.style.cssText = `
+        position:fixed;
+        inset:0;
+        background:rgba(0,0,0,.45);
+        display:flex;
+        justify-content:center;
+        align-items:center;
+        z-index:999999;
+      `;
+
+      modal.innerHTML = `
+        <div style="
+          background:#fff;
+          width:520px;
+          max-width:94%;
+          border-radius:22px;
+          padding:28px;
+        ">
+
+          <h2>Histórico da venda</h2>
+
+          <strong>
+            Valor total:
+            R$ ${Number(venda.valor).toFixed(2)}
+          </strong>
+
+          <div style="margin-top:18px;">
+            ${htmlPagamentos || "Nenhum pagamento."}
+          </div>
+
+          <div style="margin-top:18px;">
+            <strong>
+              Total pago:
+              R$ ${totalPago.toFixed(2)}
+            </strong>
+            <br>
+            <strong style="color:#d63031;">
+              Restante:
+              R$ ${restante.toFixed(2)}
+            </strong>
+          </div>
+
+          <div style="
+            display:grid;
+            grid-template-columns:1fr 1fr;
+            gap:10px;
+            margin-top:20px;
+          ">
+
+            <input
+              id="valorNovoPagamento"
+              type="number"
+              placeholder="Valor"
+              style="
+                padding:14px;
+                border:1px solid #ddd;
+                border-radius:12px;
+              "
+            >
+
+            <select
+              id="formaNovoPagamento"
+              style="
+                padding:14px;
+                border:1px solid #ddd;
+                border-radius:12px;
+              "
+            >
+              <option value="">
+                Forma pagamento
+              </option>
+            </select>
+
+          </div>
+
+          <div style="
+            display:flex;
+            gap:10px;
+            margin-top:22px;
+          ">
+
+            <button
+              onclick="this.closest('div').parentNode.parentNode.remove()"
+              style="
+                flex:1;
+                padding:14px;
+                border:none;
+                border-radius:12px;
+              "
+            >
+              Fechar
+            </button>
+
+            <button
+              onclick="adicionarPagamentoVenda('${venda.id}')"
+              style="
+                flex:1;
+                padding:14px;
+                border:none;
+                border-radius:12px;
+                background:#111;
+                color:#fff;
+              "
+            >
+              Adicionar pagamento
+            </button>
+
+          </div>
+
+        </div>
+      `;
+
+      document.body.appendChild(modal);
+
+    });
+
+}
