@@ -7047,36 +7047,35 @@ function confirmarBaixaVenda(id){
     return;
   }
 
-  console.log("ID recebido:", id);
-
   supabaseClient
     .from("comandas")
     .update({
       forma_pagamento: forma,
       status: "FECHADO",
-      pago_em: new Date().toLocaleString("pt-BR")
+      pago_em: new Date().toISOString()
     })
-    .eq("id", id)
-    .select()
+    .match({
+      id: id
+    })
     .then((resposta)=>{
-
-      console.log("Resposta Supabase:", resposta);
 
       if(resposta.error){
 
+        console.error(resposta);
+
         alert(
-          "Erro ao dar baixa: " +
-          resposta.error.message
+          "Erro ao atualizar venda."
         );
 
         return;
+
       }
 
       fecharModalBaixaVenda();
 
-      alert("Venda fechada!");
-
       carregarVendas();
+
+      alert("Venda fechada!");
 
     });
 
