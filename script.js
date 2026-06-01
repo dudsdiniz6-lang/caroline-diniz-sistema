@@ -7426,7 +7426,29 @@ function abrirHistoricoVenda(id){
 
         </div>
       `;
+supabaseClient
+  .from("formas_pagamento")
+  .select("*")
+  .order("nome")
+  .then((resp)=>{
 
+    const select =
+      document.getElementById(
+        "formaNovoPagamento"
+      );
+
+    (resp.data || [])
+      .forEach((forma)=>{
+
+        select.innerHTML += `
+          <option value="${forma.nome}">
+            ${forma.nome}
+          </option>
+        `;
+
+      });
+
+  });
       document.body.appendChild(modal);
 
     });
