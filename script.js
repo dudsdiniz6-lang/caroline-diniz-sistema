@@ -6984,43 +6984,13 @@ function carregarVendas(){
 
            <span>
 
-${(() => {
-
-  try{
-
-    const pagamentos =
-      JSON.parse(venda.forma_pagamento || "[]");
-
-    const totalPago =
-      pagamentos.reduce((soma,item)=>{
-        return soma + Number(item.valor || 0);
-      },0);
-
-    const restante =
-      Number(venda.valor || 0) - totalPago;
-
-    if(restante > 0){
-
-      return `
-        Pago: R$ ${totalPago.toFixed(2)}
-        <br>
-        Restante: R$ ${restante.toFixed(2)}
-      `;
-
-    }
-
-    return pagamentos
-      .map(p=>p.forma)
-      .join(" | ");
-
-  }catch{
-
-    return venda.forma_pagamento || "-";
-
+<span>
+  ${
+    venda.status === "FECHADO"
+      ? "QUITADO"
+      : "-"
   }
-
-})()}
-
+</span>
 </span>
 
             <span>${venda.data || "-"}</span>
