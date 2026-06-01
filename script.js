@@ -411,10 +411,15 @@ supabaseClient
 
     data: formatarData(dataSelecionada),
 
-   forma_pagamento:
-  formaPagamento &&
-  String(formaPagamento).trim() !== ""
-    ? formaPagamento
+  forma_pagamento:
+  formaPagamento
+    ? (
+        typeof formaPagamento === "string"
+          ? formaPagamento
+          : JSON.parse(formaPagamento)
+              .map(p => p.forma)
+              .join(" | ")
+      )
     : "EM ABERTO",
 
     profissional: profissionalNome,
