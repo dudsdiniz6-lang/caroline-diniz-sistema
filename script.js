@@ -372,6 +372,8 @@ Pedimos que responda esta mensagem confirmando sua presença.`;
    if(acao === "2"){
 
  abrirModalFaturamento(agendamento, function(valor, formaPagamento, servicosSelecionados){
+     const profissionalNome =
+["Carol","Jessica","Fernanda","Silamara"][agendamento.profissional] || "";
 
  const profissionalUsuario = usuarios.find((usuario)=>{
 
