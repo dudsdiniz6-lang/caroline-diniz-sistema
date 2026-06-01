@@ -315,7 +315,30 @@ const progresso =
       ) * 100
     )
   );
+supabaseClient
+  .from("comandas")
+  .select("*")
+  .eq("cliente", agendamento.cliente)
+  .eq("data", agendamento.data)
+  .then((resp)=>{
 
+    const venda =
+      (resp.data || [])[0];
+
+    if(
+      venda &&
+      venda.status === "FECHADO"
+    ){
+
+      card.style.background =
+        "#dff7df";
+
+      card.style.border =
+        "1px solid #8bcf99";
+
+    }
+
+  });
 card.innerHTML = `
   <strong>${agendamento.cliente}</strong>
 
