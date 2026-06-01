@@ -369,11 +369,9 @@ Pedimos que responda esta mensagem confirmando sua presença.`;
       return;
     }
 
-    if(acao === "2"){
+   if(acao === "2"){
 
-  const valor = prompt("Valor do atendimento:");
-
-  if(!valor) return;
+  abrirModalFaturamento(agendamento, function(valor, formaPagamento){
 
   const profissionalNome = ["Carol", "Jessica", "Fernanda", "Silamara"][agendamento.profissional];
 
@@ -396,7 +394,10 @@ const comissao =
       cliente: agendamento.cliente,
       servico: agendamento.servico || "Novo Atendimento",
       valor: Number(valor),
-      data: formatarData(dataSelecionada)
+      data: formatarData(dataSelecionada),
+forma_pagamento: formaPagamento,
+profissional: profissionalNome,
+horario: agendamento.horario
     }])
     .then(()=>{
 
@@ -460,6 +461,8 @@ alert("Atendimento faturado!");
     });
 
   return;
+  });
+
 }
 
     if(acao === "3"){
@@ -6405,5 +6408,163 @@ function editarPacote(id){
       calcularValorPacote();
 
     });
+
+}
+function abrirModalFaturamento(agendamento, callback){
+
+  let modal =
+    document.getElementById("modal-faturamento");
+
+  if(!modal){
+
+    modal = document.createElement("div");
+
+    modal.id = "modal-faturamento";
+
+    modal.style.cssText = `
+      position:fixed;
+      inset:0;
+      background:rgba(0,0,0,.45);
+      display:none;
+      align-items:center;
+      justify-content:center;
+      z-index:999999;
+    `;
+
+    document.body.appendChild(modal);
+
+  }
+
+  modal.innerHTML = `
+    <div style="
+      background:#fff;
+      width:420px;
+      max-width:92%;
+      border-radius:24px;
+      padding:28px;
+      display:flex;
+      flex-direction:column;
+      gap:14px;
+    ">
+
+      <h2 style="margin:0;">
+        Finalizar atendimento
+      </h2>
+
+      <input
+        id="valorFaturamento"
+        type="number"
+        placeholder="Valor"
+        value="${agendamento.valor || ""}"
+        style="padding:14px;border:1px solid #ddd;border-radius:12px;"
+      >
+
+      <select
+        id="formaPagamentoFaturamento"
+        style="padding:14px;border:1px solid #ddd;border-radius:12px;"
+      >
+        <option value="">
+          Forma de pagamento
+        </option>
+      </select>
+
+      <div style="
+        display:flex;
+        gap:10px;
+        margin-top:10px;
+      ">
+
+        <button
+          onclick="
+            document.getElementById(
+              'modal-faturamento'
+            ).style.display='none'
+          "
+          style="
+            flex:1;
+            padding:14px;
+            border:none;
+            border-radius:12px;
+          "
+        >
+          Cancelar
+        </button>
+
+        <button
+          id="btnSalvarFaturamento"
+          style="
+            flex:1;
+            padding:14px;
+            border:none;
+            border-radius:12px;
+            background:#111;
+            color:#fff;
+          "
+        >
+          Salvar
+        </button>
+
+      </div>
+
+    </div>
+  `;
+
+  supabaseClient
+    .from("formas_pagamento")
+    .select("*")
+    .order("nome")
+    .then((resposta)=>{
+
+      const select =
+        document.getElementById(
+          "formaPagamentoFaturamento"
+        );
+
+      (resposta.data || []).forEach((forma)=>{
+
+        select.innerHTML += `
+          <option value="${forma.nome}">
+            ${forma.nome}
+          </option>
+        `;
+
+      });
+
+    });
+
+  document
+    .getElementById("btnSalvarFaturamento")
+    .onclick = function(){
+
+      const valor =
+        document.getElementById(
+          "valorFaturamento"
+        ).value;
+
+      const formaPagamento =
+        document.getElementById(
+          "formaPagamentoFaturamento"
+        ).value;
+
+      if(!valor || !formaPagamento){
+
+        alert(
+          "Informe valor e forma de pagamento."
+        );
+
+        return;
+
+      }
+
+      modal.style.display = "none";
+
+      callback(
+        Number(valor),
+        formaPagamento
+      );
+
+    };
+
+  modal.style.display = "flex";
 
 }
