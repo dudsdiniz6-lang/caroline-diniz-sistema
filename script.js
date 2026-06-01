@@ -6513,10 +6513,22 @@ function abrirModalFaturamento(agendamento, callback){
 
           agendamentosDia.forEach((item)=>{
 
-            const servicoInfo =
-              servicosCadastrados.find(s => s.nome === item.servico);
+            const nomeServicoAgendamento =
+  (item.servico || "")
+    .toLowerCase()
+    .trim();
 
-           const valor =
+const servicoInfo =
+  servicosCadastrados.find((s)=>{
+    return (
+      (s.nome || "")
+        .toLowerCase()
+        .trim()
+      === nomeServicoAgendamento
+    );
+  });
+
+const valor =
   Number(
     item.valor ||
     servicoInfo?.valor ||
