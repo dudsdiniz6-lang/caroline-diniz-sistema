@@ -6914,3 +6914,30 @@ function carregarVendas(){
 setTimeout(()=>{
   garantirAbaVendas();
 },1500);
+function abrirBaixaVenda(id){
+
+  const forma = prompt("Forma de pagamento:");
+
+  if(!forma) return;
+
+  supabaseClient
+    .from("comandas")
+    .update({
+      forma_pagamento: forma,
+      status: "FECHADO",
+      pago_em: new Date().toLocaleString("pt-BR")
+    })
+    .eq("id", Number(id))
+    .then((resposta)=>{
+
+      if(resposta.error){
+        alert("Erro ao dar baixa: " + resposta.error.message);
+        return;
+      }
+
+      alert("Venda fechada!");
+      carregarVendas();
+
+    });
+
+}
