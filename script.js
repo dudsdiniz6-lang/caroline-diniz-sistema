@@ -6870,11 +6870,12 @@ function carregarVendas(){
     border-bottom:1px solid #ddd;
     color:#555;
   ">
-    <span>Cliente</span>
-    <span>Serviços</span>
-    <span>Valor</span>
-    <span>Pagamento</span>
-    <span>Data</span>
+   <span>Cliente</span>
+<span>Serviços</span>
+<span>Valor</span>
+<span>Status</span>
+<span>Pagamento</span>
+<span>Data</span>
   </div>
 `;
 
