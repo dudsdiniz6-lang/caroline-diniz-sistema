@@ -6517,7 +6517,12 @@ function abrirModalFaturamento(agendamento, callback){
               servicosCadastrados.find(s => s.nome === item.servico);
 
             const valor =
-              Number(servicoInfo?.valor || 0);
+            const valor =
+  Number(
+    item.valor ||
+    servicoInfo?.valor ||
+    0
+  );
 
             lista.innerHTML += `
               <label style="
@@ -6619,22 +6624,24 @@ function abrirModalFaturamento(agendamento, callback){
 
 function atualizarTotalFaturamento(){
 
-  const selecionados =
-    Array.from(
-      document.querySelectorAll(".check-servico-faturamento:checked")
-    );
+  let total = 0;
 
-  const total =
-    selecionados.reduce((soma,item)=>{
-      return soma + Number(item.dataset.valor || 0);
-    },0);
+  document
+    .querySelectorAll(
+      ".check-servico-faturamento:checked"
+    )
+    .forEach((item)=>{
 
-  const totalEl =
-    document.getElementById("total-faturamento");
+      total += Number(
+        item.dataset.valor || 0
+      );
 
-  if(totalEl){
-    totalEl.innerText =
-      `Total: R$ ${total.toFixed(2)}`;
-  }
+    });
+
+  document.getElementById(
+    "total-faturamento"
+  ).innerText =
+    "Total: R$ " +
+    total.toFixed(2);
 
 }
