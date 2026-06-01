@@ -371,7 +371,7 @@ Pedimos que responda esta mensagem confirmando sua presença.`;
 
    if(acao === "2"){
 
-  abrirModalFaturamento(agendamento, function(valor, formaPagamento){
+ abrirModalFaturamento(agendamento, function(valor, formaPagamento, servicosSelecionados){
 
   const profissionalNome = ["Carol", "Jessica", "Fernanda", "Silamara"][agendamento.profissional];
 
@@ -388,19 +388,25 @@ const comissao =
   Number(valor) * (porcentagemComissao / 100);
 
   supabaseClient
-    .from("comandas")
-    .insert([{
-      id: Date.now(),
-      cliente: agendamento.cliente,
-      servico: agendamento.servico || "Novo Atendimento",
-      valor: Number(valor),
-      data: formatarData(dataSelecionada),
-forma_pagamento: formaPagamento,
-profissional: profissionalNome,
-horario: agendamento.horario
-    }])
-    .then(()=>{
+  .from("comandas")
+  .insert([{
+    id: Date.now(),
 
+    cliente: agendamento.cliente,
+
+    servico:
+      servicosSelecionados
+        .map(item => item.servico)
+        .join(", "),
+
+    valor: Number(valor),
+
+    data: formatarData(dataSelecionada),
+    forma_pagamento: formaPagamento,
+    profissional: profissionalNome,
+    horario: agendamento.horario
+  }])
+  .then(()=>{
      supabaseClient
   .from("comissoes")
   .insert([{
@@ -6418,7 +6424,6 @@ function abrirModalFaturamento(agendamento, callback){
   if(!modal){
 
     modal = document.createElement("div");
-
     modal.id = "modal-faturamento";
 
     modal.style.cssText = `
@@ -6438,76 +6443,119 @@ function abrirModalFaturamento(agendamento, callback){
   modal.innerHTML = `
     <div style="
       background:#fff;
-      width:420px;
-      max-width:92%;
+      width:520px;
+      max-width:94%;
       border-radius:24px;
       padding:28px;
       display:flex;
       flex-direction:column;
-      gap:14px;
+      gap:16px;
     ">
 
       <h2 style="margin:0;">
-        Finalizar atendimento
+        Faturar atendimento
       </h2>
 
-      <input
-        id="valorFaturamento"
-        type="number"
-        placeholder="Valor"
-        value="${agendamento.valor || ""}"
-        style="padding:14px;border:1px solid #ddd;border-radius:12px;"
-      >
+      <p style="margin:0;color:#777;">
+        Cliente: <strong>${agendamento.cliente}</strong>
+      </p>
+
+      <div id="lista-servicos-faturamento"></div>
+
+      <strong id="total-faturamento">
+        Total: R$ 0,00
+      </strong>
 
       <select
         id="formaPagamentoFaturamento"
         style="padding:14px;border:1px solid #ddd;border-radius:12px;"
       >
-        <option value="">
-          Forma de pagamento
-        </option>
+        <option value="">Forma de pagamento</option>
       </select>
 
-      <div style="
-        display:flex;
-        gap:10px;
-        margin-top:10px;
-      ">
-
+      <div style="display:flex;gap:10px;margin-top:10px;">
         <button
-          onclick="
-            document.getElementById(
-              'modal-faturamento'
-            ).style.display='none'
-          "
-          style="
-            flex:1;
-            padding:14px;
-            border:none;
-            border-radius:12px;
-          "
+          onclick="document.getElementById('modal-faturamento').style.display='none'"
+          style="flex:1;padding:14px;border:none;border-radius:12px;"
         >
           Cancelar
         </button>
 
         <button
           id="btnSalvarFaturamento"
-          style="
-            flex:1;
-            padding:14px;
-            border:none;
-            border-radius:12px;
-            background:#111;
-            color:#fff;
-          "
+          style="flex:1;padding:14px;border:none;border-radius:12px;background:#111;color:#fff;"
         >
           Salvar
         </button>
-
       </div>
 
     </div>
   `;
+
+  supabaseClient
+    .from("Agendamentos")
+    .select("*")
+    .eq("cliente", agendamento.cliente)
+    .eq("data", agendamento.data)
+    .then((respAgendamentos)=>{
+
+      const agendamentosDia = respAgendamentos.data || [];
+
+      supabaseClient
+        .from("servicos_salao")
+        .select("*")
+        .then((respServicos)=>{
+
+          const servicosCadastrados = respServicos.data || [];
+          const lista = document.getElementById("lista-servicos-faturamento");
+
+          lista.innerHTML = "";
+
+          agendamentosDia.forEach((item)=>{
+
+            const servicoInfo =
+              servicosCadastrados.find(s => s.nome === item.servico);
+
+            const valor =
+              Number(servicoInfo?.valor || 0);
+
+            lista.innerHTML += `
+              <label style="
+                display:flex;
+                justify-content:space-between;
+                align-items:center;
+                padding:12px 0;
+                border-bottom:1px solid #eee;
+                cursor:pointer;
+              ">
+
+                <span>
+                  <input
+                    type="checkbox"
+                    class="check-servico-faturamento"
+                    data-servico="${item.servico}"
+                    data-valor="${valor}"
+                    ${item.id === agendamento.id ? "checked" : ""}
+                    onchange="atualizarTotalFaturamento()"
+                  >
+
+                  ${item.data} — ${item.servico}
+                </span>
+
+                <strong>
+                  R$ ${valor.toFixed(2)}
+                </strong>
+
+              </label>
+            `;
+
+          });
+
+          atualizarTotalFaturamento();
+
+        });
+
+    });
 
   supabaseClient
     .from("formas_pagamento")
@@ -6516,9 +6564,7 @@ function abrirModalFaturamento(agendamento, callback){
     .then((resposta)=>{
 
       const select =
-        document.getElementById(
-          "formaPagamentoFaturamento"
-        );
+        document.getElementById("formaPagamentoFaturamento");
 
       (resposta.data || []).forEach((forma)=>{
 
@@ -6532,39 +6578,63 @@ function abrirModalFaturamento(agendamento, callback){
 
     });
 
-  document
-    .getElementById("btnSalvarFaturamento")
-    .onclick = function(){
+  document.getElementById("btnSalvarFaturamento").onclick = function(){
 
-      const valor =
-        document.getElementById(
-          "valorFaturamento"
-        ).value;
-
-      const formaPagamento =
-        document.getElementById(
-          "formaPagamentoFaturamento"
-        ).value;
-
-      if(!valor || !formaPagamento){
-
-        alert(
-          "Informe valor e forma de pagamento."
-        );
-
-        return;
-
-      }
-
-      modal.style.display = "none";
-
-      callback(
-        Number(valor),
-        formaPagamento
+    const selecionados =
+      Array.from(
+        document.querySelectorAll(".check-servico-faturamento:checked")
       );
 
-    };
+    const formaPagamento =
+      document.getElementById("formaPagamentoFaturamento").value;
+
+    if(selecionados.length === 0){
+      alert("Selecione pelo menos um serviço.");
+      return;
+    }
+
+    if(!formaPagamento){
+      alert("Selecione a forma de pagamento.");
+      return;
+    }
+
+    const servicosSelecionados =
+      selecionados.map(item => ({
+        servico: item.dataset.servico,
+        valor: Number(item.dataset.valor || 0)
+      }));
+
+    const total =
+      servicosSelecionados.reduce((soma,item)=> soma + item.valor, 0);
+
+    modal.style.display = "none";
+
+    callback(total, formaPagamento, servicosSelecionados);
+
+  };
 
   modal.style.display = "flex";
+
+}
+
+function atualizarTotalFaturamento(){
+
+  const selecionados =
+    Array.from(
+      document.querySelectorAll(".check-servico-faturamento:checked")
+    );
+
+  const total =
+    selecionados.reduce((soma,item)=>{
+      return soma + Number(item.dataset.valor || 0);
+    },0);
+
+  const totalEl =
+    document.getElementById("total-faturamento");
+
+  if(totalEl){
+    totalEl.innerText =
+      `Total: R$ ${total.toFixed(2)}`;
+  }
 
 }
