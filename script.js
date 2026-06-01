@@ -6528,12 +6528,22 @@ const servicoInfo =
     );
   });
 
-const valor =
+let valor =
   Number(
     item.valor ||
     servicoInfo?.valor ||
     0
   );
+
+if(!valor){
+
+  const valorManual = prompt(
+    "Informe o valor de: " + item.servico
+  );
+
+  valor = Number(valorManual || 0);
+
+}
 
             lista.innerHTML += `
               <label style="
