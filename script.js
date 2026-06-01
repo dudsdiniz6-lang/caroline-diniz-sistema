@@ -7071,20 +7071,12 @@ function confirmarBaixaVenda(id){
 
       }
 
-     supabaseClient
-  .from("financeiro")
-  .insert([{
-    id: Date.now(),
-    tipo: "entrada",
-    descricao: "Venda fechada",
-    valor: Number(venda.valor || 0),
-    data: new Date().toLocaleDateString("pt-BR"),
-    forma_pagamento: forma
-  }]);
+      fecharModalBaixaVenda();
 
-fecharModalBaixaVenda();
+      carregarVendas();
 
-carregarVendas();
-carregarHistoricoFinanceiro();
+      alert("Venda fechada!");
 
-alert("Venda fechada e enviada ao faturamento!");
+    });
+
+}
