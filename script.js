@@ -6718,13 +6718,21 @@ function abrirModalFaturamento(agendamento, callback){
 
     modal.style.display = "none";
 
-    callback(
-      total,
-      window.pagamentosFaturamento.length
-        ? JSON.stringify(window.pagamentosFaturamento)
-        : "EM ABERTO",
-      servicosSelecionados
-    );
+    const formaPagamentoSelecionada =
+  document.getElementById(
+    "formaPagamentoFaturamento"
+  )?.value || "";
+
+console.log(
+  "FORMA PAGAMENTO:",
+  formaPagamentoSelecionada
+);
+
+callback(
+  total,
+  formaPagamentoSelecionada,
+  servicosSelecionados
+);
 
   };
 
