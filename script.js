@@ -6920,9 +6920,117 @@ setTimeout(()=>{
 },1500);
 function abrirBaixaVenda(id){
 
-  const forma = prompt("Forma de pagamento:");
+  let modal =
+    document.getElementById("modal-baixa-venda");
 
-  if(!forma) return;
+  if(!modal){
+
+    modal = document.createElement("div");
+    modal.id = "modal-baixa-venda";
+
+    modal.style.cssText = `
+      position:fixed;
+      inset:0;
+      background:rgba(0,0,0,.45);
+      display:none;
+      align-items:center;
+      justify-content:center;
+      z-index:999999;
+    `;
+
+    modal.innerHTML = `
+      <div style="
+        background:#fff;
+        width:420px;
+        max-width:92%;
+        border-radius:24px;
+        padding:28px;
+        display:flex;
+        flex-direction:column;
+        gap:14px;
+      ">
+
+        <h2 style="margin:0;">
+          Baixar venda
+        </h2>
+
+        <select
+          id="formaPagamentoBaixaVenda"
+          style="padding:14px;border:1px solid #ddd;border-radius:12px;"
+        >
+          <option value="">Forma de pagamento</option>
+        </select>
+
+        <div style="display:flex;gap:10px;">
+          <button
+            onclick="fecharModalBaixaVenda()"
+            style="flex:1;padding:14px;border:none;border-radius:12px;"
+          >
+            Cancelar
+          </button>
+
+          <button
+            onclick="confirmarBaixaVenda('${id}')"
+            style="flex:1;padding:14px;border:none;border-radius:12px;background:#111;color:#fff;"
+          >
+            Confirmar
+          </button>
+        </div>
+
+      </div>
+    `;
+
+    document.body.appendChild(modal);
+
+  }
+
+  const select =
+    document.getElementById("formaPagamentoBaixaVenda");
+
+  select.innerHTML = `
+    <option value="">Forma de pagamento</option>
+  `;
+
+  supabaseClient
+    .from("formas_pagamento")
+    .select("*")
+    .order("nome")
+    .then((resposta)=>{
+
+      (resposta.data || []).forEach((forma)=>{
+
+        select.innerHTML += `
+          <option value="${forma.nome}">
+            ${forma.nome}
+          </option>
+        `;
+
+      });
+
+    });
+
+  modal.style.display = "flex";
+
+}
+
+function fecharModalBaixaVenda(){
+
+  const modal =
+    document.getElementById("modal-baixa-venda");
+
+  if(modal) modal.style.display = "none";
+
+}
+
+function confirmarBaixaVenda(id){
+
+  const forma =
+    document.getElementById("formaPagamentoBaixaVenda").value;
+
+  if(!forma){
+    alert("Selecione a forma de pagamento.");
+    return;
+  }
 
   supabaseClient
     .from("comandas")
@@ -6939,6 +7047,7 @@ function abrirBaixaVenda(id){
         return;
       }
 
+      fecharModalBaixaVenda();
       alert("Venda fechada!");
       carregarVendas();
 
