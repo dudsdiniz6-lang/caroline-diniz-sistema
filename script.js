@@ -6952,7 +6952,7 @@ function carregarVendas(){
 
         lista.innerHTML += `
           <div
-            onclick="abrirBaixaVenda('${venda.id}')"
+            onclick="abrirHistoricoVenda('${venda.id}')"
             style="
               cursor:pointer;
               display:grid;
