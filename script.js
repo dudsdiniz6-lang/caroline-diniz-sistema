@@ -6516,8 +6516,7 @@ function abrirModalFaturamento(agendamento, callback){
             const servicoInfo =
               servicosCadastrados.find(s => s.nome === item.servico);
 
-            const valor =
-            const valor =
+           const valor =
   Number(
     item.valor ||
     servicoInfo?.valor ||
