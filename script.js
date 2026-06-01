@@ -7038,12 +7038,16 @@ function fecharModalBaixaVenda(){
 function confirmarBaixaVenda(id){
 
   const forma =
-    document.getElementById("formaPagamentoBaixaVenda").value;
+    document.getElementById(
+      "formaPagamentoBaixaVenda"
+    ).value;
 
   if(!forma){
     alert("Selecione a forma de pagamento.");
     return;
   }
+
+  console.log("ID recebido:", id);
 
   supabaseClient
     .from("comandas")
@@ -7052,16 +7056,26 @@ function confirmarBaixaVenda(id){
       status: "FECHADO",
       pago_em: new Date().toLocaleString("pt-BR")
     })
-    .eq("id", Number(id))
+    .eq("id", id)
+    .select()
     .then((resposta)=>{
 
+      console.log("Resposta Supabase:", resposta);
+
       if(resposta.error){
-        alert("Erro ao dar baixa: " + resposta.error.message);
+
+        alert(
+          "Erro ao dar baixa: " +
+          resposta.error.message
+        );
+
         return;
       }
 
       fecharModalBaixaVenda();
+
       alert("Venda fechada!");
+
       carregarVendas();
 
     });
