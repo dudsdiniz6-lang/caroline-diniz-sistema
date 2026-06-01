@@ -7138,26 +7138,56 @@ function confirmarBaixaVenda(id){
 function cancelarVenda(id){
 
   const confirmar =
-    confirm("Deseja cancelar esta venda?");
+    confirm("Deseja cancelar esta venda? Ela sairá do financeiro, mas ficará registrada como CANCELADA em Vendas.");
 
   if(!confirmar) return;
 
   supabaseClient
     .from("comandas")
-    .update({
-      status: "CANCELADA",
-      cancelado_em: new Date().toISOString()
-    })
+    .select("*")
     .eq("id", id)
-    .then((resposta)=>{
+    .single()
+    .then((busca)=>{
 
-      if(resposta.error){
-        alert("Erro ao cancelar venda: " + resposta.error.message);
+      if(busca.error || !busca.data){
+        alert("Erro ao buscar venda.");
         return;
       }
 
-      alert("Venda cancelada!");
-      carregarVendas();
+      const venda = busca.data;
+
+      supabaseClient
+        .from("comandas")
+        .update({
+          status: "CANCELADA",
+          forma_pagamento: venda.forma_pagamento || "-"
+        })
+        .eq("id", id)
+        .then((resposta)=>{
+
+          if(resposta.error){
+            alert("Erro ao cancelar venda: " + resposta.error.message);
+            return;
+          }
+
+          supabaseClient
+            .from("financeiro")
+            .delete()
+            .eq("descricao", "Venda fechada - " + (venda.cliente || ""))
+            .eq("valor", Number(venda.valor || 0))
+            .then(()=>{
+
+              alert("Venda cancelada e removida do financeiro.");
+
+              carregarVendas();
+
+              if(typeof carregarHistoricoFinanceiro === "function"){
+                carregarHistoricoFinanceiro();
+              }
+
+            });
+
+        });
 
     });
 
