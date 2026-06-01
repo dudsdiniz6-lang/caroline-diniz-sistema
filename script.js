@@ -6418,6 +6418,8 @@ function editarPacote(id){
 }
 function abrirModalFaturamento(agendamento, callback){
 
+  window.pagamentosFaturamento = [];
+
   let modal =
     document.getElementById("modal-faturamento");
 
@@ -6443,7 +6445,7 @@ function abrirModalFaturamento(agendamento, callback){
   modal.innerHTML = `
     <div style="
       background:#fff;
-      width:520px;
+      width:540px;
       max-width:94%;
       border-radius:24px;
       padding:28px;
@@ -6466,12 +6468,47 @@ function abrirModalFaturamento(agendamento, callback){
         Total: R$ 0,00
       </strong>
 
-      <select
-        id="formaPagamentoFaturamento"
-        style="padding:14px;border:1px solid #ddd;border-radius:12px;"
-      >
-        <option value="">Forma de pagamento</option>
-      </select>
+      <strong id="restante-faturamento" style="color:#ff5a1f;">
+        Restante: R$ 0,00
+      </strong>
+
+      <div style="
+        display:grid;
+        grid-template-columns:1fr 1fr auto;
+        gap:10px;
+        align-items:center;
+      ">
+        <input
+          id="valorParcialFaturamento"
+          type="number"
+          placeholder="Valor pago"
+          style="padding:14px;border:1px solid #ddd;border-radius:12px;"
+        >
+
+        <select
+          id="formaPagamentoFaturamento"
+          style="padding:14px;border:1px solid #ddd;border-radius:12px;"
+        >
+          <option value="">Forma</option>
+        </select>
+
+        <button
+          onclick="adicionarPagamentoFaturamento()"
+          style="
+            padding:14px;
+            border:none;
+            border-radius:12px;
+            background:#ff5a1f;
+            color:#fff;
+            font-weight:700;
+            cursor:pointer;
+          "
+        >
+          +
+        </button>
+      </div>
+
+      <div id="lista-pagamentos-faturamento"></div>
 
       <div style="display:flex;gap:10px;margin-top:10px;">
         <button
@@ -6514,36 +6551,36 @@ function abrirModalFaturamento(agendamento, callback){
           agendamentosDia.forEach((item)=>{
 
             const nomeServicoAgendamento =
-  (item.servico || "")
-    .toLowerCase()
-    .trim();
+              (item.servico || "")
+                .toLowerCase()
+                .trim();
 
-const servicoInfo =
-  servicosCadastrados.find((s)=>{
-    return (
-      (s.nome || "")
-        .toLowerCase()
-        .trim()
-      === nomeServicoAgendamento
-    );
-  });
+            const servicoInfo =
+              servicosCadastrados.find((s)=>{
+                return (
+                  (s.nome || "")
+                    .toLowerCase()
+                    .trim()
+                  === nomeServicoAgendamento
+                );
+              });
 
-let valor =
-  Number(
-    item.valor ||
-    servicoInfo?.valor ||
-    0
-  );
+            let valor =
+              Number(
+                item.valor ||
+                servicoInfo?.valor ||
+                0
+              );
 
-if(!valor){
+            if(!valor){
 
-  const valorManual = prompt(
-    "Informe o valor de: " + item.servico
-  );
+              const valorManual = prompt(
+                "Informe o valor de: " + item.servico
+              );
 
-  valor = Number(valorManual || 0);
+              valor = Number(valorManual || 0);
 
-}
+            }
 
             lista.innerHTML += `
               <label style="
@@ -6611,16 +6648,8 @@ if(!valor){
         document.querySelectorAll(".check-servico-faturamento:checked")
       );
 
-    const formaPagamento =
-      document.getElementById("formaPagamentoFaturamento").value;
-
     if(selecionados.length === 0){
       alert("Selecione pelo menos um serviço.");
-      return;
-    }
-
-    if(!formaPagamento){
-      alert("Selecione a forma de pagamento.");
       return;
     }
 
@@ -6633,36 +6662,143 @@ if(!valor){
     const total =
       servicosSelecionados.reduce((soma,item)=> soma + item.valor, 0);
 
+    const pago =
+      window.pagamentosFaturamento.reduce((soma,item)=>{
+        return soma + Number(item.valor || 0);
+      },0);
+
+    if(pago < total){
+      alert("Ainda falta pagar R$ " + (total - pago).toFixed(2));
+      return;
+    }
+
     modal.style.display = "none";
 
-    callback(total, formaPagamento, servicosSelecionados);
+    callback(
+      total,
+      JSON.stringify(window.pagamentosFaturamento),
+      servicosSelecionados
+    );
 
   };
 
   modal.style.display = "flex";
 
 }
+function adicionarPagamentoFaturamento(){
 
-function atualizarTotalFaturamento(){
+  const valorCampo =
+    document.getElementById("valorParcialFaturamento");
 
-  let total = 0;
+  const formaCampo =
+    document.getElementById("formaPagamentoFaturamento");
 
-  document
-    .querySelectorAll(
-      ".check-servico-faturamento:checked"
-    )
-    .forEach((item)=>{
+  const valor =
+    Number(valorCampo.value || 0);
 
-      total += Number(
-        item.dataset.valor || 0
-      );
+  const forma =
+    formaCampo.value;
 
-    });
+  if(!valor || !forma){
+    alert("Informe valor e forma de pagamento.");
+    return;
+  }
 
-  document.getElementById(
-    "total-faturamento"
-  ).innerText =
-    "Total: R$ " +
-    total.toFixed(2);
+  const totalTexto =
+    document
+      .getElementById("total-faturamento")
+      .innerText
+      .replace("Total: R$ ","")
+      .replace(",",".");
+
+  const total =
+    Number(totalTexto || 0);
+
+  const jaPago =
+    window.pagamentosFaturamento.reduce((soma,item)=>{
+      return soma + Number(item.valor || 0);
+    },0);
+
+  if(jaPago + valor > total){
+    alert("O valor informado ultrapassa o total.");
+    return;
+  }
+
+  window.pagamentosFaturamento.push({
+    valor,
+    forma
+  });
+
+  valorCampo.value = "";
+  formaCampo.value = "";
+
+  atualizarPagamentosFaturamento();
+
+}
+
+function atualizarPagamentosFaturamento(){
+
+  const lista =
+    document.getElementById("lista-pagamentos-faturamento");
+
+  const restanteEl =
+    document.getElementById("restante-faturamento");
+
+  const totalTexto =
+    document
+      .getElementById("total-faturamento")
+      .innerText
+      .replace("Total: R$ ","")
+      .replace(",",".");
+
+  const total =
+    Number(totalTexto || 0);
+
+  const pago =
+    window.pagamentosFaturamento.reduce((soma,item)=>{
+      return soma + Number(item.valor || 0);
+    },0);
+
+  const restante =
+    total - pago;
+
+  if(restanteEl){
+    restanteEl.innerText =
+      "Restante: R$ " + restante.toFixed(2);
+  }
+
+  lista.innerHTML = "";
+
+  window.pagamentosFaturamento.forEach((item,index)=>{
+
+    lista.innerHTML += `
+      <div style="
+        display:flex;
+        justify-content:space-between;
+        align-items:center;
+        padding:10px 0;
+        border-bottom:1px solid #eee;
+        font-size:14px;
+      ">
+        <span>
+          ${item.forma} — R$ ${Number(item.valor).toFixed(2)}
+        </span>
+
+        <button
+          onclick="removerPagamentoFaturamento(${index})"
+          style="
+            border:none;
+            background:transparent;
+            color:#d63031;
+            font-weight:700;
+            cursor:pointer;
+          "
+        >
+          remover
+        </button>
+      </div>
+    `;
+
+  });
 
 }
