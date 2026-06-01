@@ -416,10 +416,11 @@ supabaseClient
 
     horario: agendamento.horario,
 
-    status:
-      formaPagamento === "EM ABERTO"
-        ? "EM ABERTO"
-        : "FECHADO"
+   status:
+  formaPagamento &&
+  formaPagamento !== "EM ABERTO"
+    ? "FECHADO"
+    : "EM ABERTO"
 
   }])
 
@@ -487,7 +488,10 @@ supabaseClient
 
   });
 
-if(formaPagamento !== "EM ABERTO"){
+if(
+  formaPagamento &&
+  formaPagamento !== "EM ABERTO"
+){
 
   supabaseClient
     .from("financeiro")
