@@ -373,12 +373,17 @@ Pedimos que responda esta mensagem confirmando sua presença.`;
 
  abrirModalFaturamento(agendamento, function(valor, formaPagamento, servicosSelecionados){
 
-  const profissionalNome = ["Carol", "Jessica", "Fernanda", "Silamara"][agendamento.profissional];
+ const profissionalUsuario = usuarios.find((usuario)=>{
 
-      const profissionalUsuario = usuarios.find((usuario)=>{
   return (
-    usuario.usuario.toLowerCase() === profissionalNome.toLowerCase()
+    (usuario.usuario || "")
+      .toLowerCase()
+      ===
+    (profissionalNome || "")
+      .toLowerCase()
+
   );
+
 });
 
 const porcentagemComissao =
