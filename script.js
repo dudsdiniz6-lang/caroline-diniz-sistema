@@ -395,6 +395,7 @@ const porcentagemComissao =
 const comissao =
   Number(valor) * (porcentagemComissao / 100);
 
+     console.log("FORMA:", formaPagamento);
 supabaseClient
   .from("comandas")
   .insert([{
@@ -411,16 +412,7 @@ supabaseClient
 
     data: formatarData(dataSelecionada),
 
-  forma_pagamento:
-  formaPagamento
-    ? (
-        typeof formaPagamento === "string"
-          ? formaPagamento
-          : JSON.parse(formaPagamento)
-              .map(p => p.forma)
-              .join(" | ")
-      )
-    : "EM ABERTO",
+ forma_pagamento: String(formaPagamento),
 
     profissional: profissionalNome,
 
