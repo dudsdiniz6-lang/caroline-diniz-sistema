@@ -1350,7 +1350,7 @@ if(metasDiv){
         if(!resumoProfissionais[item.profissional]){
 
   const profissionalUsuario = usuarios.find((usuario)=>{
-    return usuario.usuario.toLowerCase() === item.profissional.toLowerCase();
+    return (usuario.usuario || "").toLowerCase() === item.profissional.toLowerCase();
   });
 
   resumoProfissionais[item.profissional] = {
