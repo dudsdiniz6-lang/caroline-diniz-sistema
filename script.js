@@ -6861,23 +6861,23 @@ function carregarVendas(){
 
   if(!lista) return;
 
- lista.innerHTML = `
-  <div style="
-    display:grid;
-    grid-template-columns:1.5fr 2fr 1fr 1fr 1fr;
-    padding:12px;
-    font-weight:700;
-    border-bottom:1px solid #ddd;
-    color:#555;
-  ">
-   <span>Cliente</span>
-<span>Serviços</span>
-<span>Valor</span>
-<span>Status</span>
-<span>Pagamento</span>
-<span>Data</span>
-  </div>
-`;
+  lista.innerHTML = `
+    <div style="
+      display:grid;
+      grid-template-columns:1.5fr 2fr 1fr 1fr 1fr 1fr;
+      padding:12px;
+      font-weight:700;
+      border-bottom:1px solid #ddd;
+      color:#555;
+    ">
+      <span>Cliente</span>
+      <span>Serviços</span>
+      <span>Valor</span>
+      <span>Status</span>
+      <span>Pagamento</span>
+      <span>Data</span>
+    </div>
+  `;
 
   supabaseClient
     .from("comandas")
@@ -6887,25 +6887,38 @@ function carregarVendas(){
 
       const vendas = resposta.data || [];
 
-vendas.forEach((venda)=>{
+      vendas.forEach((venda)=>{
 
-  lista.innerHTML += `
-    <div
-      onclick="abrirBaixaVenda('${venda.id}')"
-      style="
-        cursor:pointer;
-        display:grid;
-        grid-template-columns:1.5fr 2fr 1fr 1fr 1fr;
-        padding:16px 12px;
-        border-bottom:1px solid #eee;
-        align-items:center;
-        gap:10px;
-      "
-    >
+        lista.innerHTML += `
+          <div
+            onclick="abrirBaixaVenda('${venda.id}')"
+            style="
+              cursor:pointer;
+              display:grid;
+              grid-template-columns:1.5fr 2fr 1fr 1fr 1fr 1fr;
+              padding:16px 12px;
+              border-bottom:1px solid #eee;
+              align-items:center;
+              gap:10px;
+            "
+          >
             <strong>${venda.cliente || "-"}</strong>
+
             <span>${venda.servico || "-"}</span>
-            <span>R$ ${Number(venda.valor || 0).toFixed(2)}</span>
-            <span>${venda.forma_pagamento || "EM ABERTO"}</span>
+
+            <span>
+              R$ ${Number(venda.valor || 0).toFixed(2)}
+            </span>
+
+            <span style="
+              color:${venda.status === "FECHADO" ? "#16a34a" : "#dc2626"};
+              font-weight:700;
+            ">
+              ${venda.status || "EM ABERTO"}
+            </span>
+
+            <span>${venda.forma_pagamento || "-"}</span>
+
             <span>${venda.data || "-"}</span>
           </div>
         `;
@@ -6915,7 +6928,6 @@ vendas.forEach((venda)=>{
     });
 
 }
-
 setTimeout(()=>{
   garantirAbaVendas();
 },1500);
