@@ -6861,23 +6861,24 @@ function carregarVendas(){
 
   if(!lista) return;
 
-  lista.innerHTML = `
-    <div style="
-      display:grid;
-      grid-template-columns:1.5fr 2fr 1fr 1fr 1fr 1fr;
-      padding:12px;
-      font-weight:700;
-      border-bottom:1px solid #ddd;
-      color:#555;
-    ">
-      <span>Cliente</span>
-      <span>Serviços</span>
-      <span>Valor</span>
-      <span>Status</span>
-      <span>Pagamento</span>
-      <span>Data</span>
-    </div>
-  `;
+ lista.innerHTML = `
+  <div style="
+    display:grid;
+    grid-template-columns:1.5fr 2fr 1fr 1fr 1fr 1fr 1fr;
+    padding:12px;
+    font-weight:700;
+    border-bottom:1px solid #ddd;
+    color:#555;
+  ">
+    <span>Cliente</span>
+    <span>Serviços</span>
+    <span>Valor</span>
+    <span>Status</span>
+    <span>Pagamento</span>
+    <span>Data</span>
+    <span>Ações</span>
+  </div>
+`;
 
   supabaseClient
     .from("comandas")
@@ -6895,7 +6896,7 @@ function carregarVendas(){
             style="
               cursor:pointer;
               display:grid;
-              grid-template-columns:1.5fr 2fr 1fr 1fr 1fr 1fr;
+              grid-template-columns:1.5fr 2fr 1fr 1fr 1fr 1fr 1fr;
               padding:16px 12px;
               border-bottom:1px solid #eee;
               align-items:center;
@@ -6920,6 +6921,20 @@ function carregarVendas(){
             <span>${venda.forma_pagamento || "-"}</span>
 
             <span>${venda.data || "-"}</span>
+            <button
+  onclick="event.stopPropagation(); cancelarVenda('${venda.id}')"
+  style="
+    border:none;
+    background:#d63031;
+    color:#fff;
+    padding:8px 12px;
+    border-radius:8px;
+    font-weight:700;
+    cursor:pointer;
+  "
+>
+  Cancelar
+</button>
           </div>
         `;
 
@@ -7116,6 +7131,33 @@ function confirmarBaixaVenda(id){
             });
 
         });
+
+    });
+
+}
+function cancelarVenda(id){
+
+  const confirmar =
+    confirm("Deseja cancelar esta venda?");
+
+  if(!confirmar) return;
+
+  supabaseClient
+    .from("comandas")
+    .update({
+      status: "CANCELADA",
+      cancelado_em: new Date().toISOString()
+    })
+    .eq("id", id)
+    .then((resposta)=>{
+
+      if(resposta.error){
+        alert("Erro ao cancelar venda: " + resposta.error.message);
+        return;
+      }
+
+      alert("Venda cancelada!");
+      carregarVendas();
 
     });
 
