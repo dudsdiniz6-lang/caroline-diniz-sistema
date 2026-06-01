@@ -412,7 +412,10 @@ supabaseClient
 
     data: formatarData(dataSelecionada),
 
- forma_pagamento: String(formaPagamento),
+forma_pagamento:
+  JSON.stringify(
+    window.pagamentosFaturamento || []
+  ),
 
     profissional: profissionalNome,
 
