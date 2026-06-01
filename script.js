@@ -421,11 +421,7 @@ forma_pagamento:
 
     horario: agendamento.horario,
 
-status:
-  formaPagamento &&
-  String(formaPagamento).trim() !== ""
-    ? "FECHADO"
-    : "EM ABERTO",
+status: "EM ABERTO",
 
   }])
 
