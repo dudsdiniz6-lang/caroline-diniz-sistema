@@ -8020,3 +8020,39 @@ function garantirAbaRelatorios(){
 
 }
 garantirAbaRelatorios();
+
+function montarListaRelatorio(
+  titulo,
+  dados
+){
+
+  let html = `
+    <div class="cliente-card">
+      <h3>${titulo}</h3>
+  `;
+
+  Object
+    .entries(dados)
+    .sort((a,b)=> b[1]-a[1])
+    .forEach(([nome,valor])=>{
+
+      html += `
+        <p>
+          ${nome} —
+          ${
+            Number.isInteger(valor)
+              ? valor
+              : "R$ " +
+                Number(valor)
+                  .toFixed(2)
+          }
+        </p>
+      `;
+
+    });
+
+  html += "</div>";
+
+  return html;
+
+}
