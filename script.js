@@ -7603,3 +7603,14 @@ function adicionarPagamentoVenda(id){
     });
 
 }
+setTimeout(()=>{
+
+  if(typeof criarPainelAgendaProfissionais === "function"){
+    criarPainelAgendaProfissionais();
+  }
+
+  if(typeof carregarProfissionaisPainelAgenda === "function"){
+    carregarProfissionaisPainelAgenda();
+  }
+
+},2000);
