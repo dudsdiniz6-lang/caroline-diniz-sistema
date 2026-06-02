@@ -7895,3 +7895,41 @@ function carregarRelatorios(){
     });
 
 }
+function preencherRelatorioLista(id, dados, tipo){
+
+  const div =
+    document.getElementById(id);
+
+  if(!div) return;
+
+  div.innerHTML = "";
+
+  const itens =
+    Object.keys(dados)
+      .sort((a,b)=> dados[b] - dados[a]);
+
+  if(itens.length === 0){
+    div.innerHTML = `<div class="cliente-card">Nenhum dado encontrado.</div>`;
+    return;
+  }
+
+  itens.forEach((nome)=>{
+
+    const valor = dados[nome];
+
+    div.innerHTML += `
+      <div class="cliente-card">
+        <strong>${nome}</strong>
+        <p>
+          ${
+            tipo === "R$"
+              ? "R$ " + Number(valor).toFixed(2)
+              : valor + " " + tipo
+          }
+        </p>
+      </div>
+    `;
+
+  });
+
+}
