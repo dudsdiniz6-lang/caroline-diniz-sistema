@@ -5340,8 +5340,6 @@ function criarPainelAgendaProfissionais(){
   painel.innerHTML = `
   painel.innerHTML = `
 painel.innerHTML = `
-<button
-  onclick="alternarPainelProfissionaisAgenda()"
   style="
     position:absolute;
     right:-38px;
