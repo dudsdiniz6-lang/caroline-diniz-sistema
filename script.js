@@ -5336,12 +5336,15 @@ function criarPainelAgendaProfissionais(){
     transition:.25s ease;
   `;
 
+  painel.onmouseenter = function(){
+    painel.style.transform = "translateX(0)";
+  };
+
+  painel.onmouseleave = function(){
+    painel.style.transform = "translateX(-250px)";
+  };
 
   painel.innerHTML = `
-  painel.innerHTML = `
-painel.innerHTML = `
-
-`;
     <h3 style="margin:0 0 28px 0;font-size:16px;font-weight:700;">
       Configurações
     </h3>
@@ -7597,24 +7600,5 @@ function adicionarPagamentoVenda(id){
         });
 
     });
-
-}
-function alternarPainelProfissionaisAgenda(){
-
-  const painel =
-    document.getElementById("painel-profissionais-agenda");
-
-  if(!painel) return;
-
-  const aberto =
-    painel.dataset.aberto === "true";
-
-  painel.dataset.aberto =
-    aberto ? "false" : "true";
-
-  painel.style.transform =
-    aberto
-      ? "translateX(-250px)"
-      : "translateX(0)";
 
 }
