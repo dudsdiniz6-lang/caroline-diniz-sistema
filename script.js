@@ -7637,7 +7637,10 @@ function fixarPainelProfissionaisNaAgenda(){
 
     painel.style.display = "block";
     painel.style.position = "fixed";
-    painel.style.left = "180px";
+   painel.style.left =
+  painel.dataset.fechado === "1"
+    ? "-260px"
+    : "180px";
     painel.style.top = "0";
     painel.style.width = "230px";
     painel.style.height = "100vh";
@@ -7648,11 +7651,13 @@ function fixarPainelProfissionaisNaAgenda(){
     painel.style.padding = "24px 18px";
     painel.style.overflow = "auto";
 
-  }else{
+ }else{
 
-    painel.style.display = "none";
+  painel.style.display = "none";
 
-  }
+}
+
+criarTogglePainelAgenda();
 
 }
 
