@@ -392,169 +392,181 @@ Pedimos que responda esta mensagem confirmando sua presença.`;
       return;
     }
 
-   if(acao === "2"){
+if(acao === "2"){
 
- abrirModalFaturamento(agendamento, function(valor, formaPagamento, servicosSelecionados){
-     console.log("FORMA PAGAMENTO:", formaPagamento);
-     const profissionalNome =
-["Carol","Jessica","Fernanda","Silamara"][agendamento.profissional] || "";
+  abrirModalFaturamento(
+    agendamento,
+    function(valor, formaPagamento, servicosSelecionados){
 
- const profissionalUsuario = usuarios.find((usuario)=>{
+      const profissionalNome =
+        ["Carol","Jessica","Fernanda","Silamara"][agendamento.profissional] || "";
 
-  return (
-    (usuario.usuario || "")
-      .toLowerCase()
-      ===
-    (profissionalNome || "")
-      .toLowerCase()
+      const profissionalUsuario = usuarios.find((usuario)=>{
+        return (
+          (usuario.usuario || "").toLowerCase()
+          ===
+          (profissionalNome || "").toLowerCase()
+        );
+      });
 
-  );
+      const porcentagemComissao =
+        profissionalUsuario?.comissao || 0;
 
-});
+      const comissao =
+        Number(valor) * (porcentagemComissao / 100);
 
-const porcentagemComissao =
-  profissionalUsuario?.comissao || 0;
+      let pagamentosFinal =
+        Array.isArray(window.pagamentosFaturamento)
+          ? window.pagamentosFaturamento
+          : [];
 
-const comissao =
-  Number(valor) * (porcentagemComissao / 100);
+      if(
+        pagamentosFinal.length === 0 &&
+        formaPagamento &&
+        String(formaPagamento).trim() !== "" &&
+        formaPagamento !== "EM ABERTO"
+      ){
+        pagamentosFinal = [{
+          valor: Number(valor),
+          forma: formaPagamento,
+          data: new Date().toLocaleDateString("pt-BR")
+        }];
+      }
 
-     console.log("FORMA:", formaPagamento);
-supabaseClient
-  .from("comandas")
-  .insert([{
-    id: Date.now(),
+      const totalPago =
+        pagamentosFinal.reduce((soma,pag)=>{
+          return soma + Number(pag.valor || 0);
+        },0);
 
-    cliente: agendamento.cliente,
-
-    servico:
-      servicosSelecionados
-        .map(item => item.servico)
-        .join(", "),
-
-    valor: Number(valor),
-
-    data: formatarData(dataSelecionada),
-
-forma_pagamento:
-  JSON.stringify(
-    window.pagamentosFaturamento || []
-  ),
-
-    profissional: profissionalNome,
-
-    horario: agendamento.horario,
-
-status:
-(
-  window.pagamentosFaturamento
-    ?.reduce((soma,pag)=>{
-      return soma + Number(pag.valor || 0);
-    },0)
-  >= Number(valor)
-)
-? "FECHADO"
-: "EM ABERTO",
-
-  }])
-
-  .then((respostaComanda)=>{
-
-    if(respostaComanda.error){
-
-      alert(
-        "Erro ao salvar venda: " +
-        respostaComanda.error.message
-      );
-
-      return;
-
-    }
-
-    supabaseClient
-      .from("comissoes")
-      .insert([{
-        id: Date.now(),
-        profissional: profissionalNome,
-        cliente: agendamento.cliente,
-        servico: agendamento.servico || "Novo Atendimento",
-        valor: Number(valor),
-        comissao: comissao,
-        data: formatarData(dataSelecionada)
-      }]);
-
-supabaseClient
-  .from("consumo_servicos")
-  .select("*")
-  .eq("servico", agendamento.servico)
-  .then((consumoResposta)=>{
-
-    const consumos = consumoResposta.data || [];
-
-    consumos.forEach((consumo)=>{
+      const statusVenda =
+        totalPago >= Number(valor)
+          ? "FECHADO"
+          : "EM ABERTO";
 
       supabaseClient
-        .from("estoque")
-        .select("*")
-        .eq("produto", consumo.produto)
-        .single()
-        .then((produtoResposta)=>{
+        .from("comandas")
+        .insert([{
+          id: Date.now(),
 
-          const produto = produtoResposta.data;
+          cliente: agendamento.cliente,
 
-          if(!produto) return;
+          servico:
+            servicosSelecionados
+              .map(item => item.servico)
+              .join(", "),
 
-          const novaQuantidade =
-            Number(produto.quantidade) - Number(consumo.quantidade);
+          valor: Number(valor),
+
+          data: formatarData(dataSelecionada),
+
+          forma_pagamento:
+            JSON.stringify(pagamentosFinal),
+
+          profissional: profissionalNome,
+
+          horario: agendamento.horario,
+
+          status: statusVenda
+        }])
+        .then((respostaComanda)=>{
+
+          if(respostaComanda.error){
+            alert("Erro ao salvar venda: " + respostaComanda.error.message);
+            return;
+          }
 
           supabaseClient
-            .from("estoque")
-            .update({
-              quantidade:novaQuantidade
-            })
-            .eq("id", produto.id);
+            .from("comissoes")
+            .insert([{
+              id: Date.now() + 10,
+              profissional: profissionalNome,
+              cliente: agendamento.cliente,
+              servico:
+                servicosSelecionados
+                  .map(item => item.servico)
+                  .join(", "),
+              valor: Number(valor),
+              comissao: comissao,
+              data: formatarData(dataSelecionada)
+            }]);
+
+          pagamentosFinal.forEach((pagamento,index)=>{
+
+            supabaseClient
+              .from("financeiro")
+              .insert([{
+                id: Date.now() + index + 100,
+                tipo: "entrada",
+                descricao: "Pagamento venda - " + agendamento.cliente,
+                valor: Number(pagamento.valor || 0),
+                data: pagamento.data || formatarData(dataSelecionada),
+                forma_pagamento: pagamento.forma || "-"
+              }]);
+
+          });
+
+          supabaseClient
+            .from("consumo_servicos")
+            .select("*")
+            .eq("servico", agendamento.servico)
+            .then((consumoResposta)=>{
+
+              const consumos = consumoResposta.data || [];
+
+              consumos.forEach((consumo)=>{
+
+                supabaseClient
+                  .from("estoque")
+                  .select("*")
+                  .eq("produto", consumo.produto)
+                  .single()
+                  .then((produtoResposta)=>{
+
+                    const produto = produtoResposta.data;
+
+                    if(!produto) return;
+
+                    const novaQuantidade =
+                      Number(produto.quantidade) -
+                      Number(consumo.quantidade);
+
+                    supabaseClient
+                      .from("estoque")
+                      .update({
+                        quantidade: novaQuantidade
+                      })
+                      .eq("id", produto.id);
+
+                  });
+
+              });
+
+              carregarEstoque();
+
+            });
+
+          carregarHistoricoFinanceiro();
+
+          if(typeof carregarVendas === "function"){
+            carregarVendas();
+          }
+
+          card.style.opacity = "0.6";
+
+          if(statusVenda === "FECHADO"){
+            card.style.background = "#dff7df";
+            card.style.border = "1px solid #8bcf99";
+          }
+
+          alert("Atendimento faturado!");
 
         });
 
-    });
+    }
+  );
 
-  carregarEstoque();
-
-  });
-
-if(
-  formaPagamento &&
-  formaPagamento !== "EM ABERTO"
-){
-
-  supabaseClient
-    .from("financeiro")
-    .insert([{
-      id: Date.now() + 1,
-      tipo: "entrada",
-      descricao: "Venda fechada - " + agendamento.cliente,
-      valor: Number(valor),
-      data: formatarData(dataSelecionada),
-      forma_pagamento: formaPagamento
-    }]);
-
-}
-
-carregarHistoricoFinanceiro();
-
-if(typeof carregarVendas === "function"){
-  carregarVendas();
-}
-
-card.style.opacity = "0.6";
-
-alert("Atendimento faturado!");
-
-    });
   return;
-  });
-
 }
-
     if(acao === "3"){
 
       const confirmar = confirm("Deseja excluir este agendamento?");
