@@ -1496,11 +1496,30 @@ function mostrarSecao(secao){
     item.style.display = "none";
   });
 
-  const selecionada = document.getElementById(secao);
+  const selecionada =
+  document.getElementById(secao);
 
-  if(selecionada){
-    selecionada.style.display = "block";
+if(selecionada){
+
+  selecionada.style.display = "block";
+
+  if(secao === "relatorios-container"){
+
+    selecionada.style.marginLeft =
+      "180px";
+
+    selecionada.style.width =
+      "calc(100% - 180px)";
+
+    selecionada.style.padding =
+      "40px";
+
+    selecionada.style.boxSizing =
+      "border-box";
+
   }
+
+}
 
   if(secao === "clientes-container"){
     carregarClientes();
