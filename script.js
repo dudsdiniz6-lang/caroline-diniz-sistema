@@ -7913,6 +7913,10 @@ function carregarRelatorios(){
 </div>
 
 `;
+
+    });
+
+}
 function preencherRelatorioLista(id, dados, tipo){
 
   const div =
