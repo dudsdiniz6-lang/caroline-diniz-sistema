@@ -5337,7 +5337,7 @@ function criarPainelAgendaProfissionais(){
     transition:.25s ease;
   `;
 
-  painel.onmouseenter = function(){
+
     painel.style.transform = "translateX(0)";
   };
 
@@ -7744,7 +7744,6 @@ function desativarHoverPainelAgenda(){
 
   if(!painel) return;
 
-  painel.onmouseenter = null;
   painel.onmouseleave = null;
 
 }
