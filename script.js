@@ -7872,7 +7872,7 @@ R$ ${ticketMedio.toFixed(2)}
 
 </div>
 
-     <div class="cliente-card"
+ <div class="cliente-card"
 style="
 background:#fff;
 border-radius:22px;
@@ -7892,10 +7892,10 @@ ${
     `<div style="
       display:flex;
       justify-content:space-between;
-      margin-bottom:14px;
-      padding:12px 14px;
+      padding:14px;
+      margin-bottom:12px;
       background:#f8fafc;
-      border-radius:12px;
+      border-radius:14px;
     ">
 
       <span>${dia}</span>
@@ -7911,44 +7911,139 @@ ${
 
 </div>
 
-      <div class="cliente-card">
+     <div class="cliente-card"
+style="
+background:#fff;
+border-radius:22px;
+padding:28px;
+box-shadow:0 10px 30px rgba(0,0,0,.08);
+">
 
-  <h3>Resumo Rápido</h3>
+<h3 style="margin:0 0 20px;">
+💳 Formas de Pagamento
+</h3>
 
-  <p>
-    Vendas fechadas:
-    ${fechadas}
-  </p>
+${
+  Object.entries(pagamentos)
+  .sort((a,b)=>b[1]-a[1])
+  .map(([forma,valor])=>
 
-  <p>
-    Total comandas:
-    ${vendas.length}
-  </p>
+    `<div style="
+      display:flex;
+      justify-content:space-between;
+      padding:14px;
+      margin-bottom:12px;
+      background:#f8fafc;
+      border-radius:14px;
+    ">
 
-  <p>
-    Ticket médio:
-    R$ ${ticketMedio.toFixed(2)}
-  </p>
+      <span>${forma}</span>
+
+      <strong style="color:#2563eb;">
+        R$ ${valor.toFixed(2)}
+      </strong>
+
+    </div>`
+
+  ).join("")
+}
 
 </div>
 
-<div class="cliente-card">
+     <div class="cliente-card"
+style="
+background:#fff;
+border-radius:22px;
+padding:28px;
+box-shadow:0 10px 30px rgba(0,0,0,.08);
+">
 
-  <h3>Profissionais</h3>
+<h3 style="margin:0 0 20px;">
+⚡ Resumo Rápido
+</h3>
 
-  ${
-    Object.entries(profissionais)
-    .sort((a,b)=>b[1]-a[1])
-    .map(([nome,valor])=>
+<div style="
+display:grid;
+gap:14px;
+">
 
-      `<p>
+<div style="
+background:#f8fafc;
+padding:18px;
+border-radius:14px;
+">
+Vendas fechadas:
+<strong>
+${fechadas}
+</strong>
+</div>
+
+<div style="
+background:#f8fafc;
+padding:18px;
+border-radius:14px;
+">
+Total comandas:
+<strong>
+${vendas.length}
+</strong>
+</div>
+
+<div style="
+background:#f8fafc;
+padding:18px;
+border-radius:14px;
+">
+Ticket médio:
+<strong>
+R$ ${ticketMedio.toFixed(2)}
+</strong>
+</div>
+
+</div>
+
+</div>
+
+<div class="cliente-card"
+style="
+background:#fff;
+border-radius:22px;
+padding:28px;
+box-shadow:0 10px 30px rgba(0,0,0,.08);
+">
+
+<h3 style="margin:0 0 20px;">
+🏆 Ranking Profissionais
+</h3>
+
+${
+  Object.entries(profissionais)
+  .sort((a,b)=>b[1]-a[1])
+  .map(([nome,valor],index)=>
+
+    `<div style="
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      padding:14px;
+      margin-bottom:12px;
+      background:#f8fafc;
+      border-radius:14px;
+    ">
+
+      <span>
+        #${index+1}
         ${nome}
-        —
-        R$ ${valor.toFixed(2)}
-      </p>`
+      </span>
 
-    ).join("")
-  }
+      <strong style="color:#ea580c;">
+        R$ ${valor.toFixed(2)}
+      </strong>
+
+    </div>`
+
+  ).join("")
+}
 
 </div>
 
