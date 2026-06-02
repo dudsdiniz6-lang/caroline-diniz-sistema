@@ -7872,45 +7872,44 @@ R$ ${ticketMedio.toFixed(2)}
 
 </div>
 
-      <div class="cliente-card">
+     <div class="cliente-card"
+style="
+background:#fff;
+border-radius:22px;
+padding:28px;
+box-shadow:0 10px 30px rgba(0,0,0,.08);
+">
 
-        <h3>Faturamento por Dia</h3>
+<h3 style="margin:0 0 20px;">
+📅 Faturamento por Dia
+</h3>
 
-        ${
-          Object.entries(porDia)
-          .sort((a,b)=>b[1]-a[1])
-          .map(([dia,valor])=>
+${
+  Object.entries(porDia)
+  .sort((a,b)=>b[1]-a[1])
+  .map(([dia,valor])=>
 
-            `<p>
-              ${dia}
-              —
-              R$ ${valor.toFixed(2)}
-            </p>`
+    `<div style="
+      display:flex;
+      justify-content:space-between;
+      margin-bottom:14px;
+      padding:12px 14px;
+      background:#f8fafc;
+      border-radius:12px;
+    ">
 
-          ).join("")
-        }
+      <span>${dia}</span>
 
-      </div>
+      <strong style="color:#16a34a;">
+        R$ ${valor.toFixed(2)}
+      </strong>
 
-      <div class="cliente-card">
+    </div>`
 
-        <h3>Formas de Pagamento</h3>
+  ).join("")
+}
 
-        ${
-          Object.entries(pagamentos)
-          .sort((a,b)=>b[1]-a[1])
-          .map(([forma,valor])=>
-
-            `<p>
-              ${forma}
-              —
-              R$ ${valor.toFixed(2)}
-            </p>`
-
-          ).join("")
-        }
-
-      </div>
+</div>
 
       <div class="cliente-card">
 
