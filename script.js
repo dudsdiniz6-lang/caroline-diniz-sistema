@@ -5340,28 +5340,6 @@ function criarPainelAgendaProfissionais(){
   painel.innerHTML = `
   painel.innerHTML = `
 painel.innerHTML = `
-  style="
-    position:absolute;
-    right:-38px;
-    top:120px;
-    width:38px;
-    height:48px;
-    border:none;
-    background:#fff;
-    box-shadow:4px 0 14px rgba(0,0,0,.12);
-    border-radius:0 12px 12px 0;
-    cursor:pointer;
-    font-size:20px;
-  "
->
-  ›
-</button>
-
-<h3>
-  Profissionais
-</h3>
-
-<div id="lista-profissionais-painel-agenda"></div>
 
 `;
     <h3 style="margin:0 0 28px 0;font-size:16px;font-weight:700;">
