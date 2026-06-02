@@ -7657,3 +7657,78 @@ function fixarPainelProfissionaisNaAgenda(){
 }
 
 setInterval(fixarPainelProfissionaisNaAgenda, 700);
+
+function criarTogglePainelAgenda(){
+
+  if(
+    document.getElementById(
+      "toggle-painel-agenda"
+    )
+  ) return;
+
+  const botao =
+    document.createElement("div");
+
+  botao.id =
+    "toggle-painel-agenda";
+
+  botao.innerHTML = "❯";
+
+  botao.style.cssText = `
+    position:fixed;
+    left:180px;
+    top:50%;
+    transform:translateY(-50%);
+    width:34px;
+    height:70px;
+    background:#fff;
+    border-radius:0 14px 14px 0;
+    box-shadow:0 4px 18px rgba(0,0,0,.12);
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    cursor:pointer;
+    z-index:9999;
+    font-size:20px;
+    user-select:none;
+  `;
+
+  botao.onclick = function(){
+
+    const painel =
+      document.getElementById(
+        "painel-profissionais-agenda"
+      );
+
+    if(!painel) return;
+
+    const fechado =
+      painel.dataset.fechado === "1";
+
+    if(fechado){
+
+      painel.style.left = "180px";
+
+      painel.dataset.fechado = "0";
+
+      botao.innerHTML = "❮";
+
+      botao.style.left = "410px";
+
+    }else{
+
+      painel.style.left = "-260px";
+
+      painel.dataset.fechado = "1";
+
+      botao.innerHTML = "❯";
+
+      botao.style.left = "180px";
+
+    }
+
+  };
+
+  document.body.appendChild(botao);
+
+}
