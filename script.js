@@ -7744,6 +7744,7 @@ function carregarRelatorios(){
 
       const porDia = {};
       const pagamentos = {};
+        const profissionais = {};
 
       vendas.forEach((venda)=>{
 
@@ -7777,6 +7778,14 @@ function carregarRelatorios(){
             venda.forma_pagamento || "-"
           ] || 0
         ) + valor;
+          profissionais[
+  venda.profissional || "-"
+] =
+(
+  profissionais[
+    venda.profissional || "-"
+  ] || 0
+) + valor;
 
       });
 
@@ -7862,11 +7871,48 @@ function carregarRelatorios(){
 
       </div>
 
-      `;
+      <div class="cliente-card">
 
-    });
+  <h3>Resumo Rápido</h3>
 
-}
+  <p>
+    Vendas fechadas:
+    ${fechadas}
+  </p>
+
+  <p>
+    Total comandas:
+    ${vendas.length}
+  </p>
+
+  <p>
+    Ticket médio:
+    R$ ${ticketMedio.toFixed(2)}
+  </p>
+
+</div>
+
+<div class="cliente-card">
+
+  <h3>Profissionais</h3>
+
+  ${
+    Object.entries(profissionais)
+    .sort((a,b)=>b[1]-a[1])
+    .map(([nome,valor])=>
+
+      `<p>
+        ${nome}
+        —
+        R$ ${valor.toFixed(2)}
+      </p>`
+
+    ).join("")
+  }
+
+</div>
+
+`;
 function preencherRelatorioLista(id, dados, tipo){
 
   const div =
