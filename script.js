@@ -5336,13 +5336,35 @@ function criarPainelAgendaProfissionais(){
     transition:.25s ease;
   `;
 
-  painel.onmouseenter = function(){
-    painel.style.transform = "translateX(0)";
-  };
+ painel.onclick = function(event){
 
-  painel.onmouseleave = function(){
-    painel.style.transform = "translateX(-250px)";
-  };
+  if(
+    event.target.closest("input") ||
+    event.target.closest("label")
+  ){
+    return;
+  }
+
+  const aberto =
+    painel.dataset.aberto === "1";
+
+  if(aberto){
+
+    painel.style.transform =
+      "translateX(-250px)";
+
+    painel.dataset.aberto = "0";
+
+  }else{
+
+    painel.style.transform =
+      "translateX(0)";
+
+    painel.dataset.aberto = "1";
+
+  }
+
+};
 
   painel.innerHTML = `
     <h3 style="margin:0 0 28px 0;font-size:16px;font-weight:700;">
