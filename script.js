@@ -7614,3 +7614,40 @@ setTimeout(()=>{
   }
 
 },2000);
+function fixarPainelProfissionaisNaAgenda(){
+
+  const painel =
+    document.getElementById("painel-profissionais-agenda");
+
+  const agenda =
+    document.querySelector(".agenda-container");
+
+  if(!painel || !agenda) return;
+
+  const agendaVisivel =
+    agenda.style.display !== "none";
+
+  if(agendaVisivel){
+
+    painel.style.display = "block";
+    painel.style.position = "fixed";
+    painel.style.left = "180px";
+    painel.style.top = "0";
+    painel.style.width = "230px";
+    painel.style.height = "100vh";
+    painel.style.background = "#fff";
+    painel.style.zIndex = "50";
+    painel.style.transform = "none";
+    painel.style.boxShadow = "4px 0 18px rgba(0,0,0,.08)";
+    painel.style.padding = "24px 18px";
+    painel.style.overflow = "auto";
+
+  }else{
+
+    painel.style.display = "none";
+
+  }
+
+}
+
+setInterval(fixarPainelProfissionaisNaAgenda, 700);
