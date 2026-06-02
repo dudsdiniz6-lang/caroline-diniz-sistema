@@ -5336,15 +5336,36 @@ function criarPainelAgendaProfissionais(){
     transition:.25s ease;
   `;
 
-  painel.onmouseenter = function(){
-    painel.style.transform = "translateX(0)";
-  };
-
-  painel.onmouseleave = function(){
-    painel.style.transform = "translateX(-250px)";
-  };
 
   painel.innerHTML = `
+  painel.innerHTML = `
+
+<button
+  onclick="alternarPainelProfissionaisAgenda()"
+  style="
+    position:absolute;
+    right:-38px;
+    top:120px;
+    width:38px;
+    height:48px;
+    border:none;
+    background:#fff;
+    box-shadow:4px 0 14px rgba(0,0,0,.12);
+    border-radius:0 12px 12px 0;
+    cursor:pointer;
+    font-size:20px;
+  "
+>
+  ›
+</button>
+
+<h3>
+  Profissionais
+</h3>
+
+<div id="lista-profissionais-painel-agenda"></div>
+
+`;
     <h3 style="margin:0 0 28px 0;font-size:16px;font-weight:700;">
       Configurações
     </h3>
@@ -7600,5 +7621,24 @@ function adicionarPagamentoVenda(id){
         });
 
     });
+
+}
+function alternarPainelProfissionaisAgenda(){
+
+  const painel =
+    document.getElementById("painel-profissionais-agenda");
+
+  if(!painel) return;
+
+  const aberto =
+    painel.dataset.aberto === "true";
+
+  painel.dataset.aberto =
+    aberto ? "false" : "true";
+
+  painel.style.transform =
+    aberto
+      ? "translateX(-250px)"
+      : "translateX(0)";
 
 }
