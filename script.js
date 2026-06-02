@@ -7829,3 +7829,44 @@ setTimeout(()=>{
   }
 
 },2000);
+function garantirAbaRelatorios(){
+
+  let nav =
+    document.querySelector("nav");
+
+  if(
+    nav &&
+    !document.getElementById(
+      "menu-relatorios"
+    )
+  ){
+
+    const link =
+      document.createElement("a");
+
+    link.id =
+      "menu-relatorios";
+
+    link.href = "#";
+
+    link.innerText =
+      "Relatórios";
+
+    link.onclick = function(){
+
+      mostrarSecao(
+        "relatorios-container"
+      );
+
+      carregarRelatorios();
+
+      return false;
+
+    };
+
+    nav.appendChild(link);
+
+  }
+
+}
+garantirAbaRelatorios();
