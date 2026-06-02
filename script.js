@@ -1545,7 +1545,33 @@ if(selecionada){
   if(secao === "pacotes-container"){
     carregarPacotes();
   }
-    if(secao === "configuracoes-container"){
+   if(
+  secao === "configuracoes-container" ||
+  secao === "caixa-container"
+){
+
+  const tela =
+    document.getElementById(secao);
+
+  if(tela){
+
+    tela.style.display = "block";
+
+    tela.style.marginLeft =
+      "180px";
+
+    tela.style.width =
+      "calc(100% - 180px)";
+
+    tela.style.padding =
+      "40px";
+
+    tela.style.boxSizing =
+      "border-box";
+
+  }
+
+}
 
   const config =
     document.getElementById("configuracoes-container");
