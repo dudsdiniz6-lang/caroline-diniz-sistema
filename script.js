@@ -7747,6 +7747,7 @@ function carregarRelatorios(){
 const profissionais = {};
 const clientes = {};
 const servicos = {};
+        const pendencias = [];
 
       vendas.forEach((venda)=>{
 
@@ -7764,9 +7765,16 @@ const servicos = {};
 
         }
 
-        if(venda.status==="EM ABERTO"){
-          aberto += valor;
-        }
+       if(venda.status==="EM ABERTO"){
+  aberto += valor;
+
+  pendencias.push({
+    cliente: venda.cliente || "-",
+    servico: venda.servico || "-",
+    profissional: venda.profissional || "-",
+    valor: valor
+  });
+}
 
         if(venda.status==="CANCELADA"){
           cancelado += valor;
@@ -8158,12 +8166,60 @@ ${
 }
 
 </div>
+<div class="cliente-card"
+style="
+background:#fff;
+border-radius:22px;
+padding:28px;
+box-shadow:0 10px 30px rgba(0,0,0,.08);
+">
+
+<h3 style="margin:0 0 20px;">
+⚠️ Pendências em Aberto
+</h3>
+
+${
+  pendencias.length === 0
+    ? `<p>Nenhuma pendência em aberto.</p>`
+    : pendencias
+      .map((item)=>
+
+        `<div style="
+          padding:14px;
+          margin-bottom:12px;
+          background:#fef2f2;
+          border-radius:14px;
+        ">
+
+          <strong>${item.cliente}</strong>
+
+          <p style="margin:6px 0;">
+            ${item.servico}
+          </p>
+
+          <small>
+            Profissional: ${item.profissional}
+          </small>
+
+          <br>
+
+          <strong style="color:#dc2626;">
+            R$ ${item.valor.toFixed(2)}
+          </strong>
+
+        </div>`
+
+      ).join("")
+}
+
+</div>
 
 `;
 
     });
 
 }
+
 function preencherRelatorioLista(id, dados, tipo){
 
   const div =
