@@ -1569,22 +1569,7 @@ if(selecionada){
     tela.style.boxSizing =
       "border-box";
 
-  }
-
-}
-
-  const config =
-    document.getElementById("configuracoes-container");
-
-  if(config){
-
-    config.style.display = "block";
-    config.style.marginLeft = "180px";
-    config.style.width = "calc(100% - 180px)";
-    config.style.padding = "40px";
-    config.style.boxSizing = "border-box";
-
-  }
+    }
 
 }
 
