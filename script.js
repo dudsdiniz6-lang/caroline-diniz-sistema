@@ -7737,3 +7737,16 @@ function criarTogglePainelAgenda(){
   document.body.appendChild(botao);
 
 }
+function desativarHoverPainelAgenda(){
+
+  const painel =
+    document.getElementById("painel-profissionais-agenda");
+
+  if(!painel) return;
+
+  painel.onmouseenter = null;
+  painel.onmouseleave = null;
+
+}
+
+setInterval(desativarHoverPainelAgenda, 500);
