@@ -7761,3 +7761,137 @@ function carregarRelatorios(){
 setTimeout(()=>{
   garantirAbaRelatorios();
 },1500);
+function carregarRelatorios(){
+
+  garantirAbaRelatorios();
+
+  const cards =
+    document.getElementById("cards-relatorios");
+
+  if(!cards) return;
+
+  cards.innerHTML = `
+    <div class="cliente-card"><strong>Faturamento fechado</strong><p id="rel-fat">R$ 0,00</p></div>
+    <div class="cliente-card"><strong>Vendas em aberto</strong><p id="rel-abertas">0</p></div>
+    <div class="cliente-card"><strong>Valor em aberto</strong><p id="rel-valor-aberto">R$ 0,00</p></div>
+    <div class="cliente-card"><strong>Vendas canceladas</strong><p id="rel-canceladas">0</p></div>
+
+    <h3 style="grid-column:1/-1;margin-top:20px;">Formas de pagamento</h3>
+    <div id="rel-formas" style="grid-column:1/-1;"></div>
+
+    <h3 style="grid-column:1/-1;margin-top:20px;">Faturamento por profissional</h3>
+    <div id="rel-profissionais" style="grid-column:1/-1;"></div>
+
+    <h3 style="grid-column:1/-1;margin-top:20px;">Atendimentos por profissional</h3>
+    <div id="rel-atendimentos-profissional" style="grid-column:1/-1;"></div>
+
+    <h3 style="grid-column:1/-1;margin-top:20px;">Faturamento por dia</h3>
+    <div id="rel-dias" style="grid-column:1/-1;"></div>
+
+    <h3 style="grid-column:1/-1;margin-top:20px;">Clientes atendidos</h3>
+    <div id="rel-clientes" style="grid-column:1/-1;"></div>
+
+    <h3 style="grid-column:1/-1;margin-top:20px;">Serviços mais vendidos</h3>
+    <div id="rel-servicos" style="grid-column:1/-1;"></div>
+  `;
+
+  supabaseClient
+    .from("comandas")
+    .select("*")
+    .then((resposta)=>{
+
+      const vendas = resposta.data || [];
+
+      let faturamento = 0;
+      let abertas = 0;
+      let valorAberto = 0;
+      let canceladas = 0;
+
+      const formas = {};
+      const profissionais = {};
+      const atendimentosProf = {};
+      const dias = {};
+      const clientes = {};
+      const servicos = {};
+
+      vendas.forEach((venda)=>{
+
+        const valor = Number(venda.valor || 0);
+
+        if(venda.status === "CANCELADA"){
+          canceladas++;
+          return;
+        }
+
+        if(venda.status === "FECHADO"){
+          faturamento += valor;
+        }
+
+        if(venda.status === "EM ABERTO"){
+          abertas++;
+          valorAberto += valor;
+        }
+
+        if(venda.profissional){
+          profissionais[venda.profissional] =
+            (profissionais[venda.profissional] || 0) + valor;
+
+          atendimentosProf[venda.profissional] =
+            (atendimentosProf[venda.profissional] || 0) + 1;
+        }
+
+        if(venda.data){
+          dias[venda.data] =
+            (dias[venda.data] || 0) + valor;
+        }
+
+        if(venda.cliente){
+          clientes[venda.cliente] =
+            (clientes[venda.cliente] || 0) + 1;
+        }
+
+        if(venda.servico){
+          venda.servico.split(",").forEach((serv)=>{
+            const nome = serv.trim();
+            servicos[nome] = (servicos[nome] || 0) + 1;
+          });
+        }
+
+        try{
+          const pagamentos =
+            JSON.parse(venda.forma_pagamento || "[]");
+
+          pagamentos.forEach((pag)=>{
+            const forma = pag.forma || "Não informado";
+            const valorPag = Number(pag.valor || 0);
+
+            formas[forma] =
+              (formas[forma] || 0) + valorPag;
+          });
+
+        }catch(e){}
+
+      });
+
+      document.getElementById("rel-fat").innerText =
+        "R$ " + faturamento.toFixed(2);
+
+      document.getElementById("rel-abertas").innerText =
+        abertas;
+
+      document.getElementById("rel-valor-aberto").innerText =
+        "R$ " + valorAberto.toFixed(2);
+
+      document.getElementById("rel-canceladas").innerText =
+        canceladas;
+
+      preencherRelatorioLista("rel-formas", formas, "R$");
+      preencherRelatorioLista("rel-profissionais", profissionais, "R$");
+      preencherRelatorioLista("rel-atendimentos-profissional", atendimentosProf, "atendimentos");
+      preencherRelatorioLista("rel-dias", dias, "R$");
+      preencherRelatorioLista("rel-clientes", clientes, "atendimentos");
+      preencherRelatorioLista("rel-servicos", servicos, "vendas");
+
+    });
+
+}
