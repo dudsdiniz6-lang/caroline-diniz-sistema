@@ -7984,15 +7984,31 @@ function garantirAbaRelatorios(){
       "Relatórios";
 
   
-    link.onclick = function(){
+  link.onclick = function(){
 
-  document.querySelector(
-    ".agenda-container"
-  ).style.display = "none";
+  document.querySelector(".agenda-container").style.display = "none";
 
-  mostrarSecao(
-    "relatorios-container"
-  );
+  document.querySelectorAll(".clientes-container").forEach((item)=>{
+    item.style.display = "none";
+  });
+
+  let tela =
+    document.getElementById("relatorios-container");
+
+  if(!tela){
+
+    tela = document.createElement("div");
+    tela.id = "relatorios-container";
+    tela.className = "clientes-container";
+    document.body.appendChild(tela);
+
+  }
+
+  tela.style.display = "block";
+  tela.style.marginLeft = "180px";
+  tela.style.width = "calc(100% - 180px)";
+  tela.style.padding = "40px";
+  tela.style.boxSizing = "border-box";
 
   carregarRelatorios();
 
