@@ -7717,15 +7717,16 @@ function carregarRelatorios(){
   container.innerHTML = `
     <h2>Central de Relatórios</h2>
 
-    <div id="cards-relatorios"
+    <div
+      id="cards-relatorios"
       style="
         display:grid;
         grid-template-columns:
-          repeat(auto-fit,minmax(330px,1fr));
-        gap:22px;
+        repeat(auto-fit,minmax(320px,1fr));
+        gap:20px;
         margin-top:25px;
-      ">
-    </div>
+      "
+    ></div>
   `;
 
   supabaseClient
@@ -7739,10 +7740,9 @@ function carregarRelatorios(){
       let faturamento = 0;
       let aberto = 0;
       let cancelado = 0;
+      let fechadas = 0;
 
-      const profissionais = {};
-      const clientes = {};
-      const servicos = {};
+      const porDia = {};
       const pagamentos = {};
 
       vendas.forEach((venda)=>{
@@ -7751,7 +7751,14 @@ function carregarRelatorios(){
           Number(venda.valor || 0);
 
         if(venda.status==="FECHADO"){
+
           faturamento += valor;
+          fechadas++;
+
+          porDia[venda.data || "-"] =
+            (porDia[venda.data || "-"] || 0)
+            + valor;
+
         }
 
         if(venda.status==="EM ABERTO"){
@@ -7761,33 +7768,6 @@ function carregarRelatorios(){
         if(venda.status==="CANCELADA"){
           cancelado += valor;
         }
-
-        profissionais[
-          venda.profissional || "-"
-        ] =
-        (
-          profissionais[
-            venda.profissional || "-"
-          ] || 0
-        ) + valor;
-
-        clientes[
-          venda.cliente || "-"
-        ] =
-        (
-          clientes[
-            venda.cliente || "-"
-          ] || 0
-        ) + 1;
-
-        servicos[
-          venda.servico || "-"
-        ] =
-        (
-          servicos[
-            venda.servico || "-"
-          ] || 0
-        ) + 1;
 
         pagamentos[
           venda.forma_pagamento || "-"
@@ -7800,66 +7780,86 @@ function carregarRelatorios(){
 
       });
 
-      const cards =
-        document.getElementById(
-          "cards-relatorios"
-        );
+      const ticketMedio =
+        fechadas
+          ? faturamento / fechadas
+          : 0;
 
-      cards.innerHTML = `
+      document.getElementById(
+        "cards-relatorios"
+      ).innerHTML = `
 
       <div class="cliente-card">
-        <h3>Financeiro</h3>
-        <p>Faturamento: R$ ${faturamento.toFixed(2)}</p>
-        <p>Em aberto: R$ ${aberto.toFixed(2)}</p>
-        <p>Cancelado: R$ ${cancelado.toFixed(2)}</p>
+        <h3>Financeiro Geral</h3>
+
+        <p>
+          Faturamento:
+          <strong>
+          R$ ${faturamento.toFixed(2)}
+          </strong>
+        </p>
+
+        <p>
+          Em aberto:
+          <strong>
+          R$ ${aberto.toFixed(2)}
+          </strong>
+        </p>
+
+        <p>
+          Cancelado:
+          <strong>
+          R$ ${cancelado.toFixed(2)}
+          </strong>
+        </p>
+
+        <p>
+          Ticket médio:
+          <strong>
+          R$ ${ticketMedio.toFixed(2)}
+          </strong>
+        </p>
+
       </div>
 
       <div class="cliente-card">
-        <h3>Profissionais</h3>
+
+        <h3>Faturamento por Dia</h3>
+
         ${
-          Object.entries(profissionais)
-          .map(([n,v])=>
-            `<p>${n}: R$ ${v.toFixed(2)}</p>`
+          Object.entries(porDia)
+          .sort((a,b)=>b[1]-a[1])
+          .map(([dia,valor])=>
+
+            `<p>
+              ${dia}
+              —
+              R$ ${valor.toFixed(2)}
+            </p>`
+
           ).join("")
         }
+
       </div>
 
       <div class="cliente-card">
-        <h3>Clientes</h3>
-        ${
-          Object.entries(clientes)
-          .map(([n,v])=>
-            `<p>${n}: ${v} atend.</p>`
-          ).join("")
-        }
-      </div>
 
-      <div class="cliente-card">
-        <h3>Serviços</h3>
-        ${
-          Object.entries(servicos)
-          .map(([n,v])=>
-            `<p>${n}: ${v}</p>`
-          ).join("")
-        }
-      </div>
+        <h3>Formas de Pagamento</h3>
 
-      <div class="cliente-card">
-        <h3>Formas pagamento</h3>
         ${
           Object.entries(pagamentos)
-          .map(([n,v])=>
-            `<p>${n}: R$ ${v.toFixed(2)}</p>`
+          .sort((a,b)=>b[1]-a[1])
+          .map(([forma,valor])=>
+
+            `<p>
+              ${forma}
+              —
+              R$ ${valor.toFixed(2)}
+            </p>`
+
           ).join("")
         }
-      </div>
 
-      <div class="cliente-card">
-        <h3>Pendências</h3>
-        <p>Total aberto:</p>
-        <strong>
-          R$ ${aberto.toFixed(2)}
-        </strong>
       </div>
 
       `;
