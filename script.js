@@ -7798,3 +7798,34 @@ function abrirRelatorioPendencias(){
   document.getElementById("conteudo-relatorio").innerHTML =
     "<h3>Pendências</h3>";
 }
+setTimeout(()=>{
+
+  const nav =
+    document.querySelector("nav");
+
+  if(
+    nav &&
+    !document.getElementById(
+      "menu-relatorios"
+    )
+  ){
+
+    nav.innerHTML += `
+      <a
+        id="menu-relatorios"
+        href="#"
+        onclick="
+          mostrarSecao(
+            'relatorios-container'
+          );
+          carregarRelatorios();
+          return false;
+        "
+      >
+        Relatórios
+      </a>
+    `;
+
+  }
+
+},2000);
