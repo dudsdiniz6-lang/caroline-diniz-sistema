@@ -5375,7 +5375,7 @@ supabaseClient
   .from("profissionais_salao")
   .select("*")
   .order("nome")
-.order("nome",{ascending:true})
+  .then((resposta)=>{
 
       const profissionais = resposta.data || [];
 
