@@ -7707,183 +7707,61 @@ function garantirAbaRelatorios(){
 
 function carregarRelatorios(){
 
+  garantirAbaRelatorios();
+
+  const container =
+    document.getElementById(
+      "relatorios-container"
+    );
+
+  if(!container) return;
+
+  container.innerHTML = `
+
+    <h2 style="margin-bottom:25px;">
+      Central de Relatórios
+    </h2>
+
+    <div
+      id="cards-relatorios"
+      style="
+        display:grid;
+        grid-template-columns:
+          repeat(auto-fit,minmax(320px,1fr));
+        gap:20px;
+      "
+    ></div>
+
+  `;
+
   const cards =
     document.getElementById(
       "cards-relatorios"
     );
 
-  if(!cards) return;
-
   cards.innerHTML = `
-  
-  <h2 style="grid-column:1/-1;">
-    Central de Relatórios
-  </h2>
 
-  <div id="rel-financeiro"></div>
-  <div id="rel-profissionais"></div>
-  <div id="rel-clientes"></div>
-  <div id="rel-servicos"></div>
-  <div id="rel-pagamentos"></div>
-  <div id="rel-pendencias"></div>
+    <div class="cliente-card">
+      <h3>Financeiro</h3>
+      <p>Carregando...</p>
+    </div>
+
+    <div class="cliente-card">
+      <h3>Profissionais</h3>
+      <p>Carregando...</p>
+    </div>
+
+    <div class="cliente-card">
+      <h3>Clientes</h3>
+      <p>Carregando...</p>
+    </div>
+
+    <div class="cliente-card">
+      <h3>Serviços</h3>
+      <p>Carregando...</p>
+    </div>
 
   `;
-
-  supabaseClient
-    .from("comandas")
-    .select("*")
-    .then((resposta)=>{
-
-      const vendas =
-        resposta.data || [];
-
-      let faturamento = 0;
-      let aberto = 0;
-
-      const profissionais = {};
-      const clientes = {};
-      const servicos = {};
-      const pagamentos = {};
-
-      vendas.forEach((venda)=>{
-
-        const valor =
-          Number(venda.valor || 0);
-
-        if(
-          venda.status === "FECHADO"
-        ){
-          faturamento += valor;
-        }
-
-        if(
-          venda.status === "EM ABERTO"
-        ){
-          aberto += valor;
-        }
-
-        profissionais[
-          venda.profissional || "-"
-        ] =
-        (
-          profissionais[
-            venda.profissional || "-"
-          ] || 0
-        ) + valor;
-
-        clientes[
-          venda.cliente || "-"
-        ] =
-        (
-          clientes[
-            venda.cliente || "-"
-          ] || 0
-        ) + valor;
-
-        servicos[
-          venda.servico || "-"
-        ] =
-        (
-          servicos[
-            venda.servico || "-"
-          ] || 0
-        ) + 1;
-
-        try{
-
-          const formas =
-            JSON.parse(
-              venda.forma_pagamento || "[]"
-            );
-
-          formas.forEach((f)=>{
-
-            pagamentos[
-              f.forma || "-"
-            ] =
-            (
-              pagamentos[
-                f.forma || "-"
-              ] || 0
-            ) + Number(
-              f.valor || 0
-            );
-
-          });
-
-        }catch{}
-
-      });
-
-      document.getElementById(
-        "rel-financeiro"
-      ).innerHTML = `
-
-        <div class="cliente-card">
-          <h3>Financeiro</h3>
-          <p>
-            Faturamento:
-            R$ ${faturamento.toFixed(2)}
-          </p>
-
-          <p>
-            Em aberto:
-            R$ ${aberto.toFixed(2)}
-          </p>
-        </div>
-
-      `;
-
-      document.getElementById(
-        "rel-profissionais"
-      ).innerHTML =
-        montarListaRelatorio(
-          "Profissionais",
-          profissionais
-        );
-
-      document.getElementById(
-        "rel-clientes"
-      ).innerHTML =
-        montarListaRelatorio(
-          "Clientes",
-          clientes
-        );
-
-      document.getElementById(
-        "rel-servicos"
-      ).innerHTML =
-        montarListaRelatorio(
-          "Serviços",
-          servicos
-        );
-
-      document.getElementById(
-        "rel-pagamentos"
-      ).innerHTML =
-        montarListaRelatorio(
-          "Formas de pagamento",
-          pagamentos
-        );
-
-      document.getElementById(
-        "rel-pendencias"
-      ).innerHTML = `
-
-        <div class="cliente-card">
-
-          <h3>Pendências</h3>
-
-          <p>
-            Valor total em aberto:
-            R$ ${aberto.toFixed(2)}
-          </p>
-
-        </div>
-
-      `;
-
-    });
 
 }
 function preencherRelatorioLista(id, dados, tipo){
