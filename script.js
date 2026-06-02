@@ -4330,7 +4330,12 @@ setTimeout(()=>{
 
     container.id = "caixa-container";
     container.className = "clientes-container";
-    container.style.display = "none";
+container.style.display = "none";
+
+container.style.marginLeft = "180px";
+container.style.width = "calc(100% - 180px)";
+container.style.padding = "35px";
+container.style.boxSizing = "border-box";
 
     container.innerHTML = `
       <div id="caixa-lateral"></div>
