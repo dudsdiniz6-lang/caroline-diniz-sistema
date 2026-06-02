@@ -7707,8 +7707,6 @@ function garantirAbaRelatorios(){
 
 function carregarRelatorios(){
 
-  garantirAbaRelatorios();
-
   const container =
     document.getElementById(
       "relatorios-container"
@@ -7717,51 +7715,156 @@ function carregarRelatorios(){
   if(!container) return;
 
   container.innerHTML = `
+    <h2>Central de Relatórios</h2>
 
-    <h2 style="margin-bottom:25px;">
-      Central de Relatórios
-    </h2>
-
-    <div
-      id="cards-relatorios"
+    <div id="cards-relatorios"
       style="
         display:grid;
         grid-template-columns:
-          repeat(auto-fit,minmax(320px,1fr));
-        gap:20px;
-      "
-    ></div>
-
+          repeat(auto-fit,minmax(330px,1fr));
+        gap:22px;
+        margin-top:25px;
+      ">
+    </div>
   `;
 
-  const cards =
-    document.getElementById(
-      "cards-relatorios"
-    );
+  supabaseClient
+    .from("comandas")
+    .select("*")
+    .then((resposta)=>{
 
-  cards.innerHTML = `
+      const vendas =
+        resposta.data || [];
 
-    <div class="cliente-card">
-      <h3>Financeiro</h3>
-      <p>Carregando...</p>
-    </div>
+      let faturamento = 0;
+      let aberto = 0;
+      let cancelado = 0;
 
-    <div class="cliente-card">
-      <h3>Profissionais</h3>
-      <p>Carregando...</p>
-    </div>
+      const profissionais = {};
+      const clientes = {};
+      const servicos = {};
+      const pagamentos = {};
 
-    <div class="cliente-card">
-      <h3>Clientes</h3>
-      <p>Carregando...</p>
-    </div>
+      vendas.forEach((venda)=>{
 
-    <div class="cliente-card">
-      <h3>Serviços</h3>
-      <p>Carregando...</p>
-    </div>
+        const valor =
+          Number(venda.valor || 0);
 
-  `;
+        if(venda.status==="FECHADO"){
+          faturamento += valor;
+        }
+
+        if(venda.status==="EM ABERTO"){
+          aberto += valor;
+        }
+
+        if(venda.status==="CANCELADA"){
+          cancelado += valor;
+        }
+
+        profissionais[
+          venda.profissional || "-"
+        ] =
+        (
+          profissionais[
+            venda.profissional || "-"
+          ] || 0
+        ) + valor;
+
+        clientes[
+          venda.cliente || "-"
+        ] =
+        (
+          clientes[
+            venda.cliente || "-"
+          ] || 0
+        ) + 1;
+
+        servicos[
+          venda.servico || "-"
+        ] =
+        (
+          servicos[
+            venda.servico || "-"
+          ] || 0
+        ) + 1;
+
+        pagamentos[
+          venda.forma_pagamento || "-"
+        ] =
+        (
+          pagamentos[
+            venda.forma_pagamento || "-"
+          ] || 0
+        ) + valor;
+
+      });
+
+      const cards =
+        document.getElementById(
+          "cards-relatorios"
+        );
+
+      cards.innerHTML = `
+
+      <div class="cliente-card">
+        <h3>Financeiro</h3>
+        <p>Faturamento: R$ ${faturamento.toFixed(2)}</p>
+        <p>Em aberto: R$ ${aberto.toFixed(2)}</p>
+        <p>Cancelado: R$ ${cancelado.toFixed(2)}</p>
+      </div>
+
+      <div class="cliente-card">
+        <h3>Profissionais</h3>
+        ${
+          Object.entries(profissionais)
+          .map(([n,v])=>
+            `<p>${n}: R$ ${v.toFixed(2)}</p>`
+          ).join("")
+        }
+      </div>
+
+      <div class="cliente-card">
+        <h3>Clientes</h3>
+        ${
+          Object.entries(clientes)
+          .map(([n,v])=>
+            `<p>${n}: ${v} atend.</p>`
+          ).join("")
+        }
+      </div>
+
+      <div class="cliente-card">
+        <h3>Serviços</h3>
+        ${
+          Object.entries(servicos)
+          .map(([n,v])=>
+            `<p>${n}: ${v}</p>`
+          ).join("")
+        }
+      </div>
+
+      <div class="cliente-card">
+        <h3>Formas pagamento</h3>
+        ${
+          Object.entries(pagamentos)
+          .map(([n,v])=>
+            `<p>${n}: R$ ${v.toFixed(2)}</p>`
+          ).join("")
+        }
+      </div>
+
+      <div class="cliente-card">
+        <h3>Pendências</h3>
+        <p>Total aberto:</p>
+        <strong>
+          R$ ${aberto.toFixed(2)}
+        </strong>
+      </div>
+
+      `;
+
+    });
 
 }
 function preencherRelatorioLista(id, dados, tipo){
