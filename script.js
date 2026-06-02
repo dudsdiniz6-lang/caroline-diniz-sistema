@@ -7624,3 +7624,140 @@ function adicionarPagamentoVenda(id){
     });
 
 }
+function garantirAbaRelatorios(){
+
+  const nav = document.querySelector("nav");
+
+  if(nav && !document.getElementById("menu-relatorios")){
+
+    nav.insertAdjacentHTML(
+      "beforeend",
+      `
+        <a
+          id="menu-relatorios"
+          href="#"
+          onclick="mostrarSecao('relatorios-container'); carregarRelatorios(); return false;"
+        >
+          Relatórios
+        </a>
+      `
+    );
+
+  }
+
+  if(!document.getElementById("relatorios-container")){
+
+    const container = document.createElement("div");
+
+    container.id = "relatorios-container";
+    container.className = "clientes-container";
+    container.style.display = "none";
+
+    container.innerHTML = `
+      <h2>Relatórios</h2>
+
+      <div id="cards-relatorios" style="
+        display:grid;
+        grid-template-columns:repeat(auto-fit,minmax(220px,1fr));
+        gap:18px;
+        margin-top:20px;
+      "></div>
+    `;
+
+    document.body.appendChild(container);
+
+  }
+
+}
+
+function carregarRelatorios(){
+
+  garantirAbaRelatorios();
+
+  const cards =
+    document.getElementById("cards-relatorios");
+
+  if(!cards) return;
+
+  cards.innerHTML = `
+    <div class="cliente-card">
+      <strong>Faturamento</strong>
+      <p id="relatorio-faturamento">R$ 0,00</p>
+    </div>
+
+    <div class="cliente-card">
+      <strong>Vendas fechadas</strong>
+      <p id="relatorio-vendas-fechadas">0</p>
+    </div>
+
+    <div class="cliente-card">
+      <strong>Vendas em aberto</strong>
+      <p id="relatorio-vendas-abertas">0</p>
+    </div>
+
+    <div class="cliente-card">
+      <strong>Vendas canceladas</strong>
+      <p id="relatorio-vendas-canceladas">0</p>
+    </div>
+
+    <div class="cliente-card">
+      <strong>Total em aberto</strong>
+      <p id="relatorio-total-aberto">R$ 0,00</p>
+    </div>
+  `;
+
+  supabaseClient
+    .from("comandas")
+    .select("*")
+    .then((resposta)=>{
+
+      const vendas = resposta.data || [];
+
+      let faturamento = 0;
+      let abertas = 0;
+      let fechadas = 0;
+      let canceladas = 0;
+      let totalAberto = 0;
+
+      vendas.forEach((venda)=>{
+
+        const valor = Number(venda.valor || 0);
+
+        if(venda.status === "FECHADO"){
+          fechadas++;
+          faturamento += valor;
+        }
+
+        if(venda.status === "EM ABERTO"){
+          abertas++;
+          totalAberto += valor;
+        }
+
+        if(venda.status === "CANCELADA"){
+          canceladas++;
+        }
+
+      });
+
+      document.getElementById("relatorio-faturamento").innerText =
+        "R$ " + faturamento.toFixed(2);
+
+      document.getElementById("relatorio-vendas-fechadas").innerText =
+        fechadas;
+
+      document.getElementById("relatorio-vendas-abertas").innerText =
+        abertas;
+
+      document.getElementById("relatorio-vendas-canceladas").innerText =
+        canceladas;
+
+      document.getElementById("relatorio-total-aberto").innerText =
+        "R$ " + totalAberto.toFixed(2);
+
+    });
+
+}
+
+setTimeout(()=>{
+  garantirAbaRelatorios();
+},1500);
