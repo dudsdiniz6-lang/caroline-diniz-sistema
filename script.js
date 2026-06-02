@@ -4035,8 +4035,7 @@ async function carregarProfissionaisAgenda(){
     .from("profissionais_salao")
     .select("*")
     .eq("ativo", true)
-    .order("nome")
-.order("nome",{ascending:true})
+    .order("nome");
 
   window.profissionaisAgendaSistema = resposta.data || [];
 
@@ -5337,7 +5336,7 @@ function criarPainelAgendaProfissionais(){
     transition:.25s ease;
   `;
 
-
+  painel.onmouseenter = function(){
     painel.style.transform = "translateX(0)";
   };
 
@@ -5371,7 +5370,7 @@ function carregarProfissionaisPainelAgenda(){
 
   lista.innerHTML = "";
 
-supabaseClient
+ supabaseClient
   .from("profissionais_salao")
   .select("*")
   .order("nome")
@@ -5408,18 +5407,12 @@ supabaseClient
         lista.innerHTML += `
           <label style="display:flex;align-items:center;gap:10px;margin-bottom:14px;font-size:14px;cursor:pointer;">
             <input
-  type="checkbox"
-  value="${id}"
-  ${marcado}
-  onchange="alternarProfissionalAgenda(this)"
-  style="
-    width:20px;
-    height:20px;
-    min-width:20px;
-    accent-color:#ff5a1f;
-    cursor:pointer;
-  "
->
+              type="checkbox"
+              value="${id}"
+              ${marcado}
+              onchange="alternarProfissionalAgenda(this)"
+              style="width:16px;height:16px;accent-color:#111;"
+            >
             <span>${profissional.nome}</span>
           </label>
         `;
@@ -7609,143 +7602,3 @@ function adicionarPagamentoVenda(id){
     });
 
 }
-setTimeout(()=>{
-
-  if(typeof criarPainelAgendaProfissionais === "function"){
-    criarPainelAgendaProfissionais();
-  }
-
-  if(typeof carregarProfissionaisPainelAgenda === "function"){
-    carregarProfissionaisPainelAgenda();
-  }
-
-},2000);
-function fixarPainelProfissionaisNaAgenda(){
-
-  const painel =
-    document.getElementById("painel-profissionais-agenda");
-
-  const agenda =
-    document.querySelector(".agenda-container");
-
-  if(!painel || !agenda) return;
-
-  const agendaVisivel =
-    agenda.style.display !== "none";
-
-  if(agendaVisivel){
-
-    painel.style.display = "block";
-    painel.style.position = "fixed";
-   painel.style.left =
-  painel.dataset.fechado === "1"
-    ? "-260px"
-    : "180px";
-    painel.style.top = "0";
-    painel.style.width = "230px";
-    painel.style.height = "100vh";
-    painel.style.background = "#fff";
-    painel.style.zIndex = "50";
-    painel.style.transform = "none";
-    painel.style.boxShadow = "4px 0 18px rgba(0,0,0,.08)";
-    painel.style.padding = "24px 18px";
-    painel.style.overflow = "auto";
-
- }else{
-
-  painel.style.display = "none";
-
-}
-
-criarTogglePainelAgenda();
-
-}
-
-setInterval(fixarPainelProfissionaisNaAgenda, 700);
-
-function criarTogglePainelAgenda(){
-
-  if(
-    document.getElementById(
-      "toggle-painel-agenda"
-    )
-  ) return;
-
-  const botao =
-    document.createElement("div");
-
-  botao.id =
-    "toggle-painel-agenda";
-
-  botao.innerHTML = "❯";
-
-  botao.style.cssText = `
-    position:fixed;
-    left:180px;
-    top:50%;
-    transform:translateY(-50%);
-    width:34px;
-    height:70px;
-    background:#fff;
-    border-radius:0 14px 14px 0;
-    box-shadow:0 4px 18px rgba(0,0,0,.12);
-    display:flex;
-    align-items:center;
-    justify-content:center;
-    cursor:pointer;
-    z-index:9999;
-    font-size:20px;
-    user-select:none;
-  `;
-
-  botao.onclick = function(){
-
-    const painel =
-      document.getElementById(
-        "painel-profissionais-agenda"
-      );
-
-    if(!painel) return;
-
-    const fechado =
-      painel.dataset.fechado === "1";
-
-    if(fechado){
-
-      painel.style.left = "180px";
-
-      painel.dataset.fechado = "0";
-
-      botao.innerHTML = "❮";
-
-      botao.style.left = "410px";
-
-    }else{
-
-      painel.style.left = "-260px";
-
-      painel.dataset.fechado = "1";
-
-      botao.innerHTML = "❯";
-
-      botao.style.left = "180px";
-
-    }
-
-  };
-
-  document.body.appendChild(botao);
-
-}
-function desativarHoverPainelAgenda(){
-
-  const painel =
-    document.getElementById("painel-profissionais-agenda");
-
-  if(!painel) return;
-
-  painel.onmouseleave = null;
-
-}
-
-setInterval(desativarHoverPainelAgenda, 500);
