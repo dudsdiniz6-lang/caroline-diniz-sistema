@@ -7798,38 +7798,79 @@ function carregarRelatorios(){
         "cards-relatorios"
       ).innerHTML = `
 
-      <div class="cliente-card">
-        <h3>Financeiro Geral</h3>
+      <div class="cliente-card"
+style="
+background:#fff;
+border-radius:22px;
+padding:28px;
+box-shadow:0 10px 30px rgba(0,0,0,.08);
+border:1px solid #eee;
+">
 
-        <p>
-          Faturamento:
-          <strong>
-          R$ ${faturamento.toFixed(2)}
-          </strong>
-        </p>
+<h3 style="
+margin:0 0 22px;
+font-size:22px;
+">
+💰 Financeiro Geral
+</h3>
 
-        <p>
-          Em aberto:
-          <strong>
-          R$ ${aberto.toFixed(2)}
-          </strong>
-        </p>
+<div style="
+display:grid;
+grid-template-columns:1fr 1fr;
+gap:16px;
+">
 
-        <p>
-          Cancelado:
-          <strong>
-          R$ ${cancelado.toFixed(2)}
-          </strong>
-        </p>
+<div style="
+background:#f8fafc;
+padding:18px;
+border-radius:16px;
+">
+<small>Faturamento</small>
 
-        <p>
-          Ticket médio:
-          <strong>
-          R$ ${ticketMedio.toFixed(2)}
-          </strong>
-        </p>
+<h2 style="margin:8px 0 0;color:#16a34a;">
+R$ ${faturamento.toFixed(2)}
+</h2>
+</div>
 
-      </div>
+<div style="
+background:#fef2f2;
+padding:18px;
+border-radius:16px;
+">
+<small>Em aberto</small>
+
+<h2 style="margin:8px 0 0;color:#dc2626;">
+R$ ${aberto.toFixed(2)}
+</h2>
+</div>
+
+<div style="
+background:#fff7ed;
+padding:18px;
+border-radius:16px;
+">
+<small>Cancelado</small>
+
+<h2 style="margin:8px 0 0;color:#ea580c;">
+R$ ${cancelado.toFixed(2)}
+</h2>
+</div>
+
+<div style="
+background:#eff6ff;
+padding:18px;
+border-radius:16px;
+">
+<small>Ticket Médio</small>
+
+<h2 style="margin:8px 0 0;color:#2563eb;">
+R$ ${ticketMedio.toFixed(2)}
+</h2>
+</div>
+
+</div>
+
+</div>
 
       <div class="cliente-card">
 
