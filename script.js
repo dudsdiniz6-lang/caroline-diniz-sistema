@@ -5408,12 +5408,18 @@ supabaseClient
         lista.innerHTML += `
           <label style="display:flex;align-items:center;gap:10px;margin-bottom:14px;font-size:14px;cursor:pointer;">
             <input
-              type="checkbox"
-              value="${id}"
-              ${marcado}
-              onchange="alternarProfissionalAgenda(this)"
-              style="width:16px;height:16px;accent-color:#111;"
-            >
+  type="checkbox"
+  value="${id}"
+  ${marcado}
+  onchange="alternarProfissionalAgenda(this)"
+  style="
+    width:20px;
+    height:20px;
+    min-width:20px;
+    accent-color:#ff5a1f;
+    cursor:pointer;
+  "
+>
             <span>${profissional.nome}</span>
           </label>
         `;
