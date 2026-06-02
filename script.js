@@ -4035,7 +4035,8 @@ async function carregarProfissionaisAgenda(){
     .from("profissionais_salao")
     .select("*")
     .eq("ativo", true)
-    .order("nome");
+    .order("ordem",{ascending:true})
+.order("nome",{ascending:true})
 
   window.profissionaisAgendaSistema = resposta.data || [];
 
@@ -5373,7 +5374,8 @@ function carregarProfissionaisPainelAgenda(){
  supabaseClient
   .from("profissionais_salao")
   .select("*")
-  .order("nome")
+  .order("ordem",{ascending:true})
+.order("nome",{ascending:true})
   .then((resposta)=>{
 
       const profissionais = resposta.data || [];
