@@ -7744,8 +7744,9 @@ function carregarRelatorios(){
 
       const porDia = {};
       const pagamentos = {};
-        const profissionais = {};
-        const clientes = {};
+const profissionais = {};
+const clientes = {};
+const servicos = {};
 
       vendas.forEach((venda)=>{
 
@@ -7794,6 +7795,15 @@ clientes[
 (
   clientes[
     venda.cliente || "-"
+  ] || 0
+) + valor;
+
+servicos[
+  venda.servico || "-"
+] =
+(
+  servicos[
+    venda.servico || "-"
   ] || 0
 ) + valor;
 
@@ -8092,6 +8102,52 @@ ${
 
       <strong style="
         color:#7c3aed;
+      ">
+        R$ ${valor.toFixed(2)}
+      </strong>
+
+    </div>`
+
+  ).join("")
+}
+
+</div>
+
+<div class="cliente-card"
+style="
+background:#fff;
+border-radius:22px;
+padding:28px;
+box-shadow:0 10px 30px rgba(0,0,0,.08);
+">
+
+<h3 style="margin:0 0 20px;">
+✨ Serviços Mais Vendidos
+</h3>
+
+${
+  Object.entries(servicos)
+  .sort((a,b)=>b[1]-a[1])
+  .slice(0,10)
+  .map(([nome,valor],index)=>
+
+    `<div style="
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      padding:14px;
+      margin-bottom:12px;
+      background:#f8fafc;
+      border-radius:14px;
+    ">
+
+      <span>
+        #${index+1}
+        ${nome}
+      </span>
+
+      <strong style="
+        color:#0f766e;
       ">
         R$ ${valor.toFixed(2)}
       </strong>
