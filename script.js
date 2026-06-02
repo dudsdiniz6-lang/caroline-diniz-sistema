@@ -7745,6 +7745,7 @@ function carregarRelatorios(){
       const porDia = {};
       const pagamentos = {};
         const profissionais = {};
+        const clientes = {};
 
       vendas.forEach((venda)=>{
 
@@ -7778,7 +7779,7 @@ function carregarRelatorios(){
             venda.forma_pagamento || "-"
           ] || 0
         ) + valor;
-          profissionais[
+         profissionais[
   venda.profissional || "-"
 ] =
 (
@@ -7787,7 +7788,16 @@ function carregarRelatorios(){
   ] || 0
 ) + valor;
 
-      });
+clientes[
+  venda.cliente || "-"
+] =
+(
+  clientes[
+    venda.cliente || "-"
+  ] || 0
+) + valor;
+
+});
 
       const ticketMedio =
         fechadas
