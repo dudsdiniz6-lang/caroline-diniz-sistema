@@ -7880,18 +7880,22 @@ function garantirAbaRelatorios(){
     link.innerText =
       "Relatórios";
 
+  
     link.onclick = function(){
 
-      mostrarSecao(
-        "relatorios-container"
-      );
+  document.querySelector(
+    ".agenda-container"
+  ).style.display = "none";
 
-      carregarRelatorios();
+  mostrarSecao(
+    "relatorios-container"
+  );
 
-      return false;
+  carregarRelatorios();
 
-    };
+  return false;
 
+};
     nav.appendChild(link);
 
   }
