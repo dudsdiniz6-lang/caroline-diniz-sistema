@@ -7774,3 +7774,27 @@ function preencherRelatorioLista(id, dados, tipo){
   });
 
 }
+function abrirRelatorioFinanceiro(){
+  document.getElementById("conteudo-relatorio").innerHTML =
+    "<h3>Financeiro</h3>";
+}
+
+function abrirRelatorioProfissionais(){
+  document.getElementById("conteudo-relatorio").innerHTML =
+    "<h3>Profissionais</h3>";
+}
+
+function abrirRelatorioClientes(){
+  document.getElementById("conteudo-relatorio").innerHTML =
+    "<h3>Clientes</h3>";
+}
+
+function abrirRelatorioServicos(){
+  document.getElementById("conteudo-relatorio").innerHTML =
+    "<h3>Serviços</h3>";
+}
+
+function abrirRelatorioPendencias(){
+  document.getElementById("conteudo-relatorio").innerHTML =
+    "<h3>Pendências</h3>";
+}
