@@ -7898,15 +7898,26 @@ if(filtro==="mes"){
             partes[0]
           );
 
-        const dataInicio =
-          new Date(inicio);
+      const partesInicio =
+  inicio.split("-");
 
-        const dataFim =
-          new Date(fim);
+const partesFim =
+  fim.split("-");
 
-        dataFim.setHours(
-          23,59,59
-        );
+const dataInicio =
+  new Date(
+    partesInicio[0],
+    partesInicio[1] - 1,
+    partesInicio[2]
+  );
+
+const dataFim =
+  new Date(
+    partesFim[0],
+    partesFim[1] - 1,
+    partesFim[2],
+    23,59,59
+  );
 
         return (
           dataVenda
