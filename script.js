@@ -7705,7 +7705,11 @@ function garantirAbaRelatorios(){
 
 }
 
-function carregarRelatorios(filtro="todos"){
+function carregarRelatorios(
+  filtro="todos",
+  inicioPersonalizado="",
+  fimPersonalizado=""
+){
 
   const container =
     document.getElementById(
@@ -7753,7 +7757,9 @@ Tudo
 <button
   onclick="
     carregarRelatorios(
-      'personalizado'
+      'personalizado',
+      document.getElementById('relatorio-inicio').value,
+      document.getElementById('relatorio-fim').value
     )
   "
   class="cliente-card"
@@ -7865,19 +7871,11 @@ if(filtro==="mes"){
   filtro==="personalizado"
 ){
 
-  const inicio =
-    document
-      .getElementById(
-        "relatorio-inicio"
-      )
-      ?.value;
+ const inicio =
+  inicioPersonalizado;
 
-  const fim =
-    document
-      .getElementById(
-        "relatorio-fim"
-      )
-      ?.value;
+const fim =
+  fimPersonalizado;
 
   if(inicio && fim){
 
