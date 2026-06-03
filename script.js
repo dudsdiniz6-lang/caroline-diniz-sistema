@@ -7738,6 +7738,28 @@ Mês
 <button onclick="carregarRelatorios('todos')" class="cliente-card">
 Tudo
 </button>
+<input
+  type="date"
+  id="relatorio-inicio"
+  class="cliente-card"
+>
+
+<input
+  type="date"
+  id="relatorio-fim"
+  class="cliente-card"
+>
+
+<button
+  onclick="
+    carregarRelatorios(
+      'personalizado'
+    )
+  "
+  class="cliente-card"
+>
+Aplicar
+</button>
 
 </div>
 
@@ -7837,6 +7859,66 @@ if(filtro==="mes"){
       );
 
     });
+
+}
+        if(
+  filtro==="personalizado"
+){
+
+  const inicio =
+    document
+      .getElementById(
+        "relatorio-inicio"
+      )
+      ?.value;
+
+  const fim =
+    document
+      .getElementById(
+        "relatorio-fim"
+      )
+      ?.value;
+
+  if(inicio && fim){
+
+    vendasFiltradas =
+      vendas.filter(v=>{
+
+        const partes =
+          (v.data||"")
+            .split("/");
+
+        if(partes.length!==3)
+          return false;
+
+        const dataVenda =
+          new Date(
+            partes[2],
+            partes[1]-1,
+            partes[0]
+          );
+
+        const dataInicio =
+          new Date(inicio);
+
+        const dataFim =
+          new Date(fim);
+
+        dataFim.setHours(
+          23,59,59
+        );
+
+        return (
+          dataVenda
+          >= dataInicio
+          &&
+          dataVenda
+          <= dataFim
+        );
+
+      });
+
+  }
 
 }
 
