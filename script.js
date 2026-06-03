@@ -7784,16 +7784,19 @@ Aplicar
     overflow-x:auto;
   "
 ></div>
-      id="cards-relatorios"
-      style="
-        display:grid;
-        grid-template-columns:
-        repeat(auto-fit,minmax(320px,1fr));
-        gap:20px;
-        margin-top:25px;
-      "
-    ></div>
-  `;
+
+<div
+  id="cards-relatorios"
+  style="
+    display:grid;
+    grid-template-columns:
+    repeat(auto-fit,minmax(320px,1fr));
+    gap:20px;
+    margin-top:25px;
+  "
+></div>
+
+`;
 
   supabaseClient
     .from("comandas")
