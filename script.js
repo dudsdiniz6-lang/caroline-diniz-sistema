@@ -8273,35 +8273,33 @@ box-shadow:0 10px 30px rgba(0,0,0,.08);
 </h3>
 
 ${
-  Object.entries(clientes)
-  .sort((a,b)=>b[1]-a[1])
-  .slice(0,10)
-  .map(([nome,valor],index)=>
+  Object.keys(clientes).length === 0
+    ? `<p>Nenhum cliente nesse período.</p>`
+    : Object.entries(clientes)
+      .sort((a,b)=>b[1]-a[1])
+      .slice(0,10)
+      .map(([nome,valor],index)=>
 
-    `<div style="
-      display:flex;
-      justify-content:space-between;
-      align-items:center;
-      padding:14px;
-      margin-bottom:12px;
-      background:#f8fafc;
-      border-radius:14px;
-    ">
+        `<div style="
+          display:flex;
+          justify-content:space-between;
+          align-items:center;
+          padding:14px;
+          margin-bottom:12px;
+          background:#f8fafc;
+          border-radius:14px;
+        ">
+          <span>
+            #${index+1}
+            ${nome}
+          </span>
 
-      <span>
-        #${index+1}
-        ${nome}
-      </span>
+          <strong style="color:#7c3aed;">
+            R$ ${valor.toFixed(2)}
+          </strong>
+        </div>`
 
-      <strong style="
-        color:#7c3aed;
-      ">
-        R$ ${valor.toFixed(2)}
-      </strong>
-
-    </div>`
-
-  ).join("")
+      ).join("")
 }
 
 </div>
