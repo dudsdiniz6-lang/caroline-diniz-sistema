@@ -1384,22 +1384,27 @@ function carregarComissoes(){
 
   if(!lista) return;
 
-  lista.innerHTML = "";
+  lista.innerHTML = "Carregando comissões...";
 
-  supabaseClient
-    .from("comissoes")
-    .select("*")
-    .then((resposta)=>{
+  Promise.all([
+    supabaseClient.from("comandas").select("*"),
+    supabaseClient.from("servicos_salao").select("*")
+  ]).then(([vendasResp, servicosResp])=>{
 
-      const comissoes =
-        resposta.data || [];
+    const vendas =
+      vendasResp.data || [];
 
-      const porProfissional = {};
+    const servicos =
+      servicosResp.data || [];
 
-      comissoes.forEach((item)=>{
+    const porProfissional = {};
+
+    vendas
+      .filter(venda => venda.status === "FECHADO")
+      .forEach((venda)=>{
 
         const profissional =
-          item.profissional || "Sem profissional";
+          venda.profissional || "Sem profissional";
 
         if(!porProfissional[profissional]){
           porProfissional[profissional] = {
@@ -1408,75 +1413,98 @@ function carregarComissoes(){
           };
         }
 
-        porProfissional[profissional].total +=
-          Number(item.comissao || 0);
+        const nomesServicos =
+          String(venda.servico || "")
+            .split(",")
+            .map(s => s.trim())
+            .filter(Boolean);
 
-        porProfissional[profissional].itens.push(item);
+        nomesServicos.forEach((nomeServico)=>{
 
-      });
+          const servicoBanco =
+            servicos.find(s => s.nome === nomeServico);
 
-      Object.keys(porProfissional)
-        .sort()
-        .forEach((profissional)=>{
+          const percentual =
+            Number(servicoBanco?.comissao_padrao || 0);
 
-          const dados =
-            porProfissional[profissional];
+          const valorServico =
+            Number(servicoBanco?.valor || venda.valor || 0);
 
-          lista.innerHTML += `
-            <div class="cliente-card">
+          const comissao =
+            valorServico * (percentual / 100);
 
-              <h3>${profissional}</h3>
+          porProfissional[profissional].total += comissao;
 
-              <strong>
-                Total a pagar:
-                R$ ${dados.total.toFixed(2)}
-              </strong>
-
-              <hr>
-
-              ${
-                dados.itens.map((item)=>`
-                  <div style="
-                    padding:12px 0;
-                    border-bottom:1px solid #eee;
-                  ">
-
-                    <strong>
-                      ${item.cliente || "-"}
-                    </strong>
-
-                    <p>
-                      ${item.servico || "-"}
-                    </p>
-
-                    <small>
-                      Data: ${item.data || "-"}
-                    </small>
-
-                    <br>
-
-                    <small>
-                      Valor do serviço:
-                      R$ ${Number(item.valor || 0).toFixed(2)}
-                    </small>
-
-                    <br>
-
-                    <strong>
-                      Comissão:
-                      R$ ${Number(item.comissao || 0).toFixed(2)}
-                    </strong>
-
-                  </div>
-                `).join("")
-              }
-
-            </div>
-          `;
+          porProfissional[profissional].itens.push({
+            cliente: venda.cliente || "-",
+            servico: nomeServico,
+            data: venda.data || "-",
+            valor: valorServico,
+            percentual,
+            comissao
+          });
 
         });
 
+      });
+
+    lista.innerHTML = "";
+
+    Object.keys(porProfissional).forEach((profissional)=>{
+
+      const dados = porProfissional[profissional];
+
+      lista.innerHTML += `
+        <div class="cliente-card">
+
+          <h3>${profissional}</h3>
+
+          <strong>
+            Total a pagar:
+            R$ ${dados.total.toFixed(2)}
+          </strong>
+
+          <hr>
+
+          ${
+            dados.itens.map(item=>`
+              <div style="
+                padding:12px 0;
+                border-bottom:1px solid #eee;
+              ">
+                <strong>${item.cliente}</strong>
+
+                <p>${item.servico}</p>
+
+                <small>Data: ${item.data}</small><br>
+
+                <small>
+                  Valor: R$ ${item.valor.toFixed(2)}
+                </small><br>
+
+                <small>
+                  Comissão: ${item.percentual}%
+                </small><br>
+
+                <strong>
+                  A receber:
+                  R$ ${item.comissao.toFixed(2)}
+                </strong>
+              </div>
+            `).join("")
+          }
+
+        </div>
+      `;
+
     });
+
+    if(lista.innerHTML === ""){
+      lista.innerHTML =
+        "<div class='cliente-card'>Nenhuma comissão encontrada.</div>";
+    }
+
+  });
 
 }
 function mostrarSecao(secao){
