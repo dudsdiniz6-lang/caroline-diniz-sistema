@@ -1379,12 +1379,40 @@ document.getElementById("atendimentos-pagos").innerText = historico.length;
 }
 function carregarComissoes(){
 
-  const lista =
+let lista =
+  document.getElementById("lista-comissoes");
+
+let container =
+  document.getElementById("comissoes-container");
+
+if(!container){
+  alert("Container de comissões não encontrado.");
+  return;
+}
+
+if(!lista){
+
+  container.innerHTML = `
+    <h2>Comissões</h2>
+
+    <div
+      id="lista-comissoes"
+      style="
+        display:grid;
+        grid-template-columns:
+        repeat(auto-fit,minmax(320px,1fr));
+        gap:20px;
+        margin-top:25px;
+      "
+    ></div>
+  `;
+
+  lista =
     document.getElementById("lista-comissoes");
 
-  if(!lista) return;
+}
 
-  lista.innerHTML = "Carregando comissões...";
+lista.innerHTML = "Carregando comissões...";
 
   Promise.all([
     supabaseClient.from("comandas").select("*"),
