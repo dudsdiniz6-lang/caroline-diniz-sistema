@@ -7705,7 +7705,7 @@ function garantirAbaRelatorios(){
 
 }
 
-function carregarRelatorios(){
+function carregarRelatorios(filtro="todos"){
 
   const container =
     document.getElementById(
@@ -7716,6 +7716,30 @@ function carregarRelatorios(){
 
   container.innerHTML = `
     <h2>Central de Relatórios</h2>
+    <div style="
+display:flex;
+gap:12px;
+margin:20px 0 28px;
+flex-wrap:wrap;
+">
+
+<button onclick="carregarRelatorios('hoje')" class="cliente-card">
+Hoje
+</button>
+
+<button onclick="carregarRelatorios('semana')" class="cliente-card">
+Semana
+</button>
+
+<button onclick="carregarRelatorios('mes')" class="cliente-card">
+Mês
+</button>
+
+<button onclick="carregarRelatorios('todos')" class="cliente-card">
+Tudo
+</button>
+
+</div>
 
     <div
       id="cards-relatorios"
@@ -7736,6 +7760,85 @@ function carregarRelatorios(){
 
       const vendas =
         resposta.data || [];
+        const hoje =
+  new Date();
+
+let vendasFiltradas =
+  vendas;
+
+if(filtro==="hoje"){
+
+  const dataHoje =
+    hoje.toLocaleDateString("pt-BR");
+
+  vendasFiltradas =
+    vendas.filter(v=>
+      v.data === dataHoje
+    );
+
+}
+
+if(filtro==="semana"){
+
+  const seteDias =
+    new Date();
+
+  seteDias.setDate(
+    hoje.getDate()-7
+  );
+
+  vendasFiltradas =
+    vendas.filter(v=>{
+
+      const partes =
+        (v.data||"")
+          .split("/");
+
+      if(partes.length!==3)
+        return false;
+
+      const dataVenda =
+        new Date(
+          partes[2],
+          partes[1]-1,
+          partes[0]
+        );
+
+      return dataVenda >= seteDias;
+
+    });
+
+}
+
+if(filtro==="mes"){
+
+  const mesAtual =
+    hoje.getMonth()+1;
+
+  const anoAtual =
+    hoje.getFullYear();
+
+  vendasFiltradas =
+    vendas.filter(v=>{
+
+      const partes =
+        (v.data||"")
+          .split("/");
+
+      if(partes.length!==3)
+        return false;
+
+      return (
+        Number(partes[1])
+          === mesAtual
+        &&
+        Number(partes[2])
+          === anoAtual
+      );
+
+    });
+
+}
 
       let faturamento = 0;
       let aberto = 0;
@@ -7749,7 +7852,7 @@ const clientes = {};
 const servicos = {};
         const pendencias = [];
 
-      vendas.forEach((venda)=>{
+      vendasFiltradas.forEach((venda)=>{
 
         const valor =
           Number(venda.valor || 0);
@@ -8013,7 +8116,7 @@ border-radius:14px;
 ">
 Total comandas:
 <strong>
-${vendas.length}
+${vendasFiltradas.length}
 </strong>
 </div>
 
