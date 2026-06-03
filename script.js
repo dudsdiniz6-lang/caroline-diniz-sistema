@@ -409,11 +409,21 @@ if(acao === "2"){
         );
       });
 
-      const porcentagemComissao =
-        profissionalUsuario?.comissao || 0;
+    let comissao = 0;
 
-      const comissao =
-        Number(valor) * (porcentagemComissao / 100);
+servicosSelecionados.forEach((item)=>{
+
+  const percentual =
+    Number(item.comissao || 0);
+
+  const valorServico =
+    Number(item.valor || 0);
+
+  comissao +=
+    valorServico *
+    (percentual / 100);
+
+});
 
       let pagamentosFinal =
         Array.isArray(window.pagamentosFaturamento)
@@ -1369,121 +1379,102 @@ document.getElementById("atendimentos-pagos").innerText = historico.length;
 }
 function carregarComissoes(){
 
-  const lista = document.getElementById("lista-comissoes");
+  const lista =
+    document.getElementById("lista-comissoes");
 
   if(!lista) return;
 
   lista.innerHTML = "";
-  const metasDiv = document.getElementById("metas-profissionais");
-  const resumoComissoesDiv = document.getElementById("resumo-comissoes");
-
-if(metasDiv){
-  metasDiv.innerHTML = "";
-}
 
   supabaseClient
     .from("comissoes")
     .select("*")
     .then((resposta)=>{
 
-      const comissoes = resposta.data || [];
+      const comissoes =
+        resposta.data || [];
 
-      const resumo = {};
+      const porProfissional = {};
 
       comissoes.forEach((item)=>{
-        const resumoProfissionais = {};
 
-        if(!resumo[item.profissional]){
-          resumo[item.profissional] = 0;
+        const profissional =
+          item.profissional || "Sem profissional";
+
+        if(!porProfissional[profissional]){
+          porProfissional[profissional] = {
+            total:0,
+            itens:[]
+          };
         }
 
-        resumo[item.profissional] += Number(item.comissao);
-        if(!resumoProfissionais[item.profissional]){
+        porProfissional[profissional].total +=
+          Number(item.comissao || 0);
 
-  const profissionalUsuario = usuarios.find((usuario)=>{
-    return (usuario.usuario || "").toLowerCase() === item.profissional.toLowerCase();
-  });
-
-  resumoProfissionais[item.profissional] = {
-    total:0,
-    porcentagem: profissionalUsuario?.comissao || 0
-  };
-
-}
-
-resumoProfissionais[item.profissional].total += Number(item.comissao);
+        porProfissional[profissional].itens.push(item);
 
       });
-const metas = {
-  Carol:5000,
-  Jessica:5000,
-  Fernanda:5000,
-  Silamara:5000
-};
-      Object.keys(resumo).forEach((profissional)=>{
-        if(resumoComissoesDiv){
 
-  resumoComissoesDiv.innerHTML = "";
+      Object.keys(porProfissional)
+        .sort()
+        .forEach((profissional)=>{
 
-  Object.keys(resumoProfissionais).forEach((profissional)=>{
+          const dados =
+            porProfissional[profissional];
 
-    const dados = resumoProfissionais[profissional];
+          lista.innerHTML += `
+            <div class="cliente-card">
 
-    resumoComissoesDiv.innerHTML += `
-      <div class="cliente-card">
+              <h3>${profissional}</h3>
 
-        <strong>
-          ${profissional}
-        </strong>
+              <strong>
+                Total a pagar:
+                R$ ${dados.total.toFixed(2)}
+              </strong>
 
-        <small>
-          Comissão: ${dados.porcentagem}%
-        </small>
+              <hr>
 
-        <small>
-          Total a receber:
-          R$ ${dados.total.toFixed(2)}
-        </small>
+              ${
+                dados.itens.map((item)=>`
+                  <div style="
+                    padding:12px 0;
+                    border-bottom:1px solid #eee;
+                  ">
 
-      </div>
-    `;
+                    <strong>
+                      ${item.cliente || "-"}
+                    </strong>
 
-  });
+                    <p>
+                      ${item.servico || "-"}
+                    </p>
 
-}
-const valorMeta = metas[profissional] || 5000;
+                    <small>
+                      Data: ${item.data || "-"}
+                    </small>
 
-const porcentagem = Math.min(
-  (resumo[profissional] / valorMeta) * 100,
-  100
-);
+                    <br>
 
-metasDiv.innerHTML += `
-  <div class="cliente-card">
-    <strong>${profissional}</strong>
+                    <small>
+                      Valor do serviço:
+                      R$ ${Number(item.valor || 0).toFixed(2)}
+                    </small>
 
-    <div class="barra-meta">
-      <div 
-        class="progresso-meta"
-        style="width:${porcentagem}%"
-      ></div>
-    </div>
+                    <br>
 
-    <small>
-      R$ ${resumo[profissional].toFixed(2)}
-      / R$ ${valorMeta}
-    </small>
-  </div>
-`;
-        lista.innerHTML += `
-          <div class="cliente-card">
-            <strong>${profissional}</strong>
-            <p>Total de comissão</p>
-            <small>R$ ${resumo[profissional].toFixed(2)}</small>
-          </div>
-        `;
+                    <strong>
+                      Comissão:
+                      R$ ${Number(item.comissao || 0).toFixed(2)}
+                    </strong>
 
-      });
+                  </div>
+                `).join("")
+              }
+
+            </div>
+          `;
+
+        });
 
     });
 
