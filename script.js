@@ -8780,3 +8780,188 @@ setTimeout(()=>{
   });
 
 },1000);
+function abrirComissoes(){
+
+  document.querySelector(".agenda-container").style.display = "none";
+
+  document.querySelectorAll(".clientes-container").forEach((item)=>{
+    item.style.display = "none";
+  });
+
+  let tela = document.getElementById("comissoes-container");
+
+  if(!tela){
+    tela = document.createElement("div");
+    tela.id = "comissoes-container";
+    tela.className = "clientes-container";
+    document.body.appendChild(tela);
+  }
+
+  tela.style.display = "block";
+  tela.style.marginLeft = "180px";
+  tela.style.width = "calc(100% - 180px)";
+  tela.style.padding = "40px";
+  tela.style.boxSizing = "border-box";
+
+  carregarComissoes();
+}
+
+function carregarComissoes(){
+
+  const tela = document.getElementById("comissoes-container");
+
+  if(!tela){
+    alert("Tela de comissões não encontrada.");
+    return;
+  }
+
+  tela.innerHTML = `
+    <h2>Comissões</h2>
+    <div id="lista-comissoes">
+      Carregando comissões...
+    </div>
+  `;
+
+  const lista = document.getElementById("lista-comissoes");
+
+  Promise.all([
+    supabaseClient.from("comandas").select("*"),
+    supabaseClient.from("servicos_salao").select("*")
+  ]).then(([vendasResp, servicosResp])=>{
+
+    const vendas = vendasResp.data || [];
+    const servicos = servicosResp.data || [];
+
+    const vendasFechadas = vendas.filter(venda=>{
+      return venda.status === "FECHADO";
+    });
+
+    if(vendasFechadas.length === 0){
+      lista.innerHTML = `
+        <div class="cliente-card">
+          Nenhuma venda fechada encontrada para gerar comissão.
+          <br><br>
+          Total de vendas no sistema: ${vendas.length}
+        </div>
+      `;
+      return;
+    }
+
+    const resumo = {};
+
+    vendasFechadas.forEach((venda)=>{
+
+      const profissional =
+        venda.profissional || "Sem profissional";
+
+      if(!resumo[profissional]){
+        resumo[profissional] = {
+          total:0,
+          itens:[]
+        };
+      }
+
+      const nomesServicos =
+        String(venda.servico || "")
+          .split(",")
+          .map(s => s.trim())
+          .filter(Boolean);
+
+      nomesServicos.forEach((nomeServico)=>{
+
+        const servicoBanco =
+          servicos.find(s => s.nome === nomeServico);
+
+        const percentual =
+          Number(servicoBanco?.comissao_padrao || 0);
+
+        const valorServico =
+          Number(servicoBanco?.valor || venda.valor || 0);
+
+        const valorComissao =
+          valorServico * percentual / 100;
+
+        resumo[profissional].total += valorComissao;
+
+        resumo[profissional].itens.push({
+          cliente: venda.cliente || "-",
+          servico: nomeServico,
+          data: venda.data || "-",
+          valor: valorServico,
+          percentual,
+          comissao: valorComissao
+        });
+
+      });
+
+    });
+
+    lista.innerHTML = "";
+
+    Object.keys(resumo).forEach((profissional)=>{
+
+      const dados = resumo[profissional];
+
+      lista.innerHTML += `
+        <div class="cliente-card">
+
+          <h3>${profissional}</h3>
+
+          <strong>
+            Total a pagar:
+            R$ ${dados.total.toFixed(2)}
+          </strong>
+
+          <hr>
+
+          ${dados.itens.map(item=>`
+            <div style="
+              padding:12px 0;
+              border-bottom:1px solid #eee;
+            ">
+              <strong>${item.cliente}</strong>
+
+              <p>${item.servico}</p>
+
+              <small>Data: ${item.data}</small><br>
+
+              <small>
+                Valor do serviço:
+                R$ ${item.valor.toFixed(2)}
+              </small><br>
+
+              <small>
+                Comissão:
+                ${item.percentual}%
+              </small><br>
+
+              <strong>
+                A receber:
+                R$ ${item.comissao.toFixed(2)}
+              </strong>
+            </div>
+          `).join("")}
+
+        </div>
+      `;
+
+    });
+
+  });
+
+}
+
+setTimeout(()=>{
+
+  document.querySelectorAll("nav a").forEach((link)=>{
+
+    if(link.innerText.trim() === "Comissões"){
+      link.setAttribute(
+        "onclick",
+        "abrirComissoes(); return false;"
+      );
+    }
+
+  });
+
+},1000);
