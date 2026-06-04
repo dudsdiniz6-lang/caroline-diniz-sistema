@@ -8731,3 +8731,52 @@ function montarListaRelatorio(
   return html;
 
 }
+
+  document.querySelector(".agenda-container").style.display = "none";
+function abrirComissoes(){
+
+  document.querySelector(".agenda-container").style.display = "none";
+
+  document.querySelectorAll(".clientes-container").forEach((item)=>{
+    item.style.display = "none";
+  });
+
+  let tela =
+    document.getElementById("comissoes-container");
+
+  if(!tela){
+
+    tela = document.createElement("div");
+    tela.id = "comissoes-container";
+    tela.className = "clientes-container";
+    document.body.appendChild(tela);
+
+  }
+
+  tela.style.display = "block";
+  tela.style.marginLeft = "180px";
+  tela.style.width = "calc(100% - 180px)";
+  tela.style.padding = "40px";
+  tela.style.boxSizing = "border-box";
+
+  carregarComissoes();
+
+}
+setTimeout(()=>{
+
+  const links = document.querySelectorAll("nav a");
+
+  links.forEach((link)=>{
+
+    if(link.innerText.trim() === "Comissões"){
+
+      link.setAttribute(
+        "onclick",
+        "abrirComissoes(); return false;"
+      );
+
+    }
+
+  });
+
+},1000);
