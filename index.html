@@ -1,729 +1,132 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
-
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Caroline Diniz Sistema</title>
-  <link rel="stylesheet" href="style.css">
-  <link rel="manifest" href="manifest.json">
-<meta name="theme-color" content="#ff7a00">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <title>Centro de Estética Caroline Diniz</title>
+
+  <link rel="stylesheet" href="style.css" />
 </head>
 
 <body>
 
-  <div class="login-screen" id="login-screen">
+  <div id="login-screen" class="login-screen">
     <div class="login-box">
       <h1>Caroline Diniz</h1>
+      <p>Sistema de gestão</p>
 
-      <input type="text" id="usuario" placeholder="Usuário">
-      <input type="password" id="senha" placeholder="Senha">
+      <input id="loginUsuario" type="text" placeholder="Usuário" />
+      <input id="loginSenha" type="password" placeholder="Senha" />
 
       <button onclick="fazerLogin()">Entrar</button>
     </div>
   </div>
 
-  <div class="layout">
+  <div id="app" class="app" style="display:none;">
 
     <aside class="sidebar">
-      <div class="logo">Caroline Diniz</div>
+      <h2>Caroline Diniz</h2>
 
       <nav>
-        <a class="active" onclick="voltarAgenda()">Agenda</a>
-        <a onclick="mostrarSecao('clientes-container')">Clientes</a>
-        <a>Comandas</a>
-        <a onclick="mostrarSecao('financeiro-container')">Financeiro</a>
-       <a onclick="mostrarSecao('profissionais-container')">
-  Profissionais
-</a>
-        <a onclick="mostrarSecao('servicos-container')">Serviços</a>
-        <a onclick="mostrarSecao('pacotes-container')">Pacotes</a>
-       <a onclick="mostrarSecao('comissoes-container')">Comissões</a>
-        <a>Configurações</a>
+        <button onclick="mostrarTela('agenda')">Agenda</button>
+        <button onclick="mostrarTela('clientes')">Clientes</button>
+        <button onclick="mostrarTela('profissionais')">Profissionais</button>
+        <button onclick="mostrarTela('servicos')">Serviços</button>
+        <button onclick="mostrarTela('pacotes')">Pacotes</button>
+        <button onclick="mostrarTela('caixa')">Caixa</button>
+        <button onclick="mostrarTela('comissoes')">Comissões</button>
+        <button onclick="sairSistema()">Sair</button>
       </nav>
     </aside>
 
     <main class="main">
 
-      <header class="topbar">
-
-        <div class="cards">
-          <div class="card-financeiro">
-            <h3 id="faturamento">R$ 0</h3>
-            <p>Faturamento</p>
+      <section id="tela-agenda" class="tela ativa">
+        <div class="topo">
+          <div>
+            <h1>Agenda</h1>
+            <p id="dataAgendaTexto"></p>
           </div>
 
-          <div class="card-financeiro">
-            <h3 id="clientes-total">0</h3>
-            <p>Clientes</p>
-          </div>
-
-          <div class="card-financeiro">
-            <h3 id="atendimentos-pagos">0</h3>
-            <p>Pagos</p>
+          <div class="acoes">
+            <button onclick="voltarDia()">◀</button>
+            <button onclick="irHoje()">Hoje</button>
+            <button onclick="avancarDia()">▶</button>
+            <button class="principal" onclick="abrirModalAgendamento()">Novo agendamento</button>
           </div>
         </div>
 
-        <div>
-          <h1>Agenda</h1>
-
-         <div class="controle-data">
-           <div id="alerta-aniversariantes"></div>
-           <h3>Clientes para retorno</h3>
-
-<div id="clientes-retorno"></div>
-  <button onclick="voltarDia()">◀</button>
-  <span id="data-agenda">09/05/2026</span>
-  <button onclick="avancarDia()">▶</button>
-  <button onclick="irParaHoje()">Hoje</button>
-</div>
-
-<select id="filtroProfissional" onchange="carregarAgenda()">
-  <option value="">Todos Profissionais</option>
-</select>
-
-<input 
-  type="text"
-  id="buscaCliente"
-  placeholder="Buscar cliente..."
-  oninput="carregarAgenda()"
-/>
-
-<div class="acoes-topo">
-  <button class="btn" onclick="abrirModal()">Novo Agendamento</button>
-  <button class="btn" id="btn-instalar" style="display:none;">Instalar App</button>
-  <button class="btn" onclick="sairSistema()">Sair</button>
-</div>
-
-      </header>
-
-      <section class="agenda-container">
-
-        <div class="agenda-header">
-          <div class="time-column"></div>
-          <div class="professional">Profissional</div>
+        <div class="filtros">
+          <input id="buscaAgenda" placeholder="Buscar cliente..." oninput="carregarAgenda()" />
         </div>
 
-        <div class="agenda-body">
+        <div id="agendaGrade" class="agenda-grade"></div>
+      </section>
 
-         <div class="time-column">
-  <div aula="tempo">07:00</div>
-  <div aula="tempo">07:30</div>
-  <div aula="tempo">08:00</div>
-  <div aula="tempo">08:30</div>
-  <div aula="tempo">09:00</div>
-  <div aula="tempo">09:30</div>
-  <div aula="tempo">10:00</div>
-  <div aula="tempo">10:30</div>
-  <div aula="tempo">11:00</div>
-  <div aula="tempo">11:30</div>
-  <div aula="tempo">12:00</div>
-  <div aula="tempo">12:30</div>
-  <div aula="tempo">13:00</div>
-  <div aula="tempo">13:30</div>
-  <div aula="tempo">14:00</div>
-  <div aula="tempo">14:30</div>
-  <div aula="tempo">15:00</div>
-  <div aula="tempo">15:30</div>
-  <div aula="tempo">16:00</div>
-  <div aula="tempo">16:30</div>
-  <div aula="tempo">17:00</div>
-  <div aula="tempo">17:30</div>
-  <div aula="tempo">18:00</div>
-  <div aula="tempo">18:30</div>
-  <div aula="tempo">19:00</div>
-  <div aula="tempo">19:30</div>
-  <div aula="tempo">20:00</div>
-</div>
-
-          <div class="column"></div>
-          <div class="column"></div>
-          <div class="column"></div>
-          <div class="column"></div>
-
+      <section id="tela-clientes" class="tela">
+        <div class="topo">
+          <h1>Clientes</h1>
+          <button class="principal" onclick="abrirModalCliente()">Novo cliente</button>
         </div>
+
+        <div id="listaClientes" class="cards"></div>
       </section>
 
-      <section class="clientes-container" id="clientes-container">
-        <h2>Clientes</h2>
+      <section id="tela-profissionais" class="tela">
+        <div class="topo">
+          <h1>Profissionais</h1>
+          <button class="principal" onclick="abrirModalProfissional()">Novo profissional</button>
+        </div>
 
-        <div class="form-clientes">
-          <input type="text" id="nomeCliente" placeholder="Nome da cliente">
-          <input type="text" id="telefoneCliente" placeholder="Telefone">
-          <input type="text" id="fotoCliente" placeholder="Link da foto da cliente">
-          <input type="date" id="aniversarioCliente" placeholder="Aniversário">
-
-<input type="text" id="preferenciaCliente" placeholder="Preferências da cliente">
-
-<textarea id="alergiasCliente" placeholder="Alergias ou cuidados especiais"></textarea>
-          <textarea id="observacaoCliente" placeholder="Observações"></textarea>
-          <input type="text" id="fotoAntesDepois" placeholder="Link antes/depois">
-<input type="text" id="descricaoFoto" placeholder="Descrição da foto">
-<button onclick="salvarFotoCliente()">
-  Salvar Foto
-</button>
-
-        <div id="listaClientes"></div>
+        <div id="listaProfissionais" class="cards"></div>
       </section>
-<section class="clientes-container" id="servicos-container">
-  <div class="servicos-topo">
-    <h2>Serviços</h2>
 
-    <button class="btn-add-servico" onclick="abrirModalServico()">
-  Adicionar serviço
-</button>
-  </div>
-<div id="categorias-servicos-chips"></div>
-  <div class="servicos-filtros">
-    <select id="filtroCategoriaServico" onchange="carregarServicosSalao()">
-      <option value="">Todas as categorias</option>
-    </select>
+      <section id="tela-servicos" class="tela">
+        <div class="topo">
+          <h1>Serviços</h1>
+          <button class="principal" onclick="abrirModalServico()">Novo serviço</button>
+        </div>
 
-    <input 
-      type="text"
-      id="buscaServico"
-      placeholder="Procurar por serviço..."
-      oninput="carregarServicosSalao()"
-    />
-  </div>
-
-  <div class="tabela-servicos">
-    <div class="linha-servico cabecalho">
-      <span>Categoria</span>
-      <span>Serviço</span>
-      <span>Duração</span>
-      <span>Preço (R$)</span>
-    </div>
-
-    <div id="lista-servicos-salao"></div>
-  </div>
-</section>
-      <section class="financeiro-container clientes-container" id="financeiro-container">
-        <section class="clientes-container" id="comissoes-container">
-  <h2>Comissões</h2>
-          <h3>Resumo por profissional</h3>
-
-<div id="resumo-comissoes"></div>
-          <h3>Fechamento mensal</h3>
-
-<button onclick="gerarFechamentoMensal()">
-  Gerar fechamento
-</button>
-
-<div id="fechamento-mensal"></div>
-          <div id="metas-profissionais"></div>
-
-  <div id="lista-comissoes"></div>
-</section>
-        <h2>Histórico Financeiro</h2>
-        <h3>Clientes que mais gastam</h3>
-<div id="ranking-clientes"></div>
-        <h3>Serviços mais vendidos</h3>
-<div id="ranking-servicos"></div>
-        <h3>Faturamento mensal</h3>
-<div id="faturamento-mensal"></div>
-        <h3>Taxa de faltas</h3>
-<div id="taxa-faltas"></div>
-        <h3>Lucro líquido</h3>
-<div id="lucro-liquido"></div>
-        <h3>Meta mensal</h3>
-<div id="meta-mensal"></div>
-        <h3>Previsão de faturamento</h3>
-<div id="previsao-faturamento"></div>
-        <h3>Caixa diário</h3>
-
-<div class="caixa-form">
-
-  <input type="number" id="entradaCaixa" placeholder="Entrada">
-
-  <input type="number" id="despesaCaixa" placeholder="Despesa">
-
-  <button onclick="salvarCaixa()">
-    Salvar Caixa
-  </button>
-
-</div>
-
-<div id="caixa-diario"></div>
-        <h3>Estoque</h3>
-
-<div class="estoque-form">
-
-  <input type="text" id="produtoEstoque" placeholder="Produto">
-
-  <input type="number" id="quantidadeEstoque" placeholder="Quantidade">
-
-  <input type="number" id="custoEstoque" placeholder="Custo">
-
-  <button onclick="salvarProdutoEstoque()">
-    Salvar Produto
-  </button>
-
-</div>
-
-<div id="lista-estoque"></div>
-        <h3>Consumo por serviço</h3>
-
-<div class="estoque-form">
-
-  <input type="text" id="servicoConsumo" placeholder="Serviço">
-
-  <input type="text" id="produtoConsumo" placeholder="Produto consumido">
-
-  <input type="number" id="quantidadeConsumo" placeholder="Quantidade consumida">
-
-  <button onclick="salvarConsumoServico()">
-    Salvar Consumo
-  </button>
-
-</div>
-
-<div id="lista-consumo-servicos"></div>
-        
-        <h3>Ranking de profissionais</h3>
-
-<div id="ranking-profissionais"></div>
-        <div id="historico-financeiro"></div>
-        <canvas id="graficoFinanceiro"></canvas>
+        <div id="listaServicos" class="tabela"></div>
       </section>
-<section
-  class="clientes-container"
-  id="profissionais-container"
-  style="display:none;"
->
 
-  <div class="servicos-topo">
+      <section id="tela-pacotes" class="tela">
+        <div class="topo">
+          <h1>Pacotes</h1>
+          <button class="principal" onclick="abrirModalPacote()">Novo pacote</button>
+        </div>
 
-    <h2>
-      Profissionais
-    </h2>
+        <div id="listaPacotes" class="cards"></div>
+      </section>
 
-    <button
-      class="btn-add-servico"
-      onclick="abrirModalProfissional()"
-    >
-      + Novo profissional
-    </button>
+      <section id="tela-caixa" class="tela">
+        <div class="topo">
+          <h1>Caixa</h1>
+          <button class="principal" onclick="abrirCaixa()">Abrir caixa</button>
+        </div>
 
-  </div>
+        <div id="listaCaixas" class="cards"></div>
+      </section>
 
-  <div
-    id="lista-profissionais"
-    class="cards-clientes"
-  ></div>
+      <section id="tela-comissoes" class="tela">
+        <div class="topo">
+          <h1>Comissões</h1>
+          <button class="principal" onclick="carregarComissoes()">Atualizar</button>
+        </div>
 
-</section>
+        <div id="listaComissoes" class="cards"></div>
+      </section>
+
     </main>
-</div>
-
-   <section class="clientes-container" id="pacotes-container">
-  <div class="servicos-topo">
-    <h2>Pacotes</h2>
-    <button class="btn-add-servico" onclick="abrirModalPacote()">Adicionar pacote</button>
-  </div>
-  <div class="tabela-servicos">
-    <div class="linha-servico cabecalho">
-      <span>Pacote</span><span>Serviços</span><span>Valor</span><span>Status</span>
-    </div>
-    <div id="lista-pacotes"></div>
-  </div>
-</section>
-
-<div class="modal" id="modal">
-  <div class="modal-content atendimento99">
-
-    <div class="atendimento-header">
-      <button class="btn-voltar-modal" onclick="fecharModal()">←</button>
-      <h2>Atendimento</h2>
-    </div>
-
-    <div class="linha-atendimento" onclick="abrirSeletorCliente()">
-      <span class="icone-atendimento">👤</span>
-      <div class="campo-selecionar-servico campo-servico99">
-        <span>Cliente</span>
-        <strong id="clienteSelecionadoTexto">Selecione a cliente</strong>
-      </div>
-    </div>
-    <input type="hidden" id="cliente">
-
-    <div class="linha-atendimento">
-      <span class="icone-atendimento">📅</span>
-      <div class="campo-com-label">
-        <label>Data</label>
-        <input type="date" id="dataAgendamento">
-      </div>
-    </div>
-
-    <div class="linha-atendimento">
-      <span class="icone-atendimento">👥</span>
-      <div class="campo-com-label">
-        <label>Profissional</label>
-       <select id="profissional">
-  <option value="">Selecione</option>
-</select>
-      </div>
-    </div>
-
-    <div class="linha-atendimento" onclick="abrirSeletorServico()">
-      <span class="icone-atendimento">▦</span>
-      <div class="campo-selecionar-servico campo-servico99">
-        <span>Serviço</span>
-        <strong id="servicoSelecionadoTexto">Selecione o serviço</strong>
-      </div>
-    </div>
-    <input type="hidden" id="servico">
-
-    <div id="info-servico-agendamento"></div>
-
-    <div class="linha-atendimento dupla">
-      <span class="icone-atendimento">🕒</span>
-
-      <div class="campo-com-label">
-        <label>Horário</label>
-        <select id="horario">
-          <option value="">Selecione o horário</option>
-        </select>
-      </div>
-
-      <div class="campo-com-label">
-        <label>Duração</label>
-        <select id="duracao">
-          <option value="10">10 minutos</option>
-          <option value="20">20 minutos</option>
-          <option value="30">30 minutos</option>
-          <option value="40">40 minutos</option>
-          <option value="50">50 minutos</option>
-          <option value="60">1 hora</option>
-          <option value="70">1h10</option>
-          <option value="80">1h20</option>
-          <option value="90">1h30</option>
-          <option value="100">1h40</option>
-          <option value="110">1h50</option>
-          <option value="120">2h</option>
-          <option value="130">2h10</option>
-          <option value="140">2h20</option>
-          <option value="150">2h30</option>
-          <option value="160">2h40</option>
-          <option value="170">2h50</option>
-          <option value="180">3h</option>
-          <option value="190">3h10</option>
-          <option value="200">3h20</option>
-          <option value="210">3h30</option>
-          <option value="220">3h40</option>
-          <option value="230">3h50</option>
-          <option value="240">4h</option>
-          <option value="250">4h10</option>
-          <option value="260">4h20</option>
-          <option value="270">4h30</option>
-          <option value="280">4h40</option>
-          <option value="290">4h50</option>
-          <option value="300">5h</option>
-        </select>
-      </div>
-    </div>
-
-    <div class="linha-atendimento">
-      <span class="icone-atendimento">$</span>
-      <input type="number" id="precoAgendamento" placeholder="Preço (R$)" oninput="calcularResumoAgendamento()">
-    </div>
-
-    <div class="linha-atendimento">
-      <span class="icone-atendimento">⌁</span>
-      <div class="desconto-linha">
-        <input type="number" id="descontoAgendamento" placeholder="Desconto" oninput="calcularResumoAgendamento()">
-        <select id="tipoDescontoAgendamento" onchange="calcularResumoAgendamento()">
-          <option value="valor">R$</option>
-          <option value="porcentagem">%</option>
-        </select>
-      </div>
-    </div>
-
-    <div class="resumo-atendimento99">
-      <div><span>Subtotal</span><strong id="subtotalAgendamento">R$ 0,00</strong></div>
-      <div><span>Total</span><strong id="totalAgendamento">R$ 0,00</strong></div>
-    </div>
-
-    <div class="linha-atendimento">
-      <span class="icone-atendimento">🏷</span>
-      <input type="text" id="observacaoAgendamento" placeholder="Observação">
-    </div>
-
-    <div class="rodape-atendimento">
-      <button class="save-btn" onclick="salvarAgendamento()">SALVAR</button>
-    </div>
-
-  </div>
-</div>
-    <div class="modal" id="modal-pacote">
-
-  <div class="modal-content modal-servico-content">
-
-    <div class="modal-header">
-
-      <h2>Novo Pacote</h2>
-
-      <button class="close" onclick="fecharModalPacote()">
-        ×
-      </button>
-
-    </div>
-
-    <div class="form-servico">
-
-      <input
-        type="text"
-        id="nomePacote"
-        placeholder="Nome do pacote"
-      >
-
-      <div class="cliente-card">
-        <strong>Valor total do pacote</strong>
-        <p id="valorTotalPacote">R$ 0,00</p>
-      </div>
-
-      <input
-        type="number"
-        id="validadePacote"
-        placeholder="Validade em dias"
-      >
-
-      <div id="itensPacote"></div>
-
-      <button
-        type="button"
-        onclick="adicionarLinhaItemPacote()"
-      >
-        + Adicionar serviço
-      </button>
-
-      <select id="statusPacote">
-        <option value="Ativo">Ativo</option>
-        <option value="Inativo">Inativo</option>
-      </select>
-
-      <button onclick="salvarPacote()">
-        Salvar Pacote
-      </button>
-
-    </div>
-
   </div>
 
-</div>
-<div class="modal" id="modal-seletor-servico">
-
-  <div class="modal-content modal-servico-content">
-
-    <div class="modal-header">
-
-      <h2>Selecione o serviço</h2>
-
-      <button
-        class="close"
-        onclick="fecharSeletorServico()"
-      >
-        ×
-      </button>
-
-    </div>
-
-    <div class="campo-busca-cliente">
-
-      <span>🔎</span>
-
-      <input
-        type="text"
-        id="buscaServicoSeletor"
-        placeholder="Pesquisar serviço"
-        oninput="renderizarServicosSeletor()"
-      >
-
-    </div>
-
-    <div id="categorias-seletor-servico"></div>
-
-    <div id="lista-seletor-servicos"></div>
-
+  <div id="modal" class="modal">
+    <div id="modalConteudo" class="modal-conteudo"></div>
   </div>
 
-</div>
-
-<div class="modal" id="modal-seletor-cliente">
-
-  <div class="modal-content modal-servico-content">
-
-    <div class="modal-header">
-
-      <h2>Selecione a cliente</h2>
-
-      <button
-        class="close"
-        onclick="fecharSeletorCliente()"
-      >
-        ×
-      </button>
-
-    </div>
-
-    <div class="campo-busca-cliente">
-
-      <span>🔎</span>
-
-      <input
-        type="text"
-        id="buscaClienteSeletor"
-        placeholder="Pesquisar cliente"
-        oninput="renderizarClientesSeletor()"
-      >
-
-    </div>
-
-    <div id="lista-seletor-clientes"></div>
-
-  </div>
-
-</div>
-<div class="modal" id="modal-profissional">
-
-  <div class="modal-content atendimento99">
-
-    <div class="atendimento-header">
-      <button class="btn-voltar-modal" onclick="fecharModalProfissional()">←</button>
-      <h2>Profissional</h2>
-    </div>
-
-    <div class="linha-atendimento">
-      <span class="icone-atendimento">👤</span>
-      <input type="text" id="nomeProfissional" placeholder="Nome do profissional">
-    </div>
-
-    <div class="linha-atendimento">
-      <span class="icone-atendimento">📞</span>
-      <input type="text" id="telefoneProfissional" placeholder="Telefone">
-    </div>
-
-    <div class="linha-atendimento">
-      <span class="icone-atendimento">✨</span>
-      <input type="text" id="especialidadeProfissional" placeholder="Especialidade">
-    </div>
-
-    <div class="linha-atendimento" onclick="abrirSeletorCategoriasProfissional()">
-      <span class="icone-atendimento">▦</span>
-
-      <div class="campo-selecionar-servico campo-servico99">
-        <span>Categorias que atende</span>
-        <strong id="categoriasProfissionalTexto">Selecionar categorias</strong>
-      </div>
-    </div>
-
-    <input type="hidden" id="categoriasProfissional">
-
-    <div class="linha-atendimento" onclick="abrirModalHorariosProfissional()">
-      <span class="icone-atendimento">🕒</span>
-
-      <div class="campo-selecionar-servico campo-servico99">
-        <span>Horários de atendimento</span>
-        <strong id="horariosProfissionalTexto">Configurar horários</strong>
-      </div>
-    </div>
-
-    <input type="hidden" id="horariosProfissional">
-
-    <div class="linha-atendimento">
-      <span class="icone-atendimento">%</span>
-      <input type="number" id="comissaoProfissional" placeholder="% comissão">
-    </div>
-
-    <div class="rodape-atendimento">
-      <button class="save-btn" onclick="salvarProfissional()">
-        SALVAR
-      </button>
-    </div>
-
-  </div>
-
-</div>
-    <div class="modal" id="modal-categorias-profissional">
-  <div class="modal-content modal-servico-content">
-
-    <div class="modal-header">
-      <h2>Categorias</h2>
-      <button class="close" onclick="fecharSeletorCategoriasProfissional()">×</button>
-    </div>
-
-    <div id="lista-categorias-profissional"></div>
-
-    <button class="save-btn" onclick="confirmarCategoriasProfissional()">
-      Confirmar categorias
-    </button>
-
-  </div>
-</div>
-
-<div class="modal" id="modal-horarios-profissional">
-  <div class="modal-content modal-servico-content">
-
-    <div class="modal-header">
-      <h2>Horários</h2>
-      <button class="close" onclick="fecharModalHorariosProfissional()">×</button>
-    </div>
-
-    <div id="lista-horarios-profissional"></div>
-
-    <button class="save-btn" onclick="confirmarHorariosProfissional()">
-      Confirmar horários
-    </button>
-
-  </div>
-</div>
-<div class="modal" id="modal-categoria">
-
-  <div class="modal-content">
-
-    <div class="modal-header">
-
-      <h2>Nova Categoria</h2>
-
-      <button
-        class="close"
-        onclick="fecharModalCategoria()"
-      >
-        ×
-      </button>
-
-    </div>
-
-    <div class="estoque-form">
-
-      <input
-        type="text"
-        id="novaCategoriaServico"
-        placeholder="Nome da categoria"
-      >
-
-      <button onclick="adicionarCategoriaServico()">
-        Salvar Categoria
-      </button>
-
-    </div>
-
-  </div>
-
-</div>
-
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
-
-<script src="https://cdn.jsdelivr.net/npm/interactjs/dist/interact.min.js"></script>
-
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-
-<script src="script.js"></script>
-
-<script>
-if("serviceWorker" in navigator){
-  navigator.serviceWorker.register("sw.js");
-}
-</script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="script.js"></script>
 
 </body>
 </html>
