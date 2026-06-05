@@ -381,3 +381,44 @@ textarea{
 .ocupado-por-agendamento:hover{
   background:#fff3e8;
 }
+.agenda-profissional-wrapper{
+  display:flex;
+  min-width:1200px;
+  background:white;
+}
+
+.agenda-coluna-horarios{
+  width:90px;
+  flex:0 0 90px;
+  background:#fafafa;
+  border-right:1px solid #eee;
+}
+
+.agenda-coluna-profissional{
+  min-width:260px;
+  flex:1;
+  border-right:1px solid #eee;
+}
+
+.agenda-coluna-corpo{
+  position:relative;
+  background:white;
+}
+
+.agenda-slot{
+  height:80px;
+  border-bottom:1px solid #eee;
+  cursor:pointer;
+}
+
+.agenda-slot:hover{
+  background:#fff8f3;
+}
+
+.agendamento-card{
+  position:absolute;
+  left:8px;
+  right:8px;
+  z-index:20;
+  overflow:hidden;
+}
