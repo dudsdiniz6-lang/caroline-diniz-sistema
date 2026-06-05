@@ -998,3 +998,163 @@ async function buscarPercentualComissao(profissionalId, servicoId, padrao){
 
   return Number(padrao || 0);
 }
+async function carregarPacotes(){
+
+  const lista = document.getElementById("listaPacotes");
+
+  if(!lista) return;
+
+  lista.innerHTML = "";
+
+  const { data, error } = await supabaseClient
+    .from("pacotes")
+    .select("*")
+    .eq("ativo", true)
+    .order("nome");
+
+  if(error){
+    lista.innerHTML = "<div class='card'>Erro ao carregar pacotes.</div>";
+    return;
+  }
+
+  if(!data || data.length === 0){
+    lista.innerHTML = "<div class='card'>Nenhum pacote cadastrado.</div>";
+    return;
+  }
+
+  data.forEach((pacote)=>{
+
+    lista.innerHTML += `
+      <div class="card">
+        <h3>${pacote.nome}</h3>
+        <p>${dinheiro(pacote.valor)}</p>
+        <small>Validade: ${pacote.validade_dias || 90} dias</small>
+
+        <br><br>
+
+        <button class="principal" onclick="abrirModalPacote(${pacote.id})">
+          Editar
+        </button>
+      </div>
+    `;
+
+  });
+
+}
+
+async function carregarComissoes(){
+
+  const lista = document.getElementById("listaComissoes");
+
+  if(!lista) return;
+
+  lista.innerHTML = "Carregando...";
+
+  const { data, error } = await supabaseClient
+    .from("comandas")
+    .select(`
+      *,
+      profissionais(nome),
+      comanda_itens(valor, comissao_percentual)
+    `)
+    .eq("status", "Fechada");
+
+  if(error){
+    lista.innerHTML = "<div class='card'>Erro ao carregar comissões.</div>";
+    return;
+  }
+
+  const resumo = {};
+
+  (data || []).forEach((comanda)=>{
+
+    const nome = comanda.profissionais?.nome || "Sem profissional";
+
+    if(!resumo[nome]){
+      resumo[nome] = 0;
+    }
+
+    (comanda.comanda_itens || []).forEach((item)=>{
+      resumo[nome] += Number(item.valor || 0) * (Number(item.comissao_percentual || 0) / 100);
+    });
+
+  });
+
+  lista.innerHTML = "";
+
+  Object.keys(resumo).forEach((nome)=>{
+
+    lista.innerHTML += `
+      <div class="card">
+        <h3>${nome}</h3>
+        <p>Total comissão</p>
+        <strong>${dinheiro(resumo[nome])}</strong>
+      </div>
+    `;
+
+  });
+
+  if(lista.innerHTML === ""){
+    lista.innerHTML = "<div class='card'>Nenhuma comissão encontrada.</div>";
+  }
+}
+
+async function carregarCaixas(){
+
+  const lista = document.getElementById("listaCaixas");
+
+  if(!lista) return;
+
+  lista.innerHTML = "";
+
+  const { data, error } = await supabaseClient
+    .from("caixas")
+    .select("*")
+    .order("id", { ascending:false });
+
+  if(error){
+    lista.innerHTML = "<div class='card'>Erro ao carregar caixas.</div>";
+    return;
+  }
+
+  if(!data || data.length === 0){
+    lista.innerHTML = "<div class='card'>Nenhum caixa aberto.</div>";
+    return;
+  }
+
+  data.forEach((caixa)=>{
+
+    lista.innerHTML += `
+      <div class="card">
+        <h3>${caixa.data}</h3>
+        <p>Abertura: ${dinheiro(caixa.abertura)}</p>
+        <small>Status: ${caixa.status}</small>
+      </div>
+    `;
+
+  });
+
+}
+
+async function abrirCaixa(){
+
+  const valor = Number(prompt("Valor de abertura do caixa:") || 0);
+
+  const { error } = await supabaseClient
+    .from("caixas")
+    .insert([{
+      unidade_id: unidadeAtualId,
+      data: formatarDataISO(new Date()),
+      abertura: valor,
+      status: "Aberto"
+    }]);
+
+  if(error){
+    alert("Erro ao abrir caixa: " + error.message);
+    return;
+  }
+
+  carregarCaixas();
+
+  alert("Caixa aberto.");
+}
