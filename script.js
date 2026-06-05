@@ -969,6 +969,11 @@ async function salvarFaturamento(agendamentoId){
       valor: agendamento.total,
       data: agendamento.data
     }]);
+  await registrarEntradaCaixa(
+  comanda.id,
+  formaPagamentoId,
+  agendamento.total
+);
 
   await supabaseClient
     .from("agendamentos")
@@ -1157,4 +1162,61 @@ async function abrirCaixa(){
   carregarCaixas();
 
   alert("Caixa aberto.");
+}
+async function buscarCaixaAberto(){
+
+  const { data, error } = await supabaseClient
+    .from("caixas")
+    .select("*")
+    .eq("status", "Aberto")
+    .order("id", { ascending:false })
+    .limit(1)
+    .maybeSingle();
+
+  if(error){
+    return null;
+  }
+
+  return data;
+}
+
+async function registrarEntradaCaixa(comandaId, formaPagamentoId, valor){
+
+  let caixa = await buscarCaixaAberto();
+
+  if(!caixa){
+
+    const criarCaixa = await supabaseClient
+      .from("caixas")
+      .insert([{
+        unidade_id: unidadeAtualId,
+        data: formatarDataISO(new Date()),
+        abertura: 0,
+        status: "Aberto"
+      }])
+      .select()
+      .single();
+
+    if(criarCaixa.error){
+      alert("Erro ao criar caixa automático: " + criarCaixa.error.message);
+      return;
+    }
+
+    caixa = criarCaixa.data;
+  }
+
+  const { error } = await supabaseClient
+    .from("caixa_movimentacoes")
+    .insert([{
+      caixa_id: caixa.id,
+      tipo: "Entrada",
+      descricao: "Pagamento de atendimento",
+      valor: Number(valor || 0),
+      comanda_id: comandaId,
+      forma_pagamento_id: formaPagamentoId
+    }]);
+
+  if(error){
+    alert("Erro ao registrar entrada no caixa: " + error.message);
+  }
 }
