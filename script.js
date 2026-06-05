@@ -1705,3 +1705,119 @@ async function consumirSaldoPacoteAgendamento(agendamento){
     throw atualizar.error;
   }
 }
+function preencherDadosServicoAgendamento(){
+
+  const select = document.getElementById("agServico");
+  const option = select.options[select.selectedIndex];
+
+  const valor = Number(option?.dataset?.valor || 0);
+  const duracao = Number(option?.dataset?.duracao || 30);
+
+  document.getElementById("agValor").value = valor;
+  document.getElementById("agDuracao").value = duracao;
+
+  calcularTotalAgendamento();
+}
+
+function calcularTotalAgendamento(){
+
+  const valor = Number(document.getElementById("agValor")?.value || 0);
+  const desconto = Number(document.getElementById("agDesconto")?.value || 0);
+  const tipo = document.getElementById("agTipoDesconto")?.value || "valor";
+
+  let descontoFinal = tipo === "porcentagem"
+    ? valor * (desconto / 100)
+    : desconto;
+
+  const total = Math.max(valor - descontoFinal, 0);
+
+  document.getElementById("agTotal").value = total.toFixed(2);
+}
+
+async function salvarAgendamento(){
+
+  const id = document.getElementById("agendamentoId").value;
+  const checkboxPacote = document.getElementById("agUsarPacote");
+
+  const dados = {
+    unidade_id: unidadeAtualId,
+    cliente_id: Number(document.getElementById("agCliente").value),
+    profissional_id: Number(document.getElementById("agProfissional").value),
+    data: document.getElementById("agData").value,
+    horario: document.getElementById("agHorario").value,
+    servico_id: Number(document.getElementById("agServico").value),
+    duracao: Number(document.getElementById("agDuracao").value || 30),
+    valor: Number(document.getElementById("agValor").value || 0),
+    desconto: Number(document.getElementById("agDesconto").value || 0),
+    tipo_desconto: document.getElementById("agTipoDesconto").value,
+    total: Number(document.getElementById("agTotal").value || 0),
+    status: document.getElementById("agStatus").value,
+    observacoes: document.getElementById("agObservacoes").value.trim(),
+    usar_pacote: checkboxPacote?.checked || false,
+    pacote_cliente_id: checkboxPacote?.checked ? Number(checkboxPacote.dataset.pacoteClienteId) : null,
+    pacote_saldo_id: checkboxPacote?.checked ? Number(checkboxPacote.dataset.pacoteSaldoId) : null
+  };
+
+  if(!dados.cliente_id){
+    alert("Selecione uma cliente.");
+    return;
+  }
+
+  if(!dados.profissional_id){
+    alert("Selecione um profissional.");
+    return;
+  }
+
+  if(!dados.servico_id){
+    alert("Selecione um serviço.");
+    return;
+  }
+
+  let resposta;
+
+  if(id){
+    resposta = await supabaseClient
+      .from("agendamentos")
+      .update(dados)
+      .eq("id", id);
+  }else{
+    resposta = await supabaseClient
+      .from("agendamentos")
+      .insert([dados]);
+  }
+
+  if(resposta.error){
+    alert("Erro ao salvar agendamento: " + resposta.error.message);
+    return;
+  }
+
+  dataAgenda = new Date(dados.data + "T00:00:00");
+
+  fecharModal();
+  atualizarTextoDataAgenda();
+  carregarAgenda();
+
+  alert("Agendamento salvo com sucesso.");
+}
+
+async function excluirAgendamento(id){
+
+  const confirmar = confirm("Deseja excluir este agendamento?");
+
+  if(!confirmar) return;
+
+  const { error } = await supabaseClient
+    .from("agendamentos")
+    .delete()
+    .eq("id", id);
+
+  if(error){
+    alert("Erro ao excluir agendamento: " + error.message);
+    return;
+  }
+
+  fecharModal();
+  carregarAgenda();
+
+  alert("Agendamento excluído.");
+}
