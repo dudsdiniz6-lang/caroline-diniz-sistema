@@ -2085,3 +2085,111 @@ async function carregarPacotesClienteCancelamento(){
 
   });
 }
+function abrirOpcoesCancelamentoPacote(pacoteClienteId, clienteId, valorPacote){
+
+  abrirModal(`
+    <h2>Cancelar pacote</h2>
+
+    <p>Escolha como deseja cancelar este pacote:</p>
+
+    <label>Tipo de cancelamento</label>
+    <select id="tipoCancelamentoPacote">
+      <option value="credito">Estornar como crédito para cliente</option>
+      <option value="devolucao">Devolução de valor para cliente</option>
+      <option value="sem_extorno">Cancelar sem extorno de valores</option>
+    </select>
+
+    <label>Valor de crédito para cliente</label>
+    <input id="valorCreditoCancelamento" type="number" value="0">
+
+    <label>Valor devolvido para cliente</label>
+    <input id="valorDevolvidoCancelamento" type="number" value="0">
+
+    <label>Observação</label>
+    <textarea id="observacaoCancelamentoPacote"></textarea>
+
+    <button class="principal" onclick="confirmarCancelamentoPacote(${pacoteClienteId}, ${clienteId})">
+      Confirmar cancelamento
+    </button>
+
+    <button onclick="fecharModal()">
+      Cancelar
+    </button>
+  `);
+}
+
+async function confirmarCancelamentoPacote(pacoteClienteId, clienteId){
+
+  const tipo = document.getElementById("tipoCancelamentoPacote").value;
+  const valorCredito = Number(document.getElementById("valorCreditoCancelamento").value || 0);
+  const valorDevolvido = Number(document.getElementById("valorDevolvidoCancelamento").value || 0);
+  const observacao = document.getElementById("observacaoCancelamentoPacote").value.trim();
+
+  const caixa = await buscarCaixaAberto();
+
+  if(tipo === "devolucao" && !caixa){
+    alert("Abra um caixa antes de registrar devolução de valor.");
+    return;
+  }
+
+  await supabaseClient
+    .from("pacotes_clientes")
+    .update({
+      status: "Cancelado",
+      ativo: false,
+      cancelado_em: new Date().toISOString(),
+      motivo_cancelamento: observacao || tipo
+    })
+    .eq("id", pacoteClienteId);
+
+  await supabaseClient
+    .from("pacotes_saldos")
+    .update({
+      cancelado: true,
+      cancelado_em: new Date().toISOString()
+    })
+    .eq("pacote_cliente_id", pacoteClienteId);
+
+  await supabaseClient
+    .from("cancelamentos_pacotes")
+    .insert([{
+      pacote_cliente_id: pacoteClienteId,
+      cliente_id: clienteId,
+      tipo_cancelamento: tipo,
+      valor_devolvido: tipo === "devolucao" ? valorDevolvido : 0,
+      valor_credito: tipo === "credito" ? valorCredito : 0,
+      observacao
+    }]);
+
+  if(tipo === "credito" && valorCredito > 0){
+
+    await supabaseClient
+      .from("creditos_clientes")
+      .insert([{
+        cliente_id: clienteId,
+        valor: valorCredito,
+        descricao: "Crédito gerado por cancelamento de pacote",
+        ativo: true
+      }]);
+
+  }
+
+  if(tipo === "devolucao" && valorDevolvido > 0){
+
+    await supabaseClient
+      .from("caixa_movimentacoes")
+      .insert([{
+        caixa_id: caixa.id,
+        tipo: "Saída",
+        descricao: "Devolução de pacote para cliente",
+        valor: Number(valorDevolvido),
+        pacote_cliente_id: pacoteClienteId,
+        cliente_id: clienteId
+      }]);
+
+  }
+
+  fecharModal();
+
+  alert("Pacote cancelado com sucesso.");
+}
