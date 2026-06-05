@@ -837,3 +837,164 @@ async function abrirModalAgendamento(id = null, profissionalPre = "", horarioPre
 
   calcularTotalAgendamento();
 }
+async function faturarAgendamento(id){
+
+  const { data: agendamento, error } = await supabaseClient
+    .from("agendamentos")
+    .select(`
+      *,
+      clientes(nome),
+      profissionais(nome),
+      servicos(nome, comissao_padrao)
+    `)
+    .eq("id", id)
+    .single();
+
+  if(error || !agendamento){
+    alert("Agendamento não encontrado.");
+    return;
+  }
+
+  const formasResp = await supabaseClient
+    .from("formas_pagamento")
+    .select("*")
+    .eq("ativo", true)
+    .order("nome");
+
+  const formas = formasResp.data || [];
+
+  abrirModal(`
+    <h2>Faturar atendimento</h2>
+
+    <p><strong>Cliente:</strong> ${agendamento.clientes?.nome || "-"}</p>
+    <p><strong>Serviço:</strong> ${agendamento.servicos?.nome || "-"}</p>
+    <p><strong>Profissional:</strong> ${agendamento.profissionais?.nome || "-"}</p>
+
+    <br>
+
+    <label>Subtotal</label>
+    <input id="fatSubtotal" type="number" value="${agendamento.valor || 0}" readonly>
+
+    <label>Desconto</label>
+    <input id="fatDesconto" type="number" value="${agendamento.desconto || 0}" readonly>
+
+    <label>Total</label>
+    <input id="fatTotal" type="number" value="${agendamento.total || 0}" readonly>
+
+    <label>Forma de pagamento</label>
+    <select id="fatFormaPagamento">
+      <option value="">Selecione</option>
+      ${formas.map(f=>`
+        <option value="${f.id}">${f.nome}</option>
+      `).join("")}
+    </select>
+
+    <button class="principal" onclick="salvarFaturamento(${agendamento.id})">
+      Confirmar faturamento
+    </button>
+
+    <button onclick="fecharModal()">
+      Cancelar
+    </button>
+  `);
+}
+
+async function salvarFaturamento(agendamentoId){
+
+  const formaPagamentoId = Number(document.getElementById("fatFormaPagamento").value);
+
+  if(!formaPagamentoId){
+    alert("Selecione a forma de pagamento.");
+    return;
+  }
+
+  const { data: agendamento, error } = await supabaseClient
+    .from("agendamentos")
+    .select(`
+      *,
+      servicos(nome, comissao_padrao)
+    `)
+    .eq("id", agendamentoId)
+    .single();
+
+  if(error || !agendamento){
+    alert("Agendamento não encontrado.");
+    return;
+  }
+
+  const comandaResp = await supabaseClient
+    .from("comandas")
+    .insert([{
+      unidade_id: unidadeAtualId,
+      agendamento_id: agendamento.id,
+      cliente_id: agendamento.cliente_id,
+      profissional_id: agendamento.profissional_id,
+      data: agendamento.data,
+      subtotal: agendamento.valor,
+      desconto: agendamento.desconto,
+      total: agendamento.total,
+      status: "Fechada"
+    }])
+    .select()
+    .single();
+
+  if(comandaResp.error){
+    alert("Erro ao criar comanda: " + comandaResp.error.message);
+    return;
+  }
+
+  const comanda = comandaResp.data;
+
+  const percentualComissao = await buscarPercentualComissao(
+    agendamento.profissional_id,
+    agendamento.servico_id,
+    agendamento.servicos?.comissao_padrao || 0
+  );
+
+  await supabaseClient
+    .from("comanda_itens")
+    .insert([{
+      comanda_id: comanda.id,
+      servico_id: agendamento.servico_id,
+      descricao: agendamento.servicos?.nome || "Serviço",
+      valor: agendamento.total,
+      comissao_percentual: percentualComissao
+    }]);
+
+  await supabaseClient
+    .from("pagamentos")
+    .insert([{
+      comanda_id: comanda.id,
+      forma_pagamento_id: formaPagamentoId,
+      valor: agendamento.total,
+      data: agendamento.data
+    }]);
+
+  await supabaseClient
+    .from("agendamentos")
+    .update({
+      status: "Finalizado"
+    })
+    .eq("id", agendamento.id);
+
+  fecharModal();
+  carregarAgenda();
+
+  alert("Atendimento faturado com sucesso.");
+}
+
+async function buscarPercentualComissao(profissionalId, servicoId, padrao){
+
+  const { data } = await supabaseClient
+    .from("comissoes_regras")
+    .select("*")
+    .eq("profissional_id", profissionalId)
+    .eq("servico_id", servicoId)
+    .maybeSingle();
+
+  if(data){
+    return Number(data.percentual || 0);
+  }
+
+  return Number(padrao || 0);
+}
