@@ -1205,3 +1205,158 @@ async function registrarEntradaCaixa(comandaId, formaPagamentoId, valor){
     throw error;
   }
 }
+async function abrirModalPacote(id = null){
+
+  const servicosResp = await supabaseClient
+    .from("servicos")
+    .select("*")
+    .eq("ativo", true)
+    .order("nome");
+
+  const servicos = servicosResp.data || [];
+
+  let pacote = null;
+  let itemPacote = null;
+
+  if(id){
+
+    const pacoteResp = await supabaseClient
+      .from("pacotes")
+      .select("*")
+      .eq("id", id)
+      .single();
+
+    pacote = pacoteResp.data;
+
+    const itemResp = await supabaseClient
+      .from("pacote_itens")
+      .select("*")
+      .eq("pacote_id", id)
+      .maybeSingle();
+
+    itemPacote = itemResp.data;
+  }
+
+  abrirModal(`
+    <h2>${id ? "Editar pacote" : "Novo pacote"}</h2>
+
+    <input id="pacoteId" type="hidden" value="${pacote?.id || ""}">
+
+    <label>Nome do pacote</label>
+    <input id="pacoteNome" value="${pacote?.nome || ""}" placeholder="Ex: Pacote Drenagem 10 sessões">
+
+    <label>Serviço do pacote</label>
+    <select id="pacoteServico">
+      <option value="">Selecione</option>
+      ${servicos.map(servico=>`
+        <option value="${servico.id}" ${String(itemPacote?.servico_id || "") === String(servico.id) ? "selected" : ""}>
+          ${servico.nome} - ${dinheiro(servico.valor)}
+        </option>
+      `).join("")}
+    </select>
+
+    <label>Quantidade de sessões/créditos</label>
+    <input id="pacoteQuantidade" type="number" value="${itemPacote?.quantidade || 1}">
+
+    <label>Valor total do pacote</label>
+    <input id="pacoteValor" type="number" value="${pacote?.valor || 0}">
+
+    <label>Validade em dias</label>
+    <input id="pacoteValidade" type="number" value="${pacote?.validade_dias || 90}">
+
+    <button class="principal" onclick="salvarPacote()">
+      Salvar pacote
+    </button>
+
+    <button onclick="fecharModal()">
+      Cancelar
+    </button>
+  `);
+}
+
+async function salvarPacote(){
+
+  const id = document.getElementById("pacoteId").value;
+
+  const nome = document.getElementById("pacoteNome").value.trim();
+  const servicoId = Number(document.getElementById("pacoteServico").value);
+  const quantidade = Number(document.getElementById("pacoteQuantidade").value || 1);
+  const valor = Number(document.getElementById("pacoteValor").value || 0);
+  const validade = Number(document.getElementById("pacoteValidade").value || 90);
+
+  if(!nome){
+    alert("Digite o nome do pacote.");
+    return;
+  }
+
+  if(!servicoId){
+    alert("Selecione o serviço do pacote.");
+    return;
+  }
+
+  if(quantidade <= 0){
+    alert("Informe uma quantidade válida.");
+    return;
+  }
+
+  const dadosPacote = {
+    unidade_id: unidadeAtualId,
+    nome,
+    valor,
+    validade_dias: validade,
+    ativo: true
+  };
+
+  let pacoteId = id;
+
+  if(id){
+
+    const atualizar = await supabaseClient
+      .from("pacotes")
+      .update(dadosPacote)
+      .eq("id", id);
+
+    if(atualizar.error){
+      alert("Erro ao atualizar pacote: " + atualizar.error.message);
+      return;
+    }
+
+    await supabaseClient
+      .from("pacote_itens")
+      .delete()
+      .eq("pacote_id", id);
+
+  }else{
+
+    const criar = await supabaseClient
+      .from("pacotes")
+      .insert([dadosPacote])
+      .select()
+      .single();
+
+    if(criar.error){
+      alert("Erro ao criar pacote: " + criar.error.message);
+      return;
+    }
+
+    pacoteId = criar.data.id;
+  }
+
+  const item = await supabaseClient
+    .from("pacote_itens")
+    .insert([{
+      pacote_id: pacoteId,
+      servico_id: servicoId,
+      quantidade
+    }]);
+
+  if(item.error){
+    alert("Erro ao salvar serviço do pacote: " + item.error.message);
+    return;
+  }
+
+  fecharModal();
+  carregarPacotes();
+
+  alert("Pacote salvo com sucesso.");
+}
