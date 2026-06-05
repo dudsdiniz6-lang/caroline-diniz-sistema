@@ -665,7 +665,11 @@ async function carregarAgenda(){
           return `
             <div class="agenda-celula" onclick="abrirModalAgendamento(null, '${profissional.id}', '${horario}')">
               ${itens.map(a=>`
-                <div class="agendamento-card status-${normalizarClasse(a.status)}" onclick="event.stopPropagation(); abrirModalAgendamento(${a.id})">
+              <div 
+  class="agendamento-card status-${normalizarClasse(a.status)}" 
+  style="height:${Math.max(((Number(a.duracao || 30) / 30) * 80) - 12, 68)}px;"
+  onclick="event.stopPropagation(); abrirModalAgendamento(${a.id})"
+>
                   <strong>${a.clientes?.nome || "Cliente"}</strong>
                   <span>${a.servicos?.nome || "Serviço"}</span>
                   <small>${a.horario} • ${a.duracao || 30}min</small>
