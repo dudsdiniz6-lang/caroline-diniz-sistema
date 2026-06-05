@@ -605,7 +605,6 @@ async function carregarAgenda(){
   atualizarTextoDataAgenda();
 
   const grade = document.getElementById("agendaGrade");
-
   if(!grade) return;
 
   grade.innerHTML = "Carregando agenda...";
@@ -633,7 +632,7 @@ async function carregarAgenda(){
   let agendamentos = agendamentosResp.data || [];
 
   if(busca){
-    agendamentos = agendamentos.filter((item)=>
+    agendamentos = agendamentos.filter(item =>
       item.clientes?.nome?.toLowerCase().includes(busca)
     );
   }
@@ -644,53 +643,77 @@ async function carregarAgenda(){
   }
 
   const horarios = gerarHorariosAgenda();
+  const alturaAgenda = horarios.length * 80;
 
   grade.innerHTML = `
-    <div class="agenda-tabela" style="grid-template-columns:90px repeat(${profissionais.length}, minmax(220px, 1fr));">
-      <div class="agenda-cabecalho horario-coluna">Horário</div>
+    <div class="agenda-profissional-wrapper">
 
-      ${profissionais.map(p=>`
-        <div class="agenda-cabecalho">${p.nome}</div>
-      `).join("")}
+      <div class="agenda-coluna-horarios">
+        <div class="agenda-cabecalho">Horário</div>
+        ${horarios.map(h=>`
+          <div class="agenda-horario">${h}</div>
+        `).join("")}
+      </div>
 
-      ${horarios.map(horario=>`
-        <div class="agenda-horario">${horario}</div>
+      ${profissionais.map(profissional=>{
 
-        ${profissionais.map(profissional=>{
-         const itens = agendamentos.filter(a =>
-  String(a.profissional_id) === String(profissional.id) &&
-  a.horario === horario
-);
+        const agendaProf = agendamentos.filter(a =>
+          String(a.profissional_id) === String(profissional.id)
+        );
 
-const ocupadoPorOutro = agendamentos.find(a =>
-  String(a.profissional_id) === String(profissional.id) &&
-  horarioEstaOcupado(horario, a)
-);
+        return `
+          <div class="agenda-coluna-profissional">
 
-          return `
-            <div 
-  class="agenda-celula ${ocupadoPorOutro ? "ocupado-por-agendamento" : ""}" 
-  ${ocupadoPorOutro ? "" : `onclick="abrirModalAgendamento(null, '${profissional.id}', '${horario}')"`}>
-              ${itens.map(a=>`
-              <div 
-  class="agendamento-card status-${normalizarClasse(a.status)}" 
-  style="height:${Math.max(((Number(a.duracao || 30) / 30) * 80) - 12, 68)}px;"
-  onclick="event.stopPropagation(); abrirModalAgendamento(${a.id})"
->
-                  <strong>${a.clientes?.nome || "Cliente"}</strong>
-                  <span>${a.servicos?.nome || "Serviço"}</span>
-                  <small>
-  ${formatarHorarioBonito(a.horario)} - ${formatarHorarioBonito(somarMinutosHorario(a.horario, a.duracao || 30))}
-</small>
-                  <em>${a.status || "Agendado"}</em>
-                </div>
-              `).join("")}
+            <div class="agenda-cabecalho">
+              ${profissional.nome}
             </div>
-          `;
-        }).join("")}
-      `).join("")}
+
+            <div class="agenda-coluna-corpo" style="height:${alturaAgenda}px;">
+
+              ${horarios.map(h=>`
+                <div 
+                  class="agenda-slot"
+                  onclick="abrirModalAgendamento(null, '${profissional.id}', '${h}')"
+                ></div>
+              `).join("")}
+
+              ${agendaProf.map(a=>{
+
+                const top = calcularTopAgenda(a.horario);
+                const altura = Math.max((Number(a.duracao || 30) / 30) * 80 - 8, 70);
+                const fim = somarMinutosHorario(a.horario, a.duracao || 30);
+
+                return `
+                  <div 
+                    class="agendamento-card status-${normalizarClasse(a.status)}"
+                    style="top:${top + 4}px; height:${altura}px;"
+                    onclick="event.stopPropagation(); abrirModalAgendamento(${a.id})"
+                  >
+                    <strong>${a.clientes?.nome || "Cliente"}</strong>
+                    <span>${a.servicos?.nome || "Serviço"}</span>
+                    <small>${formatarHorarioBonito(a.horario)} - ${formatarHorarioBonito(fim)}</small>
+                    <em>${a.status || "Agendado"}</em>
+                  </div>
+                `;
+              }).join("")}
+
+            </div>
+          </div>
+        `;
+      }).join("")}
+
     </div>
   `;
+}
+
+function calcularTopAgenda(horario){
+
+  const [hora, minuto] = horario.split(":").map(Number);
+
+  const inicio = 7 * 60;
+  const atual = hora * 60 + minuto;
+
+  return ((atual - inicio) / 30) * 80;
 }
 
 function gerarHorariosAgenda(){
