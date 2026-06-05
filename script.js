@@ -1996,3 +1996,92 @@ async function salvarComissoesPersonalizadas(profissionalId){
       .insert(regras);
   }
 }
+async function abrirCancelamentoPacote(){
+
+  const clientesResp = await supabaseClient
+    .from("clientes")
+    .select("*")
+    .eq("ativo", true)
+    .order("nome");
+
+  const clientes = clientesResp.data || [];
+
+  abrirModal(`
+    <h2>Cancelar créditos de pacote</h2>
+
+    <label>Cliente</label>
+    <select id="cancelarPacoteCliente" onchange="carregarPacotesClienteCancelamento()">
+      <option value="">Selecione</option>
+      ${clientes.map(c=>`
+        <option value="${c.id}">${c.nome}</option>
+      `).join("")}
+    </select>
+
+    <div id="pacotesClienteCancelamento"></div>
+
+    <button onclick="fecharModal()">Fechar</button>
+  `);
+}
+
+async function carregarPacotesClienteCancelamento(){
+
+  const clienteId = Number(document.getElementById("cancelarPacoteCliente").value);
+  const area = document.getElementById("pacotesClienteCancelamento");
+
+  area.innerHTML = "";
+
+  if(!clienteId) return;
+
+  const { data, error } = await supabaseClient
+    .from("pacotes_clientes")
+    .select(`
+      *,
+      pacotes(nome, valor),
+      pacotes_saldos(
+        id,
+        quantidade_total,
+        quantidade_usada,
+        cancelado,
+        servicos(nome)
+      )
+    `)
+    .eq("cliente_id", clienteId)
+    .eq("status", "Ativo");
+
+  if(error){
+    area.innerHTML = "<div class='card'>Erro ao carregar pacotes.</div>";
+    return;
+  }
+
+  if(!data || data.length === 0){
+    area.innerHTML = "<div class='card'>Cliente sem pacotes ativos.</div>";
+    return;
+  }
+
+  data.forEach((pacoteCliente)=>{
+
+    area.innerHTML += `
+      <div class="card">
+        <h3>${pacoteCliente.pacotes?.nome || "Pacote"}</h3>
+
+        ${(pacoteCliente.pacotes_saldos || []).map(saldo=>{
+          const restante = Number(saldo.quantidade_total || 0) - Number(saldo.quantidade_usada || 0);
+
+          return `
+            <p>${saldo.servicos?.nome || "Serviço"}</p>
+            <small>
+              Saldo: ${restante}/${saldo.quantidade_total}
+            </small>
+          `;
+        }).join("")}
+
+        <br><br>
+
+        <button class="principal" onclick="abrirOpcoesCancelamentoPacote(${pacoteCliente.id}, ${clienteId}, ${pacoteCliente.pacotes?.valor || 0})">
+          Cancelar este pacote
+        </button>
+      </div>
+    `;
+
+  });
+}
