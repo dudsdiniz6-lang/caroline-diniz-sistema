@@ -465,6 +465,11 @@ async function salvarProfissional(){
 
   carregarProfissionais();
   carregarAgenda();
+  const profissionalIdFinal = id || resposta.data?.[0]?.id;
+
+if(profissionalIdFinal){
+  await salvarComissoesPersonalizadas(profissionalIdFinal);
+}
 
   alert("Profissional salvo com sucesso.");
 }
@@ -1943,4 +1948,47 @@ async function toggleComissaoPersonalizada(){
       </div>
     `).join("")}
   `;
+}
+async function salvarComissoesPersonalizadas(profissionalId){
+
+  const checkbox = document.getElementById("profissionalUsaComissaoPadrao");
+
+  if(!checkbox || checkbox.checked){
+    await supabaseClient
+      .from("comissoes_regras")
+      .delete()
+      .eq("profissional_id", profissionalId);
+
+    return;
+  }
+
+  const servicosResp = await supabaseClient
+    .from("servicos")
+    .select("*")
+    .eq("ativo", true);
+
+  const servicos = servicosResp.data || [];
+
+  await supabaseClient
+    .from("comissoes_regras")
+    .delete()
+    .eq("profissional_id", profissionalId);
+
+  const regras = servicos.map((servico)=>{
+
+    const campo = document.getElementById(`comissaoServico_${servico.id}`);
+
+    return {
+      profissional_id: profissionalId,
+      servico_id: servico.id,
+      percentual: Number(campo?.value || servico.comissao_padrao || 0)
+    };
+
+  });
+
+  if(regras.length > 0){
+    await supabaseClient
+      .from("comissoes_regras")
+      .insert(regras);
+  }
 }
