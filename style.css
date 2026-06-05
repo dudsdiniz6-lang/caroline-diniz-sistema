@@ -226,3 +226,141 @@ textarea{
   }
 
 }
+.agenda-grade{
+  background:white;
+  border-radius:22px;
+  padding:0;
+  overflow:auto;
+  box-shadow:0 8px 25px rgba(0,0,0,.06);
+  border:1px solid #eee;
+}
+
+.agenda-tabela{
+  display:grid;
+  min-width:1200px;
+}
+
+.agenda-cabecalho{
+  height:58px;
+  padding:18px 16px;
+  background:#fff;
+  border-bottom:1px solid #eee;
+  border-left:1px solid #eee;
+  font-weight:700;
+  position:sticky;
+  top:0;
+  z-index:5;
+}
+
+.horario-coluna{
+  border-left:none;
+  background:#fafafa;
+}
+
+.agenda-horario{
+  height:80px;
+  padding:10px;
+  font-size:12px;
+  color:#777;
+  background:#fafafa;
+  border-bottom:1px solid #eee;
+  border-right:1px solid #eee;
+}
+
+.agenda-celula{
+  min-height:80px;
+  padding:6px;
+  border-bottom:1px solid #eee;
+  border-left:1px solid #eee;
+  background:#fff;
+  cursor:pointer;
+  position:relative;
+}
+
+.agenda-celula:hover{
+  background:#fff8f3;
+}
+
+.agendamento-card{
+  background:#fff3e8;
+  border-left:5px solid #ff6b2c;
+  border-radius:14px;
+  padding:10px;
+  box-shadow:0 4px 12px rgba(0,0,0,.08);
+  font-size:13px;
+  cursor:pointer;
+  margin-bottom:5px;
+}
+
+.agendamento-card strong{
+  display:block;
+  font-size:14px;
+  margin-bottom:4px;
+}
+
+.agendamento-card span{
+  display:block;
+  color:#555;
+  margin-bottom:4px;
+}
+
+.agendamento-card small{
+  display:block;
+  color:#ff6b2c;
+  font-weight:700;
+  margin-bottom:4px;
+}
+
+.agendamento-card em{
+  display:inline-block;
+  font-style:normal;
+  background:#fff;
+  color:#ff6b2c;
+  font-size:11px;
+  padding:3px 8px;
+  border-radius:999px;
+  font-weight:700;
+}
+
+.status-confirmado{
+  background:#e9fff3;
+  border-left-color:#22c55e;
+}
+
+.status-finalizado{
+  background:#eaf2ff;
+  border-left-color:#3b82f6;
+}
+
+.status-cancelado{
+  background:#fff0f0;
+  border-left-color:#ef4444;
+  opacity:.75;
+}
+
+.status-faltou{
+  background:#f1f1f1;
+  border-left-color:#777;
+  opacity:.75;
+}
+
+.status-reagendado{
+  background:#fffbe6;
+  border-left-color:#eab308;
+}
+
+.acoes button{
+  border:none;
+  padding:11px 16px;
+  border-radius:12px;
+  cursor:pointer;
+  font-weight:700;
+  background:#fff;
+  border:1px solid #ddd;
+}
+
+.acoes .principal{
+  background:#ff6b2c;
+  color:#fff;
+  border:none;
+}
