@@ -657,13 +657,20 @@ async function carregarAgenda(){
         <div class="agenda-horario">${horario}</div>
 
         ${profissionais.map(profissional=>{
-          const itens = agendamentos.filter(a =>
-            String(a.profissional_id) === String(profissional.id) &&
-            a.horario === horario
-          );
+         const itens = agendamentos.filter(a =>
+  String(a.profissional_id) === String(profissional.id) &&
+  a.horario === horario
+);
+
+const ocupadoPorOutro = agendamentos.find(a =>
+  String(a.profissional_id) === String(profissional.id) &&
+  horarioEstaOcupado(horario, a)
+);
 
           return `
-            <div class="agenda-celula" onclick="abrirModalAgendamento(null, '${profissional.id}', '${horario}')">
+            <div 
+  class="agenda-celula ${ocupadoPorOutro ? "ocupado-por-agendamento" : ""}" 
+  ${ocupadoPorOutro ? "" : `onclick="abrirModalAgendamento(null, '${profissional.id}', '${horario}')"`}>
               ${itens.map(a=>`
               <div 
   class="agendamento-card status-${normalizarClasse(a.status)}" 
@@ -672,7 +679,9 @@ async function carregarAgenda(){
 >
                   <strong>${a.clientes?.nome || "Cliente"}</strong>
                   <span>${a.servicos?.nome || "Serviço"}</span>
-                  <small>${a.horario} • ${a.duracao || 30}min</small>
+                  <small>
+  ${formatarHorarioBonito(a.horario)} - ${formatarHorarioBonito(somarMinutosHorario(a.horario, a.duracao || 30))}
+</small>
                   <em>${a.status || "Agendado"}</em>
                 </div>
               `).join("")}
@@ -1824,4 +1833,39 @@ async function excluirAgendamento(id){
   carregarAgenda();
 
   alert("Agendamento excluído.");
+}
+function somarMinutosHorario(horario, duracao){
+
+  const [hora, minuto] = horario.split(":").map(Number);
+
+  const total = hora * 60 + minuto + Number(duracao || 0);
+
+  const h = Math.floor(total / 60);
+  const m = total % 60;
+
+  return `${String(h).padStart(2,"0")}:${String(m).padStart(2,"0")}`;
+}
+
+function formatarHorarioBonito(horario){
+
+  if(!horario) return "";
+
+  const [hora, minuto] = horario.split(":");
+
+  return minuto === "00"
+    ? `${Number(hora)}h`
+    : `${Number(hora)}h${minuto}`;
+}
+
+function horarioEstaOcupado(horario, agendamento){
+
+  const [h, m] = horario.split(":").map(Number);
+  const minutosHorario = h * 60 + m;
+
+  const [ih, im] = agendamento.horario.split(":").map(Number);
+  const inicio = ih * 60 + im;
+
+  const fim = inicio + Number(agendamento.duracao || 30);
+
+  return minutosHorario > inicio && minutosHorario < fim;
 }
