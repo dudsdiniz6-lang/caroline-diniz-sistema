@@ -1040,6 +1040,9 @@ async function carregarPacotes(){
         <button class="principal" onclick="abrirModalPacote(${pacote.id})">
           Editar
         </button>
+        <button onclick="venderPacote(${pacote.id})">
+  Vender
+</button>
       </div>
     `;
 
@@ -1359,4 +1362,183 @@ async function salvarPacote(){
   carregarPacotes();
 
   alert("Pacote salvo com sucesso.");
+}
+async function venderPacote(pacoteId){
+
+  const clientesResp = await supabaseClient
+    .from("clientes")
+    .select("*")
+    .eq("ativo", true)
+    .order("nome");
+
+  const formasResp = await supabaseClient
+    .from("formas_pagamento")
+    .select("*")
+    .eq("ativo", true)
+    .order("nome");
+
+  const pacoteResp = await supabaseClient
+    .from("pacotes")
+    .select("*")
+    .eq("id", pacoteId)
+    .single();
+
+  const itemResp = await supabaseClient
+    .from("pacote_itens")
+    .select("*, servicos(nome)")
+    .eq("pacote_id", pacoteId)
+    .single();
+
+  const clientes = clientesResp.data || [];
+  const formas = formasResp.data || [];
+  const pacote = pacoteResp.data;
+  const item = itemResp.data;
+
+  abrirModal(`
+    <h2>Vender pacote</h2>
+
+    <p><strong>${pacote.nome}</strong></p>
+    <p>${item.servicos?.nome || ""} • ${item.quantidade} sessões</p>
+    <p>Valor: ${dinheiro(pacote.valor)}</p>
+
+    <label>Cliente</label>
+    <select id="vendaPacoteCliente">
+      <option value="">Selecione</option>
+      ${clientes.map(c=>`
+        <option value="${c.id}">${c.nome}</option>
+      `).join("")}
+    </select>
+
+    <label>Forma de pagamento</label>
+    <select id="vendaPacoteForma">
+      <option value="">Selecione</option>
+      ${formas.map(f=>`
+        <option value="${f.id}">${f.nome}</option>
+      `).join("")}
+    </select>
+
+    <button class="principal" onclick="confirmarVendaPacote(${pacote.id})">
+      Confirmar venda
+    </button>
+
+    <button onclick="fecharModal()">
+      Cancelar
+    </button>
+  `);
+}
+
+async function confirmarVendaPacote(pacoteId){
+
+  const clienteId = Number(document.getElementById("vendaPacoteCliente").value);
+  const formaPagamentoId = Number(document.getElementById("vendaPacoteForma").value);
+
+  if(!clienteId){
+    alert("Selecione a cliente.");
+    return;
+  }
+
+  if(!formaPagamentoId){
+    alert("Selecione a forma de pagamento.");
+    return;
+  }
+
+  const caixa = await buscarCaixaAberto();
+
+  if(!caixa){
+    alert("Não existe caixa aberto. Abra o caixa antes de vender pacote.");
+    return;
+  }
+
+  const pacoteResp = await supabaseClient
+    .from("pacotes")
+    .select("*")
+    .eq("id", pacoteId)
+    .single();
+
+  const itemResp = await supabaseClient
+    .from("pacote_itens")
+    .select("*")
+    .eq("pacote_id", pacoteId)
+    .single();
+
+  const pacote = pacoteResp.data;
+  const item = itemResp.data;
+
+  const validade = new Date();
+  validade.setDate(validade.getDate() + Number(pacote.validade_dias || 90));
+
+  const pacoteClienteResp = await supabaseClient
+    .from("pacotes_clientes")
+    .insert([{
+      cliente_id: clienteId,
+      pacote_id: pacoteId,
+      data_compra: formatarDataISO(new Date()),
+      validade: formatarDataISO(validade),
+      ativo: true,
+      status: "Ativo"
+    }])
+    .select()
+    .single();
+
+  if(pacoteClienteResp.error){
+    alert("Erro ao vender pacote: " + pacoteClienteResp.error.message);
+    return;
+  }
+
+  const pacoteCliente = pacoteClienteResp.data;
+
+  const saldoResp = await supabaseClient
+    .from("pacotes_saldos")
+    .insert([{
+      pacote_cliente_id: pacoteCliente.id,
+      servico_id: item.servico_id,
+      quantidade_total: item.quantidade,
+      quantidade_usada: 0,
+      cancelado: false
+    }]);
+
+  if(saldoResp.error){
+    alert("Erro ao criar saldo do pacote: " + saldoResp.error.message);
+    return;
+  }
+
+  const comandaResp = await supabaseClient
+    .from("comandas")
+    .insert([{
+      unidade_id: unidadeAtualId,
+      cliente_id: clienteId,
+      data: formatarDataISO(new Date()),
+      subtotal: pacote.valor,
+      desconto: 0,
+      total: pacote.valor,
+      status: "Fechada",
+      forma_origem: "pacote"
+    }])
+    .select()
+    .single();
+
+  if(comandaResp.error){
+    alert("Erro ao criar comanda do pacote: " + comandaResp.error.message);
+    return;
+  }
+
+  await supabaseClient
+    .from("pagamentos")
+    .insert([{
+      comanda_id: comandaResp.data.id,
+      forma_pagamento_id: formaPagamentoId,
+      valor: pacote.valor,
+      data: formatarDataISO(new Date())
+    }]);
+
+  await registrarEntradaCaixa(
+    comandaResp.data.id,
+    formaPagamentoId,
+    pacote.valor
+  );
+
+  fecharModal();
+  carregarPacotes();
+
+  alert("Pacote vendido e saldo criado para a cliente.");
 }
