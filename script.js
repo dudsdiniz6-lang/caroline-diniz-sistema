@@ -450,9 +450,10 @@ async function salvarProfissional(){
 
   }else{
 
-    resposta = await supabaseClient
-      .from("profissionais")
-      .insert([dados]);
+   resposta = await supabaseClient
+  .from("profissionais")
+  .insert([dados])
+  .select();
 
   }
 
@@ -1097,6 +1098,9 @@ async function carregarPacotes(){
         </button>
         <button onclick="venderPacote(${pacote.id})">
   Vender
+</button>
+<button onclick="abrirCancelamentoPacote()">
+  Cancelar créditos
 </button>
       </div>
     `;
