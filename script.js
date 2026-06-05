@@ -746,7 +746,7 @@ async function abrirModalAgendamento(id = null, profissionalPre = "", horarioPre
     <input id="agendamentoId" type="hidden" value="${agendamento?.id || ""}">
 
     <label>Cliente</label>
-    <select id="agCliente">
+    <select id="agCliente" onchange="verificarPacoteDisponivel()">
       <option value="">Selecione</option>
       ${clientes.map(c=>`
         <option value="${c.id}" ${String(agendamento?.cliente_id || "") === String(c.id) ? "selected" : ""}>
@@ -772,7 +772,7 @@ async function abrirModalAgendamento(id = null, profissionalPre = "", horarioPre
     <input id="agHorario" type="time" value="${agendamento?.horario || horarioPre || "08:00"}">
 
     <label>Serviço</label>
-    <select id="agServico" onchange="preencherDadosServicoAgendamento()">
+    <select id="agServico" onchange="preencherDadosServicoAgendamento(); verificarPacoteDisponivel();">
       <option value="">Selecione</option>
       ${servicos.map(s=>`
         <option 
@@ -785,8 +785,9 @@ async function abrirModalAgendamento(id = null, profissionalPre = "", horarioPre
         </option>
       `).join("")}
     </select>
+<div id="areaPacoteAgendamento"></div>
 
-    <label>Duração</label>
+<label>Duração</label>
     <input id="agDuracao" type="number" value="${agendamento?.duracao || 30}">
 
     <label>Valor</label>
@@ -1541,4 +1542,166 @@ async function confirmarVendaPacote(pacoteId){
   carregarPacotes();
 
   alert("Pacote vendido e saldo criado para a cliente.");
+}
+async function verificarPacoteDisponivel(){
+
+  const clienteId = Number(document.getElementById("agCliente")?.value || 0);
+  const servicoId = Number(document.getElementById("agServico")?.value || 0);
+
+  const area = document.getElementById("areaPacoteAgendamento");
+
+  if(!area) return;
+
+  area.innerHTML = "";
+
+  if(!clienteId || !servicoId) return;
+
+  const { data, error } = await supabaseClient
+    .from("pacotes_clientes")
+    .select(`
+      *,
+      pacotes(nome),
+      pacotes_saldos(
+        id,
+        servico_id,
+        quantidade_total,
+        quantidade_usada,
+        cancelado
+      )
+    `)
+    .eq("cliente_id", clienteId)
+    .eq("ativo", true)
+    .eq("status", "Ativo");
+
+  if(error || !data) return;
+
+  let saldoEncontrado = null;
+  let pacoteClienteEncontrado = null;
+
+  data.forEach((pacoteCliente)=>{
+
+    (pacoteCliente.pacotes_saldos || []).forEach((saldo)=>{
+
+      const restante =
+        Number(saldo.quantidade_total || 0) -
+        Number(saldo.quantidade_usada || 0);
+
+      if(
+        String(saldo.servico_id) === String(servicoId) &&
+        restante > 0 &&
+        saldo.cancelado !== true
+      ){
+        saldoEncontrado = saldo;
+        pacoteClienteEncontrado = pacoteCliente;
+      }
+
+    });
+
+  });
+
+  if(!saldoEncontrado) return;
+
+  const restante =
+    Number(saldoEncontrado.quantidade_total || 0) -
+    Number(saldoEncontrado.quantidade_usada || 0);
+
+  area.innerHTML = `
+    <div class="card" style="margin-bottom:15px;">
+      <h3>Pacote disponível</h3>
+
+      <p>
+        ${pacoteClienteEncontrado.pacotes?.nome || "Pacote"}
+      </p>
+
+      <small>
+        Saldo restante: ${restante} sessão(ões)
+      </small>
+
+      <label style="display:flex;gap:10px;align-items:center;margin-top:12px;">
+        <input
+          id="agUsarPacote"
+          type="checkbox"
+          onchange="alternarUsoPacoteAgenda()"
+          data-pacote-cliente-id="${pacoteClienteEncontrado.id}"
+          data-pacote-saldo-id="${saldoEncontrado.id}"
+          style="width:auto;height:auto;margin:0;"
+        >
+        Usar pacote neste atendimento
+      </label>
+    </div>
+  `;
+}
+
+function alternarUsoPacoteAgenda(){
+
+  const checkbox = document.getElementById("agUsarPacote");
+
+  if(!checkbox) return;
+
+  if(checkbox.checked){
+
+    document.getElementById("agValor").dataset.valorOriginal =
+      document.getElementById("agValor").value;
+
+    document.getElementById("agDesconto").dataset.valorOriginal =
+      document.getElementById("agDesconto").value;
+
+    document.getElementById("agValor").value = 0;
+    document.getElementById("agDesconto").value = 0;
+    document.getElementById("agTotal").value = 0;
+
+  }else{
+
+    const valorOriginal =
+      document.getElementById("agValor").dataset.valorOriginal || 0;
+
+    const descontoOriginal =
+      document.getElementById("agDesconto").dataset.valorOriginal || 0;
+
+    document.getElementById("agValor").value = valorOriginal;
+    document.getElementById("agDesconto").value = descontoOriginal;
+
+    calcularTotalAgendamento();
+
+  }
+
+}
+
+async function consumirSaldoPacoteAgendamento(agendamento){
+
+  if(!agendamento.usar_pacote || !agendamento.pacote_saldo_id){
+    return;
+  }
+
+  const { data: saldo, error } = await supabaseClient
+    .from("pacotes_saldos")
+    .select("*")
+    .eq("id", agendamento.pacote_saldo_id)
+    .single();
+
+  if(error || !saldo){
+    alert("Erro ao localizar saldo do pacote.");
+    throw new Error("Saldo não encontrado");
+  }
+
+  const restante =
+    Number(saldo.quantidade_total || 0) -
+    Number(saldo.quantidade_usada || 0);
+
+  if(restante <= 0){
+    alert("Este pacote não possui saldo disponível.");
+    throw new Error("Saldo insuficiente");
+  }
+
+  const atualizar = await supabaseClient
+    .from("pacotes_saldos")
+    .update({
+      quantidade_usada: Number(saldo.quantidade_usada || 0) + 1
+    })
+    .eq("id", saldo.id);
+
+  if(atualizar.error){
+    alert("Erro ao consumir saldo do pacote: " + atualizar.error.message);
+    throw atualizar.error;
+  }
 }
