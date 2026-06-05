@@ -1000,6 +1000,7 @@ async function salvarFaturamento(agendamentoId){
   }
 
   const comanda = comandaResp.data;
+  await consumirPacoteSeNecessario(agendamento);
 
   const percentualComissao = await buscarPercentualComissao(
     agendamento.profissional_id,
@@ -2192,4 +2193,12 @@ async function confirmarCancelamentoPacote(pacoteClienteId, clienteId){
   fecharModal();
 
   alert("Pacote cancelado com sucesso.");
+}
+async function consumirPacoteSeNecessario(agendamento){
+
+  if(!agendamento.usar_pacote || !agendamento.pacote_saldo_id){
+    return;
+  }
+
+  await consumirSaldoPacoteAgendamento(agendamento);
 }
