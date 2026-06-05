@@ -424,14 +424,15 @@ async function salvarProfissional(){
 
   const id = document.getElementById("profissionalId").value;
 
-  const dados = {
-    unidade_id: unidadeAtualId,
-    nome: document.getElementById("profissionalNome").value.trim(),
-    telefone: document.getElementById("profissionalTelefone").value.trim(),
-    especialidade: document.getElementById("profissionalEspecialidade").value.trim(),
-    ordem: Number(document.getElementById("profissionalOrdem").value || 0),
-    ativo: true
-  };
+ const dados = {
+  unidade_id: unidadeAtualId,
+  nome: document.getElementById("profissionalNome").value.trim(),
+  telefone: document.getElementById("profissionalTelefone").value.trim(),
+  especialidade: document.getElementById("profissionalEspecialidade").value.trim(),
+  ordem: Number(document.getElementById("profissionalOrdem").value || 0),
+  usa_comissao_padrao: document.getElementById("profissionalUsaComissaoPadrao")?.checked ?? true,
+  ativo: true
+};
 
   if(!dados.nome){
     alert("Digite o nome do profissional.");
