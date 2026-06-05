@@ -1182,27 +1182,11 @@ async function buscarCaixaAberto(){
 
 async function registrarEntradaCaixa(comandaId, formaPagamentoId, valor){
 
-  let caixa = await buscarCaixaAberto();
+  const caixa = await buscarCaixaAberto();
 
   if(!caixa){
-
-    const criarCaixa = await supabaseClient
-      .from("caixas")
-      .insert([{
-        unidade_id: unidadeAtualId,
-        data: formatarDataISO(new Date()),
-        abertura: 0,
-        status: "Aberto"
-      }])
-      .select()
-      .single();
-
-    if(criarCaixa.error){
-      alert("Erro ao criar caixa automático: " + criarCaixa.error.message);
-      return;
-    }
-
-    caixa = criarCaixa.data;
+    alert("Não existe caixa aberto. Abra o caixa antes de faturar.");
+    throw new Error("Caixa fechado");
   }
 
   const { error } = await supabaseClient
@@ -1218,5 +1202,6 @@ async function registrarEntradaCaixa(comandaId, formaPagamentoId, valor){
 
   if(error){
     alert("Erro ao registrar entrada no caixa: " + error.message);
+    throw error;
   }
 }
