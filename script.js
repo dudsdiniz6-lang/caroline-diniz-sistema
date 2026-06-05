@@ -396,6 +396,18 @@ async function abrirModalProfissional(id = null){
 
     <label>Ordem na agenda</label>
     <input id="profissionalOrdem" type="number" value="${profissional?.ordem || 0}" placeholder="Ordem">
+    <label>
+  <input
+    id="profissionalUsaComissaoPadrao"
+    type="checkbox"
+    ${profissional?.usa_comissao_padrao !== false ? "checked" : ""}
+    onchange="toggleComissaoPersonalizada()"
+    style="width:auto;height:auto;"
+  >
+  Utilizar comissão padrão dos serviços
+</label>
+
+<div id="areaComissaoPersonalizada"></div>
 
     <button class="principal" onclick="salvarProfissional()">
       Salvar
@@ -1891,4 +1903,43 @@ function horarioEstaOcupado(horario, agendamento){
   const fim = inicio + Number(agendamento.duracao || 30);
 
   return minutosHorario > inicio && minutosHorario < fim;
+}
+async function toggleComissaoPersonalizada(){
+
+  const area = document.getElementById("areaComissaoPersonalizada");
+  const checkbox = document.getElementById("profissionalUsaComissaoPadrao");
+
+  if(!area || !checkbox) return;
+
+  if(checkbox.checked){
+    area.innerHTML = "";
+    return;
+  }
+
+  const servicosResp = await supabaseClient
+    .from("servicos")
+    .select("*")
+    .eq("ativo", true)
+    .order("nome");
+
+  const servicos = servicosResp.data || [];
+
+  area.innerHTML = `
+    <h3>Comissões personalizadas</h3>
+
+    ${servicos.map(servico=>`
+      <div style="display:flex;gap:10px;margin-bottom:10px;">
+        <div style="flex:1;">
+          ${servico.nome}
+        </div>
+
+        <input
+          type="number"
+          id="comissaoServico_${servico.id}"
+          value="${servico.comissao_padrao || 0}"
+          style="width:100px;"
+        >
+      </div>
+    `).join("")}
+  `;
 }
