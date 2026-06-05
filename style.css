@@ -364,3 +364,11 @@ textarea{
   color:#fff;
   border:none;
 }
+.agenda-celula{
+  overflow:visible;
+}
+
+.agendamento-card{
+  position:relative;
+  z-index:10;
+}
