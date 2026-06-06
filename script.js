@@ -1102,22 +1102,38 @@ if(
       comissao_percentual: percentualComissao
     }]);
 
-  if(tipoRecebimento === "receber_agora"){
+ if(tipoRecebimento === "receber_agora"){
 
-  await supabaseClient
-    .from("pagamentos")
-    .insert([{
-      comanda_id: comanda.id,
-      forma_pagamento_id: formaPagamentoId,
-      valor: agendamento.total,
-      data: agendamento.data
-    }]);
+  const totalPagamentos = pagamentosInformados
+    .reduce((soma, p) => soma + Number(p.valor || 0), 0);
 
-  await registrarEntradaCaixa(
-    comanda.id,
-    formaPagamentoId,
-    agendamento.total
-  );
+  if(Number(totalPagamentos.toFixed(2)) !== Number(Number(agendamento.total || 0).toFixed(2))){
+    alert("A soma dos pagamentos precisa ser igual ao total do atendimento.");
+    return;
+  }
+
+  for(const pagamento of pagamentosInformados){
+
+    await supabaseClient
+      .from("pagamentos")
+      .insert([{
+        comanda_id: comanda.id,
+        forma_pagamento_id: pagamento.formaPagamentoId,
+        valor: pagamento.valor,
+        data: agendamento.data
+      }]);
+
+    if(pagamento.formaNome !== "Crédito da Cliente"){
+
+      await registrarEntradaCaixa(
+        comanda.id,
+        pagamento.formaPagamentoId,
+        pagamento.valor
+      );
+
+    }
+
+  }
 
 }
   await supabaseClient
