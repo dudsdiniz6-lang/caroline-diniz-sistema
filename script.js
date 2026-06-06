@@ -29,6 +29,7 @@ async function fazerLogin(){
     return;
   }
 
+ const busca = document.getElementById("buscaCliente")?.value?.toLowerCase().trim() || "";
   const { data, error } = await supabaseClient
     .from("usuarios_sistema")
     .select("*")
@@ -211,7 +212,13 @@ async function carregarClientes(){
     return;
   }
 
-  data.forEach((cliente)=>{
+  (data || [])
+  .filter(cliente =>
+    !busca ||
+    cliente.nome?.toLowerCase().includes(busca) ||
+    String(cliente.telefone || "").includes(busca)
+  )
+  .forEach((cliente)=>{
 
     lista.innerHTML += `
       <div class="card">
