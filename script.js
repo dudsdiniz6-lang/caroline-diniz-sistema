@@ -2732,3 +2732,90 @@ async function abrirRelatorioProfissional(){
     <div id="resultadoRelatorioProfissional"></div>
   `;
 }
+async function gerarRelatorioProfissional(){
+
+  const profissionalId = document.getElementById("relProfissionalId").value;
+  const dataInicio = document.getElementById("relProfDataInicio").value;
+  const dataFim = document.getElementById("relProfDataFim").value;
+  const area = document.getElementById("resultadoRelatorioProfissional");
+
+  area.innerHTML = "Gerando relatório...";
+
+  let query = supabaseClient
+    .from("comandas")
+    .select(`
+      *,
+      profissionais(nome),
+      comanda_itens(descricao, valor, comissao_percentual)
+    `)
+    .gte("data", dataInicio)
+    .lte("data", dataFim)
+    .eq("cancelada", false);
+
+  if(profissionalId){
+    query = query.eq("profissional_id", profissionalId);
+  }
+
+  const { data, error } = await query;
+
+  if(error){
+    area.innerHTML = "<div class='card'>Erro ao gerar relatório.</div>";
+    return;
+  }
+
+  const resumo = {};
+
+  (data || []).forEach((comanda)=>{
+
+    const profissional = comanda.profissionais?.nome || "Sem profissional";
+
+    (comanda.comanda_itens || []).forEach((item)=>{
+
+      const servico = item.descricao || "Serviço";
+
+      if(!resumo[profissional]){
+        resumo[profissional] = {};
+      }
+
+      if(!resumo[profissional][servico]){
+        resumo[profissional][servico] = {
+          quantidade: 0,
+          valor: 0,
+          comissao: 0
+        };
+      }
+
+      resumo[profissional][servico].quantidade += 1;
+      resumo[profissional][servico].valor += Number(item.valor || 0);
+      resumo[profissional][servico].comissao +=
+        Number(item.valor || 0) * (Number(item.comissao_percentual || 0) / 100);
+
+    });
+
+  });
+
+  area.innerHTML = "";
+
+  Object.keys(resumo).forEach((profissional)=>{
+
+    area.innerHTML += `<h2 style="margin:20px 0 10px;">${profissional}</h2>`;
+
+    Object.keys(resumo[profissional]).forEach((servico)=>{
+
+      const item = resumo[profissional][servico];
+
+      area.innerHTML += `
+        <div class="card">
+          <h3>${servico}</h3>
+          <p>Quantidade: ${item.quantidade}</p>
+          <p>Total recebido: ${dinheiro(item.valor)}</p>
+          <p>Comissão: ${dinheiro(item.comissao)}</p>
+        </div>
+      `;
+    });
+  });
+
+  if(area.innerHTML === ""){
+    area.innerHTML = "<div class='card'>Nenhum atendimento encontrado no período.</div>";
+  }
+}
