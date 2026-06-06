@@ -282,6 +282,61 @@ async function salvarCliente(){
 
   alert("Cliente salvo com sucesso.");
 }
+async function carregarClientes(){
+
+  const lista = document.getElementById("listaClientes");
+
+  if(!lista) return;
+
+  lista.innerHTML = "";
+
+  const busca =
+    document.getElementById("buscaCliente")
+      ?.value
+      ?.toLowerCase()
+      .trim() || "";
+
+  const { data, error } = await supabaseClient
+    .from("clientes")
+    .select("*")
+    .eq("ativo", true)
+    .order("nome");
+
+  if(error){
+    lista.innerHTML = "<div class='card'>Erro ao carregar clientes.</div>";
+    return;
+  }
+
+  const clientes = (data || []).filter(cliente =>
+    !busca ||
+    cliente.nome?.toLowerCase().includes(busca) ||
+    String(cliente.telefone || "").includes(busca)
+  );
+
+  if(clientes.length === 0){
+    lista.innerHTML = "<div class='card'>Nenhum cliente encontrado.</div>";
+    return;
+  }
+
+  clientes.forEach((cliente)=>{
+
+    lista.innerHTML += `
+      <div class="card">
+        <h3>${cliente.nome}</h3>
+        <p>${cliente.telefone || "Sem telefone"}</p>
+        <small>${cliente.observacoes || ""}</small>
+
+        <br><br>
+
+        <button class="principal" onclick="abrirModalCliente(${cliente.id})">
+          Editar
+        </button>
+      </div>
+    `;
+
+  });
+
+}
 async function carregarProfissionais(){
 
   const lista = document.getElementById("listaProfissionais");
@@ -2635,59 +2690,4 @@ function mudarDataAgendaPeloCalendario(){
 
   atualizarTextoDataAgenda();
   carregarAgenda();
-}
-async function carregarClientes(){
-
-  const lista = document.getElementById("listaClientes");
-
-  if(!lista) return;
-
-  lista.innerHTML = "";
-
-  const busca =
-    document.getElementById("buscaCliente")
-      ?.value
-      ?.toLowerCase()
-      .trim() || "";
-
-  const { data, error } = await supabaseClient
-    .from("clientes")
-    .select("*")
-    .eq("ativo", true)
-    .order("nome");
-
-  if(error){
-    lista.innerHTML = "<div class='card'>Erro ao carregar clientes.</div>";
-    return;
-  }
-
-  const clientes = (data || []).filter(cliente =>
-    !busca ||
-    cliente.nome?.toLowerCase().includes(busca) ||
-    String(cliente.telefone || "").includes(busca)
-  );
-
-  if(clientes.length === 0){
-    lista.innerHTML = "<div class='card'>Nenhum cliente encontrado.</div>";
-    return;
-  }
-
-  clientes.forEach((cliente)=>{
-
-    lista.innerHTML += `
-      <div class="card">
-        <h3>${cliente.nome}</h3>
-        <p>${cliente.telefone || "Sem telefone"}</p>
-        <small>${cliente.observacoes || ""}</small>
-
-        <br><br>
-
-        <button class="principal" onclick="abrirModalCliente(${cliente.id})">
-          Editar
-        </button>
-      </div>
-    `;
-
-  });
-
 }
