@@ -422,3 +422,50 @@ textarea{
   z-index:20;
   overflow:hidden;
 }
+.busca-cliente-agenda{
+  position:relative;
+  margin-bottom:12px;
+}
+
+.busca-cliente-agenda input{
+  padding-left:42px;
+  margin-bottom:0;
+}
+
+.busca-cliente-agenda::before{
+  content:"🔎";
+  position:absolute;
+  left:14px;
+  top:14px;
+  opacity:.55;
+  z-index:2;
+}
+
+.resultado-busca{
+  margin-top:6px;
+  border:1px solid #eee;
+  border-radius:14px;
+  background:#fff;
+  box-shadow:0 8px 20px rgba(0,0,0,.08);
+  max-height:220px;
+  overflow:auto;
+}
+
+.item-busca{
+  padding:12px 14px;
+  cursor:pointer;
+  border-bottom:1px solid #f1f1f1;
+}
+
+.item-busca:hover{
+  background:#fff4ec;
+}
+
+.item-busca strong{
+  display:block;
+  font-size:14px;
+}
+
+.item-busca small{
+  color:#777;
+}
