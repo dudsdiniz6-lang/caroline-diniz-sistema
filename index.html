@@ -34,6 +34,7 @@
         <button onclick="mostrarTela('profissionais')">Profissionais</button>
         <button onclick="mostrarTela('servicos')">Serviços</button>
         <button onclick="mostrarTela('pacotes')">Pacotes</button>
+        <button onclick="mostrarTela('comandas')">Comandas</button>
         <button onclick="mostrarTela('caixa')">Caixa</button>
         <button onclick="mostrarTela('comissoes')">Comissões</button>
         <button onclick="sairSistema()">Sair</button>
@@ -100,6 +101,14 @@
         <div id="listaPacotes" class="cards"></div>
       </section>
 
+   <section id="tela-comandas" class="tela">
+  <div class="topo">
+    <h1>Comandas</h1>
+    <button class="principal" onclick="carregarComandas()">Atualizar</button>
+  </div>
+
+  <div id="listaComandas" class="cards"></div>
+</section>   
       <section id="tela-caixa" class="tela">
         <div class="topo">
           <h1>Caixa</h1>
