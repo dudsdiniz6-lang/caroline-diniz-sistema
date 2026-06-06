@@ -70,6 +70,13 @@
           <h1>Clientes</h1>
           <button class="principal" onclick="abrirModalCliente()">Novo cliente</button>
         </div>
+        <div class="filtros">
+  <input
+    id="buscaCliente"
+    placeholder="Pesquisar cliente por nome ou telefone..."
+    oninput="carregarClientes()"
+  >
+</div>
 
         <div id="listaClientes" class="cards"></div>
       </section>
