@@ -2515,3 +2515,58 @@ async function abrirComanda(comandaId){
     <button onclick="fecharModal()">Fechar</button>
   `);
 }
+function gerarIdRecorrencia(){
+  return "rec_" + Date.now() + "_" + Math.floor(Math.random() * 999999);
+}
+
+function adicionarDias(data, dias){
+
+  const nova = new Date(data);
+  nova.setDate(nova.getDate() + dias);
+  return nova;
+}
+
+async function criarAgendamentosRecorrentes(dadosBase){
+
+  const repetir = document.getElementById("agRepetir")?.checked || false;
+  const repetirAte = document.getElementById("agRepetirAte")?.value;
+
+  if(!repetir || !repetirAte){
+    return;
+  }
+
+  const inicio = new Date(dadosBase.data + "T00:00:00");
+  const fim = new Date(repetirAte + "T00:00:00");
+
+  if(fim <= inicio){
+    alert("A data final da repetição precisa ser depois da data inicial.");
+    return;
+  }
+
+  const recorrenciaId = dadosBase.recorrencia_id || gerarIdRecorrencia();
+
+  const novosAgendamentos = [];
+
+  let dataAtual = adicionarDias(inicio, 7);
+
+  while(dataAtual <= fim){
+
+    novosAgendamentos.push({
+      ...dadosBase,
+      data: formatarDataISO(dataAtual),
+      recorrencia_id: recorrenciaId,
+      recorrencia_ativa: true,
+      recorrencia_frequencia: "semanal",
+      recorrencia_ate: repetirAte,
+      status: "Agendado"
+    });
+
+    dataAtual = adicionarDias(dataAtual, 7);
+  }
+
+  if(novosAgendamentos.length > 0){
+    await supabaseClient
+      .from("agendamentos")
+      .insert(novosAgendamentos);
+  }
+}
