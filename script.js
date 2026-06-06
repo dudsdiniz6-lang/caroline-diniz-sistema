@@ -131,6 +131,9 @@ function mostrarTela(nome){
   if(nome === "comandas") carregarComandas();
   if(nome === "caixa") carregarCaixas();
   if(nome === "comissoes") carregarComissoes();
+  if(nome === "relatorios"){
+  document.getElementById("areaRelatorios").innerHTML = "";
+}
 }
 
 function abrirModal(html){
