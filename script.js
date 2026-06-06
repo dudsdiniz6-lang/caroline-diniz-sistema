@@ -820,24 +820,20 @@ async function abrirModalAgendamento(id = null, profissionalPre = "", horarioPre
 
     <input id="agendamentoId" type="hidden" value="${agendamento?.id || ""}">
 
-   <label>Cliente</label>
+  <label>Cliente</label>
 
-<div style="display:flex;gap:8px;">
+<div class="busca-cliente-agenda">
   <input
     id="agClienteBusca"
-    placeholder="Pesquisar cliente..."
+    placeholder="Digite o nome ou telefone da cliente..."
     value="${agendamento ? (clientes.find(c => String(c.id) === String(agendamento.cliente_id))?.nome || "") : ""}"
     oninput="filtrarClientesAgendamento()"
   >
 
-  <button type="button" onclick="limparClienteAgendamento()">
-    🔎
-  </button>
+  <input id="agCliente" type="hidden" value="${agendamento?.cliente_id || ""}">
+
+  <div id="resultadoBuscaClientesAgendamento" class="resultado-busca"></div>
 </div>
-
-<input id="agCliente" type="hidden" value="${agendamento?.cliente_id || ""}">
-
-<div id="resultadoBuscaClientesAgendamento" class="resultado-busca"></div>
 
     <label>Profissional</label>
     <select id="agProfissional">
@@ -909,6 +905,24 @@ async function abrirModalAgendamento(id = null, profissionalPre = "", horarioPre
 </label>
 
 <div id="areaRecorrenciaAgendamento">
+  <label>Intervalo entre repetições</label>
+
+  <div style="display:flex;gap:8px;align-items:center;">
+    <button type="button" onclick="alterarIntervaloRecorrencia(-1)">-</button>
+
+    <input
+      id="agIntervaloRepeticao"
+      type="number"
+      min="1"
+      value="${agendamento?.recorrencia_intervalo_dias || 7}"
+      style="width:100px;margin-bottom:0;"
+    >
+
+    <button type="button" onclick="alterarIntervaloRecorrencia(1)">+</button>
+
+    <span>dias</span>
+  </div>
+
   <label>Repetir até</label>
   <input
     id="agRepetirAte"
@@ -916,7 +930,6 @@ async function abrirModalAgendamento(id = null, profissionalPre = "", horarioPre
     value="${agendamento?.recorrencia_ate || ""}"
   >
 </div>
-
     <button class="principal" onclick="salvarAgendamento()">
       Salvar
     </button>
