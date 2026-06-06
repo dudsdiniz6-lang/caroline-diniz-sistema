@@ -2848,3 +2848,88 @@ async function abrirRelatorioPacotesVencendo(){
 
   `;
 }
+async function gerarRelatorioPacotesVencendo(){
+
+  const filtro = document.getElementById("filtroPacoteVencendo").value;
+  const area = document.getElementById("resultadoPacotesVencendo");
+
+  area.innerHTML = "Carregando pacotes...";
+
+  const hoje = new Date();
+  const hojeISO = formatarDataISO(hoje);
+
+  let dataLimite = new Date();
+
+  if(!["vencidos", "todos"].includes(filtro)){
+    dataLimite.setDate(dataLimite.getDate() + Number(filtro));
+  }
+
+  let query = supabaseClient
+    .from("pacotes_clientes")
+    .select(`
+      *,
+      clientes(nome, telefone),
+      pacotes(nome),
+      pacotes_saldos(
+        id,
+        quantidade_total,
+        quantidade_usada,
+        cancelado,
+        servicos(nome)
+      )
+    `)
+    .eq("ativo", true)
+    .eq("status", "Ativo")
+    .order("validade", { ascending:true });
+
+  if(filtro === "vencidos"){
+    query = query.lt("validade", hojeISO);
+  }
+
+  if(!["vencidos", "todos"].includes(filtro)){
+    query = query.gte("validade", hojeISO).lte("validade", formatarDataISO(dataLimite));
+  }
+
+  const { data, error } = await query;
+
+  if(error){
+    area.innerHTML = "<div class='card'>Erro ao carregar pacotes vencendo.</div>";
+    return;
+  }
+
+  if(!data || data.length === 0){
+    area.innerHTML = "<div class='card'>Nenhum pacote encontrado.</div>";
+    return;
+  }
+
+  area.innerHTML = "";
+
+  data.forEach((pacoteCliente)=>{
+
+    const saldos = pacoteCliente.pacotes_saldos || [];
+
+    const saldoTexto = saldos.map(saldo=>{
+      const restante =
+        Number(saldo.quantidade_total || 0) -
+        Number(saldo.quantidade_usada || 0);
+
+      return `${saldo.servicos?.nome || "Serviço"}: ${restante}/${saldo.quantidade_total}`;
+    }).join("<br>");
+
+    area.innerHTML += `
+      <div class="card">
+        <h3>${pacoteCliente.clientes?.nome || "Cliente"}</h3>
+
+        <p><strong>Pacote:</strong> ${pacoteCliente.pacotes?.nome || "-"}</p>
+        <p><strong>Validade:</strong> ${formatarDataComanda(pacoteCliente.validade)}</p>
+        <p><strong>Telefone:</strong> ${pacoteCliente.clientes?.telefone || "-"}</p>
+
+        <p><strong>Créditos:</strong><br>${saldoTexto || "Sem saldo"}</p>
+
+        <button onclick="abrirEstenderValidadePacote(${pacoteCliente.id}, '${pacoteCliente.validade || ""}')">
+          Estender validade
+        </button>
+      </div>
+    `;
+  });
+}
