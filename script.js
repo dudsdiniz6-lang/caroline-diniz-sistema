@@ -2933,3 +2933,52 @@ async function gerarRelatorioPacotesVencendo(){
     `;
   });
 }
+function abrirEstenderValidadePacote(pacoteClienteId, validadeAtual){
+
+  abrirModal(`
+    <h2>Estender validade do pacote</h2>
+
+    <p>Validade atual: <strong>${formatarDataComanda(validadeAtual)}</strong></p>
+
+    <label>Nova validade</label>
+    <input id="novaValidadePacote" type="date" value="${validadeAtual || ""}">
+
+    <label>Motivo/observação</label>
+    <textarea id="motivoEstenderPacote"></textarea>
+
+    <button class="principal" onclick="confirmarEstenderValidadePacote(${pacoteClienteId})">
+      Salvar nova validade
+    </button>
+
+    <button onclick="fecharModal()">
+      Cancelar
+    </button>
+  `);
+}
+
+async function confirmarEstenderValidadePacote(pacoteClienteId){
+
+  const novaValidade = document.getElementById("novaValidadePacote").value;
+
+  if(!novaValidade){
+    alert("Informe a nova validade.");
+    return;
+  }
+
+  const { error } = await supabaseClient
+    .from("pacotes_clientes")
+    .update({
+      validade: novaValidade
+    })
+    .eq("id", pacoteClienteId);
+
+  if(error){
+    alert("Erro ao alterar validade: " + error.message);
+    return;
+  }
+
+  fecharModal();
+  gerarRelatorioPacotesVencendo();
+
+  alert("Validade atualizada com sucesso.");
+}
