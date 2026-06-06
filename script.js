@@ -2640,14 +2640,20 @@ async function abrirComanda(comandaId){
 
     <br>
 
-    <h3>Resumo</h3>
-    <p>Subtotal: ${dinheiro(comanda.subtotal)}</p>
-    <p>Desconto: ${dinheiro(comanda.desconto)}</p>
-    <p><strong>Total: ${dinheiro(comanda.total)}</strong></p>
+   <h3>Resumo</h3>
+<p>Subtotal: ${dinheiro(comanda.subtotal)}</p>
+<p>Desconto: ${dinheiro(comanda.desconto)}</p>
+<p><strong>Total: ${dinheiro(comanda.total)}</strong></p>
 
-    <br>
+<br>
 
-    <button onclick="fecharModal()">Fechar</button>
+${comanda.status !== "Fechada" ? `
+  <button class="principal" onclick="abrirReceberComanda(${comanda.id})">
+    Receber comanda
+  </button>
+` : ""}
+
+<button onclick="fecharModal()">Fechar</button>
   `);
 }
 function gerarIdRecorrencia(){
