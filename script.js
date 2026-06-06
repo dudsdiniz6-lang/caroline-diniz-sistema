@@ -2271,29 +2271,3 @@ function limparClienteAgendamento(){
   document.getElementById("agClienteBusca").value = "";
   document.getElementById("resultadoBuscaClientesAgendamento").innerHTML = "";
 }
-.resultado-busca{
-  background:#fff;
-  border:1px solid #eee;
-  border-radius:12px;
-  margin-bottom:12px;
-  max-height:220px;
-  overflow:auto;
-}
-
-.item-busca{
-  padding:12px;
-  cursor:pointer;
-  border-bottom:1px solid #f1f1f1;
-}
-
-.item-busca:hover{
-  background:#fff4ec;
-}
-
-.item-busca strong{
-  display:block;
-}
-
-.item-busca small{
-  color:#777;
-}
