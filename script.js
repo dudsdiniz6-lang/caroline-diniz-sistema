@@ -3249,3 +3249,20 @@ async function confirmarRecebimentoComanda(comandaId){
 
   abrirReceberComanda(comandaId);
 }
+function adicionarLinhaPagamentoFaturamento(){
+
+  const area = document.getElementById("areaPagamentosFaturamento");
+
+  if(!area) return;
+
+  const primeiraLinha = area.querySelector(".linha-pagamento");
+
+  if(!primeiraLinha) return;
+
+  const novaLinha = primeiraLinha.cloneNode(true);
+
+  novaLinha.querySelector(".fatFormaPagamento").value = "";
+  novaLinha.querySelector(".fatValorPagamento").value = "";
+
+  area.appendChild(novaLinha);
+}
