@@ -54,6 +54,12 @@
             <button onclick="voltarDia()">◀</button>
             <button onclick="irHoje()">Hoje</button>
             <button onclick="avancarDia()">▶</button>
+            <input
+  id="calendarioAgenda"
+  type="date"
+  onchange="mudarDataAgendaPeloCalendario()"
+  style="width:160px;margin-bottom:0;"
+>
             <button class="principal" onclick="abrirModalAgendamento()">Novo agendamento</button>
           </div>
         </div>
