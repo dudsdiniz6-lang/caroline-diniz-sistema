@@ -2694,3 +2694,41 @@ function mudarDataAgendaPeloCalendario(){
   atualizarTextoDataAgenda();
   carregarAgenda();
 }
+async function abrirRelatorioProfissional(){
+
+  const profissionaisResp = await supabaseClient
+    .from("profissionais")
+    .select("*")
+    .eq("ativo", true)
+    .order("nome");
+
+  const profissionais = profissionaisResp.data || [];
+
+  const hoje = formatarDataISO(new Date());
+
+  document.getElementById("areaRelatorios").innerHTML = `
+    <div class="card">
+      <h2>Atendimentos por profissional</h2>
+
+      <label>Profissional</label>
+      <select id="relProfissionalId">
+        <option value="">Todos</option>
+        ${profissionais.map(p=>`
+          <option value="${p.id}">${p.nome}</option>
+        `).join("")}
+      </select>
+
+      <label>Data inicial</label>
+      <input id="relProfDataInicio" type="date" value="${hoje}">
+
+      <label>Data final</label>
+      <input id="relProfDataFim" type="date" value="${hoje}">
+
+      <button class="principal" onclick="gerarRelatorioProfissional()">
+        Gerar relatório
+      </button>
+    </div>
+
+    <div id="resultadoRelatorioProfissional"></div>
+  `;
+}
