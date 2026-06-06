@@ -3158,3 +3158,83 @@ async function abrirReceberComanda(comandaId){
     </button>
   `);
 }
+async function confirmarRecebimentoComanda(comandaId){
+
+  const formaPagamentoId = Number(document.getElementById("receberFormaPagamento").value);
+  const valor = Number(document.getElementById("receberValor").value || 0);
+
+  if(!formaPagamentoId){
+    alert("Selecione a forma de pagamento.");
+    return;
+  }
+
+  if(valor <= 0){
+    alert("Informe um valor válido.");
+    return;
+  }
+
+  const formaSelecionada =
+    document.getElementById("receberFormaPagamento")
+      .selectedOptions[0]
+      .dataset.nome;
+
+  const { data: comanda, error } = await supabaseClient
+    .from("comandas")
+    .select(`
+      *,
+      pagamentos(valor)
+    `)
+    .eq("id", comandaId)
+    .single();
+
+  if(error || !comanda){
+    alert("Comanda não encontrada.");
+    return;
+  }
+
+  const total = Number(comanda.total || 0);
+  const recebidoAtual = (comanda.pagamentos || [])
+    .reduce((soma, p) => soma + Number(p.valor || 0), 0);
+
+  const saldoAtual = Math.max(total - recebidoAtual, 0);
+
+  if(valor > saldoAtual){
+    alert("O valor recebido não pode ser maior que o saldo em aberto.");
+    return;
+  }
+
+  await supabaseClient
+    .from("pagamentos")
+    .insert([{
+      comanda_id: comandaId,
+      forma_pagamento_id: formaPagamentoId,
+      valor,
+      data: formatarDataISO(new Date())
+    }]);
+
+  if(formaSelecionada !== "Crédito da Cliente"){
+
+    await registrarEntradaCaixa(
+      comandaId,
+      formaPagamentoId,
+      valor
+    );
+
+  }
+
+  const novoRecebido = recebidoAtual + valor;
+  const novoStatus = novoRecebido >= total
+    ? "Fechada"
+    : "Parcial";
+
+  await supabaseClient
+    .from("comandas")
+    .update({
+      status: novoStatus
+    })
+    .eq("id", comandaId);
+
+  alert("Pagamento adicionado.");
+
+  abrirReceberComanda(comandaId);
+}
