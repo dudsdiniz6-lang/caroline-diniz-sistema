@@ -2355,3 +2355,65 @@ async function carregarComandas(){
   });
 
 }
+async function abrirComanda(comandaId){
+
+  const { data: comanda, error } = await supabaseClient
+    .from("comandas")
+    .select(`
+      *,
+      clientes(nome, telefone),
+      profissionais(nome),
+      comanda_itens(*),
+      pagamentos(*, formas_pagamento(nome))
+    `)
+    .eq("id", comandaId)
+    .single();
+
+  if(error || !comanda){
+    alert("Erro ao abrir comanda.");
+    return;
+  }
+
+  abrirModal(`
+    <h2>Comanda #${comanda.id}</h2>
+
+    <p><strong>Cliente:</strong> ${comanda.clientes?.nome || "-"}</p>
+    <p><strong>Telefone:</strong> ${comanda.clientes?.telefone || "-"}</p>
+    <p><strong>Status:</strong> ${comanda.status || "Aberta"}</p>
+
+    <hr><br>
+
+    <h3>Itens</h3>
+
+    ${(comanda.comanda_itens || []).map(item=>`
+      <div class="card">
+        <strong>${item.descricao || "Item"}</strong>
+        <p>Valor: ${dinheiro(item.valor)}</p>
+        <small>Comissão: ${item.comissao_percentual || 0}%</small>
+      </div>
+    `).join("") || "<p>Nenhum item lançado.</p>"}
+
+    <br>
+
+    <h3>Pagamentos</h3>
+
+    ${(comanda.pagamentos || []).map(pag=>`
+      <div class="card">
+        <strong>${dinheiro(pag.valor)}</strong>
+        <p>${pag.formas_pagamento?.nome || "-"}</p>
+        <small>${pag.data || ""}</small>
+      </div>
+    `).join("") || "<p>Nenhum pagamento lançado.</p>"}
+
+    <br>
+
+    <h3>Resumo</h3>
+    <p>Subtotal: ${dinheiro(comanda.subtotal)}</p>
+    <p>Desconto: ${dinheiro(comanda.desconto)}</p>
+    <p><strong>Total: ${dinheiro(comanda.total)}</strong></p>
+
+    <br>
+
+    <button onclick="fecharModal()">Fechar</button>
+  `);
+}
