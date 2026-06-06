@@ -1040,9 +1040,9 @@ const pagamentosInformados = Array.from(
 
 if(
   tipoRecebimento === "receber_agora" &&
-  !formaPagamentoId
+  pagamentosInformados.length === 0
 ){
-  alert("Selecione a forma de pagamento.");
+  alert("Informe pelo menos uma forma de pagamento.");
   return;
 }
 
