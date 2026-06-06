@@ -3009,3 +3009,63 @@ async function abrirRelatorioClientesDevendo(){
 
   `;
 }
+async function gerarRelatorioClientesDevendo(){
+
+  const area = document.getElementById("resultadoClientesDevendo");
+  const filtro = document.getElementById("filtroClientesDevendo").value;
+
+  area.innerHTML = "Carregando comandas em aberto...";
+
+  let query = supabaseClient
+    .from("comandas")
+    .select(`
+      *,
+      clientes(nome, telefone),
+      comanda_itens(descricao, valor)
+    `)
+    .order("data", { ascending:false });
+
+  if(filtro === "abertas"){
+    query = query.eq("status", "Aberta");
+  }else{
+    query = query.in("status", ["Aberta", "Em aberto"]);
+  }
+
+  const { data, error } = await query;
+
+  if(error){
+    area.innerHTML = "<div class='card'>Erro ao carregar clientes devendo.</div>";
+    return;
+  }
+
+  if(!data || data.length === 0){
+    area.innerHTML = "<div class='card'>Nenhuma comanda em aberto encontrada.</div>";
+    return;
+  }
+
+  area.innerHTML = "";
+
+  data.forEach((comanda)=>{
+
+    const itens = (comanda.comanda_itens || [])
+      .map(item => `${item.descricao || "Serviço"} - ${dinheiro(item.valor || 0)}`)
+      .join("<br>");
+
+    area.innerHTML += `
+      <div class="card">
+        <h3>${comanda.clientes?.nome || "Cliente"}</h3>
+
+        <p><strong>Telefone:</strong> ${comanda.clientes?.telefone || "-"}</p>
+        <p><strong>Data:</strong> ${formatarDataComanda(comanda.data)}</p>
+        <p><strong>Serviços:</strong><br>${itens || "Sem itens"}</p>
+        <p><strong>Total em aberto:</strong> ${dinheiro(comanda.total || 0)}</p>
+        <p><strong>Status:</strong> ${comanda.status || "Aberta"}</p>
+
+        <button onclick="abrirComanda(${comanda.id})">
+          Abrir comanda
+        </button>
+      </div>
+    `;
+
+  });
+}
