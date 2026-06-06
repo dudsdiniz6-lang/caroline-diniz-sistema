@@ -127,6 +127,7 @@ function mostrarTela(nome){
   if(nome === "profissionais") carregarProfissionais();
   if(nome === "servicos") carregarServicos();
   if(nome === "pacotes") carregarPacotes();
+  if(nome === "comandas") carregarComandas();
   if(nome === "caixa") carregarCaixas();
   if(nome === "comissoes") carregarComissoes();
 }
