@@ -2982,3 +2982,30 @@ async function confirmarEstenderValidadePacote(pacoteClienteId){
 
   alert("Validade atualizada com sucesso.");
 }
+async function abrirRelatorioClientesDevendo(){
+
+  document.getElementById("areaRelatorios").innerHTML = `
+
+    <div class="card">
+
+      <h2>Clientes devendo</h2>
+
+      <label>Filtro</label>
+
+      <select id="filtroClientesDevendo">
+        <option value="todos">Todos</option>
+        <option value="abertas">Somente comandas abertas</option>
+      </select>
+
+      <button
+        class="principal"
+        onclick="gerarRelatorioClientesDevendo()">
+        Gerar relatório
+      </button>
+
+    </div>
+
+    <div id="resultadoClientesDevendo"></div>
+
+  `;
+}
