@@ -1053,7 +1053,9 @@ if(
       subtotal: agendamento.valor,
       desconto: agendamento.desconto,
       total: agendamento.total,
-      status: "Fechada"
+     status: tipoRecebimento === "receber_agora"
+  ? "Fechada"
+  : "Aberta"
     }])
     .select()
     .single();
@@ -1082,6 +1084,8 @@ if(
       comissao_percentual: percentualComissao
     }]);
 
+  if(tipoRecebimento === "receber_agora"){
+
   await supabaseClient
     .from("pagamentos")
     .insert([{
@@ -1090,12 +1094,14 @@ if(
       valor: agendamento.total,
       data: agendamento.data
     }]);
-  await registrarEntradaCaixa(
-  comanda.id,
-  formaPagamentoId,
-  agendamento.total
-);
 
+  await registrarEntradaCaixa(
+    comanda.id,
+    formaPagamentoId,
+    agendamento.total
+  );
+
+}
   await supabaseClient
     .from("agendamentos")
     .update({
