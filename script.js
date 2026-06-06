@@ -184,57 +184,11 @@ function atualizarTextoDataAgenda(){
     campo.innerText = formatarDataBR(dataAgenda);
   }
 
-}
+  const calendario = document.getElementById("calendarioAgenda");
 
-window.onload = verificarLoginSalvo;
-
-async function carregarClientes(){
-
-  const lista = document.getElementById("listaClientes");
-
-  if(!lista) return;
-
-  lista.innerHTML = "";
-
-  const { data, error } = await supabaseClient
-    .from("clientes")
-    .select("*")
-    .eq("ativo", true)
-    .order("nome");
-
-  if(error){
-    lista.innerHTML = "<div class='card'>Erro ao carregar clientes.</div>";
-    return;
+  if(calendario){
+    calendario.value = formatarDataISO(dataAgenda);
   }
-
-  if(!data || data.length === 0){
-    lista.innerHTML = "<div class='card'>Nenhum cliente cadastrado.</div>";
-    return;
-  }
-
-  (data || [])
-  .filter(cliente =>
-    !busca ||
-    cliente.nome?.toLowerCase().includes(busca) ||
-    String(cliente.telefone || "").includes(busca)
-  )
-  .forEach((cliente)=>{
-
-    lista.innerHTML += `
-      <div class="card">
-        <h3>${cliente.nome}</h3>
-        <p>${cliente.telefone || "Sem telefone"}</p>
-        <small>${cliente.observacoes || ""}</small>
-
-        <br><br>
-
-        <button class="principal" onclick="abrirModalCliente(${cliente.id})">
-          Editar
-        </button>
-      </div>
-    `;
-
-  });
 
 }
 
@@ -2670,4 +2624,70 @@ async function criarAgendamentosRecorrentes(dadosBase){
       .from("agendamentos")
       .insert(novosAgendamentos);
   }
+}
+function mudarDataAgendaPeloCalendario(){
+
+  const valor = document.getElementById("calendarioAgenda")?.value;
+
+  if(!valor) return;
+
+  dataAgenda = new Date(valor + "T00:00:00");
+
+  atualizarTextoDataAgenda();
+  carregarAgenda();
+}
+async function carregarClientes(){
+
+  const lista = document.getElementById("listaClientes");
+
+  if(!lista) return;
+
+  lista.innerHTML = "";
+
+  const busca =
+    document.getElementById("buscaCliente")
+      ?.value
+      ?.toLowerCase()
+      .trim() || "";
+
+  const { data, error } = await supabaseClient
+    .from("clientes")
+    .select("*")
+    .eq("ativo", true)
+    .order("nome");
+
+  if(error){
+    lista.innerHTML = "<div class='card'>Erro ao carregar clientes.</div>";
+    return;
+  }
+
+  const clientes = (data || []).filter(cliente =>
+    !busca ||
+    cliente.nome?.toLowerCase().includes(busca) ||
+    String(cliente.telefone || "").includes(busca)
+  );
+
+  if(clientes.length === 0){
+    lista.innerHTML = "<div class='card'>Nenhum cliente encontrado.</div>";
+    return;
+  }
+
+  clientes.forEach((cliente)=>{
+
+    lista.innerHTML += `
+      <div class="card">
+        <h3>${cliente.nome}</h3>
+        <p>${cliente.telefone || "Sem telefone"}</p>
+        <small>${cliente.observacoes || ""}</small>
+
+        <br><br>
+
+        <button class="principal" onclick="abrirModalCliente(${cliente.id})">
+          Editar
+        </button>
+      </div>
+    `;
+
+  });
+
 }
