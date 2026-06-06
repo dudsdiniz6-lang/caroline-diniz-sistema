@@ -1027,9 +1027,16 @@ async function faturarAgendamento(id){
 
 async function salvarFaturamento(agendamentoId){
 
-  const formaPagamentoId = Number(document.getElementById("fatFormaPagamento").value);
-  const tipoRecebimento =
+ const tipoRecebimento =
   document.getElementById("fatTipoRecebimento").value;
+
+const pagamentosInformados = Array.from(
+  document.querySelectorAll(".linha-pagamento")
+).map(linha => ({
+  formaPagamentoId: Number(linha.querySelector(".fatFormaPagamento").value),
+  formaNome: linha.querySelector(".fatFormaPagamento").selectedOptions[0]?.dataset.nome || "",
+  valor: Number(linha.querySelector(".fatValorPagamento").value || 0)
+})).filter(p => p.formaPagamentoId && p.valor > 0);
 
 if(
   tipoRecebimento === "receber_agora" &&
