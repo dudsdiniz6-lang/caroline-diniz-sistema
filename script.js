@@ -1906,7 +1906,6 @@ async function salvarAgendamento(){
 
   }
 
-}
  } else {
 
   const repetir = document.getElementById("agRepetir")?.checked || false;
