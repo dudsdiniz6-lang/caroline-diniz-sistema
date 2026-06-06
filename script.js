@@ -992,6 +992,17 @@ async function faturarAgendamento(id){
         <option value="${f.id}">${f.nome}</option>
       `).join("")}
     </select>
+    <label>Finalização</label>
+
+<select id="fatTipoRecebimento">
+  <option value="receber_agora">
+    Receber agora
+  </option>
+
+  <option value="deixar_em_aberto">
+    Deixar em aberto
+  </option>
+</select>
 
     <button class="principal" onclick="salvarFaturamento(${agendamento.id})">
       Confirmar faturamento
@@ -1006,11 +1017,16 @@ async function faturarAgendamento(id){
 async function salvarFaturamento(agendamentoId){
 
   const formaPagamentoId = Number(document.getElementById("fatFormaPagamento").value);
+  const tipoRecebimento =
+  document.getElementById("fatTipoRecebimento").value;
 
-  if(!formaPagamentoId){
-    alert("Selecione a forma de pagamento.");
-    return;
-  }
+if(
+  tipoRecebimento === "receber_agora" &&
+  !formaPagamentoId
+){
+  alert("Selecione a forma de pagamento.");
+  return;
+}
 
   const { data: agendamento, error } = await supabaseClient
     .from("agendamentos")
