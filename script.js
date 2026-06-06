@@ -2819,3 +2819,32 @@ async function gerarRelatorioProfissional(){
     area.innerHTML = "<div class='card'>Nenhum atendimento encontrado no período.</div>";
   }
 }
+async function abrirRelatorioPacotesVencendo(){
+
+  document.getElementById("areaRelatorios").innerHTML = `
+
+    <div class="card">
+
+      <h2>Pacotes vencendo</h2>
+
+      <label>Filtro</label>
+
+      <select id="filtroPacoteVencendo">
+        <option value="7">Vence em 7 dias</option>
+        <option value="15">Vence em 15 dias</option>
+        <option value="30">Vence em 30 dias</option>
+        <option value="vencidos">Vencidos</option>
+        <option value="todos">Todos</option>
+      </select>
+
+      <button class="principal"
+        onclick="gerarRelatorioPacotesVencendo()">
+        Gerar relatório
+      </button>
+
+    </div>
+
+    <div id="resultadoPacotesVencendo"></div>
+
+  `;
+}
