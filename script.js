@@ -1868,12 +1868,26 @@ async function salvarAgendamento(){
       .from("agendamentos")
       .update(dados)
       .eq("id", id);
-  }else{
-    resposta = await supabaseClient
-      .from("agendamentos")
-      .insert([dados]);
+ } else {
+
+  const repetir = document.getElementById("agRepetir")?.checked || false;
+  const repetirAte = document.getElementById("agRepetirAte")?.value || null;
+
+  if(repetir){
+    dados.recorrencia_id = gerarIdRecorrencia();
+    dados.recorrencia_ativa = true;
+    dados.recorrencia_frequencia = "semanal";
+    dados.recorrencia_ate = repetirAte;
   }
 
+  resposta = await supabaseClient
+    .from("agendamentos")
+    .insert([dados]);
+
+  if(!resposta.error && repetir){
+    await criarAgendamentosRecorrentes(dados);
+  }
+}
   if(resposta.error){
     alert("Erro ao salvar agendamento: " + resposta.error.message);
     return;
