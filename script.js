@@ -2272,3 +2272,86 @@ function limparClienteAgendamento(){
   document.getElementById("agClienteBusca").value = "";
   document.getElementById("resultadoBuscaClientesAgendamento").innerHTML = "";
 }
+async function carregarComandas(){
+
+  const lista = document.getElementById("listaComandas");
+
+  if(!lista) return;
+
+  lista.innerHTML = "Carregando comandas...";
+
+  const { data, error } = await supabaseClient
+    .from("comandas")
+    .select(`
+      *,
+      clientes(nome),
+      profissionais(nome)
+    `)
+    .order("id", { ascending:false });
+
+  if(error){
+    lista.innerHTML = `
+      <div class="card">
+        Erro ao carregar comandas
+      </div>
+    `;
+    return;
+  }
+
+  if(!data || data.length === 0){
+    lista.innerHTML = `
+      <div class="card">
+        Nenhuma comanda encontrada
+      </div>
+    `;
+    return;
+  }
+
+  lista.innerHTML = "";
+
+  data.forEach((comanda)=>{
+
+    lista.innerHTML += `
+      <div class="card">
+
+        <h3>
+          Comanda #${comanda.id}
+        </h3>
+
+        <p>
+          Cliente:
+          <strong>
+            ${comanda.clientes?.nome || "-"}
+          </strong>
+        </p>
+
+        <p>
+          Profissional:
+          <strong>
+            ${comanda.profissionais?.nome || "-"}
+          </strong>
+        </p>
+
+        <p>
+          Total:
+          <strong>
+            ${dinheiro(comanda.total || 0)}
+          </strong>
+        </p>
+
+        <p>
+          Status:
+          <strong>
+            ${comanda.status || "Aberta"}
+          </strong>
+        </p>
+
+        <button onclick="abrirComanda(${comanda.id})">
+          Visualizar
+        </button>
+
+      </div>
+    `;
+  });
+
+}
