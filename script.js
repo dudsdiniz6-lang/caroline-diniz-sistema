@@ -800,15 +800,24 @@ async function abrirModalAgendamento(id = null, profissionalPre = "", horarioPre
 
     <input id="agendamentoId" type="hidden" value="${agendamento?.id || ""}">
 
-    <label>Cliente</label>
-    <select id="agCliente" onchange="verificarPacoteDisponivel()">
-      <option value="">Selecione</option>
-      ${clientes.map(c=>`
-        <option value="${c.id}" ${String(agendamento?.cliente_id || "") === String(c.id) ? "selected" : ""}>
-          ${c.nome}
-        </option>
-      `).join("")}
-    </select>
+   <label>Cliente</label>
+
+<div style="display:flex;gap:8px;">
+  <input
+    id="agClienteBusca"
+    placeholder="Pesquisar cliente..."
+    value="${agendamento ? (clientes.find(c => String(c.id) === String(agendamento.cliente_id))?.nome || "") : ""}"
+    oninput="filtrarClientesAgendamento()"
+  >
+
+  <button type="button" onclick="limparClienteAgendamento()">
+    🔎
+  </button>
+</div>
+
+<input id="agCliente" type="hidden" value="${agendamento?.cliente_id || ""}">
+
+<div id="resultadoBuscaClientesAgendamento" class="resultado-busca"></div>
 
     <label>Profissional</label>
     <select id="agProfissional">
@@ -892,6 +901,7 @@ async function abrirModalAgendamento(id = null, profissionalPre = "", horarioPre
   `);
 
   calcularTotalAgendamento();
+  carregarClientesParaBuscaAgendamento();
 }
 async function faturarAgendamento(id){
 
@@ -2201,4 +2211,89 @@ async function consumirPacoteSeNecessario(agendamento){
   }
 
   await consumirSaldoPacoteAgendamento(agendamento);
+}
+window.clientesAgendamentoCache = [];
+
+async function carregarClientesParaBuscaAgendamento(){
+
+  const { data } = await supabaseClient
+    .from("clientes")
+    .select("*")
+    .eq("ativo", true)
+    .order("nome");
+
+  window.clientesAgendamentoCache = data || [];
+}
+
+function filtrarClientesAgendamento(){
+
+  const busca = document.getElementById("agClienteBusca")?.value?.toLowerCase().trim() || "";
+  const resultado = document.getElementById("resultadoBuscaClientesAgendamento");
+
+  if(!resultado) return;
+
+  resultado.innerHTML = "";
+
+  if(busca.length < 2) return;
+
+  const encontrados = (window.clientesAgendamentoCache || [])
+    .filter(cliente =>
+      cliente.nome.toLowerCase().includes(busca) ||
+      String(cliente.telefone || "").includes(busca)
+    )
+    .slice(0, 10);
+
+  encontrados.forEach((cliente)=>{
+
+    resultado.innerHTML += `
+      <div class="item-busca" onclick="selecionarClienteAgendamento(${cliente.id}, '${cliente.nome.replace(/'/g, "\\'")}')">
+        <strong>${cliente.nome}</strong>
+        <small>${cliente.telefone || ""}</small>
+      </div>
+    `;
+
+  });
+}
+
+function selecionarClienteAgendamento(id, nome){
+
+  document.getElementById("agCliente").value = id;
+  document.getElementById("agClienteBusca").value = nome;
+
+  document.getElementById("resultadoBuscaClientesAgendamento").innerHTML = "";
+
+  verificarPacoteDisponivel();
+}
+
+function limparClienteAgendamento(){
+
+  document.getElementById("agCliente").value = "";
+  document.getElementById("agClienteBusca").value = "";
+  document.getElementById("resultadoBuscaClientesAgendamento").innerHTML = "";
+}
+.resultado-busca{
+  background:#fff;
+  border:1px solid #eee;
+  border-radius:12px;
+  margin-bottom:12px;
+  max-height:220px;
+  overflow:auto;
+}
+
+.item-busca{
+  padding:12px;
+  cursor:pointer;
+  border-bottom:1px solid #f1f1f1;
+}
+
+.item-busca:hover{
+  background:#fff4ec;
+}
+
+.item-busca strong{
+  display:block;
+}
+
+.item-busca small{
+  color:#777;
 }
