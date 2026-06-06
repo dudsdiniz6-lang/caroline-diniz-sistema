@@ -1904,17 +1904,59 @@ async function salvarAgendamento(){
 
 async function excluirAgendamento(id){
 
-  const confirmar = confirm("Deseja excluir este agendamento?");
-
-  if(!confirmar) return;
-
-  const { error } = await supabaseClient
+  const { data: agendamento, error: erroBusca } = await supabaseClient
     .from("agendamentos")
-    .delete()
-    .eq("id", id);
+    .select("*")
+    .eq("id", id)
+    .single();
 
-  if(error){
-    alert("Erro ao excluir agendamento: " + error.message);
+  if(erroBusca || !agendamento){
+    alert("Agendamento não encontrado.");
+    return;
+  }
+
+  let modo = "unico";
+
+  if(agendamento.recorrencia_id){
+
+    const escolha = prompt(
+      "Este é um agendamento recorrente.\n\nDigite:\n1 - Excluir apenas este horário\n2 - Excluir este e todos os futuros"
+    );
+
+    if(escolha === "2"){
+      modo = "futuros";
+    }else if(escolha !== "1"){
+      return;
+    }
+
+  }else{
+
+    const confirmar = confirm("Deseja excluir este agendamento?");
+    if(!confirmar) return;
+
+  }
+
+  let resposta;
+
+  if(modo === "futuros"){
+
+    resposta = await supabaseClient
+      .from("agendamentos")
+      .delete()
+      .eq("recorrencia_id", agendamento.recorrencia_id)
+      .gte("data", agendamento.data);
+
+  }else{
+
+    resposta = await supabaseClient
+      .from("agendamentos")
+      .delete()
+      .eq("id", id);
+
+  }
+
+  if(resposta.error){
+    alert("Erro ao excluir agendamento: " + resposta.error.message);
     return;
   }
 
