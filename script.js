@@ -879,6 +879,24 @@ async function abrirModalAgendamento(id = null, profissionalPre = "", horarioPre
 
     <label>Observações</label>
     <textarea id="agObservacoes">${agendamento?.observacoes || ""}</textarea>
+    <label style="display:flex;gap:10px;align-items:center;">
+  <input
+    id="agRepetir"
+    type="checkbox"
+    style="width:auto;height:auto;"
+    ${agendamento?.recorrencia_ativa ? "checked" : ""}
+  >
+  Repetir agendamento
+</label>
+
+<div id="areaRecorrenciaAgendamento">
+  <label>Repetir até</label>
+  <input
+    id="agRepetirAte"
+    type="date"
+    value="${agendamento?.recorrencia_ate || ""}"
+  >
+</div>
 
     <button class="principal" onclick="salvarAgendamento()">
       Salvar
