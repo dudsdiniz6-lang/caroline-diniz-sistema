@@ -106,7 +106,13 @@
     <h1>Comandas</h1>
     <button class="principal" onclick="carregarComandas()">Atualizar</button>
   </div>
-
+<div class="filtros">
+  <input
+    id="buscaComanda"
+    placeholder="Pesquisar por cliente ou serviço..."
+    oninput="carregarComandas()"
+  >
+</div>
   <div id="listaComandas" class="cards"></div>
 </section>   
       <section id="tela-caixa" class="tela">
