@@ -2280,80 +2280,160 @@ async function carregarComandas(){
 
   lista.innerHTML = "Carregando comandas...";
 
+  const busca =
+    document.getElementById("buscaComanda")
+      ?.value
+      ?.toLowerCase()
+      .trim() || "";
+
   const { data, error } = await supabaseClient
     .from("comandas")
     .select(`
       *,
       clientes(nome),
-      profissionais(nome)
+      profissionais(nome),
+      comanda_itens(descricao)
     `)
+    .order("data", { ascending:false })
     .order("id", { ascending:false });
 
   if(error){
     lista.innerHTML = `
       <div class="card">
-        Erro ao carregar comandas
+        Erro ao carregar comandas.
       </div>
     `;
     return;
   }
 
-  if(!data || data.length === 0){
+  let comandas = data || [];
+
+  if(busca){
+
+    comandas = comandas.filter((comanda)=>{
+
+      const cliente =
+        comanda.clientes?.nome?.toLowerCase() || "";
+
+      const servicos =
+        (comanda.comanda_itens || [])
+          .map(item => item.descricao || "")
+          .join(" ")
+          .toLowerCase();
+
+      return (
+        cliente.includes(busca) ||
+        servicos.includes(busca)
+      );
+
+    });
+
+  }
+
+  if(comandas.length === 0){
     lista.innerHTML = `
       <div class="card">
-        Nenhuma comanda encontrada
+        Nenhuma comanda encontrada.
       </div>
     `;
     return;
   }
+
+  const porData = {};
+
+  comandas.forEach((comanda)=>{
+
+    const dataComanda =
+      comanda.data || "Sem data";
+
+    if(!porData[dataComanda]){
+      porData[dataComanda] = [];
+    }
+
+    porData[dataComanda].push(comanda);
+
+  });
 
   lista.innerHTML = "";
 
-  data.forEach((comanda)=>{
+  Object.keys(porData).forEach((data)=>{
 
     lista.innerHTML += `
-      <div class="card">
-
-        <h3>
-          Comanda #${comanda.id}
-        </h3>
-
-        <p>
-          Cliente:
-          <strong>
-            ${comanda.clientes?.nome || "-"}
-          </strong>
-        </p>
-
-        <p>
-          Profissional:
-          <strong>
-            ${comanda.profissionais?.nome || "-"}
-          </strong>
-        </p>
-
-        <p>
-          Total:
-          <strong>
-            ${dinheiro(comanda.total || 0)}
-          </strong>
-        </p>
-
-        <p>
-          Status:
-          <strong>
-            ${comanda.status || "Aberta"}
-          </strong>
-        </p>
-
-        <button onclick="abrirComanda(${comanda.id})">
-          Visualizar
-        </button>
-
+      <div style="grid-column:1/-1;margin:10px 0;">
+        <h2 style="font-size:20px;">
+          ${formatarDataComanda(data)}
+        </h2>
       </div>
     `;
+
+    porData[data].forEach((comanda)=>{
+
+      const servicos =
+        (comanda.comanda_itens || [])
+          .map(item => item.descricao)
+          .filter(Boolean)
+          .join(", ") || "Sem itens";
+
+      lista.innerHTML += `
+        <div class="card">
+
+          <h3>
+            Comanda #${comanda.id}
+          </h3>
+
+          <p>
+            Cliente:
+            <strong>
+              ${comanda.clientes?.nome || "-"}
+            </strong>
+          </p>
+
+          <p>
+            Serviço:
+            <strong>
+              ${servicos}
+            </strong>
+          </p>
+
+          <p>
+            Total:
+            <strong>
+              ${dinheiro(comanda.total || 0)}
+            </strong>
+          </p>
+
+          <p>
+            Status:
+            <strong>
+              ${comanda.status || "Aberta"}
+            </strong>
+          </p>
+
+          <button onclick="abrirComanda(${comanda.id})">
+            Visualizar
+          </button>
+
+        </div>
+      `;
+    });
+
   });
 
+}
+
+function formatarDataComanda(data){
+
+  if(!data || data === "Sem data"){
+    return "Sem data";
+  }
+
+  const partes = String(data).split("-");
+
+  if(partes.length !== 3){
+    return data;
+  }
+
+  return `${partes[2]}/${partes[1]}/${partes[0]}`;
 }
 async function abrirComanda(comandaId){
 
