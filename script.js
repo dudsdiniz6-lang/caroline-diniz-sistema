@@ -1864,10 +1864,49 @@ async function salvarAgendamento(){
   let resposta;
 
   if(id){
+
+  const agendamentoAtualResp = await supabaseClient
+    .from("agendamentos")
+    .select("*")
+    .eq("id", id)
+    .single();
+
+  const agendamentoAtual = agendamentoAtualResp.data;
+
+  let modo = "unico";
+
+  if(agendamentoAtual?.recorrencia_id){
+
+    const escolha = prompt(
+      "Este é um agendamento recorrente.\n\nDigite:\n1 - Alterar apenas este horário\n2 - Alterar este e todos os futuros"
+    );
+
+    if(escolha === "2"){
+      modo = "futuros";
+    }else if(escolha !== "1"){
+      return;
+    }
+
+  }
+
+  if(modo === "futuros"){
+
+    resposta = await supabaseClient
+      .from("agendamentos")
+      .update(dados)
+      .eq("recorrencia_id", agendamentoAtual.recorrencia_id)
+      .gte("data", agendamentoAtual.data);
+
+  }else{
+
     resposta = await supabaseClient
       .from("agendamentos")
       .update(dados)
       .eq("id", id);
+
+  }
+
+}
  } else {
 
   const repetir = document.getElementById("agRepetir")?.checked || false;
