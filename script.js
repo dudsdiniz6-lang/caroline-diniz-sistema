@@ -3097,3 +3097,64 @@ async function gerarRelatorioClientesDevendo(){
 
   });
 }
+async function abrirReceberComanda(comandaId){
+
+  const { data: comanda, error } = await supabaseClient
+    .from("comandas")
+    .select(`
+      *,
+      clientes(nome),
+      pagamentos(valor, formas_pagamento(nome))
+    `)
+    .eq("id", comandaId)
+    .single();
+
+  if(error || !comanda){
+    alert("Erro ao abrir recebimento.");
+    return;
+  }
+
+  const formasResp = await supabaseClient
+    .from("formas_pagamento")
+    .select("*")
+    .eq("ativo", true)
+    .order("nome");
+
+  const formas = formasResp.data || [];
+
+  const total = Number(comanda.total || 0);
+  const recebido = (comanda.pagamentos || [])
+    .reduce((soma, p) => soma + Number(p.valor || 0), 0);
+
+  const saldo = Math.max(total - recebido, 0);
+
+  abrirModal(`
+    <h2>Receber comanda #${comanda.id}</h2>
+
+    <p><strong>Cliente:</strong> ${comanda.clientes?.nome || "-"}</p>
+    <p><strong>Total:</strong> ${dinheiro(total)}</p>
+    <p><strong>Recebido:</strong> ${dinheiro(recebido)}</p>
+    <p><strong>Saldo:</strong> ${dinheiro(saldo)}</p>
+
+    <label>Forma de pagamento</label>
+    <select id="receberFormaPagamento">
+      <option value="">Selecione</option>
+      ${formas.map(f=>`
+        <option value="${f.id}" data-nome="${f.nome}">
+          ${f.nome}
+        </option>
+      `).join("")}
+    </select>
+
+    <label>Valor recebido</label>
+    <input id="receberValor" type="number" value="${saldo}">
+
+    <button class="principal" onclick="confirmarRecebimentoComanda(${comanda.id})">
+      Adicionar pagamento
+    </button>
+
+    <button onclick="abrirComanda(${comanda.id})">
+      Voltar
+    </button>
+  `);
+}
