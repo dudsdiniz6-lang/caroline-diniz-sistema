@@ -985,13 +985,24 @@ async function faturarAgendamento(id){
     <label>Total</label>
     <input id="fatTotal" type="number" value="${agendamento.total || 0}" readonly>
 
-    <label>Forma de pagamento</label>
-    <select id="fatFormaPagamento">
-      <option value="">Selecione</option>
+    <label>Pagamentos</label>
+
+<div id="areaPagamentosFaturamento">
+  <div class="linha-pagamento">
+    <select class="fatFormaPagamento">
+      <option value="">Forma</option>
       ${formas.map(f=>`
-        <option value="${f.id}">${f.nome}</option>
+        <option value="${f.id}" data-nome="${f.nome}">${f.nome}</option>
       `).join("")}
     </select>
+
+    <input class="fatValorPagamento" type="number" placeholder="Valor" value="${agendamento.total || 0}">
+  </div>
+</div>
+
+<button type="button" onclick="adicionarLinhaPagamentoFaturamento()">
+  + Adicionar pagamento
+</button>
     <label>Finalização</label>
 
 <select id="fatTipoRecebimento">
