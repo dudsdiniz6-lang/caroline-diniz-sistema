@@ -4,6 +4,7 @@ const SUPABASE_KEY = "sb_publishable_F4-5yOEa-lfaK5I-arqfMg_-j9pU0N8";
 const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
 let usuarioLogado = null;
+let permissoesUsuario = [];
 let unidadeAtualId = 1;
 let dataAgenda = new Date();
 
@@ -43,15 +44,17 @@ async function fazerLogin(){
     return;
   }
 
-  usuarioLogado = data;
+ usuarioLogado = data;
 
-  localStorage.setItem("usuarioLogado", JSON.stringify(data));
+localStorage.setItem("usuarioLogado", JSON.stringify(data));
 
-  document.getElementById("login-screen").style.display = "none";
-  document.getElementById("app").style.display = "flex";
+await carregarPermissoesUsuario();
 
-  aplicarPermissoes();
-  iniciarSistema();
+document.getElementById("login-screen").style.display = "none";
+document.getElementById("app").style.display = "flex";
+
+aplicarPermissoes();
+iniciarSistema();
 }
 
 function sairSistema(){
@@ -70,8 +73,10 @@ function verificarLoginSalvo(){
   document.getElementById("login-screen").style.display = "none";
   document.getElementById("app").style.display = "flex";
 
+carregarPermissoesUsuario().then(()=>{
   aplicarPermissoes();
   iniciarSistema();
+});
 }
 
 function aplicarPermissoes(){
@@ -4079,4 +4084,24 @@ async function salvarUsuarioSistema(){
   carregarUsuariosSistema();
 
   alert("Usuário salvo com sucesso.");
+}
+async function carregarPermissoesUsuario(){
+
+  permissoesUsuario = [];
+
+  if(!usuarioLogado?.perfil_acesso_id){
+    return;
+  }
+
+  const { data } = await supabaseClient
+    .from("permissoes_acesso")
+    .select("*")
+    .eq("perfil_id", usuarioLogado.perfil_acesso_id)
+    .eq("permitido", true);
+
+  permissoesUsuario = (data || []).map(p => p.chave);
+}
+
+function temPermissao(chave){
+  return permissoesUsuario.includes(chave);
 }
