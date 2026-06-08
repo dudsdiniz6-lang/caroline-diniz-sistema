@@ -3497,3 +3497,84 @@ async function abrirCentralAlertas(){
 
   await carregarCentralAlertasConteudo();
 }
+async function carregarCentralAlertasConteudo(){
+
+  const area = document.getElementById("conteudoCentralAlertas");
+
+  if(!area) return;
+
+  const hoje = formatarDataISO(new Date());
+  const hojeMesDia = hoje.slice(5);
+
+  const clientesResp = await supabaseClient
+    .from("clientes")
+    .select("id,nome,telefone,aniversario,vip")
+    .eq("ativo", true);
+
+  const clientes = clientesResp.data || [];
+
+  const aniversariantes = clientes.filter(c =>
+    c.aniversario &&
+    String(c.aniversario).slice(5) === hojeMesDia
+  );
+
+  const vips = clientes.filter(c => c.vip);
+
+  const pacotesResp = await supabaseClient
+    .from("pacotes_clientes")
+    .select(`
+      *,
+      clientes(nome),
+      pacotes(nome)
+    `)
+    .eq("ativo", true)
+    .eq("status", "Ativo")
+    .gte("validade", hoje);
+
+  const pacotesVencendo = (pacotesResp.data || []).filter(p=>{
+    const validade = new Date(p.validade + "T00:00:00");
+    const agora = new Date(hoje + "T00:00:00");
+    const dias = Math.ceil((validade - agora) / (1000 * 60 * 60 * 24));
+    return dias <= 7;
+  });
+
+  const comandasResp = await supabaseClient
+    .from("comandas")
+    .select(`
+      *,
+      clientes(nome)
+    `)
+    .in("status", ["Aberta", "Parcial"]);
+
+  const comandasAbertas = comandasResp.data || [];
+
+  area.innerHTML = `
+    <div class="card">
+      <h3>🎂 Aniversariantes de hoje</h3>
+      ${aniversariantes.length ? aniversariantes.map(c=>`
+        <p>${c.nome} ${c.telefone ? "• " + c.telefone : ""}</p>
+      `).join("") : "<p>Nenhum aniversário hoje.</p>"}
+    </div>
+
+    <div class="card">
+      <h3>⭐ Clientes VIP</h3>
+      ${vips.length ? vips.map(c=>`
+        <p>${c.nome} ${c.telefone ? "• " + c.telefone : ""}</p>
+      `).join("") : "<p>Nenhuma cliente VIP cadastrada.</p>"}
+    </div>
+
+    <div class="card">
+      <h3>📦 Pacotes vencendo em até 7 dias</h3>
+      ${pacotesVencendo.length ? pacotesVencendo.map(p=>`
+        <p>${p.clientes?.nome || "Cliente"} • ${p.pacotes?.nome || "Pacote"} • vence em ${formatarDataComanda(p.validade)}</p>
+      `).join("") : "<p>Nenhum pacote vencendo.</p>"}
+    </div>
+
+    <div class="card">
+      <h3>💰 Comandas em aberto</h3>
+      ${comandasAbertas.length ? comandasAbertas.map(c=>`
+        <p>${c.clientes?.nome || "Cliente"} • ${dinheiro(c.total || 0)} • ${c.status}</p>
+      `).join("") : "<p>Nenhuma comanda em aberto.</p>"}
+    </div>
+  `;
+}
