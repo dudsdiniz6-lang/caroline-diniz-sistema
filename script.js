@@ -3695,3 +3695,44 @@ async function salvarConfiguracoes(){
 
   alert("Configurações salvas.");
 }
+async function carregarGestores(){
+
+  const area = document.getElementById("areaGestores");
+
+  if(!area) return;
+
+  area.innerHTML = `
+
+    <div class="card">
+      <h3>Perfis do sistema</h3>
+
+      <button class="principal"
+        onclick="abrirPerfilAcesso('Dono')">
+        Dono
+      </button>
+
+      <br><br>
+
+      <button class="principal"
+        onclick="abrirPerfilAcesso('Gestor')">
+        Gestor
+      </button>
+
+      <br><br>
+
+      <button class="principal"
+        onclick="abrirPerfilAcesso('Recepcionista')">
+        Recepcionista
+      </button>
+
+      <br><br>
+
+      <button class="principal"
+        onclick="abrirPerfilAcesso('Profissional')">
+        Profissional
+      </button>
+
+    </div>
+
+  `;
+}
