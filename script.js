@@ -3737,17 +3737,70 @@ async function carregarGestores(){
   `;
 }
 const permissoesPadraoSistema = [
-  { chave:"agenda", nome:"Agenda" },
-  { chave:"clientes", nome:"Clientes" },
-  { chave:"profissionais", nome:"Profissionais" },
-  { chave:"servicos", nome:"Serviços" },
-  { chave:"pacotes", nome:"Pacotes" },
-  { chave:"comandas", nome:"Comandas" },
-  { chave:"caixa", nome:"Caixa" },
-  { chave:"comissoes", nome:"Comissões" },
-  { chave:"relatorios", nome:"Relatórios" },
-  { chave:"configuracoes", nome:"Configurações" },
-  { chave:"gestores", nome:"Gestores" }
+
+  { grupo:"Agenda", chave:"agenda_visualizar", nome:"Visualizar agenda" },
+  { grupo:"Agenda", chave:"agenda_adicionar", nome:"Adicionar agendamentos" },
+  { grupo:"Agenda", chave:"agenda_editar", nome:"Editar agendamentos" },
+  { grupo:"Agenda", chave:"agenda_excluir", nome:"Excluir agendamentos" },
+  { grupo:"Agenda", chave:"agenda_faturar", nome:"Faturar atendimentos" },
+  { grupo:"Agenda", chave:"agenda_recorrencia", nome:"Criar agendamentos recorrentes" },
+
+  { grupo:"Clientes", chave:"clientes_visualizar", nome:"Visualizar clientes" },
+  { grupo:"Clientes", chave:"clientes_adicionar", nome:"Adicionar novos clientes" },
+  { grupo:"Clientes", chave:"clientes_editar", nome:"Editar clientes" },
+  { grupo:"Clientes", chave:"clientes_excluir", nome:"Excluir clientes" },
+  { grupo:"Clientes", chave:"clientes_anamnese", nome:"Adicionar ficha de anamnese" },
+  { grupo:"Clientes", chave:"clientes_vip", nome:"Marcar cliente VIP" },
+
+  { grupo:"Profissionais", chave:"profissionais_visualizar", nome:"Visualizar profissionais" },
+  { grupo:"Profissionais", chave:"profissionais_adicionar", nome:"Adicionar profissionais" },
+  { grupo:"Profissionais", chave:"profissionais_editar", nome:"Alterar dados de profissionais" },
+  { grupo:"Profissionais", chave:"profissionais_excluir", nome:"Apagar profissionais" },
+  { grupo:"Profissionais", chave:"profissionais_comissao", nome:"Alterar comissões dos profissionais" },
+
+  { grupo:"Serviços", chave:"servicos_visualizar", nome:"Visualizar serviços" },
+  { grupo:"Serviços", chave:"servicos_adicionar", nome:"Adicionar serviços" },
+  { grupo:"Serviços", chave:"servicos_editar", nome:"Editar serviços" },
+  { grupo:"Serviços", chave:"servicos_excluir", nome:"Excluir serviços" },
+  { grupo:"Serviços", chave:"servicos_comissao", nome:"Alterar comissão padrão dos serviços" },
+
+  { grupo:"Pacotes", chave:"pacotes_visualizar", nome:"Visualizar pacotes" },
+  { grupo:"Pacotes", chave:"pacotes_adicionar", nome:"Cadastrar pacotes" },
+  { grupo:"Pacotes", chave:"pacotes_editar", nome:"Editar pacotes" },
+  { grupo:"Pacotes", chave:"pacotes_vender", nome:"Vender pacotes" },
+  { grupo:"Pacotes", chave:"pacotes_cancelar", nome:"Cancelar créditos/pacotes" },
+  { grupo:"Pacotes", chave:"pacotes_estender", nome:"Estender validade de pacote" },
+
+  { grupo:"Comandas", chave:"comandas_visualizar", nome:"Visualizar comandas" },
+  { grupo:"Comandas", chave:"comandas_receber", nome:"Receber comandas" },
+  { grupo:"Comandas", chave:"comandas_pagamento_parcial", nome:"Lançar pagamento parcial" },
+  { grupo:"Comandas", chave:"comandas_cancelar", nome:"Cancelar comandas" },
+
+  { grupo:"Caixa", chave:"caixa_visualizar", nome:"Visualizar caixa" },
+  { grupo:"Caixa", chave:"caixa_abrir", nome:"Abrir caixa" },
+  { grupo:"Caixa", chave:"caixa_fechar", nome:"Fechar caixa" },
+  { grupo:"Caixa", chave:"caixa_movimentar", nome:"Lançar entradas/saídas" },
+
+  { grupo:"Comissões", chave:"comissoes_visualizar", nome:"Visualizar comissões" },
+  { grupo:"Comissões", chave:"comissoes_pagar", nome:"Marcar comissão como paga" },
+
+  { grupo:"Relatórios", chave:"rel_profissional", nome:"Abrir relatório de atendimento por profissional" },
+  { grupo:"Relatórios", chave:"rel_pacotes_vencendo", nome:"Abrir relatório de pacotes vencendo" },
+  { grupo:"Relatórios", chave:"rel_vendas_geral", nome:"Abrir resumo geral de vendas" },
+  { grupo:"Relatórios", chave:"rel_pacotes", nome:"Abrir resumo de pacotes" },
+  { grupo:"Relatórios", chave:"rel_clientes_sumidos", nome:"Abrir relatório de clientes sumidos" },
+  { grupo:"Relatórios", chave:"rel_clientes_devendo", nome:"Abrir relatório de clientes devendo" },
+
+  { grupo:"Alertas", chave:"alertas_visualizar", nome:"Visualizar central de alertas" },
+  { grupo:"Alertas", chave:"alertas_whatsapp", nome:"Enviar WhatsApp pelos alertas" },
+
+  { grupo:"Configurações", chave:"configuracoes_visualizar", nome:"Visualizar configurações" },
+  { grupo:"Configurações", chave:"configuracoes_editar", nome:"Editar configurações do sistema" },
+
+  { grupo:"Gestores", chave:"gestores_visualizar", nome:"Visualizar gestores/acessos" },
+  { grupo:"Gestores", chave:"gestores_editar", nome:"Editar permissões de acesso" },
+  { grupo:"Gestores", chave:"gestores_usuarios", nome:"Criar/editar usuários do sistema" }
+
 ];
 
 async function abrirPerfilAcesso(nomePerfil){
