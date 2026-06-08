@@ -2170,6 +2170,31 @@ async function excluirAgendamento(id){
     return;
   }
 
+  const { data: comanda } = await supabaseClient
+    .from("comandas")
+    .select("*")
+    .eq("agendamento_id", id)
+    .maybeSingle();
+
+  if(comanda){
+
+    const confirmar = confirm(
+      "Este atendimento já foi faturado.\n\nAo cancelar, o sistema irá cancelar a comanda, retirar o valor do financeiro/caixa e manter histórico.\n\nDeseja continuar?"
+    );
+
+    if(!confirmar) return;
+
+    const motivo = prompt("Informe o motivo do cancelamento:");
+
+    if(!motivo){
+      alert("Informe o motivo do cancelamento.");
+      return;
+    }
+
+    await cancelarAtendimentoFaturado(agendamento, comanda, motivo);
+    return;
+  }
+
   let modo = "unico";
 
   if(agendamento.recorrencia_id){
@@ -4343,4 +4368,52 @@ async function salvarFaturamentoPacote(agendamentoId){
   carregarAgenda();
 
   alert("Atendimento de pacote finalizado com comissão calculada.");
+}
+async function cancelarAtendimentoFaturado(agendamento, comanda, motivo){
+
+  await supabaseClient
+    .from("historico_cancelamentos")
+    .insert([{
+      tipo: "atendimento_faturado",
+      referencia_id: agendamento.id,
+      cliente_id: agendamento.cliente_id,
+      profissional_id: agendamento.profissional_id,
+      valor: comanda.total || 0,
+      motivo,
+      dados_antigos: {
+        agendamento,
+        comanda
+      }
+    }]);
+
+  await supabaseClient
+    .from("comandas")
+    .update({
+      status: "Cancelada",
+      cancelada: true,
+      cancelada_em: new Date().toISOString(),
+      motivo_cancelamento: motivo
+    })
+    .eq("id", comanda.id);
+
+  await supabaseClient
+    .from("caixa_movimentacoes")
+    .update({
+      cancelada: true,
+      cancelada_em: new Date().toISOString(),
+      motivo_cancelamento: motivo
+    })
+    .eq("comanda_id", comanda.id);
+
+  await supabaseClient
+    .from("agendamentos")
+    .update({
+      status: "Cancelado"
+    })
+    .eq("id", agendamento.id);
+
+  fecharModal();
+  carregarAgenda();
+
+  alert("Atendimento faturado cancelado com histórico.");
 }
