@@ -159,6 +159,8 @@ function iniciarSistema(){
   carregarClientes();
   carregarProfissionais();
   carregarServicos();
+
+  carregarResumoAlertasAgenda();
 }
 
 function voltarDia(){
