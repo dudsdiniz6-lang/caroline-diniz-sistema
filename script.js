@@ -728,7 +728,10 @@ async function carregarAgenda(){
                     style="top:${top + 4}px; height:${altura}px;"
                     onclick="event.stopPropagation(); abrirModalAgendamento(${a.id})"
                   >
-                    <strong>${a.clientes?.nome || "Cliente"}</strong>
+                   <strong>
+  ${a.recorrencia_id ? "🔁 " : ""}
+  ${a.clientes?.nome || "Cliente"}
+</strong>
                     <span>${a.servicos?.nome || "Serviço"}</span>
                     <small>${formatarHorarioBonito(a.horario)} - ${formatarHorarioBonito(fim)}</small>
                     <em>${a.status || "Agendado"}</em>
