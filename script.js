@@ -3820,27 +3820,30 @@ async function abrirPerfilAcesso(nomePerfil){
     .select("*")
     .eq("perfil_id", perfil.id);
 
-  area.innerHTML = `
-    <div class="card">
-      <h2>${nomePerfil}</h2>
+  const grupos = {};
 
-    ${Object.keys(
-  permissoesPadraoSistema.reduce((grupos, item)=>{
-    grupos[item.grupo] = true;
-    return grupos;
-  }, {})
-).map(grupo=>`
+  permissoesPadraoSistema.forEach((item)=>{
+    if(!grupos[item.grupo]){
+      grupos[item.grupo] = [];
+    }
 
-  <h3 style="margin-top:22px;">${grupo}</h3>
+    grupos[item.grupo].push(item);
+  });
 
-  ${permissoesPadraoSistema
-    .filter(p => p.grupo === grupo)
-    .map(p=>{
+  let htmlPermissoes = "";
+
+  Object.keys(grupos).forEach((grupo)=>{
+
+    htmlPermissoes += `
+      <h3 style="margin-top:22px;">${grupo}</h3>
+    `;
+
+    grupos[grupo].forEach((p)=>{
 
       const marcada =
         permissoes?.find(x => x.chave === p.chave)?.permitido || false;
 
-      return `
+      htmlPermissoes += `
         <label style="display:flex;gap:10px;align-items:center;margin-bottom:8px;">
           <input
             type="checkbox"
@@ -3852,9 +3855,15 @@ async function abrirPerfilAcesso(nomePerfil){
           ${p.nome}
         </label>
       `;
-    }).join("")}
+    });
 
-`).join("")}
+  });
+
+  area.innerHTML = `
+    <div class="card">
+      <h2>${nomePerfil}</h2>
+
+      ${htmlPermissoes}
 
       <br>
 
