@@ -131,6 +131,7 @@ function mostrarTela(nome){
   if(nome === "comandas") carregarComandas();
   if(nome === "caixa") carregarCaixas();
   if(nome === "comissoes") carregarComissoes();
+  if(nome === "configuracoes") carregarConfiguracoes();
   if(nome === "relatorios"){
   document.getElementById("areaRelatorios").innerHTML = "";
 }
@@ -3635,4 +3636,61 @@ async function buscarClientesEmRisco(){
   return resultado.sort((a,b)=>
     b.diasSemVir - a.diasSemVir
   );
+}
+async function carregarConfiguracoes(){
+
+  const area = document.getElementById("areaConfiguracoes");
+
+  if(!area) return;
+
+  const { data } = await supabaseClient
+    .from("configuracoes_sistema")
+    .select("*");
+
+  const diasRisco =
+    data?.find(c => c.chave === "clientes_em_risco_dias")
+      ?.valor || "60";
+
+  area.innerHTML = `
+
+    <div class="card">
+
+      <h3>Clientes em risco</h3>
+
+      <label>
+        Considerar cliente em risco após quantos dias sem retorno?
+      </label>
+
+      <input
+        id="cfgClientesRiscoDias"
+        type="number"
+        value="${diasRisco}"
+      >
+
+      <br><br>
+
+      <button
+        class="principal"
+        onclick="salvarConfiguracoes()"
+      >
+        Salvar
+      </button>
+
+    </div>
+
+  `;
+}
+async function salvarConfiguracoes(){
+
+  const dias =
+    document.getElementById("cfgClientesRiscoDias").value;
+
+  await supabaseClient
+    .from("configuracoes_sistema")
+    .update({
+      valor: dias
+    })
+    .eq("chave", "clientes_em_risco_dias");
+
+  alert("Configurações salvas.");
 }
