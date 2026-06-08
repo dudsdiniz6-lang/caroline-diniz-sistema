@@ -132,6 +132,7 @@ function mostrarTela(nome){
   if(nome === "caixa") carregarCaixas();
   if(nome === "comissoes") carregarComissoes();
   if(nome === "configuracoes") carregarConfiguracoes();
+  if(nome === "gestores") carregarGestores();
   if(nome === "relatorios"){
   document.getElementById("areaRelatorios").innerHTML = "";
 }
