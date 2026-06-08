@@ -19,6 +19,14 @@ function formatarDataISO(data){
 function dinheiro(valor){
   return `R$ ${Number(valor || 0).toFixed(2)}`;
 }
+function pode(chave){
+
+  if(typeof temPermissao === "function"){
+    return temPermissao(chave);
+  }
+
+  return true;
+}
 
 async function fazerLogin(){
 
@@ -4128,7 +4136,4 @@ async function carregarPermissoesUsuario(){
 
 function temPermissao(chave){
   return permissoesUsuario.includes(chave);
-}
-function pode(chave){
-  return temPermissao(chave);
 }
