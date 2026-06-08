@@ -817,6 +817,13 @@ async function abrirModalAgendamento(id = null, profissionalPre = "", horarioPre
   const clientes = clientesResp.data || [];
   const profissionais = profissionaisResp.data || [];
   const servicos = servicosResp.data || [];
+  const clienteAlertaId =
+  agendamento?.cliente_id || null;
+
+const alertasClienteHtml =
+  clienteAlertaId
+    ? await carregarAlertasClienteAgenda(clienteAlertaId)
+    : "";
 
   abrirModal(`
     <h2>${id ? "Editar agendamento" : "Novo agendamento"}</h2>
@@ -836,6 +843,7 @@ async function abrirModalAgendamento(id = null, profissionalPre = "", horarioPre
   <input id="agCliente" type="hidden" value="${agendamento?.cliente_id || ""}">
 
   <div id="resultadoBuscaClientesAgendamento" class="resultado-busca"></div>
+  ${alertasClienteHtml}
 </div>
 
     <label>Profissional</label>
