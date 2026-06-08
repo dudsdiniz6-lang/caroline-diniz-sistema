@@ -3547,6 +3547,7 @@ async function carregarCentralAlertasConteudo(){
     .in("status", ["Aberta", "Parcial"]);
 
   const comandasAbertas = comandasResp.data || [];
+  const clientesEmRisco = await buscarClientesEmRisco();
 
   area.innerHTML = `
     <div class="card">
@@ -3576,6 +3577,20 @@ async function carregarCentralAlertasConteudo(){
         <p>${c.clientes?.nome || "Cliente"} • ${dinheiro(c.total || 0)} • ${c.status}</p>
       `).join("") : "<p>Nenhuma comanda em aberto.</p>"}
     </div>
+    <div class="card">
+  <h3>⚠ Clientes em risco</h3>
+  ${clientesEmRisco.length ? clientesEmRisco.slice(0, 10).map(item=>`
+    <p>
+      ${item.cliente.nome}
+      ${item.cliente.telefone ? "• " + item.cliente.telefone : ""}
+      <br>
+      <small>
+        Última visita: ${formatarDataComanda(item.ultimaData)}
+        • há ${item.diasSemVir} dias
+      </small>
+    </p>
+  `).join("") : "<p>Nenhuma cliente em risco.</p>"}
+</div>
   `;
 }
 async function buscarClientesEmRisco(){
