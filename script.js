@@ -4488,17 +4488,12 @@ async function gerarComissoesPorPeriodo(){
           <div
             class="linha"
             style="cursor:pointer;"
-            onclick="abrirDetalheComissao('${profissional.replace(/'/g, "\\'")}')"
+           onclick="abrirPaginaDetalheComissao('${profissional.replace(/'/g, "\\'")}')"
           >
             <span>${profissional}</span>
             <span>${dados.totalAtendimentos}</span>
             <span>${dinheiro(dados.totalComissao)}</span>
           </div>
-
-          <div
-            id="detalheComissao_${normalizarClasse(profissional)}"
-            style="display:none;margin:10px 0 20px;"
-          ></div>
         `;
       }).join("")}
     </div>
@@ -4567,6 +4562,65 @@ function abrirDetalheComissao(profissional){
 
       <p><strong>Total de comissões:</strong> ${dinheiro(dados.totalComissao)}</p>
 
+    </div>
+  `;
+}
+function abrirPaginaDetalheComissao(profissional){
+
+  const dados = window.comissoesPeriodoCache?.[profissional];
+
+  if(!dados) return;
+
+  mostrarTela("comissao-detalhe");
+
+  document.getElementById("tituloComissaoDetalhe").innerText =
+    `Comissões - ${profissional}`;
+
+  const area = document.getElementById("areaComissaoDetalhe");
+
+  const resumoServicos = {};
+
+  dados.itens.forEach(item=>{
+    if(!resumoServicos[item.servico]){
+      resumoServicos[item.servico] = 0;
+    }
+
+    resumoServicos[item.servico] += 1;
+  });
+
+  area.innerHTML = `
+    <div class="card">
+      <h3>Resumo</h3>
+
+      <p><strong>Total de serviços:</strong> ${dados.totalAtendimentos}</p>
+
+      ${Object.keys(resumoServicos).map(servico=>`
+        <p>${resumoServicos[servico]} ${servico}</p>
+      `).join("")}
+
+      <p><strong>Total de comissões:</strong> ${dinheiro(dados.totalComissao)}</p>
+    </div>
+
+    <div class="card">
+      <h3>Atendimentos detalhados</h3>
+
+      <div class="linha-tabela cabecalho">
+        <span>Data</span>
+        <span>Cliente</span>
+        <span>Serviço</span>
+        <span>Valor real</span>
+        <span>Comissão</span>
+      </div>
+
+      ${dados.itens.map(item=>`
+        <div class="linha-tabela">
+          <span>${formatarDataComanda(item.data)}</span>
+          <span>${item.cliente}</span>
+          <span>${item.servico}</span>
+          <span>${dinheiro(item.valorReal)}</span>
+          <span>${dinheiro(item.valorComissao)}</span>
+        </div>
+      `).join("")}
     </div>
   `;
 }
