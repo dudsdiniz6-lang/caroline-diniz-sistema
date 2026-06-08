@@ -1461,7 +1461,7 @@ async function abrirModalPacote(id = null){
   const servicos = servicosResp.data || [];
 
   let pacote = null;
-  let itemPacote = null;
+  let itensPacote = [];
 
   if(id){
 
@@ -1473,13 +1473,20 @@ async function abrirModalPacote(id = null){
 
     pacote = pacoteResp.data;
 
-    const itemResp = await supabaseClient
+    const itensResp = await supabaseClient
       .from("pacote_itens")
       .select("*")
-      .eq("pacote_id", id)
-      .maybeSingle();
+      .eq("pacote_id", id);
 
-    itemPacote = itemResp.data;
+    itensPacote = itensResp.data || [];
+  }
+
+  if(itensPacote.length === 0){
+    itensPacote = [{
+      servico_id: "",
+      quantidade: 1,
+      valor_sessao: 0
+    }];
   }
 
   abrirModal(`
@@ -1488,23 +1495,50 @@ async function abrirModalPacote(id = null){
     <input id="pacoteId" type="hidden" value="${pacote?.id || ""}">
 
     <label>Nome do pacote</label>
-    <input id="pacoteNome" value="${pacote?.nome || ""}" placeholder="Ex: Pacote Drenagem 10 sessões">
+    <input id="pacoteNome" value="${pacote?.nome || ""}" placeholder="Ex: Pacote Corporal Premium">
 
-    <label>Serviço do pacote</label>
-    <select id="pacoteServico">
-      <option value="">Selecione</option>
-      ${servicos.map(servico=>`
-        <option value="${servico.id}" ${String(itemPacote?.servico_id || "") === String(servico.id) ? "selected" : ""}>
-          ${servico.nome} - ${dinheiro(servico.valor)}
-        </option>
+    <div id="itensPacoteArea">
+      ${itensPacote.map((item, index)=>`
+        <div class="card item-pacote" style="margin-bottom:15px;">
+          <h3>Serviço ${index + 1}</h3>
+
+          <label>Serviço</label>
+          <select class="pacoteServicoItem" onchange="calcularTotalPacote()">
+            <option value="">Selecione</option>
+            ${servicos.map(servico=>`
+              <option value="${servico.id}" ${String(item.servico_id || "") === String(servico.id) ? "selected" : ""}>
+                ${servico.nome}
+              </option>
+            `).join("")}
+          </select>
+
+          <label>Quantidade de sessões</label>
+          <input
+            class="pacoteQuantidadeItem"
+            type="number"
+            min="1"
+            value="${item.quantidade || 1}"
+            oninput="calcularTotalPacote()"
+          >
+
+          <label>Valor por sessão</label>
+          <input
+            class="pacoteValorSessaoItem"
+            type="number"
+            min="0"
+            value="${item.valor_sessao || 0}"
+            oninput="calcularTotalPacote()"
+          >
+        </div>
       `).join("")}
-    </select>
+    </div>
 
-    <label>Quantidade de sessões/créditos</label>
-    <input id="pacoteQuantidade" type="number" value="${itemPacote?.quantidade || 1}">
+    <button type="button" onclick="adicionarItemPacote()">
+      + Adicionar outro serviço
+    </button>
 
     <label>Valor total do pacote</label>
-    <input id="pacoteValor" type="number" value="${pacote?.valor || 0}">
+    <input id="pacoteValor" type="number" value="${pacote?.valor || 0}" readonly>
 
     <label>Validade em dias</label>
     <input id="pacoteValidade" type="number" value="${pacote?.validade_dias || 90}">
@@ -1517,8 +1551,10 @@ async function abrirModalPacote(id = null){
       Cancelar
     </button>
   `);
-}
 
+  window.servicosPacoteCache = servicos;
+  calcularTotalPacote();
+}
 async function salvarPacote(){
 
   const id = document.getElementById("pacoteId").value;
