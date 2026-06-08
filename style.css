@@ -480,3 +480,32 @@ textarea{
   font-weight:800;
   margin-bottom:4px;
 }
+.alerta-resumo{
+
+  display:inline-flex;
+  align-items:center;
+  gap:10px;
+
+  background:#fff;
+
+  border:1px solid #ececec;
+
+  border-radius:999px;
+
+  padding:10px 16px;
+
+  margin-top:10px;
+
+  cursor:pointer;
+
+  font-weight:600;
+
+  transition:.2s;
+}
+
+.alerta-resumo:hover{
+
+  transform:translateY(-1px);
+
+  box-shadow:0 6px 18px rgba(0,0,0,.08);
+}
