@@ -83,24 +83,39 @@ function aplicarPermissoes(){
 
   if(!usuarioLogado) return;
 
-  const cargo = usuarioLogado.cargo;
+  const regrasMenu = [
+    { texto:"Agenda", permissao:"agenda_visualizar" },
+    { texto:"Clientes", permissao:"clientes_visualizar" },
+    { texto:"Profissionais", permissao:"profissionais_visualizar" },
+    { texto:"Serviços", permissao:"servicos_visualizar" },
+    { texto:"Pacotes", permissao:"pacotes_visualizar" },
+    { texto:"Comandas", permissao:"comandas_visualizar" },
+    { texto:"Caixa", permissao:"caixa_visualizar" },
+    { texto:"Comissões", permissao:"comissoes_visualizar" },
+    { texto:"Relatórios", permissao:"rel_profissional" },
+    { texto:"Configurações", permissao:"configuracoes_visualizar" },
+    { texto:"Gestores", permissao:"gestores_visualizar" }
+  ];
 
-  if(cargo === "funcionario"){
+  regrasMenu.forEach((regra)=>{
 
-    esconderBotaoMenu("Clientes");
-    esconderBotaoMenu("Profissionais");
-    esconderBotaoMenu("Serviços");
-    esconderBotaoMenu("Pacotes");
-    esconderBotaoMenu("Caixa");
-    esconderBotaoMenu("Comissões");
+    const botoes = Array.from(
+      document.querySelectorAll(".sidebar nav button")
+    );
 
-  }
+    const botao = botoes.find(b =>
+      b.innerText.trim() === regra.texto
+    );
 
-  if(cargo === "gerente"){
+    if(botao && !temPermissao(regra.permissao)){
+      botao.style.display = "none";
+    }
 
-    esconderBotaoMenu("Comissões");
+    if(botao && temPermissao(regra.permissao)){
+      botao.style.display = "";
+    }
 
-  }
+  });
 
 }
 
