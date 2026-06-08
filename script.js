@@ -1312,55 +1312,27 @@ async function carregarComissoes(){
 
   if(!lista) return;
 
-  lista.innerHTML = "Carregando...";
+  const hoje = formatarDataISO(new Date());
 
-  const { data, error } = await supabaseClient
-    .from("comandas")
-    .select(`
-      *,
-      profissionais(nome),
-      comanda_itens(valor, comissao_percentual)
-    `)
-    .eq("status", "Fechada");
+  lista.innerHTML = `
+    <div class="card">
+      <h3>Filtros de comissão</h3>
 
-  if(error){
-    lista.innerHTML = "<div class='card'>Erro ao carregar comissões.</div>";
-    return;
-  }
+      <label>Data inicial</label>
+      <input id="comissaoDataInicio" type="date" value="${hoje}">
 
-  const resumo = {};
+      <label>Data final</label>
+      <input id="comissaoDataFim" type="date" value="${hoje}">
 
-  (data || []).forEach((comanda)=>{
+      <button class="principal" onclick="gerarComissoesPorPeriodo()">
+        Gerar
+      </button>
+    </div>
 
-    const nome = comanda.profissionais?.nome || "Sem profissional";
+    <div id="resultadoComissoes"></div>
+  `;
 
-    if(!resumo[nome]){
-      resumo[nome] = 0;
-    }
-
-    (comanda.comanda_itens || []).forEach((item)=>{
-      resumo[nome] += Number(item.valor || 0) * (Number(item.comissao_percentual || 0) / 100);
-    });
-
-  });
-
-  lista.innerHTML = "";
-
-  Object.keys(resumo).forEach((nome)=>{
-
-    lista.innerHTML += `
-      <div class="card">
-        <h3>${nome}</h3>
-        <p>Total comissão</p>
-        <strong>${dinheiro(resumo[nome])}</strong>
-      </div>
-    `;
-
-  });
-
-  if(lista.innerHTML === ""){
-    lista.innerHTML = "<div class='card'>Nenhuma comissão encontrada.</div>";
-  }
+  gerarComissoesPorPeriodo();
 }
 
 async function carregarCaixas(){
@@ -4419,4 +4391,149 @@ async function cancelarAtendimentoFaturado(agendamento, comanda, motivo){
   carregarAgenda();
 
   alert("Atendimento faturado cancelado com histórico.");
+}
+async function gerarComissoesPorPeriodo(){
+
+  const area = document.getElementById("resultadoComissoes");
+
+  if(!area) return;
+
+  const inicio = document.getElementById("comissaoDataInicio")?.value;
+  const fim = document.getElementById("comissaoDataFim")?.value;
+
+  area.innerHTML = "Carregando comissões...";
+
+  const { data, error } = await supabaseClient
+    .from("comandas")
+    .select(`
+      *,
+      profissionais(nome),
+      comanda_itens(descricao, valor, comissao_percentual)
+    `)
+    .gte("data", inicio)
+    .lte("data", fim)
+    .eq("status", "Fechada")
+    .eq("cancelada", false)
+    .order("data", { ascending:true });
+
+  if(error){
+    area.innerHTML = "<div class='card'>Erro ao carregar comissões.</div>";
+    return;
+  }
+
+  const porProfissional = {};
+
+  (data || []).forEach((comanda)=>{
+
+    const profissional = comanda.profissionais?.nome || "Sem profissional";
+
+    if(!porProfissional[profissional]){
+      porProfissional[profissional] = {
+        totalComissao: 0,
+        totalAtendimentos: 0,
+        servicos: {},
+        itens: []
+      };
+    }
+
+    (comanda.comanda_itens || []).forEach((item)=>{
+
+      const valorServico = Number(item.valor || 0);
+      const percentual = Number(item.comissao_percentual || 0);
+      const valorComissao = valorServico * (percentual / 100);
+      const servico = item.descricao || "Serviço";
+
+      porProfissional[profissional].totalComissao += valorComissao;
+      porProfissional[profissional].totalAtendimentos += 1;
+
+      if(!porProfissional[profissional].servicos[servico]){
+        porProfissional[profissional].servicos[servico] = 0;
+      }
+
+      porProfissional[profissional].servicos[servico] += 1;
+
+      porProfissional[profissional].itens.push({
+        data: comanda.data,
+        servico,
+        valorServico,
+        valorComissao
+      });
+
+    });
+
+  });
+
+  area.innerHTML = "";
+
+  Object.keys(porProfissional).forEach((profissional, index)=>{
+
+    const dados = porProfissional[profissional];
+
+    const resumoServicos = Object.keys(dados.servicos)
+      .map(servico => `${dados.servicos[servico]} ${servico}`)
+      .join("<br>");
+
+    area.innerHTML += `
+      <div class="card">
+        <h3 onclick="abrirDetalheComissao('${profissional.replace(/'/g, "\\'")}')" style="cursor:pointer;">
+          ${profissional}
+        </h3>
+
+        <p><strong>Total de atendimentos:</strong> ${dados.totalAtendimentos}</p>
+        <p><strong>Comissão total:</strong> ${dinheiro(dados.totalComissao)}</p>
+
+        <small>
+          ${resumoServicos || ""}
+        </small>
+
+        <div id="detalheComissao_${normalizarClasse(profissional)}" style="display:none;margin-top:15px;"></div>
+      </div>
+    `;
+  });
+
+  window.comissoesPeriodoCache = porProfissional;
+
+  if(area.innerHTML === ""){
+    area.innerHTML = "<div class='card'>Nenhuma comissão encontrada no período.</div>";
+  }
+}
+
+function abrirDetalheComissao(profissional){
+
+  const dados = window.comissoesPeriodoCache?.[profissional];
+
+  if(!dados) return;
+
+  const id = `detalheComissao_${normalizarClasse(profissional)}`;
+  const area = document.getElementById(id);
+
+  if(!area) return;
+
+  if(area.style.display === "block"){
+    area.style.display = "none";
+    return;
+  }
+
+  area.style.display = "block";
+
+  area.innerHTML = `
+    <hr><br>
+
+    <h4>Detalhamento</h4>
+
+    ${dados.itens.map(item=>`
+      <div style="border-bottom:1px solid #eee;padding:8px 0;">
+        <p><strong>${formatarDataComanda(item.data)}</strong></p>
+        <p>${item.servico}</p>
+        <p>Valor do serviço: ${dinheiro(item.valorServico)}</p>
+        <p>Comissão: ${dinheiro(item.valorComissao)}</p>
+      </div>
+    `).join("")}
+
+    <br>
+
+    <h4>Resumo final</h4>
+    <p>Total de atendimentos: ${dados.totalAtendimentos}</p>
+    <p><strong>Comissão total: ${dinheiro(dados.totalComissao)}</strong></p>
+  `;
 }
