@@ -3955,3 +3955,67 @@ async function carregarUsuariosSistema(){
     </div>
   `;
 }
+async function abrirModalUsuarioSistema(id = null){
+
+  let usuario = null;
+
+  if(id){
+    const resp = await supabaseClient
+      .from("usuarios_sistema")
+      .select("*")
+      .eq("id", id)
+      .single();
+
+    usuario = resp.data;
+  }
+
+  const perfisResp = await supabaseClient
+    .from("perfis_acesso")
+    .select("*")
+    .order("nome");
+
+  const perfis = perfisResp.data || [];
+
+  abrirModal(`
+    <h2>${id ? "Editar usuário" : "Novo usuário"}</h2>
+
+    <input id="usuarioSistemaId" type="hidden" value="${usuario?.id || ""}">
+
+    <label>Nome</label>
+    <input id="usuarioSistemaNome" value="${usuario?.nome || ""}">
+
+    <label>Usuário de login</label>
+    <input id="usuarioSistemaLogin" value="${usuario?.usuario || ""}">
+
+    <label>Senha</label>
+    <input id="usuarioSistemaSenha" type="password" value="${usuario?.senha || ""}">
+
+    <label>Perfil de acesso</label>
+    <select id="usuarioSistemaPerfil">
+      <option value="">Selecione</option>
+      ${perfis.map(p=>`
+        <option value="${p.id}" ${String(usuario?.perfil_acesso_id || "") === String(p.id) ? "selected" : ""}>
+          ${p.nome}
+        </option>
+      `).join("")}
+    </select>
+
+    <label style="display:flex;gap:10px;align-items:center;">
+      <input
+        id="usuarioSistemaAtivo"
+        type="checkbox"
+        style="width:auto;height:auto;"
+        ${usuario?.ativo !== false ? "checked" : ""}
+      >
+      Usuário ativo
+    </label>
+
+    <button class="principal" onclick="salvarUsuarioSistema()">
+      Salvar usuário
+    </button>
+
+    <button onclick="fecharModal()">
+      Cancelar
+    </button>
+  `);
+}
