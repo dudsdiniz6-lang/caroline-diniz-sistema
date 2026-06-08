@@ -252,14 +252,15 @@ async function salvarCliente(){
 
   const id = document.getElementById("clienteId").value;
 
-  const dados = {
-    unidade_id: unidadeAtualId,
-    nome: document.getElementById("clienteNome").value.trim(),
-    telefone: document.getElementById("clienteTelefone").value.trim(),
-    aniversario: document.getElementById("clienteAniversario").value || null,
-    observacoes: document.getElementById("clienteObservacoes").value.trim(),
-    ativo: true
-  };
+ const dados = {
+  unidade_id: unidadeAtualId,
+  nome: document.getElementById("clienteNome").value.trim(),
+  telefone: document.getElementById("clienteTelefone").value.trim(),
+  aniversario: document.getElementById("clienteAniversario").value || null,
+  observacoes: document.getElementById("clienteObservacoes").value.trim(),
+  vip: document.getElementById("clienteVip").checked,
+  ativo: true
+};
 
   if(!dados.nome){
     alert("Digite o nome da cliente.");
@@ -334,7 +335,10 @@ async function carregarClientes(){
 
     lista.innerHTML += `
       <div class="card">
-        <h3>${cliente.nome}</h3>
+        <h3>
+  ${cliente.vip ? "⭐ " : ""}
+  ${cliente.nome}
+</h3>
         <p>${cliente.telefone || "Sem telefone"}</p>
         <small>${cliente.observacoes || ""}</small>
 
@@ -737,11 +741,11 @@ async function carregarAgenda(){
                     style="top:${top + 4}px; height:${altura}px;"
                     onclick="event.stopPropagation(); abrirModalAgendamento(${a.id})"
                   >
-                   <strong>
+              <strong>
+  ${a.clientes?.vip ? "⭐ " : ""}
   ${a.recorrencia_id ? "🔁 " : ""}
   ${a.clientes?.nome || "Cliente"}
-</strong>
-                    <span>${a.servicos?.nome || "Serviço"}</span>
+</strong>         <span>${a.servicos?.nome || "Serviço"}</span>
                     <small>${formatarHorarioBonito(a.horario)} - ${formatarHorarioBonito(fim)}</small>
                     <em>${a.status || "Agendado"}</em>
                   </div>
