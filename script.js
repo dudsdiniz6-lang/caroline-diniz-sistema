@@ -714,6 +714,9 @@ async function carregarAgenda(){
 
   const profissionais = profissionaisResp.data || [];
   let agendamentos = agendamentosResp.data || [];
+  agendamentos = agendamentos.filter(a =>
+  a.status !== "Cancelado"
+);
 
   if(busca){
     agendamentos = agendamentos.filter(item =>
