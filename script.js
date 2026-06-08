@@ -2002,7 +2002,10 @@ async function salvarAgendamento(){
   if(repetir){
     dados.recorrencia_id = gerarIdRecorrencia();
     dados.recorrencia_ativa = true;
-    dados.recorrencia_frequencia = "semanal";
+    dados.recorrencia_frequencia = "personalizada";
+
+dados.recorrencia_intervalo_dias =
+  Number(document.getElementById("agIntervaloRepeticao")?.value || 7);
     dados.recorrencia_ate = repetirAte;
   }
 
