@@ -741,7 +741,7 @@ async function carregarAgenda(){
                     style="top:${top + 4}px; height:${altura}px;"
                     onclick="event.stopPropagation(); abrirModalAgendamento(${a.id})"
                   >
-  ${a.clientes?.vip ? `<div class="selo-vip-agenda">⭐ VIP</div>` : ""}
+ ${(a.clientes?.vip === true || a.clientes?.vip === "true") ? `<div class="selo-vip-agenda">⭐ VIP</div>` : ""}
 
 <strong>
   ${a.recorrencia_id ? "🔁 " : ""}
