@@ -2735,7 +2735,10 @@ async function criarAgendamentosRecorrentes(dadosBase){
 
   const novosAgendamentos = [];
 
-  let dataAtual = adicionarDias(inicio, 7);
+const intervaloDias =
+  Number(document.getElementById("agIntervaloRepeticao")?.value || 7);
+
+let dataAtual = adicionarDias(inicio, intervaloDias);
 
   while(dataAtual <= fim){
 
@@ -2744,12 +2747,13 @@ async function criarAgendamentosRecorrentes(dadosBase){
       data: formatarDataISO(dataAtual),
       recorrencia_id: recorrenciaId,
       recorrencia_ativa: true,
-      recorrencia_frequencia: "semanal",
+     recorrencia_frequencia: "personalizada",
+recorrencia_intervalo_dias: intervaloDias,
       recorrencia_ate: repetirAte,
       status: "Agendado"
     });
 
-    dataAtual = adicionarDias(dataAtual, 7);
+  dataAtual = adicionarDias(dataAtual, intervaloDias);
   }
 
   if(novosAgendamentos.length > 0){
