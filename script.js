@@ -227,6 +227,15 @@ async function abrirModalCliente(id = null){
 
     <label>Observações</label>
     <textarea id="clienteObservacoes" placeholder="Observações">${cliente?.observacoes || ""}</textarea>
+    <label style="display:flex;gap:10px;align-items:center;">
+  <input
+    id="clienteVip"
+    type="checkbox"
+    style="width:auto;height:auto;"
+    ${cliente?.vip ? "checked" : ""}
+  >
+  Cliente VIP ⭐
+</label>
 
     <button class="principal" onclick="salvarCliente()">
       Salvar
