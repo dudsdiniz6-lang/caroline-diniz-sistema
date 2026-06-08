@@ -1560,23 +1560,22 @@ async function salvarPacote(){
   const id = document.getElementById("pacoteId").value;
 
   const nome = document.getElementById("pacoteNome").value.trim();
-  const servicoId = Number(document.getElementById("pacoteServico").value);
-  const quantidade = Number(document.getElementById("pacoteQuantidade").value || 1);
   const valor = Number(document.getElementById("pacoteValor").value || 0);
   const validade = Number(document.getElementById("pacoteValidade").value || 90);
+
+  const itens = Array.from(document.querySelectorAll(".item-pacote")).map(item=>({
+    servico_id: Number(item.querySelector(".pacoteServicoItem").value),
+    quantidade: Number(item.querySelector(".pacoteQuantidadeItem").value || 1),
+    valor_sessao: Number(item.querySelector(".pacoteValorSessaoItem").value || 0)
+  })).filter(item => item.servico_id && item.quantidade > 0);
 
   if(!nome){
     alert("Digite o nome do pacote.");
     return;
   }
 
-  if(!servicoId){
-    alert("Selecione o serviço do pacote.");
-    return;
-  }
-
-  if(quantidade <= 0){
-    alert("Informe uma quantidade válida.");
+  if(itens.length === 0){
+    alert("Adicione pelo menos um serviço ao pacote.");
     return;
   }
 
@@ -1623,16 +1622,19 @@ async function salvarPacote(){
     pacoteId = criar.data.id;
   }
 
-  const item = await supabaseClient
-    .from("pacote_itens")
-    .insert([{
-      pacote_id: pacoteId,
-      servico_id: servicoId,
-      quantidade
-    }]);
+  const itensSalvar = itens.map(item=>({
+    pacote_id: pacoteId,
+    servico_id: item.servico_id,
+    quantidade: item.quantidade,
+    valor_sessao: item.valor_sessao
+  }));
 
-  if(item.error){
-    alert("Erro ao salvar serviço do pacote: " + item.error.message);
+  const salvarItens = await supabaseClient
+    .from("pacote_itens")
+    .insert(itensSalvar);
+
+  if(salvarItens.error){
+    alert("Erro ao salvar serviços do pacote: " + salvarItens.error.message);
     return;
   }
 
