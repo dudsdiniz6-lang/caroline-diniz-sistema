@@ -1306,34 +1306,6 @@ async function carregarPacotes(){
 
 }
 
-async function carregarComissoes(){
-
-  const lista = document.getElementById("listaComissoes");
-
-  if(!lista) return;
-
-  const hoje = formatarDataISO(new Date());
-
-  lista.innerHTML = `
-    <div class="card">
-      <h3>Filtros de comissão</h3>
-
-      <label>Data inicial</label>
-      <input id="comissaoDataInicio" type="date" value="${hoje}">
-
-      <label>Data final</label>
-      <input id="comissaoDataFim" type="date" value="${hoje}">
-
-      <button class="principal" onclick="gerarComissoesPorPeriodo()">
-        Gerar
-      </button>
-    </div>
-
-    <div id="resultadoComissoes"></div>
-  `;
-
-  gerarComissoesPorPeriodo();
-}
 
 async function carregarCaixas(){
 
@@ -4392,6 +4364,38 @@ async function cancelarAtendimentoFaturado(agendamento, comanda, motivo){
 
   alert("Atendimento faturado cancelado com histórico.");
 }
+
+async function carregarComissoes(){
+
+  const lista = document.getElementById("listaComissoes");
+
+  if(!lista) return;
+
+  const hoje = formatarDataISO(new Date());
+
+  lista.innerHTML = `
+    <div class="filtros" style="display:flex;gap:12px;align-items:end;flex-wrap:wrap;margin-bottom:18px;">
+      <div>
+        <label>Data inicial</label>
+        <input id="comissaoDataInicio" type="date" value="${hoje}">
+      </div>
+
+      <div>
+        <label>Data final</label>
+        <input id="comissaoDataFim" type="date" value="${hoje}">
+      </div>
+
+      <button class="principal" onclick="gerarComissoesPorPeriodo()">
+        Gerar
+      </button>
+    </div>
+
+    <div id="resultadoComissoes"></div>
+  `;
+
+  gerarComissoesPorPeriodo();
+}
+
 async function gerarComissoesPorPeriodo(){
 
   const area = document.getElementById("resultadoComissoes");
@@ -4407,6 +4411,7 @@ async function gerarComissoesPorPeriodo(){
     .from("comandas")
     .select(`
       *,
+      clientes(nome),
       profissionais(nome),
       comanda_itens(descricao, valor, comissao_percentual)
     `)
@@ -4426,36 +4431,31 @@ async function gerarComissoesPorPeriodo(){
   (data || []).forEach((comanda)=>{
 
     const profissional = comanda.profissionais?.nome || "Sem profissional";
+    const cliente = comanda.clientes?.nome || "Cliente não informado";
 
     if(!porProfissional[profissional]){
       porProfissional[profissional] = {
         totalComissao: 0,
         totalAtendimentos: 0,
-        servicos: {},
         itens: []
       };
     }
 
     (comanda.comanda_itens || []).forEach((item)=>{
 
-      const valorServico = Number(item.valor || 0);
+      const valorReal = Number(item.valor || 0);
       const percentual = Number(item.comissao_percentual || 0);
-      const valorComissao = valorServico * (percentual / 100);
-      const servico = item.descricao || "Serviço";
+      const valorComissao = valorReal * (percentual / 100);
 
       porProfissional[profissional].totalComissao += valorComissao;
       porProfissional[profissional].totalAtendimentos += 1;
 
-      if(!porProfissional[profissional].servicos[servico]){
-        porProfissional[profissional].servicos[servico] = 0;
-      }
-
-      porProfissional[profissional].servicos[servico] += 1;
-
       porProfissional[profissional].itens.push({
         data: comanda.data,
-        servico,
-        valorServico,
+        cliente,
+        servico: item.descricao || "Serviço",
+        valorReal,
+        percentual,
         valorComissao
       });
 
@@ -4463,39 +4463,44 @@ async function gerarComissoesPorPeriodo(){
 
   });
 
-  area.innerHTML = "";
-
-  Object.keys(porProfissional).forEach((profissional, index)=>{
-
-    const dados = porProfissional[profissional];
-
-    const resumoServicos = Object.keys(dados.servicos)
-      .map(servico => `${dados.servicos[servico]} ${servico}`)
-      .join("<br>");
-
-    area.innerHTML += `
-      <div class="card">
-        <h3 onclick="abrirDetalheComissao('${profissional.replace(/'/g, "\\'")}')" style="cursor:pointer;">
-          ${profissional}
-        </h3>
-
-        <p><strong>Total de atendimentos:</strong> ${dados.totalAtendimentos}</p>
-        <p><strong>Comissão total:</strong> ${dinheiro(dados.totalComissao)}</p>
-
-        <small>
-          ${resumoServicos || ""}
-        </small>
-
-        <div id="detalheComissao_${normalizarClasse(profissional)}" style="display:none;margin-top:15px;"></div>
-      </div>
-    `;
-  });
-
   window.comissoesPeriodoCache = porProfissional;
 
-  if(area.innerHTML === ""){
+  const profissionais = Object.keys(porProfissional);
+
+  if(profissionais.length === 0){
     area.innerHTML = "<div class='card'>Nenhuma comissão encontrada no período.</div>";
+    return;
   }
+
+  area.innerHTML = `
+    <div class="linha-tabela cabecalho">
+      <span>Profissional</span>
+      <span>Atendimentos</span>
+      <span>Comissão total</span>
+    </div>
+
+    ${profissionais.map(profissional=>{
+
+      const dados = porProfissional[profissional];
+
+      return `
+        <div
+          class="linha-tabela"
+          style="cursor:pointer;"
+          onclick="abrirDetalheComissao('${profissional.replace(/'/g, "\\'")}')"
+        >
+          <span>${profissional}</span>
+          <span>${dados.totalAtendimentos}</span>
+          <span>${dinheiro(dados.totalComissao)}</span>
+        </div>
+
+        <div
+          id="detalheComissao_${normalizarClasse(profissional)}"
+          style="display:none;margin:10px 0 20px;"
+        ></div>
+      `;
+    }).join("")}
+  `;
 }
 
 function abrirDetalheComissao(profissional){
@@ -4516,24 +4521,51 @@ function abrirDetalheComissao(profissional){
 
   area.style.display = "block";
 
+  const resumoServicos = {};
+
+  dados.itens.forEach(item=>{
+    if(!resumoServicos[item.servico]){
+      resumoServicos[item.servico] = 0;
+    }
+
+    resumoServicos[item.servico] += 1;
+  });
+
   area.innerHTML = `
-    <hr><br>
+    <div class="card" style="margin-top:10px;">
 
-    <h4>Detalhamento</h4>
+      <h3>Detalhamento de ${profissional}</h3>
 
-    ${dados.itens.map(item=>`
-      <div style="border-bottom:1px solid #eee;padding:8px 0;">
-        <p><strong>${formatarDataComanda(item.data)}</strong></p>
-        <p>${item.servico}</p>
-        <p>Valor do serviço: ${dinheiro(item.valorServico)}</p>
-        <p>Comissão: ${dinheiro(item.valorComissao)}</p>
+      <div class="linha-tabela cabecalho">
+        <span>Data</span>
+        <span>Cliente</span>
+        <span>Serviço</span>
+        <span>Valor real</span>
+        <span>Comissão</span>
       </div>
-    `).join("")}
 
-    <br>
+      ${dados.itens.map(item=>`
+        <div class="linha-tabela">
+          <span>${formatarDataComanda(item.data)}</span>
+          <span>${item.cliente}</span>
+          <span>${item.servico}</span>
+          <span>${dinheiro(item.valorReal)}</span>
+          <span>${dinheiro(item.valorComissao)}</span>
+        </div>
+      `).join("")}
 
-    <h4>Resumo final</h4>
-    <p>Total de atendimentos: ${dados.totalAtendimentos}</p>
-    <p><strong>Comissão total: ${dinheiro(dados.totalComissao)}</strong></p>
+      <br>
+
+      <h3>Resumo final</h3>
+
+      <p><strong>Total de serviços:</strong> ${dados.totalAtendimentos}</p>
+
+      ${Object.keys(resumoServicos).map(servico=>`
+        <p>${resumoServicos[servico]} ${servico}</p>
+      `).join("")}
+
+      <p><strong>Total de comissões:</strong> ${dinheiro(dados.totalComissao)}</p>
+
+    </div>
   `;
 }
