@@ -3479,3 +3479,21 @@ async function carregarResumoAlertasAgenda(){
 
   `;
 }
+async function abrirCentralAlertas(){
+
+  abrirModal(`
+    <h2>Central de Alertas</h2>
+
+    <div id="conteudoCentralAlertas">
+      Carregando alertas...
+    </div>
+
+    <br>
+
+    <button onclick="fecharModal()">
+      Fechar
+    </button>
+  `);
+
+  await carregarCentralAlertasConteudo();
+}
