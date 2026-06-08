@@ -673,7 +673,7 @@ async function carregarAgenda(){
     .from("agendamentos")
     .select(`
       *,
-      clientes(nome, telefone),
+     clientes(nome, telefone, vip),
       profissionais(nome),
       servicos(nome, duracao, valor)
     `)
