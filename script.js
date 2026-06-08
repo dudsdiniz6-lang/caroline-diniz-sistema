@@ -15,7 +15,7 @@ function formatarDataISO(data){
   return data.toISOString().split("T")[0];
 }
 
-function dinheiro(valor){
+function dinheiro(vasync function abrirPerfilAcesso(nomePerfil){alor){
   return `R$ ${Number(valor || 0).toFixed(2)}`;
 }
 
@@ -3824,23 +3824,37 @@ async function abrirPerfilAcesso(nomePerfil){
     <div class="card">
       <h2>${nomePerfil}</h2>
 
-      ${permissoesPadraoSistema.map(p=>{
+    ${Object.keys(
+  permissoesPadraoSistema.reduce((grupos, item)=>{
+    grupos[item.grupo] = true;
+    return grupos;
+  }, {})
+).map(grupo=>`
 
-        const marcada = permissoes?.find(x => x.chave === p.chave)?.permitido || false;
+  <h3 style="margin-top:22px;">${grupo}</h3>
 
-        return `
-          <label style="display:flex;gap:10px;align-items:center;">
-            <input
-              type="checkbox"
-              class="permissaoPerfil"
-              data-chave="${p.chave}"
-              style="width:auto;height:auto;"
-              ${marcada ? "checked" : ""}
-            >
-            ${p.nome}
-          </label>
-        `;
-      }).join("")}
+  ${permissoesPadraoSistema
+    .filter(p => p.grupo === grupo)
+    .map(p=>{
+
+      const marcada =
+        permissoes?.find(x => x.chave === p.chave)?.permitido || false;
+
+      return `
+        <label style="display:flex;gap:10px;align-items:center;margin-bottom:8px;">
+          <input
+            type="checkbox"
+            class="permissaoPerfil"
+            data-chave="${p.chave}"
+            style="width:auto;height:auto;"
+            ${marcada ? "checked" : ""}
+          >
+          ${p.nome}
+        </label>
+      `;
+    }).join("")}
+
+`).join("")}
 
       <br>
 
