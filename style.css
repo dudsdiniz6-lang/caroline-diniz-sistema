@@ -546,3 +546,51 @@ textarea{
 .tabela-comissoes .linha:hover{
   background:#fff4ec;
 }
+.comissao-detalhe-grid{
+  display:grid;
+  grid-template-columns:repeat(3,1fr);
+  gap:16px;
+  margin-bottom:22px;
+}
+
+.comissao-resumo-card{
+  background:#fff;
+  border:1px solid #eee;
+  border-radius:18px;
+  padding:18px;
+}
+
+.comissao-resumo-card small{
+  color:#777;
+}
+
+.comissao-resumo-card strong{
+  display:block;
+  font-size:24px;
+  margin-top:6px;
+}
+
+.comissao-detalhe-tabela{
+  background:#fff;
+  border:1px solid #eee;
+  border-radius:18px;
+  overflow:hidden;
+}
+
+.comissao-detalhe-tabela .linha{
+  display:grid;
+  grid-template-columns:120px 1.4fr 1.4fr 120px 120px;
+  gap:12px;
+  padding:14px 16px;
+  border-bottom:1px solid #f3f3f3;
+  align-items:center;
+}
+
+.comissao-detalhe-tabela .cabecalho{
+  background:#fafafa;
+  font-weight:700;
+}
+
+.comissao-detalhe-tabela .linha:hover{
+  background:#fff8f3;
+}
