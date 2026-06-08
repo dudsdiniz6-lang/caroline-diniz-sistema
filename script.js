@@ -3695,6 +3695,7 @@ async function salvarConfiguracoes(){
 
   alert("Configurações salvas.");
 }
+
 async function carregarGestores(){
 
   const area = document.getElementById("areaGestores");
@@ -3704,34 +3705,17 @@ async function carregarGestores(){
   area.innerHTML = `
 
     <div class="card">
-      <h3>Perfis do sistema</h3>
+      <h3>Gestores e Acessos</h3>
 
-      <button class="principal"
-        onclick="abrirPerfilAcesso('Dono')">
-        Dono
+      <button class="principal" onclick="carregarPerfisAcesso()">
+        Perfis de acesso
       </button>
 
       <br><br>
 
-      <button class="principal"
-        onclick="abrirPerfilAcesso('Gestor')">
-        Gestor
+      <button class="principal" onclick="carregarUsuariosSistema()">
+        Usuários do sistema
       </button>
-
-      <br><br>
-
-      <button class="principal"
-        onclick="abrirPerfilAcesso('Recepcionista')">
-        Recepcionista
-      </button>
-
-      <br><br>
-
-      <button class="principal"
-        onclick="abrirPerfilAcesso('Profissional')">
-        Profissional
-      </button>
-
     </div>
 
   `;
@@ -3900,4 +3884,31 @@ async function salvarPermissoesPerfil(perfilId, nomePerfil){
   alert("Permissões salvas.");
 
   abrirPerfilAcesso(nomePerfil);
+}
+async function carregarPerfisAcesso(){
+
+  const area = document.getElementById("areaGestores");
+
+  area.innerHTML = `
+
+    <div class="card">
+      <h3>Perfis do sistema</h3>
+
+      <button class="principal" onclick="abrirPerfilAcesso('Dono')">Dono</button>
+      <br><br>
+
+      <button class="principal" onclick="abrirPerfilAcesso('Gestor')">Gestor</button>
+      <br><br>
+
+      <button class="principal" onclick="abrirPerfilAcesso('Recepcionista')">Recepcionista</button>
+      <br><br>
+
+      <button class="principal" onclick="abrirPerfilAcesso('Profissional')">Profissional</button>
+
+      <br><br>
+
+      <button onclick="carregarGestores()">Voltar</button>
+    </div>
+
+  `;
 }
