@@ -4019,3 +4019,58 @@ async function abrirModalUsuarioSistema(id = null){
     </button>
   `);
 }
+async function salvarUsuarioSistema(){
+
+  const id = document.getElementById("usuarioSistemaId").value;
+
+  const dados = {
+    nome: document.getElementById("usuarioSistemaNome").value.trim(),
+    usuario: document.getElementById("usuarioSistemaLogin").value.trim().toLowerCase(),
+    senha: document.getElementById("usuarioSistemaSenha").value.trim(),
+    perfil_acesso_id: Number(document.getElementById("usuarioSistemaPerfil").value),
+    ativo: document.getElementById("usuarioSistemaAtivo").checked
+  };
+
+  if(!dados.nome){
+    alert("Informe o nome do usuário.");
+    return;
+  }
+
+  if(!dados.usuario){
+    alert("Informe o usuário de login.");
+    return;
+  }
+
+  if(!dados.senha){
+    alert("Informe a senha.");
+    return;
+  }
+
+  if(!dados.perfil_acesso_id){
+    alert("Selecione o perfil de acesso.");
+    return;
+  }
+
+  let resposta;
+
+  if(id){
+    resposta = await supabaseClient
+      .from("usuarios_sistema")
+      .update(dados)
+      .eq("id", id);
+  }else{
+    resposta = await supabaseClient
+      .from("usuarios_sistema")
+      .insert([dados]);
+  }
+
+  if(resposta.error){
+    alert("Erro ao salvar usuário: " + resposta.error.message);
+    return;
+  }
+
+  fecharModal();
+  carregarUsuariosSistema();
+
+  alert("Usuário salvo com sucesso.");
+}
