@@ -509,3 +509,40 @@ textarea{
 
   box-shadow:0 6px 18px rgba(0,0,0,.08);
 }
+.comissoes-filtros{
+  display:flex;
+  gap:14px;
+  align-items:flex-end;
+  flex-wrap:wrap;
+  margin-bottom:22px;
+}
+
+.comissoes-filtros > div{
+  min-width:220px;
+}
+
+.tabela-comissoes{
+  width:100%;
+  background:#fff;
+  border-radius:18px;
+  overflow:hidden;
+  border:1px solid #eee;
+}
+
+.tabela-comissoes .linha{
+  display:grid;
+  grid-template-columns:2fr 1fr 1fr;
+  gap:12px;
+  padding:14px 16px;
+  border-bottom:1px solid #f1f1f1;
+  align-items:center;
+}
+
+.tabela-comissoes .cabecalho{
+  font-weight:700;
+  background:#fafafa;
+}
+
+.tabela-comissoes .linha:hover{
+  background:#fff4ec;
+}
