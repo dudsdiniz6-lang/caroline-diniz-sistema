@@ -4589,22 +4589,35 @@ function abrirPaginaDetalheComissao(profissional){
   });
 
   area.innerHTML = `
-    <div class="card">
-      <h3>Resumo</h3>
+    <div class="comissao-detalhe-grid">
 
-      <p><strong>Total de serviços:</strong> ${dados.totalAtendimentos}</p>
+      <div class="comissao-resumo-card">
+        <small>Total de serviços</small>
+        <strong>${dados.totalAtendimentos}</strong>
+      </div>
+
+      <div class="comissao-resumo-card">
+        <small>Total de comissões</small>
+        <strong>${dinheiro(dados.totalComissao)}</strong>
+      </div>
+
+      <div class="comissao-resumo-card">
+        <small>Tipos de serviços</small>
+        <strong>${Object.keys(resumoServicos).length}</strong>
+      </div>
+
+    </div>
+
+    <div class="card">
+      <h3>Resumo por serviço</h3>
 
       ${Object.keys(resumoServicos).map(servico=>`
         <p>${resumoServicos[servico]} ${servico}</p>
       `).join("")}
-
-      <p><strong>Total de comissões:</strong> ${dinheiro(dados.totalComissao)}</p>
     </div>
 
-    <div class="card">
-      <h3>Atendimentos detalhados</h3>
-
-      <div class="linha-tabela cabecalho">
+    <div class="comissao-detalhe-tabela">
+      <div class="linha cabecalho">
         <span>Data</span>
         <span>Cliente</span>
         <span>Serviço</span>
@@ -4613,7 +4626,7 @@ function abrirPaginaDetalheComissao(profissional){
       </div>
 
       ${dados.itens.map(item=>`
-        <div class="linha-tabela">
+        <div class="linha">
           <span>${formatarDataComanda(item.data)}</span>
           <span>${item.cliente}</span>
           <span>${item.servico}</span>
