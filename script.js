@@ -4173,3 +4173,68 @@ async function carregarPermissoesUsuario(){
 function temPermissao(chave){
   return permissoesUsuario.includes(chave);
 }
+function adicionarItemPacote(){
+
+  const area = document.getElementById("itensPacoteArea");
+
+  if(!area) return;
+
+  const index = area.querySelectorAll(".item-pacote").length;
+
+  area.insertAdjacentHTML("beforeend", `
+    <div class="card item-pacote" style="margin-bottom:15px;">
+      <h3>Serviço ${index + 1}</h3>
+
+      <label>Serviço</label>
+      <select class="pacoteServicoItem" onchange="calcularTotalPacote()">
+        <option value="">Selecione</option>
+        ${(window.servicosPacoteCache || []).map(servico=>`
+          <option value="${servico.id}">${servico.nome}</option>
+        `).join("")}
+      </select>
+
+      <label>Quantidade de sessões</label>
+      <input
+        class="pacoteQuantidadeItem"
+        type="number"
+        min="1"
+        value="1"
+        oninput="calcularTotalPacote()"
+      >
+
+      <label>Valor por sessão</label>
+      <input
+        class="pacoteValorSessaoItem"
+        type="number"
+        min="0"
+        value="0"
+        oninput="calcularTotalPacote()"
+      >
+    </div>
+  `);
+
+  calcularTotalPacote();
+}
+
+function calcularTotalPacote(){
+
+  let total = 0;
+
+  document.querySelectorAll(".item-pacote").forEach((item)=>{
+
+    const quantidade =
+      Number(item.querySelector(".pacoteQuantidadeItem")?.value || 0);
+
+    const valorSessao =
+      Number(item.querySelector(".pacoteValorSessaoItem")?.value || 0);
+
+    total += quantidade * valorSessao;
+
+  });
+
+  const campoTotal = document.getElementById("pacoteValor");
+
+  if(campoTotal){
+    campoTotal.value = total.toFixed(2);
+  }
+}
