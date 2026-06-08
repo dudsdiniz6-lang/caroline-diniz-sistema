@@ -3912,3 +3912,46 @@ async function carregarPerfisAcesso(){
 
   `;
 }
+async function carregarUsuariosSistema(){
+
+  const area = document.getElementById("areaGestores");
+
+  area.innerHTML = "Carregando usuários...";
+
+  const { data, error } = await supabaseClient
+    .from("usuarios_sistema")
+    .select(`
+      *,
+      perfis_acesso(nome)
+    `)
+    .order("nome");
+
+  if(error){
+    area.innerHTML = "<div class='card'>Erro ao carregar usuários.</div>";
+    return;
+  }
+
+  area.innerHTML = `
+    <div class="card">
+      <h3>Usuários do sistema</h3>
+
+      <button class="principal" onclick="abrirModalUsuarioSistema()">
+        Novo usuário
+      </button>
+
+      <br><br>
+
+      ${(data || []).map(usuario=>`
+        <div class="linha-tabela" onclick="abrirModalUsuarioSistema(${usuario.id})">
+          <span>${usuario.nome || usuario.usuario}</span>
+          <span>${usuario.usuario}</span>
+          <span>${usuario.perfis_acesso?.nome || usuario.cargo || "-"}</span>
+        </div>
+      `).join("") || "<p>Nenhum usuário cadastrado.</p>"}
+
+      <br>
+
+      <button onclick="carregarGestores()">Voltar</button>
+    </div>
+  `;
+}
