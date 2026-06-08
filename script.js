@@ -3736,3 +3736,92 @@ async function carregarGestores(){
 
   `;
 }
+const permissoesPadraoSistema = [
+  { chave:"agenda", nome:"Agenda" },
+  { chave:"clientes", nome:"Clientes" },
+  { chave:"profissionais", nome:"Profissionais" },
+  { chave:"servicos", nome:"Serviços" },
+  { chave:"pacotes", nome:"Pacotes" },
+  { chave:"comandas", nome:"Comandas" },
+  { chave:"caixa", nome:"Caixa" },
+  { chave:"comissoes", nome:"Comissões" },
+  { chave:"relatorios", nome:"Relatórios" },
+  { chave:"configuracoes", nome:"Configurações" },
+  { chave:"gestores", nome:"Gestores" }
+];
+
+async function abrirPerfilAcesso(nomePerfil){
+
+  const area = document.getElementById("areaGestores");
+
+  area.innerHTML = "Carregando permissões...";
+
+  const { data: perfil } = await supabaseClient
+    .from("perfis_acesso")
+    .select("*")
+    .eq("nome", nomePerfil)
+    .single();
+
+  const { data: permissoes } = await supabaseClient
+    .from("permissoes_acesso")
+    .select("*")
+    .eq("perfil_id", perfil.id);
+
+  area.innerHTML = `
+    <div class="card">
+      <h2>${nomePerfil}</h2>
+
+      ${permissoesPadraoSistema.map(p=>{
+
+        const marcada = permissoes?.find(x => x.chave === p.chave)?.permitido || false;
+
+        return `
+          <label style="display:flex;gap:10px;align-items:center;">
+            <input
+              type="checkbox"
+              class="permissaoPerfil"
+              data-chave="${p.chave}"
+              style="width:auto;height:auto;"
+              ${marcada ? "checked" : ""}
+            >
+            ${p.nome}
+          </label>
+        `;
+      }).join("")}
+
+      <br>
+
+      <button class="principal" onclick="salvarPermissoesPerfil(${perfil.id}, '${nomePerfil}')">
+        Salvar permissões
+      </button>
+
+      <button onclick="carregarGestores()">
+        Voltar
+      </button>
+    </div>
+  `;
+}
+
+async function salvarPermissoesPerfil(perfilId, nomePerfil){
+
+  const checks = document.querySelectorAll(".permissaoPerfil");
+
+  await supabaseClient
+    .from("permissoes_acesso")
+    .delete()
+    .eq("perfil_id", perfilId);
+
+  const registros = Array.from(checks).map(campo=>({
+    perfil_id: perfilId,
+    chave: campo.dataset.chave,
+    permitido: campo.checked
+  }));
+
+  await supabaseClient
+    .from("permissoes_acesso")
+    .insert(registros);
+
+  alert("Permissões salvas.");
+
+  abrirPerfilAcesso(nomePerfil);
+}
