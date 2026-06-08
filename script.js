@@ -3728,6 +3728,8 @@ const permissoesPadraoSistema = [
   { grupo:"Agenda", chave:"agenda_excluir", nome:"Excluir agendamentos" },
   { grupo:"Agenda", chave:"agenda_faturar", nome:"Faturar atendimentos" },
   { grupo:"Agenda", chave:"agenda_recorrencia", nome:"Criar agendamentos recorrentes" },
+  { grupo:"Agenda", chave:"agenda_ver_todas_profissionais", nome:"Ver agenda de todas as profissionais" },
+{ grupo:"Agenda", chave:"agenda_ver_apenas_propria", nome:"Ver apenas a própria agenda" },
 
   { grupo:"Clientes", chave:"clientes_visualizar", nome:"Visualizar clientes" },
   { grupo:"Clientes", chave:"clientes_adicionar", nome:"Adicionar novos clientes" },
@@ -3735,6 +3737,8 @@ const permissoesPadraoSistema = [
   { grupo:"Clientes", chave:"clientes_excluir", nome:"Excluir clientes" },
   { grupo:"Clientes", chave:"clientes_anamnese", nome:"Adicionar ficha de anamnese" },
   { grupo:"Clientes", chave:"clientes_vip", nome:"Marcar cliente VIP" },
+  { grupo:"Clientes", chave:"clientes_ver_todos", nome:"Ver todos os clientes" },
+{ grupo:"Clientes", chave:"clientes_ver_apenas_atendidos", nome:"Ver apenas clientes atendidos por esse profissional" },
 
   { grupo:"Profissionais", chave:"profissionais_visualizar", nome:"Visualizar profissionais" },
   { grupo:"Profissionais", chave:"profissionais_adicionar", nome:"Adicionar profissionais" },
@@ -3767,6 +3771,8 @@ const permissoesPadraoSistema = [
 
   { grupo:"Comissões", chave:"comissoes_visualizar", nome:"Visualizar comissões" },
   { grupo:"Comissões", chave:"comissoes_pagar", nome:"Marcar comissão como paga" },
+  { grupo:"Comissões", chave:"comissoes_ver_todas", nome:"Ver comissão de todos os profissionais" },
+{ grupo:"Comissões", chave:"comissoes_ver_apenas_propria", nome:"Ver apenas a própria comissão" },
 
   { grupo:"Relatórios", chave:"rel_profissional", nome:"Abrir relatório de atendimento por profissional" },
   { grupo:"Relatórios", chave:"rel_pacotes_vencendo", nome:"Abrir relatório de pacotes vencendo" },
