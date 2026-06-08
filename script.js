@@ -4374,7 +4374,7 @@ async function carregarComissoes(){
   const hoje = formatarDataISO(new Date());
 
   lista.innerHTML = `
-    <div class="filtros" style="display:flex;gap:12px;align-items:end;flex-wrap:wrap;margin-bottom:18px;">
+   <div class="comissoes-filtros">
       <div>
         <label>Data inicial</label>
         <input id="comissaoDataInicio" type="date" value="${hoje}">
@@ -4433,15 +4433,15 @@ async function gerarComissoesPorPeriodo(){
     const profissional = comanda.profissionais?.nome || "Sem profissional";
     const cliente = comanda.clientes?.nome || "Cliente não informado";
 
-    if(!porProfissional[profissional]){
-      porProfissional[profissional] = {
-        totalComissao: 0,
-        totalAtendimentos: 0,
-        itens: []
-      };
-    }
-
     (comanda.comanda_itens || []).forEach((item)=>{
+
+      if(!porProfissional[profissional]){
+        porProfissional[profissional] = {
+          totalComissao: 0,
+          totalAtendimentos: 0,
+          itens: []
+        };
+      }
 
       const valorReal = Number(item.valor || 0);
       const percentual = Number(item.comissao_percentual || 0);
@@ -4473,36 +4473,37 @@ async function gerarComissoesPorPeriodo(){
   }
 
   area.innerHTML = `
-    <div class="linha-tabela cabecalho">
-      <span>Profissional</span>
-      <span>Atendimentos</span>
-      <span>Comissão total</span>
+    <div class="tabela-comissoes">
+      <div class="linha cabecalho">
+        <span>Profissional</span>
+        <span>Atendimentos</span>
+        <span>Comissão total</span>
+      </div>
+
+      ${profissionais.map((profissional)=>{
+
+        const dados = porProfissional[profissional];
+
+        return `
+          <div
+            class="linha"
+            style="cursor:pointer;"
+            onclick="abrirDetalheComissao('${profissional.replace(/'/g, "\\'")}')"
+          >
+            <span>${profissional}</span>
+            <span>${dados.totalAtendimentos}</span>
+            <span>${dinheiro(dados.totalComissao)}</span>
+          </div>
+
+          <div
+            id="detalheComissao_${normalizarClasse(profissional)}"
+            style="display:none;margin:10px 0 20px;"
+          ></div>
+        `;
+      }).join("")}
     </div>
-
-    ${profissionais.map(profissional=>{
-
-      const dados = porProfissional[profissional];
-
-      return `
-        <div
-          class="linha-tabela"
-          style="cursor:pointer;"
-          onclick="abrirDetalheComissao('${profissional.replace(/'/g, "\\'")}')"
-        >
-          <span>${profissional}</span>
-          <span>${dados.totalAtendimentos}</span>
-          <span>${dinheiro(dados.totalComissao)}</span>
-        </div>
-
-        <div
-          id="detalheComissao_${normalizarClasse(profissional)}"
-          style="display:none;margin:10px 0 20px;"
-        ></div>
-      `;
-    }).join("")}
   `;
 }
-
 function abrirDetalheComissao(profissional){
 
   const dados = window.comissoesPeriodoCache?.[profissional];
