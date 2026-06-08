@@ -4279,15 +4279,20 @@ async function salvarFaturamentoPacote(agendamentoId){
     return;
   }
 
-  await consumirPacoteSeNecessario(agendamento);
-
   const { data: saldoPacote } = await supabaseClient
     .from("pacotes_saldos")
     .select("*")
     .eq("id", agendamento.pacote_saldo_id)
     .single();
 
-  const valorSessao = Number(saldoPacote?.valor_sessao || agendamento.total || 0);
+  const valorSessao = Number(saldoPacote?.valor_sessao || 0);
+
+  if(valorSessao <= 0){
+    alert("Este pacote não possui valor por sessão cadastrado. Confira o cadastro do pacote.");
+    return;
+  }
+
+  await consumirPacoteSeNecessario(agendamento);
 
   const percentualComissao = await buscarPercentualComissao(
     agendamento.profissional_id,
@@ -4337,5 +4342,5 @@ async function salvarFaturamentoPacote(agendamentoId){
   fecharModal();
   carregarAgenda();
 
-  alert("Atendimento de pacote finalizado com sucesso.");
+  alert("Atendimento de pacote finalizado com comissão calculada.");
 }
