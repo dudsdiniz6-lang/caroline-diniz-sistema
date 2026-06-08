@@ -1036,6 +1036,17 @@ async function faturarAgendamento(id){
     alert("Agendamento não encontrado.");
     return;
   }
+  if(agendamento.usar_pacote){
+
+  const confirmar = confirm(
+    "Este atendimento será faturado usando crédito de pacote. Deseja finalizar automaticamente?"
+  );
+
+  if(!confirmar) return;
+
+  await salvarFaturamentoPacote(agendamento.id);
+  return;
+}
 
   const formasResp = await supabaseClient
     .from("formas_pagamento")
@@ -4251,4 +4262,80 @@ function calcularTotalPacote(){
   if(campoTotal){
     campoTotal.value = total.toFixed(2);
   }
+}
+async function salvarFaturamentoPacote(agendamentoId){
+
+  const { data: agendamento, error } = await supabaseClient
+    .from("agendamentos")
+    .select(`
+      *,
+      servicos(nome, comissao_padrao)
+    `)
+    .eq("id", agendamentoId)
+    .single();
+
+  if(error || !agendamento){
+    alert("Agendamento não encontrado.");
+    return;
+  }
+
+  await consumirPacoteSeNecessario(agendamento);
+
+  const { data: saldoPacote } = await supabaseClient
+    .from("pacotes_saldos")
+    .select("*")
+    .eq("id", agendamento.pacote_saldo_id)
+    .single();
+
+  const valorSessao = Number(saldoPacote?.valor_sessao || agendamento.total || 0);
+
+  const percentualComissao = await buscarPercentualComissao(
+    agendamento.profissional_id,
+    agendamento.servico_id,
+    agendamento.servicos?.comissao_padrao || 0
+  );
+
+  const comandaResp = await supabaseClient
+    .from("comandas")
+    .insert([{
+      unidade_id: unidadeAtualId,
+      agendamento_id: agendamento.id,
+      cliente_id: agendamento.cliente_id,
+      profissional_id: agendamento.profissional_id,
+      data: agendamento.data,
+      subtotal: valorSessao,
+      desconto: 0,
+      total: valorSessao,
+      status: "Fechada",
+      forma_origem: "pacote"
+    }])
+    .select()
+    .single();
+
+  if(comandaResp.error){
+    alert("Erro ao criar comanda do pacote: " + comandaResp.error.message);
+    return;
+  }
+
+  await supabaseClient
+    .from("comanda_itens")
+    .insert([{
+      comanda_id: comandaResp.data.id,
+      servico_id: agendamento.servico_id,
+      descricao: agendamento.servicos?.nome || "Serviço do pacote",
+      valor: valorSessao,
+      comissao_percentual: percentualComissao
+    }]);
+
+  await supabaseClient
+    .from("agendamentos")
+    .update({
+      status: "Finalizado"
+    })
+    .eq("id", agendamento.id);
+
+  fecharModal();
+  carregarAgenda();
+
+  alert("Atendimento de pacote finalizado com sucesso.");
 }
