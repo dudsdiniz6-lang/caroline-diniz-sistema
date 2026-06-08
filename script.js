@@ -4129,3 +4129,6 @@ async function carregarPermissoesUsuario(){
 function temPermissao(chave){
   return permissoesUsuario.includes(chave);
 }
+function pode(chave){
+  return temPermissao(chave);
+}
