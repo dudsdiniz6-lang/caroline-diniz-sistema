@@ -942,7 +942,8 @@ const alertasClienteHtml =
 
     <label>Observações</label>
     <textarea id="agObservacoes">${agendamento?.observacoes || ""}</textarea>
-    <label style="display:flex;gap:10px;align-items:center;">
+   ${pode("agenda_recorrencia") ? `
+<label style="display:flex;gap:10px;align-items:center;">
   <input
     id="agRepetir"
     type="checkbox"
@@ -953,6 +954,7 @@ const alertasClienteHtml =
 </label>
 
 <div id="areaRecorrenciaAgendamento">
+` : `<div id="areaRecorrenciaAgendamento" style="display:none;">`}
   <label>Intervalo entre repetições</label>
 
   <div style="display:flex;gap:8px;align-items:center;">
@@ -978,21 +980,23 @@ const alertasClienteHtml =
     value="${agendamento?.recorrencia_ate || ""}"
   >
 </div>
-    <button class="principal" onclick="salvarAgendamento()">
-      Salvar
-    </button>
+    ${(!id && pode("agenda_adicionar")) || (id && pode("agenda_editar")) ? `
+  <button class="principal" onclick="salvarAgendamento()">
+    Salvar
+  </button>
+` : ""}
 
-    ${id ? `
-      <button onclick="faturarAgendamento(${id})">
-        Faturar
-      </button>
-    ` : ""}
+${id && pode("agenda_faturar") ? `
+  <button onclick="faturarAgendamento(${id})">
+    Faturar
+  </button>
+` : ""}
 
-    ${id ? `
-      <button onclick="excluirAgendamento(${id})">
-        Excluir
-      </button>
-    ` : ""}
+${id && pode("agenda_excluir") ? `
+  <button onclick="excluirAgendamento(${id})">
+    Excluir
+  </button>
+` : ""}
 
     <button onclick="fecharModal()">
       Cancelar
