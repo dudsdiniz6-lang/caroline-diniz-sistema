@@ -1735,14 +1735,23 @@ async function confirmarVendaPacote(pacoteId){
     .eq("id", pacoteId)
     .single();
 
-  const itemResp = await supabaseClient
+  const itensResp = await supabaseClient
     .from("pacote_itens")
     .select("*")
-    .eq("pacote_id", pacoteId)
-    .single();
+    .eq("pacote_id", pacoteId);
 
   const pacote = pacoteResp.data;
-  const item = itemResp.data;
+  const itens = itensResp.data || [];
+
+  if(!pacote){
+    alert("Pacote não encontrado.");
+    return;
+  }
+
+  if(itens.length === 0){
+    alert("Este pacote não possui serviços cadastrados.");
+    return;
+  }
 
   const validade = new Date();
   validade.setDate(validade.getDate() + Number(pacote.validade_dias || 90));
@@ -1767,18 +1776,21 @@ async function confirmarVendaPacote(pacoteId){
 
   const pacoteCliente = pacoteClienteResp.data;
 
+  const saldosSalvar = itens.map(item=>({
+    pacote_cliente_id: pacoteCliente.id,
+    servico_id: item.servico_id,
+    quantidade_total: item.quantidade,
+    quantidade_usada: 0,
+    valor_sessao: item.valor_sessao || 0,
+    cancelado: false
+  }));
+
   const saldoResp = await supabaseClient
     .from("pacotes_saldos")
-    .insert([{
-      pacote_cliente_id: pacoteCliente.id,
-      servico_id: item.servico_id,
-      quantidade_total: item.quantidade,
-      quantidade_usada: 0,
-      cancelado: false
-    }]);
+    .insert(saldosSalvar);
 
   if(saldoResp.error){
-    alert("Erro ao criar saldo do pacote: " + saldoResp.error.message);
+    alert("Erro ao criar saldos do pacote: " + saldoResp.error.message);
     return;
   }
 
@@ -1820,7 +1832,7 @@ async function confirmarVendaPacote(pacoteId){
   fecharModal();
   carregarPacotes();
 
-  alert("Pacote vendido e saldo criado para a cliente.");
+  alert("Pacote vendido e saldos criados para todos os serviços.");
 }
 async function verificarPacoteDisponivel(){
 
