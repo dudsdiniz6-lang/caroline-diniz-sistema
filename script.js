@@ -942,45 +942,50 @@ const alertasClienteHtml =
 
     <label>Observações</label>
     <textarea id="agObservacoes">${agendamento?.observacoes || ""}</textarea>
-   ${pode("agenda_recorrencia") ? `
-<label style="display:flex;gap:10px;align-items:center;">
-  <input
-    id="agRepetir"
-    type="checkbox"
-    style="width:auto;height:auto;"
-    ${agendamento?.recorrencia_ativa ? "checked" : ""}
-  >
-  Repetir agendamento
-</label>
-
-<div id="areaRecorrenciaAgendamento">
-` : `<div id="areaRecorrenciaAgendamento" style="display:none;">`}
-  <label>Intervalo entre repetições</label>
-
-  <div style="display:flex;gap:8px;align-items:center;">
-    <button type="button" onclick="alterarIntervaloRecorrencia(-1)">-</button>
-
+  ${pode("agenda_recorrencia") ? `
+  <label style="display:flex;gap:10px;align-items:center;">
     <input
-      id="agIntervaloRepeticao"
-      type="number"
-      min="1"
-      value="${agendamento?.recorrencia_intervalo_dias || 7}"
-      style="width:100px;margin-bottom:0;"
+      id="agRepetir"
+      type="checkbox"
+      style="width:auto;height:auto;"
+      ${agendamento?.recorrencia_ativa ? "checked" : ""}
     >
+    Repetir agendamento
+  </label>
 
-    <button type="button" onclick="alterarIntervaloRecorrencia(1)">+</button>
+  <div id="areaRecorrenciaAgendamento">
+    <label>Intervalo entre repetições</label>
 
-    <span>dias</span>
+    <div style="display:flex;gap:8px;align-items:center;">
+      <button type="button" onclick="alterarIntervaloRecorrencia(-1)">-</button>
+
+      <input
+        id="agIntervaloRepeticao"
+        type="number"
+        min="1"
+        value="${agendamento?.recorrencia_intervalo_dias || 7}"
+        style="width:100px;margin-bottom:0;"
+      >
+
+      <button type="button" onclick="alterarIntervaloRecorrencia(1)">+</button>
+
+      <span>dias</span>
+    </div>
+
+    <label>Repetir até</label>
+    <input
+      id="agRepetirAte"
+      type="date"
+      value="${agendamento?.recorrencia_ate || ""}"
+    >
   </div>
+` : `
+  <input id="agRepetir" type="hidden">
+  <input id="agIntervaloRepeticao" type="hidden" value="7">
+  <input id="agRepetirAte" type="hidden">
+`}
 
-  <label>Repetir até</label>
-  <input
-    id="agRepetirAte"
-    type="date"
-    value="${agendamento?.recorrencia_ate || ""}"
-  >
-</div>
-    ${(!id && pode("agenda_adicionar")) || (id && pode("agenda_editar")) ? `
+${(!id && pode("agenda_adicionar")) || (id && pode("agenda_editar")) ? `
   <button class="principal" onclick="salvarAgendamento()">
     Salvar
   </button>
@@ -998,13 +1003,13 @@ ${id && pode("agenda_excluir") ? `
   </button>
 ` : ""}
 
-    <button onclick="fecharModal()">
-      Cancelar
-    </button>
-  `);
+<button onclick="fecharModal()">
+  Cancelar
+</button>
+`);
 
-  calcularTotalAgendamento();
-  carregarClientesParaBuscaAgendamento();
+calcularTotalAgendamento();
+carregarClientesParaBuscaAgendamento();
 }
 async function faturarAgendamento(id){
 
