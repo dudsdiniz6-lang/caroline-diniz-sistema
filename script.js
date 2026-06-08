@@ -3578,3 +3578,46 @@ async function carregarCentralAlertasConteudo(){
     </div>
   `;
 }
+async function buscarClientesEmRisco(){
+
+  const { data: clientes } = await supabaseClient
+    .from("clientes")
+    .select("*")
+    .eq("ativo", true);
+
+  const { data: comandas } = await supabaseClient
+    .from("comandas")
+    .select("*")
+    .order("data", { ascending:false });
+
+  const resultado = [];
+
+  (clientes || []).forEach(cliente => {
+
+    const ultimaComanda = (comandas || [])
+      .filter(c => String(c.cliente_id) === String(cliente.id))
+      .sort((a,b)=>new Date(b.data) - new Date(a.data))[0];
+
+    if(!ultimaComanda) return;
+
+    const diasSemVir = Math.floor(
+      (new Date() - new Date(ultimaComanda.data))
+      / (1000 * 60 * 60 * 24)
+    );
+
+    if(diasSemVir >= 60){
+
+      resultado.push({
+        cliente,
+        diasSemVir,
+        ultimaData: ultimaComanda.data
+      });
+
+    }
+
+  });
+
+  return resultado.sort((a,b)=>
+    b.diasSemVir - a.diasSemVir
+  );
+}
