@@ -2118,11 +2118,10 @@ async function excluirAgendamento(id){
   }
 
   const { data: comanda } = await supabaseClient
-    .from("comandas")
-    .select("*")
-    .eq("agendamento_id", id)
-    .maybeSingle();
-
+  .from("comandas")
+  .select("*")
+  .eq("agendamento_id", id)
+  .maybeSingle();
   if(comanda){
 
     const confirmar = confirm(
@@ -2177,8 +2176,10 @@ async function excluirAgendamento(id){
 
     resposta = await supabaseClient
       .from("agendamentos")
-      .delete()
-      .eq("id", id);
+     .update({
+  status: "Cancelado"
+})
+.eq("id", id);
 
   }
 
