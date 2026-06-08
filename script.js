@@ -15,7 +15,7 @@ function formatarDataISO(data){
   return data.toISOString().split("T")[0];
 }
 
-function dinheiro(vasync function abrirPerfilAcesso(nomePerfil){alor){
+function dinheiro(valor){
   return `R$ ${Number(valor || 0).toFixed(2)}`;
 }
 
