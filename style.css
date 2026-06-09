@@ -632,103 +632,15 @@ textarea{
   color:#333;
   margin-bottom:3px;
 }
-/* AGENDA PREMIUM - CABEÇALHO FIXO E ROLAGEM HORIZONTAL */
-
-.agenda-topo-fixo {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 16px;
-  margin: 18px 0 22px;
-  flex-wrap: wrap;
+.acoes-busca-agenda{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  margin-bottom:20px;
+  flex-wrap:wrap;
 }
 
-.agenda-topo-esquerda,
-.agenda-topo-direita {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-
-#buscaAgenda {
-  width: 280px;
-  height: 42px;
-  border-radius: 10px;
-}
-
-.agenda-topo-direita button,
-.agenda-topo-direita input {
-  height: 42px;
-}
-
-.agenda-scroll {
-  width: 100%;
-  max-width: calc(100vw - 250px);
-  overflow: auto;
-  border-radius: 18px;
-  background: #fff;
-  border: 1px solid #eee;
-}
-
-.agenda-profissional-wrapper {
-  display: flex;
-  width: max-content;
-  min-width: 100%;
-}
-
-.agenda-coluna-horarios {
-  width: 90px;
-  min-width: 90px;
-  position: sticky;
-  left: 0;
-  z-index: 8;
-  background: #fff;
-  border-right: 1px solid #e5e5e5;
-}
-
-.agenda-coluna-profissional {
-  width: 230px;
-  min-width: 230px;
-  border-right: 1px solid #eee;
-  position: relative;
-}
-
-.agenda-cabecalho {
-  height: 58px;
-  padding: 0 14px;
-  display: flex;
-  align-items: center;
-  font-weight: 700;
-  background: #fff;
-  border-bottom: 1px solid #eee;
-  position: sticky;
-  top: 0;
-  z-index: 7;
-}
-
-.agenda-coluna-horarios .agenda-cabecalho {
-  z-index: 10;
-}
-
-.agenda-horario {
-  height: 80px;
-  padding: 12px 10px;
-  font-size: 12px;
-  color: #6b6b6b;
-  border-bottom: 1px solid #eee;
-  background: #fff;
-}
-
-.agenda-coluna-corpo {
-  position: relative;
-}
-
-.agenda-slot {
-  height: 80px;
-  border-bottom: 1px solid #eee;
-  cursor: pointer;
-}
-
-.agenda-slot:hover {
-  background: #faf7f4;
+.acoes-busca-agenda #buscaAgenda{
+  width:320px;
+  margin:0;
 }
