@@ -4904,3 +4904,36 @@ function horarioParaMinutos(horario){
 
   return (h * 60) + m;
 }
+async function criarBloqueiosRecorrentes(dadosBase){
+
+  if(!dadosBase.recorrencia_ate) return;
+
+  const inicio = new Date(dadosBase.data + "T00:00:00");
+  const fim = new Date(dadosBase.recorrencia_ate + "T00:00:00");
+
+  let dataAtual = adicionarDias(
+    inicio,
+    Number(dadosBase.recorrencia_intervalo_dias || 7)
+  );
+
+  const bloqueios = [];
+
+  while(dataAtual <= fim){
+
+    bloqueios.push({
+      ...dadosBase,
+      data: formatarDataISO(dataAtual)
+    });
+
+    dataAtual = adicionarDias(
+      dataAtual,
+      Number(dadosBase.recorrencia_intervalo_dias || 7)
+    );
+  }
+
+  if(bloqueios.length > 0){
+    await supabaseClient
+      .from("bloqueios_agenda")
+      .insert(bloqueios);
+  }
+}
