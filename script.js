@@ -1402,6 +1402,17 @@ async function carregarCaixas(){
         <h3>${caixa.data}</h3>
         <p>Abertura: ${dinheiro(caixa.abertura)}</p>
         <small>Status: ${caixa.status}</small>
+        <br><br>
+
+${caixa.status === "Aberto" ? `
+  <button class="principal" onclick="abrirReforcoCaixa(${caixa.id})">
+    Reforço
+  </button>
+
+  <button onclick="abrirSangriaCaixa(${caixa.id})">
+    Sangria
+  </button>
+` : ""}
       </div>
     `;
 
