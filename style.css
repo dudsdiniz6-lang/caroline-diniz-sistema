@@ -594,3 +594,22 @@ textarea{
 .comissao-detalhe-tabela .linha:hover{
   background:#fff8f3;
 }
+.form-grid-2{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:12px 14px;
+}
+
+.form-grid-2 > div{
+  display:flex;
+  flex-direction:column;
+}
+
+.form-grid-2 label{
+  margin-bottom:6px;
+}
+
+.form-grid-2 input,
+.form-grid-2 select{
+  margin-bottom:0;
+}
