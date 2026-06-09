@@ -705,25 +705,26 @@ async function carregarAgenda(){
     .from("agendamentos")
     .select(`
       *,
-     clientes(nome, telefone, vip),
+      clientes(nome, telefone, vip),
       profissionais(nome),
       servicos(nome, duracao, valor)
     `)
     .eq("data", formatarDataISO(dataAgenda))
     .order("horario");
+
   const bloqueiosResp = await supabaseClient
-  .from("bloqueios_agenda")
-  .select("*")
-  .eq("ativo", true)
-  .eq("data", formatarDataISO(dataAgenda));
+    .from("bloqueios_agenda")
+    .select("*")
+    .eq("ativo", true)
+    .eq("data", formatarDataISO(dataAgenda));
 
- const profissionais = profissionaisResp.data || [];
-let agendamentos = agendamentosResp.data || [];
-const bloqueios = bloqueiosResp.data || [];
+  const profissionais = profissionaisResp.data || [];
+  let agendamentos = agendamentosResp.data || [];
+  const bloqueios = bloqueiosResp.data || [];
 
-agendamentos = agendamentos.filter(a =>
-  a.status !== "Cancelado"
-);
+  agendamentos = agendamentos.filter(a =>
+    a.status !== "Cancelado"
+  );
 
   if(busca){
     agendamentos = agendamentos.filter(item =>
@@ -740,97 +741,139 @@ agendamentos = agendamentos.filter(a =>
   const alturaAgenda = horarios.length * 80;
 
   grade.innerHTML = `
-    <div class="agenda-profissional-wrapper">
-
-      <div class="agenda-coluna-horarios">
-        <div class="agenda-cabecalho">Horário</div>
-        ${horarios.map(h=>`
-          <div class="agenda-horario">${h}</div>
-        `).join("")}
+    <div class="agenda-topo-fixo">
+      <div class="agenda-topo-esquerda">
+        <input
+          id="buscaAgendaVisual"
+          placeholder="Buscar cliente..."
+          value="${busca}"
+          oninput="
+            document.getElementById('buscaAgenda').value = this.value;
+            carregarAgenda();
+          "
+        >
       </div>
 
-      ${profissionais.map(profissional=>{
+      <div class="agenda-topo-direita">
+        <button onclick="voltarDia()">◀</button>
+        <button onclick="irHoje()">Hoje</button>
+        <button onclick="avancarDia()">▶</button>
 
-        const agendaProf = agendamentos.filter(a =>
-          String(a.profissional_id) === String(profissional.id)
-        );
-        const bloqueiosProf = bloqueios.filter(b =>
-  String(b.profissional_id) === String(profissional.id)
-);
+        <input
+          id="calendarioAgendaVisual"
+          type="date"
+          value="${formatarDataISO(dataAgenda)}"
+          onchange="
+            dataAgenda = new Date(this.value + 'T00:00:00');
+            atualizarTextoDataAgenda();
+            carregarAgenda();
+          "
+        >
 
-        return `
-          <div class="agenda-coluna-profissional">
-
-            <div class="agenda-cabecalho">
-              ${profissional.nome}
-            </div>
-
-            <div class="agenda-coluna-corpo" style="height:${alturaAgenda}px;">
-
-              ${horarios.map(h=>`
-                <div 
-                  class="agenda-slot"
-                 onclick="abrirOpcoesHorarioAgenda('${profissional.id}', '${h}')"
-                ></div>
-              `).join("")}
-${bloqueiosProf.map(b=>{
-
-  const top = calcularTopAgenda(String(b.horario_inicio).slice(0,5));
-
-  const inicioMin = horarioParaMinutos(String(b.horario_inicio).slice(0,5));
-  const fimMin = horarioParaMinutos(String(b.horario_fim).slice(0,5));
-  const duracao = fimMin - inicioMin;
-
-  const altura = Math.max((duracao / 30) * 80 - 8, 50);
-
-  return `
-    <div
-      class="agenda-bloqueio-card"
-      style="top:${top + 4}px; height:${altura}px;"
-      onclick="event.stopPropagation(); abrirModalBloqueioAgenda(${b.id})"
-    >
-      <strong>Bloqueado</strong>
-      <span>${b.motivo || "Indisponível"}</span>
-      <small>
-        ${formatarHorarioBonito(String(b.horario_inicio).slice(0,5))}
-        -
-        ${formatarHorarioBonito(String(b.horario_fim).slice(0,5))}
-      </small>
+        <button class="principal" onclick="abrirModalAgendamento()">
+          Novo agendamento
+        </button>
+      </div>
     </div>
-  `;
-}).join("")}
-              ${agendaProf.map(a=>{
 
-                const top = calcularTopAgenda(a.horario);
-                const altura = Math.max((Number(a.duracao || 30) / 30) * 80 - 8, 70);
-                const fim = somarMinutosHorario(a.horario, a.duracao || 30);
+    <div class="agenda-scroll">
+      <div class="agenda-profissional-wrapper">
 
-                return `
-                  <div 
-                    class="agendamento-card status-${normalizarClasse(a.status)}"
-                    style="top:${top + 4}px; height:${altura}px;"
-                    onclick="event.stopPropagation(); abrirModalAgendamento(${a.id})"
-                  >
-${(a.clientes?.vip === true || a.clientes?.vip === "true") ? `<div class="selo-vip-agenda">⭐ VIP</div>` : ""}
-<strong>
-  ${a.recorrencia_id ? "🔁 " : ""}
-  ${a.clientes?.nome || "Cliente"}
-</strong>         <span>${a.servicos?.nome || "Serviço"}</span>
-                    <small>${formatarHorarioBonito(a.horario)} - ${formatarHorarioBonito(fim)}</small>
-                    <em>${a.status || "Agendado"}</em>
-                  </div>
-                `;
-              }).join("")}
+        <div class="agenda-coluna-horarios">
+          <div class="agenda-cabecalho">Horário</div>
+          ${horarios.map(h=>`
+            <div class="agenda-horario">${h}</div>
+          `).join("")}
+        </div>
 
+        ${profissionais.map(profissional=>{
+
+          const agendaProf = agendamentos.filter(a =>
+            String(a.profissional_id) === String(profissional.id)
+          );
+
+          const bloqueiosProf = bloqueios.filter(b =>
+            String(b.profissional_id) === String(profissional.id)
+          );
+
+          return `
+            <div class="agenda-coluna-profissional">
+
+              <div class="agenda-cabecalho">
+                ${profissional.nome}
+              </div>
+
+              <div class="agenda-coluna-corpo" style="height:${alturaAgenda}px;">
+
+                ${horarios.map(h=>`
+                  <div
+                    class="agenda-slot"
+                    onclick="abrirOpcoesHorarioAgenda('${profissional.id}', '${h}')"
+                  ></div>
+                `).join("")}
+
+                ${bloqueiosProf.map(b=>{
+
+                  const top = calcularTopAgenda(String(b.horario_inicio).slice(0,5));
+
+                  const inicioMin = horarioParaMinutos(String(b.horario_inicio).slice(0,5));
+                  const fimMin = horarioParaMinutos(String(b.horario_fim).slice(0,5));
+                  const duracao = fimMin - inicioMin;
+
+                  const altura = Math.max((duracao / 30) * 80 - 8, 50);
+
+                  return `
+                    <div
+                      class="agenda-bloqueio-card"
+                      style="top:${top + 4}px; height:${altura}px;"
+                      onclick="event.stopPropagation(); abrirModalBloqueioAgenda(${b.id})"
+                    >
+                      <strong>Bloqueado</strong>
+                      <span>${b.motivo || "Indisponível"}</span>
+                      <small>
+                        ${formatarHorarioBonito(String(b.horario_inicio).slice(0,5))}
+                        -
+                        ${formatarHorarioBonito(String(b.horario_fim).slice(0,5))}
+                      </small>
+                    </div>
+                  `;
+                }).join("")}
+
+                ${agendaProf.map(a=>{
+
+                  const top = calcularTopAgenda(a.horario);
+                  const altura = Math.max((Number(a.duracao || 30) / 30) * 80 - 8, 70);
+                  const fim = somarMinutosHorario(a.horario, a.duracao || 30);
+
+                  return `
+                    <div
+                      class="agendamento-card status-${normalizarClasse(a.status)}"
+                      style="top:${top + 4}px; height:${altura}px;"
+                      onclick="event.stopPropagation(); abrirModalAgendamento(${a.id})"
+                    >
+                      ${(a.clientes?.vip === true || a.clientes?.vip === "true") ? `<div class="selo-vip-agenda">⭐ VIP</div>` : ""}
+
+                      <strong>
+                        ${a.recorrencia_id ? "🔁 " : ""}
+                        ${a.clientes?.nome || "Cliente"}
+                      </strong>
+
+                      <span>${a.servicos?.nome || "Serviço"}</span>
+                      <small>${formatarHorarioBonito(a.horario)} - ${formatarHorarioBonito(fim)}</small>
+                      <em>${a.status || "Agendado"}</em>
+                    </div>
+                  `;
+                }).join("")}
+
+              </div>
             </div>
-          </div>
-        `;
-      }).join("")}
+          `;
+        }).join("")}
 
+      </div>
     </div>
   `;
 }
-
 function calcularTopAgenda(horario){
 
   const [hora, minuto] = horario.split(":").map(Number);
