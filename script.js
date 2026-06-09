@@ -5501,3 +5501,54 @@ async function salvarMovimentacaoCaixa(caixaId, tipo){
 
   alert("Movimentação registrada.");
 }
+async function abrirFechamentoCaixa(caixaId){
+
+  const { data: caixa } = await supabaseClient
+    .from("caixas")
+    .select("*")
+    .eq("id", caixaId)
+    .single();
+
+  const { data: movs } = await supabaseClient
+    .from("caixa_movimentacoes")
+    .select("*")
+    .eq("caixa_id", caixaId)
+    .neq("cancelada", true);
+
+  const movimentacoes = movs || [];
+
+  const entradas = movimentacoes
+    .filter(m => m.tipo === "Entrada")
+    .reduce((soma, m) => soma + Number(m.valor || 0), 0);
+
+  const saidas = movimentacoes
+    .filter(m => m.tipo === "Saída")
+    .reduce((soma, m) => soma + Number(m.valor || 0), 0);
+
+  const esperado =
+    Number(caixa?.abertura || 0) + entradas - saidas;
+
+  abrirModal(`
+    <h2>Fechar caixa</h2>
+
+    <p><strong>Abertura:</strong> ${dinheiro(caixa?.abertura || 0)}</p>
+    <p><strong>Entradas:</strong> ${dinheiro(entradas)}</p>
+    <p><strong>Saídas:</strong> ${dinheiro(saidas)}</p>
+
+    <hr>
+
+    <p><strong>Total esperado:</strong> ${dinheiro(esperado)}</p>
+
+    <label>Valor contado no caixa</label>
+    <input id="valorFechamentoCaixa" type="number" value="${esperado.toFixed(2)}">
+
+    <label>Observação</label>
+    <textarea id="observacaoFechamentoCaixa"></textarea>
+
+    <button class="principal" onclick="confirmarFechamentoCaixa(${caixaId}, ${esperado})">
+      Confirmar fechamento
+    </button>
+
+    <button onclick="fecharModal()">Cancelar</button>
+  `);
+}
