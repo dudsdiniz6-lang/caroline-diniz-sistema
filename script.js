@@ -1381,8 +1381,9 @@ async function carregarCaixas(){
   lista.innerHTML = "";
 
   const { data, error } = await supabaseClient
-    .from("caixas")
-    .select("*")
+   .from("caixas")
+.select("*")
+.neq("status", "Excluído")
     .order("id", { ascending:false });
 
   if(error){
@@ -3946,7 +3947,9 @@ const permissoesPadraoSistema = [
   { grupo:"Agenda", chave:"agenda_faturar", nome:"Faturar atendimentos" },
   { grupo:"Agenda", chave:"agenda_recorrencia", nome:"Criar agendamentos recorrentes" },
   { grupo:"Agenda", chave:"agenda_ver_todas_profissionais", nome:"Ver agenda de todas as profissionais" },
-{ grupo:"Agenda", chave:"agenda_ver_apenas_propria", nome:"Ver apenas a própria agenda" },
+  { grupo:"Agenda", chave:"agenda_ver_apenas_propria", nome:"Ver apenas a própria agenda" },
+
+  { grupo:"Caixa", chave:"caixa_excluir", nome:"Excluir caixa" },
 
   { grupo:"Clientes", chave:"clientes_visualizar", nome:"Visualizar clientes" },
   { grupo:"Clientes", chave:"clientes_adicionar", nome:"Adicionar novos clientes" },
@@ -5584,4 +5587,33 @@ async function confirmarFechamentoCaixa(caixaId, esperado){
   carregarCaixas();
 
   alert("Caixa fechado com sucesso.");
+}
+async function excluirCaixa(caixaId){
+
+  if(!pode("caixa_excluir")){
+    alert("Você não tem permissão para excluir caixa.");
+    return;
+  }
+
+  const confirmar = confirm(
+    "Deseja realmente excluir este caixa?"
+  );
+
+  if(!confirmar) return;
+
+  const { error } = await supabaseClient
+    .from("caixas")
+    .update({
+      status: "Excluído"
+    })
+    .eq("id", caixaId);
+
+  if(error){
+    alert("Erro ao excluir caixa: " + error.message);
+    return;
+  }
+
+  carregarCaixas();
+
+  alert("Caixa excluído.");
 }
