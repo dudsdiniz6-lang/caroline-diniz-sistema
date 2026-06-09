@@ -3785,36 +3785,75 @@ async function carregarConfiguracoes(){
   const diasRisco =
     data?.find(c => c.chave === "clientes_em_risco_dias")
       ?.valor || "60";
+  const horaInicio =
+  data?.find(c => c.chave === "agenda_hora_inicio")
+    ?.valor || "07:00";
 
-  area.innerHTML = `
+const horaFim =
+  data?.find(c => c.chave === "agenda_hora_fim")
+    ?.valor || "20:00";
 
-    <div class="card">
+const alturaBloco =
+  data?.find(c => c.chave === "agenda_altura_bloco")
+    ?.valor || "48";
 
-      <h3>Clientes em risco</h3>
+area.innerHTML = `
 
-      <label>
-        Considerar cliente em risco após quantos dias sem retorno?
-      </label>
+  <div class="card">
 
-      <input
-        id="cfgClientesRiscoDias"
-        type="number"
-        value="${diasRisco}"
-      >
+    <h3>Clientes em risco</h3>
 
-      <br><br>
+    <label>
+      Considerar cliente em risco após quantos dias sem retorno?
+    </label>
 
-      <button
-        class="principal"
-        onclick="salvarConfiguracoes()"
-      >
-        Salvar
-      </button>
+    <input
+      id="cfgClientesRiscoDias"
+      type="number"
+      value="${diasRisco}"
+    >
 
-    </div>
+  </div>
 
-  `;
-}
+  <div class="card">
+
+    <h3>Agenda</h3>
+
+    <label>Horário inicial exibido</label>
+    <input
+      id="cfgAgendaHoraInicio"
+      type="time"
+      value="${horaInicio}"
+    >
+
+    <label>Horário final exibido</label>
+    <input
+      id="cfgAgendaHoraFim"
+      type="time"
+      value="${horaFim}"
+    >
+
+    <label>Altura visual dos horários</label>
+    <input
+      id="cfgAgendaAlturaBloco"
+      type="number"
+      value="${alturaBloco}"
+    >
+
+  </div>
+
+  <div class="card">
+
+    <button
+      class="principal"
+      onclick="salvarConfiguracoes()"
+    >
+      Salvar
+    </button>
+
+  </div>
+
+`;
 async function salvarConfiguracoes(){
 
   const dias =
