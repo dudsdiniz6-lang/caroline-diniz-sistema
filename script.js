@@ -5066,3 +5066,115 @@ async function excluirBloqueioAgenda(id){
 
   alert("Bloqueio excluído.");
 }
+async function abrirFaturamentoClienteDia(agendamentoId){
+
+  const { data: agendamentoBase, error } = await supabaseClient
+    .from("agendamentos")
+    .select(`
+      *,
+      clientes(nome),
+      servicos(nome)
+    `)
+    .eq("id", agendamentoId)
+    .single();
+
+  if(error || !agendamentoBase){
+    alert("Agendamento não encontrado.");
+    return;
+  }
+
+  const { data: agendamentosDia } = await supabaseClient
+    .from("agendamentos")
+    .select(`
+      *,
+      servicos(nome, comissao_padrao),
+      profissionais(nome)
+    `)
+    .eq("cliente_id", agendamentoBase.cliente_id)
+    .eq("data", agendamentoBase.data)
+    .neq("status", "Finalizado")
+    .neq("status", "Cancelado")
+    .order("horario");
+
+  const itens = agendamentosDia || [];
+
+  if(itens.length === 0){
+    alert("Não há serviços pendentes para faturar desta cliente neste dia.");
+    return;
+  }
+
+  abrirModal(`
+    <h2>Faturar cliente</h2>
+
+    <p><strong>Cliente:</strong> ${agendamentoBase.clientes?.nome || "-"}</p>
+    <p><strong>Data:</strong> ${formatarDataComanda(agendamentoBase.data)}</p>
+
+    <br>
+
+    <div id="listaItensFaturamentoCliente">
+
+      ${itens.map(item=>`
+        <label
+          style="display:grid;grid-template-columns:30px 1fr 100px;gap:10px;align-items:center;border-bottom:1px solid #eee;padding:10px 0;"
+        >
+          <input
+            type="checkbox"
+            class="itemFaturamentoCliente"
+            value="${item.id}"
+            data-total="${item.usar_pacote ? 0 : Number(item.total || 0)}"
+            checked
+            onchange="calcularTotalFaturamentoCliente()"
+            style="width:auto;height:auto;"
+          >
+
+          <span>
+            <strong>${item.servicos?.nome || "Serviço"}</strong><br>
+            <small>
+              ${item.profissionais?.nome || "Profissional"}
+              • ${formatarHorarioBonito(item.horario)}
+              ${item.usar_pacote ? " • Pacote" : ""}
+            </small>
+          </span>
+
+          <strong>
+            ${item.usar_pacote ? dinheiro(0) : dinheiro(item.total || 0)}
+          </strong>
+        </label>
+      `).join("")}
+
+    </div>
+
+    <br>
+
+    <h3>Total: <span id="totalFaturamentoCliente">R$ 0,00</span></h3>
+
+    <br>
+
+    <button class="principal" onclick="confirmarFaturamentoClienteDia()">
+      Continuar para pagamento
+    </button>
+
+    <button onclick="fecharModal()">
+      Cancelar
+    </button>
+  `);
+
+  window.itensFaturamentoClienteCache = itens;
+
+  calcularTotalFaturamentoCliente();
+}
+
+function calcularTotalFaturamentoCliente(){
+
+  let total = 0;
+
+  document.querySelectorAll(".itemFaturamentoCliente:checked").forEach(item=>{
+    total += Number(item.dataset.total || 0);
+  });
+
+  const campo = document.getElementById("totalFaturamentoCliente");
+
+  if(campo){
+    campo.innerText = dinheiro(total);
+  }
+}
