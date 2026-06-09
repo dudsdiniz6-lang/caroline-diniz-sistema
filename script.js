@@ -1411,7 +1411,19 @@ async function carregarCaixas(){
 
 async function abrirCaixa(){
 
-  const valor = Number(prompt("Valor de abertura do caixa:") || 0);
+  const caixaAberto = await buscarCaixaAberto();
+
+  if(caixaAberto){
+    alert("Já existe um caixa aberto. Feche o caixa atual antes de abrir outro.");
+    return;
+  }
+
+  const valor = Number(prompt("Informe o valor de abertura do caixa:") || 0);
+
+  if(valor <= 0){
+    alert("O valor de abertura precisa ser maior que zero.");
+    return;
+  }
 
   const { error } = await supabaseClient
     .from("caixas")
@@ -1429,7 +1441,7 @@ async function abrirCaixa(){
 
   carregarCaixas();
 
-  alert("Caixa aberto.");
+  alert("Caixa aberto com sucesso.");
 }
 async function buscarCaixaAberto(){
 
