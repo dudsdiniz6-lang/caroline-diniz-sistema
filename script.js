@@ -4731,3 +4731,68 @@ function abrirOpcoesHorarioAgenda(profissionalId, horario){
     </button>
   `);
 }
+async function abrirModalBloqueioAgenda(id = null, profissionalPre = "", horarioPre = ""){
+
+  abrirModal(`
+    <h2>Bloquear horário</h2>
+
+    <input id="bloqueioProfissional" type="hidden" value="${profissionalPre}">
+
+    <label>Horário de início do bloqueio</label>
+    <input id="bloqueioInicio" type="time" value="${horarioPre || "12:00"}">
+
+    <label>Horário final do bloqueio</label>
+    <input id="bloqueioFim" type="time" value="13:00">
+
+    <label>Descrição do bloqueio</label>
+    <input
+      id="bloqueioMotivo"
+      placeholder="Ex: Almoço, Reunião, Folga"
+    >
+
+    <button class="principal" onclick="salvarBloqueioAgenda()">
+      Salvar bloqueio
+    </button>
+
+    <button onclick="fecharModal()">
+      Cancelar
+    </button>
+  `);
+}
+
+async function salvarBloqueioAgenda(){
+
+  const profissionalId =
+    document.getElementById("bloqueioProfissional").value;
+
+  const inicio =
+    document.getElementById("bloqueioInicio").value;
+
+  const fim =
+    document.getElementById("bloqueioFim").value;
+
+  const motivo =
+    document.getElementById("bloqueioMotivo").value.trim();
+
+  const { error } = await supabaseClient
+    .from("bloqueios_agenda")
+    .insert([{
+      unidade_id: unidadeAtualId,
+      profissional_id: profissionalId,
+      data: formatarDataISO(dataAgenda),
+      horario_inicio: inicio,
+      horario_fim: fim,
+      motivo,
+      ativo: true
+    }]);
+
+  if(error){
+    alert(error.message);
+    return;
+  }
+
+  fecharModal();
+  carregarAgenda();
+
+  alert("Bloqueio criado.");
+}
