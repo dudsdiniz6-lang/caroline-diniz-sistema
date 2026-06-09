@@ -46,43 +46,46 @@
 
    <main class="main">
 
-  <section id="tela-agenda" class="tela ativa">
-    <div class="topo">
-      <div>
-        <h1>Agenda</h1>
-        <div id="resumoAlertasAgenda"></div>
-        <p id="dataAgendaTexto"></p>
-      </div>
+ <section id="tela-agenda" class="tela ativa">
+
+  <div class="topo agenda-topo">
+    <div>
+      <h1>Agenda</h1>
+      <div id="resumoAlertasAgenda"></div>
+      <p id="dataAgendaTexto"></p>
     </div>
 
-    <div class="acoes-busca-agenda">
+    <div class="agenda-acoes-topo">
+      <button onclick="voltarDia()">◀</button>
+      <button onclick="irHoje()">Hoje</button>
+      <button onclick="avancarDia()">▶</button>
+
       <input
-        id="buscaAgenda"
-        placeholder="Buscar cliente..."
-        oninput="carregarAgenda()"
-      />
+        id="calendarioAgenda"
+        type="date"
+        onchange="mudarDataAgendaPeloCalendario()"
+      >
 
-  <button onclick="voltarDia()">◀</button>
-  <button onclick="irHoje()">Hoje</button>
-  <button onclick="avancarDia()">▶</button>
+      <button
+        class="principal"
+        onclick="abrirModalAgendamento()"
+      >
+        Novo agendamento
+      </button>
+    </div>
+  </div>
 
-  <input
-    id="calendarioAgenda"
-    type="date"
-    onchange="mudarDataAgendaPeloCalendario()"
-  >
+  <div class="agenda-busca-linha">
+    <input
+      id="buscaAgenda"
+      placeholder="Buscar cliente..."
+      oninput="carregarAgenda()"
+    />
+  </div>
 
-  <button
-    class="principal"
-    onclick="abrirModalAgendamento()"
-  >
-    Novo agendamento
-  </button>
-</div>
+  <div id="agendaGrade" class="agenda-grade"></div>
 
-        <div id="agendaGrade" class="agenda-grade"></div>
-      </section>
-
+</section>
       <section id="tela-clientes" class="tela">
         <div class="topo">
           <h1>Clientes</h1>
