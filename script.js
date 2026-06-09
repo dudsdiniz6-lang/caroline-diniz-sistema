@@ -5275,3 +5275,129 @@ async function carregarFormasPagamentoNosSelects(){
     `;
   });
 }
+async function salvarFaturamentoClienteDiaPago(){
+
+  const tipoRecebimento =
+    document.getElementById("fatTipoRecebimento").value;
+
+  const itensPagos =
+    window.itensFaturamentoClienteSelecionados || [];
+
+  const totalReceber =
+    Number(window.totalFaturamentoClienteSelecionado || 0);
+
+  const pagamentosInformados = Array.from(
+    document.querySelectorAll(".linha-pagamento")
+  ).map(linha => ({
+    formaPagamentoId: Number(linha.querySelector(".fatFormaPagamento").value),
+    formaNome: linha.querySelector(".fatFormaPagamento").selectedOptions[0]?.dataset.nome || "",
+    valor: Number(linha.querySelector(".fatValorPagamento").value || 0)
+  })).filter(p => p.formaPagamentoId && p.valor > 0);
+
+  if(tipoRecebimento === "receber_agora"){
+
+    if(pagamentosInformados.length === 0){
+      alert("Informe pelo menos uma forma de pagamento.");
+      return;
+    }
+
+    const totalPagamentos = pagamentosInformados
+      .reduce((soma, p) => soma + Number(p.valor || 0), 0);
+
+    if(Number(totalPagamentos.toFixed(2)) !== Number(totalReceber.toFixed(2))){
+      alert("A soma dos pagamentos precisa ser igual ao total selecionado.");
+      return;
+    }
+
+  }
+
+  for(const item of itensPagos){
+
+    const percentualComissao = await buscarPercentualComissao(
+      item.profissional_id,
+      item.servico_id,
+      item.servicos?.comissao_padrao || 0
+    );
+
+    const comandaResp = await supabaseClient
+      .from("comandas")
+      .insert([{
+        unidade_id: unidadeAtualId,
+        agendamento_id: item.id,
+        cliente_id: item.cliente_id,
+        profissional_id: item.profissional_id,
+        data: item.data,
+        subtotal: item.valor,
+        desconto: item.desconto,
+        total: item.total,
+        status: tipoRecebimento === "receber_agora" ? "Fechada" : "Aberta"
+      }])
+      .select()
+      .single();
+
+    if(comandaResp.error){
+      alert("Erro ao criar comanda: " + comandaResp.error.message);
+      return;
+    }
+
+    const comanda = comandaResp.data;
+
+    await supabaseClient
+      .from("comanda_itens")
+      .insert([{
+        comanda_id: comanda.id,
+        servico_id: item.servico_id,
+        descricao: item.servicos?.nome || "Serviço",
+        valor: item.total,
+        comissao_percentual: percentualComissao
+      }]);
+
+    if(tipoRecebimento === "receber_agora"){
+
+      for(const pagamento of pagamentosInformados){
+
+        const proporcao =
+          totalReceber > 0
+            ? Number(item.total || 0) / totalReceber
+            : 0;
+
+        const valorPagamentoItem =
+          Number((pagamento.valor * proporcao).toFixed(2));
+
+        await supabaseClient
+          .from("pagamentos")
+          .insert([{
+            comanda_id: comanda.id,
+            forma_pagamento_id: pagamento.formaPagamentoId,
+            valor: valorPagamentoItem,
+            data: item.data
+          }]);
+
+        if(pagamento.formaNome !== "Crédito da Cliente"){
+
+          await registrarEntradaCaixa(
+            comanda.id,
+            pagamento.formaPagamentoId,
+            valorPagamentoItem
+          );
+
+        }
+
+      }
+
+    }
+
+    await supabaseClient
+      .from("agendamentos")
+      .update({
+        status: "Finalizado"
+      })
+      .eq("id", item.id);
+
+  }
+
+  fecharModal();
+  carregarAgenda();
+
+  alert("Faturamento concluído com sucesso.");
+}
