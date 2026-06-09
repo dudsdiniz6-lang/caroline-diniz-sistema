@@ -4822,39 +4822,76 @@ async function abrirModalBloqueioAgenda(id = null, profissionalPre = "", horario
 
 async function salvarBloqueioAgenda(){
 
-  const profissionalId =
-    document.getElementById("bloqueioProfissional").value;
+  const id = document.getElementById("bloqueioId").value;
 
-  const inicio =
-    document.getElementById("bloqueioInicio").value;
+  const repetir = document.getElementById("bloqueioRepetir")?.checked || false;
+  const repetirAte = document.getElementById("bloqueioRepetirAte")?.value || null;
+  const intervalo = Number(document.getElementById("bloqueioIntervalo")?.value || 7);
 
-  const fim =
-    document.getElementById("bloqueioFim").value;
+  const dados = {
+    unidade_id: unidadeAtualId,
+    profissional_id: Number(document.getElementById("bloqueioProfissional").value),
+    data: document.getElementById("bloqueioData").value,
+    horario_inicio: document.getElementById("bloqueioInicio").value,
+    horario_fim: document.getElementById("bloqueioFim").value,
+    motivo: document.getElementById("bloqueioMotivo").value.trim(),
+    ativo: true,
+    recorrencia_ativa: repetir,
+    recorrencia_intervalo_dias: intervalo,
+    recorrencia_ate: repetirAte
+  };
 
-  const motivo =
-    document.getElementById("bloqueioMotivo").value.trim();
+  if(!dados.profissional_id){
+    alert("Profissional não identificado.");
+    return;
+  }
 
-  const { error } = await supabaseClient
-    .from("bloqueios_agenda")
-    .insert([{
-      unidade_id: unidadeAtualId,
-      profissional_id: profissionalId,
-      data: formatarDataISO(dataAgenda),
-      horario_inicio: inicio,
-      horario_fim: fim,
-      motivo,
-      ativo: true
-    }]);
+  if(!dados.horario_inicio || !dados.horario_fim){
+    alert("Informe início e fim do bloqueio.");
+    return;
+  }
 
-  if(error){
-    alert(error.message);
+  if(horarioParaMinutos(dados.horario_fim) <= horarioParaMinutos(dados.horario_inicio)){
+    alert("O horário final precisa ser maior que o inicial.");
+    return;
+  }
+
+  let resp;
+
+  if(id){
+
+    resp = await supabaseClient
+      .from("bloqueios_agenda")
+      .update(dados)
+      .eq("id", id);
+
+  }else{
+
+    if(repetir){
+      dados.recorrencia_id = gerarIdRecorrencia();
+    }
+
+    resp = await supabaseClient
+      .from("bloqueios_agenda")
+      .insert([dados])
+      .select()
+      .single();
+
+    if(!resp.error && repetir){
+      await criarBloqueiosRecorrentes(dados);
+    }
+
+  }
+
+  if(resp.error){
+    alert("Erro ao salvar bloqueio: " + resp.error.message);
     return;
   }
 
   fecharModal();
   carregarAgenda();
 
-  alert("Bloqueio criado.");
+  alert("Bloqueio salvo com sucesso.");
 }
 function horarioParaMinutos(horario){
 
