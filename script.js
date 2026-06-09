@@ -711,10 +711,17 @@ async function carregarAgenda(){
     `)
     .eq("data", formatarDataISO(dataAgenda))
     .order("horario");
+  const bloqueiosResp = await supabaseClient
+  .from("bloqueios_agenda")
+  .select("*")
+  .eq("ativo", true)
+  .eq("data", formatarDataISO(dataAgenda));
 
-  const profissionais = profissionaisResp.data || [];
-  let agendamentos = agendamentosResp.data || [];
-  agendamentos = agendamentos.filter(a =>
+ const profissionais = profissionaisResp.data || [];
+let agendamentos = agendamentosResp.data || [];
+const bloqueios = bloqueiosResp.data || [];
+
+agendamentos = agendamentos.filter(a =>
   a.status !== "Cancelado"
 );
 
@@ -747,6 +754,9 @@ async function carregarAgenda(){
         const agendaProf = agendamentos.filter(a =>
           String(a.profissional_id) === String(profissional.id)
         );
+        const bloqueiosProf = bloqueios.filter(b =>
+  String(b.profissional_id) === String(profissional.id)
+);
 
         return `
           <div class="agenda-coluna-profissional">
