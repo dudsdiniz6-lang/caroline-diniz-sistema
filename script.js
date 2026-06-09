@@ -5424,3 +5424,77 @@ async function salvarFaturamentoClienteDiaPago(){
 
   alert("Faturamento concluído com sucesso.");
 }
+function abrirReforcoCaixa(caixaId){
+
+  abrirModal(`
+    <h2>Reforço de caixa</h2>
+
+    <label>Valor do reforço</label>
+    <input id="valorReforcoCaixa" type="number" min="0" placeholder="Ex: 100">
+
+    <label>Descrição</label>
+    <input id="descricaoReforcoCaixa" value="Reforço de caixa">
+
+    <button class="principal" onclick="salvarMovimentacaoCaixa(${caixaId}, 'Entrada')">
+      Salvar reforço
+    </button>
+
+    <button onclick="fecharModal()">Cancelar</button>
+  `);
+}
+
+function abrirSangriaCaixa(caixaId){
+
+  abrirModal(`
+    <h2>Sangria de caixa</h2>
+
+    <label>Valor da sangria</label>
+    <input id="valorSangriaCaixa" type="number" min="0" placeholder="Ex: 100">
+
+    <label>Descrição</label>
+    <input id="descricaoSangriaCaixa" value="Sangria de caixa">
+
+    <button class="principal" onclick="salvarMovimentacaoCaixa(${caixaId}, 'Saída')">
+      Salvar sangria
+    </button>
+
+    <button onclick="fecharModal()">Cancelar</button>
+  `);
+}
+
+async function salvarMovimentacaoCaixa(caixaId, tipo){
+
+  const valor =
+    tipo === "Entrada"
+      ? Number(document.getElementById("valorReforcoCaixa").value || 0)
+      : Number(document.getElementById("valorSangriaCaixa").value || 0);
+
+  const descricao =
+    tipo === "Entrada"
+      ? document.getElementById("descricaoReforcoCaixa").value.trim()
+      : document.getElementById("descricaoSangriaCaixa").value.trim();
+
+  if(valor <= 0){
+    alert("Informe um valor maior que zero.");
+    return;
+  }
+
+  const { error } = await supabaseClient
+    .from("caixa_movimentacoes")
+    .insert([{
+      caixa_id: caixaId,
+      tipo,
+      descricao,
+      valor
+    }]);
+
+  if(error){
+    alert("Erro ao salvar movimentação: " + error.message);
+    return;
+  }
+
+  fecharModal();
+  carregarCaixas();
+
+  alert("Movimentação registrada.");
+}
