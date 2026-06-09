@@ -1087,6 +1087,8 @@ carregarClientesParaBuscaAgendamento();
 }
 async function faturarAgendamento(id){
 
+  return abrirFaturamentoClienteDia(id);
+
   const { data: agendamento, error } = await supabaseClient
     .from("agendamentos")
     .select(`
