@@ -5178,3 +5178,100 @@ function calcularTotalFaturamentoCliente(){
     campo.innerText = dinheiro(total);
   }
 }
+async function confirmarFaturamentoClienteDia(){
+
+  const selecionados = Array.from(
+    document.querySelectorAll(".itemFaturamentoCliente:checked")
+  ).map(item => Number(item.value));
+
+  if(selecionados.length === 0){
+    alert("Selecione pelo menos um serviço para faturar.");
+    return;
+  }
+
+  const itensSelecionados = (window.itensFaturamentoClienteCache || [])
+    .filter(item => selecionados.includes(Number(item.id)));
+
+  const totalReceber = itensSelecionados.reduce((soma, item)=>{
+    return soma + (item.usar_pacote ? 0 : Number(item.total || 0));
+  }, 0);
+
+  const itensPacote = itensSelecionados.filter(item => item.usar_pacote);
+  const itensPagos = itensSelecionados.filter(item => !item.usar_pacote);
+
+  if(itensPacote.length > 0){
+    for(const item of itensPacote){
+      await salvarFaturamentoPacote(item.id);
+    }
+  }
+
+  if(itensPagos.length === 0){
+    fecharModal();
+    carregarAgenda();
+    alert("Atendimentos de pacote finalizados com sucesso.");
+    return;
+  }
+
+  abrirModal(`
+    <h2>Pagamento</h2>
+
+    <p><strong>Total a receber:</strong> ${dinheiro(totalReceber)}</p>
+
+    <div id="areaPagamentosFaturamento">
+      <div class="linha-pagamento">
+        <select class="fatFormaPagamento">
+          <option value="">Forma</option>
+        </select>
+
+        <input
+          class="fatValorPagamento"
+          type="number"
+          placeholder="Valor"
+          value="${totalReceber.toFixed(2)}"
+        >
+      </div>
+    </div>
+
+    <button type="button" onclick="adicionarLinhaPagamentoFaturamento()">
+      + Adicionar pagamento
+    </button>
+
+    <label>Finalização</label>
+    <select id="fatTipoRecebimento">
+      <option value="receber_agora">Receber agora</option>
+      <option value="deixar_em_aberto">Deixar em aberto</option>
+    </select>
+
+    <button class="principal" onclick="salvarFaturamentoClienteDiaPago()">
+      Confirmar faturamento
+    </button>
+
+    <button onclick="fecharModal()">Cancelar</button>
+  `);
+
+  window.itensFaturamentoClienteSelecionados = itensPagos;
+  window.totalFaturamentoClienteSelecionado = totalReceber;
+
+  await carregarFormasPagamentoNosSelects();
+}
+async function carregarFormasPagamentoNosSelects(){
+
+  const { data } = await supabaseClient
+    .from("formas_pagamento")
+    .select("*")
+    .eq("ativo", true)
+    .order("nome");
+
+  const formas = data || [];
+
+  document.querySelectorAll(".fatFormaPagamento").forEach(select=>{
+    select.innerHTML = `
+      <option value="">Forma</option>
+      ${formas.map(f=>`
+        <option value="${f.id}" data-nome="${f.nome}">
+          ${f.nome}
+        </option>
+      `).join("")}
+    `;
+  });
+}
