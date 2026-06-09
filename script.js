@@ -1412,6 +1412,9 @@ ${caixa.status === "Aberto" ? `
   <button onclick="abrirSangriaCaixa(${caixa.id})">
     Sangria
   </button>
+  <button onclick="abrirFechamentoCaixa(${caixa.id})">
+  Fechar caixa
+</button>
 ` : ""}
       </div>
     `;
