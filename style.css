@@ -644,3 +644,17 @@ textarea{
   width:320px;
   margin:0;
 }
+.acoes-busca-agenda button,
+.acoes-busca-agenda input{
+  height:42px;
+  margin:0;
+}
+
+.acoes-busca-agenda #calendarioAgenda{
+  width:160px;
+}
+
+#agendaGrade .acoes-busca-agenda,
+#agendaGrade .agenda-topo-fixo{
+  display:none !important;
+}
