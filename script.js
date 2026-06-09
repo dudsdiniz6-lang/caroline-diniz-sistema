@@ -1412,16 +1412,17 @@ ${caixa.status === "Aberto" ? `
   <button onclick="abrirSangriaCaixa(${caixa.id})">
     Sangria
   </button>
+
   <button onclick="abrirFechamentoCaixa(${caixa.id})">
-  Fechar caixa
-</button>
+    Fechar caixa
+  </button>
 ` : ""}
-      </div>
-    `;
 
-  });
-
-}
+${pode("caixa_excluir") ? `
+  <button onclick="excluirCaixa(${caixa.id})">
+    Excluir caixa
+  </button>
+` : ""}
 
 async function abrirCaixa(){
 
@@ -3984,6 +3985,7 @@ const permissoesPadraoSistema = [
   { grupo:"Caixa", chave:"caixa_abrir", nome:"Abrir caixa" },
   { grupo:"Caixa", chave:"caixa_fechar", nome:"Fechar caixa" },
   { grupo:"Caixa", chave:"caixa_movimentar", nome:"Lançar entradas/saídas" },
+  { grupo:"Caixa", chave:"caixa_excluir", nome:"Excluir caixa" },
 
   { grupo:"Comissões", chave:"comissoes_visualizar", nome:"Visualizar comissões" },
   { grupo:"Comissões", chave:"comissoes_pagar", nome:"Marcar comissão como paga" },
