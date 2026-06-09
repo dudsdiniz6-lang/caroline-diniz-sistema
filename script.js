@@ -770,7 +770,7 @@ agendamentos = agendamentos.filter(a =>
               ${horarios.map(h=>`
                 <div 
                   class="agenda-slot"
-                  onclick="abrirModalAgendamento(null, '${profissional.id}', '${h}')"
+                 onclick="abrirOpcoesHorarioAgenda('${profissional.id}', '${h}')"
                 ></div>
               `).join("")}
 ${bloqueiosProf.map(b=>{
