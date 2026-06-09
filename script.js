@@ -737,54 +737,21 @@ async function carregarAgenda(){
     return;
   }
 
-  const horarios = gerarHorariosAgenda();
-  const alturaAgenda = horarios.length * 80;
+ const horarios = gerarHorariosAgenda();
+const alturaAgenda = horarios.length * 80;
 
-  grade.innerHTML = `
-    <div class="agenda-topo-fixo">
-      <div class="agenda-topo-esquerda">
-        <input
-          id="buscaAgendaVisual"
-          placeholder="Buscar cliente..."
-          value="${busca}"
-          oninput="
-            document.getElementById('buscaAgenda').value = this.value;
-            carregarAgenda();
-          "
-        >
+grade.innerHTML = `
+  <div class="agenda-scroll">
+    <div class="agenda-profissional-wrapper">
+
+      <div class="agenda-coluna-horarios">
+        <div class="agenda-cabecalho">Horário</div>
+
+        ${horarios.map(h=>`
+          <div class="agenda-horario">${h}</div>
+        `).join("")}
+
       </div>
-
-      <div class="agenda-topo-direita">
-        <button onclick="voltarDia()">◀</button>
-        <button onclick="irHoje()">Hoje</button>
-        <button onclick="avancarDia()">▶</button>
-
-        <input
-          id="calendarioAgendaVisual"
-          type="date"
-          value="${formatarDataISO(dataAgenda)}"
-          onchange="
-            dataAgenda = new Date(this.value + 'T00:00:00');
-            atualizarTextoDataAgenda();
-            carregarAgenda();
-          "
-        >
-
-        <button class="principal" onclick="abrirModalAgendamento()">
-          Novo agendamento
-        </button>
-      </div>
-    </div>
-
-    <div class="agenda-scroll">
-      <div class="agenda-profissional-wrapper">
-
-        <div class="agenda-coluna-horarios">
-          <div class="agenda-cabecalho">Horário</div>
-          ${horarios.map(h=>`
-            <div class="agenda-horario">${h}</div>
-          `).join("")}
-        </div>
 
         ${profissionais.map(profissional=>{
 
