@@ -4796,3 +4796,14 @@ async function salvarBloqueioAgenda(){
 
   alert("Bloqueio criado.");
 }
+function horarioParaMinutos(horario){
+
+  if(!horario) return 0;
+
+  const [h, m] = String(horario)
+    .slice(0,5)
+    .split(":")
+    .map(Number);
+
+  return (h * 60) + m;
+}
