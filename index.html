@@ -44,33 +44,41 @@
       </nav>
     </aside>
 
-    <main class="main">
+   <main class="main">
 
-      <section id="tela-agenda" class="tela ativa">
-        <div class="topo">
-          <div>
-            <h1>Agenda</h1>
-            <div id="resumoAlertasAgenda"></div>
-            <p id="dataAgendaTexto"></p>
-          </div>
+  <section id="tela-agenda" class="tela ativa">
+    <div class="topo">
+      <div>
+        <h1>Agenda</h1>
+        <div id="resumoAlertasAgenda"></div>
+        <p id="dataAgendaTexto"></p>
+      </div>
+    </div>
 
-          <div class="acoes">
-            <button onclick="voltarDia()">◀</button>
-            <button onclick="irHoje()">Hoje</button>
-            <button onclick="avancarDia()">▶</button>
-            <input
-  id="calendarioAgenda"
-  type="date"
-  onchange="mudarDataAgendaPeloCalendario()"
-  style="width:160px;margin-bottom:0;"
->
-            <button class="principal" onclick="abrirModalAgendamento()">Novo agendamento</button>
-          </div>
-        </div>
+    <div class="acoes-busca-agenda">
+      <input
+        id="buscaAgenda"
+        placeholder="Buscar cliente..."
+        oninput="carregarAgenda()"
+      />
 
-        <div class="filtros">
-          <input id="buscaAgenda" placeholder="Buscar cliente..." oninput="carregarAgenda()" />
-        </div>
+  <button onclick="voltarDia()">◀</button>
+  <button onclick="irHoje()">Hoje</button>
+  <button onclick="avancarDia()">▶</button>
+
+  <input
+    id="calendarioAgenda"
+    type="date"
+    onchange="mudarDataAgendaPeloCalendario()"
+  >
+
+  <button
+    class="principal"
+    onclick="abrirModalAgendamento()"
+  >
+    Novo agendamento
+  </button>
+</div>
 
         <div id="agendaGrade" class="agenda-grade"></div>
       </section>
@@ -247,3 +255,15 @@
 
 </body>
 </html>
+.acoes-busca-agenda{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  margin-bottom:20px;
+  flex-wrap:wrap;
+}
+
+.acoes-busca-agenda #buscaAgenda{
+  width:320px;
+  margin:0;
+}
