@@ -738,8 +738,8 @@ async function carregarAgenda(){
   }
 
  const horarios = gerarHorariosAgenda();
-const alturaAgenda = horarios.length * 80;
-
+const alturaBlocoAgenda = 48;
+const alturaAgenda = horarios.length * alturaBlocoAgenda;
 grade.innerHTML = `
   <div class="agenda-scroll">
     <div class="agenda-profissional-wrapper">
@@ -787,7 +787,7 @@ grade.innerHTML = `
                   const fimMin = horarioParaMinutos(String(b.horario_fim).slice(0,5));
                   const duracao = fimMin - inicioMin;
 
-                  const altura = Math.max((duracao / 30) * 80 - 8, 50);
+                  const altura = Math.max((duracao / 30) * alturaBlocoAgenda - 6, 42);
 
                   return `
                     <div
@@ -809,7 +809,7 @@ grade.innerHTML = `
                 ${agendaProf.map(a=>{
 
                   const top = calcularTopAgenda(a.horario);
-                  const altura = Math.max((Number(a.duracao || 30) / 30) * 80 - 8, 70);
+                  const altura = Math.max((Number(a.duracao || 30) / 30) * alturaBlocoAgenda - 6, 42);
                   const fim = somarMinutosHorario(a.horario, a.duracao || 30);
 
                   return `
@@ -848,7 +848,7 @@ function calcularTopAgenda(horario){
   const inicio = 7 * 60;
   const atual = hora * 60 + minuto;
 
-  return ((atual - inicio) / 30) * 80;
+  return ((atual - inicio) / 30) * 48;
 }
 
 function gerarHorariosAgenda(){
