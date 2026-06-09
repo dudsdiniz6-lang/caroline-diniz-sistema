@@ -5420,6 +5420,11 @@ async function salvarFaturamentoClienteDiaPago(){
   const totalReceber =
     Number(window.totalFaturamentoClienteSelecionado || 0);
 
+  if(itensPagos.length === 0){
+    alert("Nenhum serviço selecionado para faturar.");
+    return;
+  }
+
   const pagamentosInformados = Array.from(
     document.querySelectorAll(".linha-pagamento")
   ).map(linha => ({
@@ -5445,6 +5450,26 @@ async function salvarFaturamentoClienteDiaPago(){
 
   }
 
+  const primeiroItem = itensPagos[0];
+
+  const grupoResp = await supabaseClient
+    .from("faturamentos_grupos")
+    .insert([{
+      cliente_id: primeiroItem.cliente_id,
+      data: primeiroItem.data,
+      total: totalReceber,
+      status: "Ativo"
+    }])
+    .select()
+    .single();
+
+  if(grupoResp.error){
+    alert("Erro ao criar grupo de faturamento: " + grupoResp.error.message);
+    return;
+  }
+
+  const grupo = grupoResp.data;
+
   for(const item of itensPagos){
 
     const percentualComissao = await buscarPercentualComissao(
@@ -5457,6 +5482,7 @@ async function salvarFaturamentoClienteDiaPago(){
       .from("comandas")
       .insert([{
         unidade_id: unidadeAtualId,
+        faturamento_grupo_id: grupo.id,
         agendamento_id: item.id,
         cliente_id: item.cliente_id,
         profissional_id: item.profissional_id,
@@ -5464,7 +5490,8 @@ async function salvarFaturamentoClienteDiaPago(){
         subtotal: item.valor,
         desconto: item.desconto,
         total: item.total,
-        status: tipoRecebimento === "receber_agora" ? "Fechada" : "Aberta"
+        status: tipoRecebimento === "receber_agora" ? "Fechada" : "Aberta",
+        cancelada: false
       }])
       .select()
       .single();
