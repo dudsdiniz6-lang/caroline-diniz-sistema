@@ -4672,7 +4672,8 @@ async function gerarComissoesPorPeriodo(){
     .gte("data", inicio)
     .lte("data", fim)
     .in("status", ["Fechada", "Aberta"])
-.eq("cancelada", false)
+.neq("status", "Cancelada")
+.neq("cancelada", true)
     .order("data", { ascending:true });
 
   if(error){
