@@ -1378,12 +1378,12 @@ async function carregarCaixas(){
 
   if(!lista) return;
 
-  lista.innerHTML = "";
+  lista.innerHTML = "Carregando caixas...";
 
   const { data, error } = await supabaseClient
-   .from("caixas")
-.select("*")
-.neq("status", "Excluído")
+    .from("caixas")
+    .select("*")
+    .neq("status", "Excluído")
     .order("id", { ascending:false });
 
   if(error){
@@ -1392,43 +1392,122 @@ async function carregarCaixas(){
   }
 
   if(!data || data.length === 0){
-    lista.innerHTML = "<div class='card'>Nenhum caixa aberto.</div>";
+    lista.innerHTML = "<div class='card'>Nenhum caixa encontrado.</div>";
     return;
   }
 
-  data.forEach((caixa)=>{
+  lista.innerHTML = "";
+
+  for(const caixa of data){
+
+    const { data: movs } = await supabaseClient
+      .from("caixa_movimentacoes")
+      .select(`
+        *,
+        formas_pagamento(nome),
+        comandas(
+          id,
+          total,
+          clientes(nome)
+        )
+      `)
+      .eq("caixa_id", caixa.id)
+      .neq("cancelada", true);
+
+    const movimentacoes = movs || [];
+
+    const entradas = movimentacoes.filter(m => m.tipo === "Entrada");
+    const saidas = movimentacoes.filter(m => m.tipo === "Saída");
+
+    const totalEntradas = entradas.reduce((soma, m)=> soma + Number(m.valor || 0), 0);
+    const totalSaidas = saidas.reduce((soma, m)=> soma + Number(m.valor || 0), 0);
+
+    const totalEsperado =
+      Number(caixa.abertura || 0) + totalEntradas - totalSaidas;
+
+    const porForma = {};
+
+    entradas.forEach(m=>{
+
+      const forma = m.formas_pagamento?.nome || m.descricao || "Entrada";
+
+      if(!porForma[forma]){
+        porForma[forma] = {
+          total: 0,
+          itens: []
+        };
+      }
+
+      porForma[forma].total += Number(m.valor || 0);
+
+      porForma[forma].itens.push({
+        cliente: m.comandas?.clientes?.nome || m.descricao || "Movimentação",
+        valor: Number(m.valor || 0)
+      });
+
+    });
 
     lista.innerHTML += `
       <div class="card">
-        <h3>${caixa.data}</h3>
-        <p>Abertura: ${dinheiro(caixa.abertura)}</p>
-        <small>Status: ${caixa.status}</small>
-        <br><br>
 
-${caixa.status === "Aberto" ? `
-  <button class="principal" onclick="abrirReforcoCaixa(${caixa.id})">
-    Reforço
-  </button>
+        <h3>Caixa ${formatarDataComanda(caixa.data)}</h3>
 
-  <button onclick="abrirSangriaCaixa(${caixa.id})">
-    Sangria
-  </button>
+        <p><strong>Status:</strong> ${caixa.status}</p>
+        <p><strong>Aberto por:</strong> ${caixa.aberto_por || "-"}</p>
+        <p><strong>Abertura:</strong> ${dinheiro(caixa.abertura || 0)}</p>
 
-  <button onclick="abrirFechamentoCaixa(${caixa.id})">
-    Fechar caixa
-  </button>
-` : ""}
+        ${caixa.status === "Fechado" ? `
+          <p><strong>Fechamento:</strong> ${dinheiro(caixa.fechamento || 0)}</p>
+          <p><strong>Diferença:</strong> ${dinheiro(caixa.diferenca || 0)}</p>
+        ` : ""}
 
-${pode("caixa_excluir") ? `
-  <button onclick="excluirCaixa(${caixa.id})">
-    Excluir caixa
-  </button>
-` : ""}
+        <hr>
+
+        <h4>Entradas por forma de pagamento</h4>
+
+        ${Object.keys(porForma).length ? Object.keys(porForma).map(forma=>`
+          <div style="margin:12px 0;">
+            <strong>${forma}: ${dinheiro(porForma[forma].total)}</strong>
+
+            ${porForma[forma].itens.map(item=>`
+              <p style="margin:4px 0 0 12px;">
+                ${item.cliente} — ${dinheiro(item.valor)}
+              </p>
+            `).join("")}
+          </div>
+        `).join("") : "<p>Nenhuma entrada registrada.</p>"}
+
+        <hr>
+
+        <p><strong>Total de entradas:</strong> ${dinheiro(totalEntradas)}</p>
+        <p><strong>Total de saídas/sangrias:</strong> ${dinheiro(totalSaidas)}</p>
+        <p><strong>Total esperado:</strong> ${dinheiro(totalEsperado)}</p>
+
+        <br>
+
+        ${caixa.status === "Aberto" ? `
+          <button class="principal" onclick="abrirReforcoCaixa(${caixa.id})">
+            Reforço
+          </button>
+
+          <button onclick="abrirSangriaCaixa(${caixa.id})">
+            Sangria
+          </button>
+
+          <button onclick="abrirFechamentoCaixa(${caixa.id})">
+            Fechar caixa
+          </button>
+        ` : ""}
+
+        ${pode("caixa_excluir") ? `
+          <button onclick="excluirCaixa(${caixa.id})">
+            Excluir caixa
+          </button>
+        ` : ""}
 
       </div>
     `;
-  });
-
+  }
 }
 
 async function abrirCaixa(){
