@@ -4733,26 +4733,86 @@ function abrirOpcoesHorarioAgenda(profissionalId, horario){
 }
 async function abrirModalBloqueioAgenda(id = null, profissionalPre = "", horarioPre = ""){
 
-  abrirModal(`
-    <h2>Bloquear horário</h2>
+  let bloqueio = null;
 
-    <input id="bloqueioProfissional" type="hidden" value="${profissionalPre}">
+  if(id){
+    const resp = await supabaseClient
+      .from("bloqueios_agenda")
+      .select("*")
+      .eq("id", id)
+      .single();
+
+    bloqueio = resp.data;
+  }
+
+  const inicio = bloqueio?.horario_inicio?.slice(0,5) || horarioPre || "12:00";
+  const fim = bloqueio?.horario_fim?.slice(0,5) || somarMinutosHorario(inicio, 60);
+
+  abrirModal(`
+    <h2>${id ? "Editar bloqueio" : "Bloquear horário"}</h2>
+
+    <input id="bloqueioId" type="hidden" value="${bloqueio?.id || ""}">
+    <input id="bloqueioProfissional" type="hidden" value="${bloqueio?.profissional_id || profissionalPre}">
 
     <label>Horário de início do bloqueio</label>
-    <input id="bloqueioInicio" type="time" value="${horarioPre || "12:00"}">
+    <input id="bloqueioInicio" type="time" value="${inicio}">
 
     <label>Horário final do bloqueio</label>
-    <input id="bloqueioFim" type="time" value="13:00">
+    <input id="bloqueioFim" type="time" value="${fim}">
 
     <label>Descrição do bloqueio</label>
     <input
       id="bloqueioMotivo"
+      value="${bloqueio?.motivo || ""}"
       placeholder="Ex: Almoço, Reunião, Folga"
     >
+
+    <input
+      id="bloqueioData"
+      type="hidden"
+      value="${bloqueio?.data || formatarDataISO(dataAgenda)}"
+    >
+
+    <label style="display:flex;gap:10px;align-items:center;">
+      <input
+        id="bloqueioRepetir"
+        type="checkbox"
+        style="width:auto;height:auto;"
+        ${bloqueio?.recorrencia_ativa ? "checked" : ""}
+      >
+      Repetir bloqueio
+    </label>
+
+    <div class="form-grid-2">
+      <div>
+        <label>Intervalo em dias</label>
+        <input
+          id="bloqueioIntervalo"
+          type="number"
+          min="1"
+          value="${bloqueio?.recorrencia_intervalo_dias || 7}"
+        >
+      </div>
+
+      <div>
+        <label>Repetir até</label>
+        <input
+          id="bloqueioRepetirAte"
+          type="date"
+          value="${bloqueio?.recorrencia_ate || ""}"
+        >
+      </div>
+    </div>
 
     <button class="principal" onclick="salvarBloqueioAgenda()">
       Salvar bloqueio
     </button>
+
+    ${id ? `
+      <button onclick="excluirBloqueioAgenda(${id})">
+        Excluir bloqueio
+      </button>
+    ` : ""}
 
     <button onclick="fecharModal()">
       Cancelar
