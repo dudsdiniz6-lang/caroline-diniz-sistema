@@ -3785,75 +3785,90 @@ async function carregarConfiguracoes(){
   const diasRisco =
     data?.find(c => c.chave === "clientes_em_risco_dias")
       ?.valor || "60";
+
   const horaInicio =
-  data?.find(c => c.chave === "agenda_hora_inicio")
-    ?.valor || "07:00";
+    data?.find(c => c.chave === "agenda_hora_inicio")
+      ?.valor || "07:00";
 
-const horaFim =
-  data?.find(c => c.chave === "agenda_hora_fim")
-    ?.valor || "20:00";
+  const horaFim =
+    data?.find(c => c.chave === "agenda_hora_fim")
+      ?.valor || "20:00";
 
-const alturaBloco =
-  data?.find(c => c.chave === "agenda_altura_bloco")
-    ?.valor || "48";
+  const alturaBloco =
+    data?.find(c => c.chave === "agenda_altura_bloco")
+      ?.valor || "48";
 
-area.innerHTML = `
+  area.innerHTML = `
 
-  <div class="card">
+    <div class="card">
 
-    <h3>Clientes em risco</h3>
+      <h3>Clientes em risco</h3>
 
-    <label>
-      Considerar cliente em risco após quantos dias sem retorno?
-    </label>
+      <label>
+        Considerar cliente em risco após quantos dias sem retorno?
+      </label>
 
-    <input
-      id="cfgClientesRiscoDias"
-      type="number"
-      value="${diasRisco}"
-    >
+      <input
+        id="cfgClientesRiscoDias"
+        type="number"
+        value="${diasRisco}"
+      >
 
-  </div>
+    </div>
 
-  <div class="card">
+    <div class="card">
 
-    <h3>Agenda</h3>
+      <h3>Agenda</h3>
 
-    <label>Horário inicial exibido</label>
-    <input
-      id="cfgAgendaHoraInicio"
-      type="time"
-      value="${horaInicio}"
-    >
+      <label>Horário inicial exibido</label>
+      <input
+        id="cfgAgendaHoraInicio"
+        type="time"
+        value="${horaInicio}"
+      >
 
-    <label>Horário final exibido</label>
-    <input
-      id="cfgAgendaHoraFim"
-      type="time"
-      value="${horaFim}"
-    >
+      <label>Horário final exibido</label>
+      <input
+        id="cfgAgendaHoraFim"
+        type="time"
+        value="${horaFim}"
+      >
 
-    <label>Altura visual dos horários</label>
-    <input
-      id="cfgAgendaAlturaBloco"
-      type="number"
-      value="${alturaBloco}"
-    >
+      <label>Altura visual dos horários</label>
+      <input
+        id="cfgAgendaAlturaBloco"
+        type="number"
+        value="${alturaBloco}"
+      >
 
-  </div>
+    </div>
 
-  <div class="card">
+    <div class="card">
 
-    <button
-      class="principal"
-      onclick="salvarConfiguracoes()"
-    >
-      Salvar
-    </button>
+      <button
+        class="principal"
+        onclick="salvarConfiguracoes()"
+      >
+        Salvar
+      </button>
 
-  </div>
+    </div>
 
-`;
+  `;
+}
+
+async function salvarConfiguracoes(){
+
+  const dias =
+    document.getElementById("cfgClientesRiscoDias").value;
+
+  await supabaseClient
+    .from("configuracoes_sistema")
+    .update({ valor: dias })
+    .eq("chave", "clientes_em_risco_dias");
+
+  alert("Configurações salvas.");
+}
 async function salvarConfiguracoes(){
 
   const dias =
