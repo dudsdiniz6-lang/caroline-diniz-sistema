@@ -658,3 +658,35 @@ textarea{
 #agendaGrade .agenda-topo-fixo{
   display:none !important;
 }
+.agenda-topo{
+  display:flex;
+  align-items:flex-start;
+  justify-content:space-between;
+  gap:20px;
+}
+
+.agenda-acoes-topo{
+  display:flex;
+  align-items:center;
+  gap:8px;
+  flex-wrap:nowrap;
+}
+
+.agenda-acoes-topo input{
+  width:160px;
+  margin:0;
+}
+
+.agenda-acoes-topo button{
+  margin:0;
+  white-space:nowrap;
+}
+
+.agenda-busca-linha{
+  margin:18px 0 20px;
+}
+
+.agenda-busca-linha input{
+  max-width:280px;
+  margin:0;
+}
