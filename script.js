@@ -3125,25 +3125,42 @@ async function gerarRelatorioProfissional(){
 
   const resumo = {};
 
-  (data || []).forEach((comanda)=>{
+(data || []).forEach((comanda)=>{
 
-    const profissional = comanda.profissionais?.nome || "Sem profissional";
+  const profissional = comanda.profissionais?.nome || "Sem profissional";
 
-    (comanda.comanda_itens || []).forEach((item)=>{
+  const itensUnicos = [];
+  const chavesItens = new Set();
 
-      const servico = item.descricao || "Serviço";
+  (comanda.comanda_itens || []).forEach((item)=>{
+    const chave = `${comanda.id}-${item.descricao}-${item.valor}`;
 
-      if(!resumo[profissional]){
-        resumo[profissional] = {};
-      }
+    if(!chavesItens.has(chave)){
+      chavesItens.add(chave);
+      itensUnicos.push(item);
+    }
+  });
 
-      if(!resumo[profissional][servico]){
-        resumo[profissional][servico] = {
-          quantidade: 0,
-          valor: 0,
-          comissao: 0
-        };
-      }
+  itensUnicos.forEach((item)=>{
+
+    const servico = item.descricao || "Serviço";
+
+    if(!resumo[profissional]){
+      resumo[profissional] = {};
+    }
+
+    if(!resumo[profissional][servico]){
+      resumo[profissional][servico] = {
+        quantidade: 0,
+        valor: 0,
+        comissao: 0
+      };
+    }
+
+    // continua o restante do seu código aqui...
+  });
+
+});
 
       resumo[profissional][servico].quantidade += 1;
       resumo[profissional][servico].valor += Number(item.valor || 0);
