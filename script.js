@@ -773,7 +773,32 @@ agendamentos = agendamentos.filter(a =>
                   onclick="abrirModalAgendamento(null, '${profissional.id}', '${h}')"
                 ></div>
               `).join("")}
+${bloqueiosProf.map(b=>{
 
+  const top = calcularTopAgenda(String(b.horario_inicio).slice(0,5));
+
+  const inicioMin = horarioParaMinutos(String(b.horario_inicio).slice(0,5));
+  const fimMin = horarioParaMinutos(String(b.horario_fim).slice(0,5));
+  const duracao = fimMin - inicioMin;
+
+  const altura = Math.max((duracao / 30) * 80 - 8, 50);
+
+  return `
+    <div
+      class="agenda-bloqueio-card"
+      style="top:${top + 4}px; height:${altura}px;"
+      onclick="event.stopPropagation(); abrirModalBloqueioAgenda(${b.id})"
+    >
+      <strong>Bloqueado</strong>
+      <span>${b.motivo || "Indisponível"}</span>
+      <small>
+        ${formatarHorarioBonito(String(b.horario_inicio).slice(0,5))}
+        -
+        ${formatarHorarioBonito(String(b.horario_fim).slice(0,5))}
+      </small>
+    </div>
+  `;
+}).join("")}
               ${agendaProf.map(a=>{
 
                 const top = calcularTopAgenda(a.horario);
