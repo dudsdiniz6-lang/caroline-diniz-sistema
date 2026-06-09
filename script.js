@@ -4937,3 +4937,66 @@ async function criarBloqueiosRecorrentes(dadosBase){
       .insert(bloqueios);
   }
 }
+async function excluirBloqueioAgenda(id){
+
+  const { data: bloqueio, error } = await supabaseClient
+    .from("bloqueios_agenda")
+    .select("*")
+    .eq("id", id)
+    .single();
+
+  if(error || !bloqueio){
+    alert("Bloqueio não encontrado.");
+    return;
+  }
+
+  let modo = "unico";
+
+  if(bloqueio.recorrencia_id){
+
+    const escolha = prompt(
+      "Este é um bloqueio recorrente.\n\nDigite:\n1 - Excluir apenas este bloqueio\n2 - Excluir este e todos os futuros"
+    );
+
+    if(escolha === "2"){
+      modo = "futuros";
+    }else if(escolha !== "1"){
+      return;
+    }
+
+  }else{
+
+    const confirmar = confirm("Deseja excluir este bloqueio?");
+    if(!confirmar) return;
+
+  }
+
+  let resp;
+
+  if(modo === "futuros"){
+
+    resp = await supabaseClient
+      .from("bloqueios_agenda")
+      .update({ ativo:false })
+      .eq("recorrencia_id", bloqueio.recorrencia_id)
+      .gte("data", bloqueio.data);
+
+  }else{
+
+    resp = await supabaseClient
+      .from("bloqueios_agenda")
+      .update({ ativo:false })
+      .eq("id", id);
+
+  }
+
+  if(resp.error){
+    alert("Erro ao excluir bloqueio: " + resp.error.message);
+    return;
+  }
+
+  fecharModal();
+  carregarAgenda();
+
+  alert("Bloqueio excluído.");
+}
