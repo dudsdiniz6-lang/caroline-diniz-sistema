@@ -5552,3 +5552,34 @@ async function abrirFechamentoCaixa(caixaId){
     <button onclick="fecharModal()">Cancelar</button>
   `);
 }
+async function confirmarFechamentoCaixa(caixaId, esperado){
+
+  const valorContado =
+    Number(document.getElementById("valorFechamentoCaixa").value || 0);
+
+  const observacao =
+    document.getElementById("observacaoFechamentoCaixa").value.trim();
+
+  const diferenca = valorContado - Number(esperado || 0);
+
+  const { error } = await supabaseClient
+    .from("caixas")
+    .update({
+      status: "Fechado",
+      fechamento: valorContado,
+      diferenca: diferenca,
+      observacao_fechamento: observacao,
+      fechado_em: new Date().toISOString()
+    })
+    .eq("id", caixaId);
+
+  if(error){
+    alert("Erro ao fechar caixa: " + error.message);
+    return;
+  }
+
+  fecharModal();
+  carregarCaixas();
+
+  alert("Caixa fechado com sucesso.");
+}
