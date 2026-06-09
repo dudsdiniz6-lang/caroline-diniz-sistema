@@ -1425,6 +1425,12 @@ ${pode("caixa_excluir") ? `
   </button>
 ` : ""}
 
+      </div>
+    `;
+  });
+
+}
+
 async function abrirCaixa(){
 
   const caixaAberto = await buscarCaixaAberto();
@@ -1443,13 +1449,13 @@ async function abrirCaixa(){
 
   const { error } = await supabaseClient
     .from("caixas")
-  .insert([{
-  unidade_id: unidadeAtualId,
-  data: formatarDataISO(new Date()),
-  abertura: valor,
-  status: "Aberto",
-  aberto_por: usuarioLogado?.nome || usuarioLogado?.usuario || "Usuário"
-}]);
+    .insert([{
+      unidade_id: unidadeAtualId,
+      data: formatarDataISO(new Date()),
+      abertura: valor,
+      status: "Aberto",
+      aberto_por: usuarioLogado?.nome || usuarioLogado?.usuario || "Usuário"
+    }]);
 
   if(error){
     alert("Erro ao abrir caixa: " + error.message);
