@@ -809,7 +809,7 @@ grade.innerHTML = `
                 ${agendaProf.map(a=>{
 
                   const top = calcularTopAgenda(a.horario);
-                  const altura = Math.max((Number(a.duracao || 30) / 30) * alturaBlocoAgenda - 6, 42);
+                  const altura = Math.max((Number(a.duracao || 30) / 30) * alturaBlocoAgenda - 6, 58);
                   const fim = somarMinutosHorario(a.horario, a.duracao || 30);
 
                   return `
