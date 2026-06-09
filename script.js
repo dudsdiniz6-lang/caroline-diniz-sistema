@@ -904,13 +904,17 @@ const alertasClienteHtml =
       `).join("")}
     </select>
 
+    <div class="form-grid-2">
+  <div>
     <label>Data</label>
     <input id="agData" type="date" value="${agendamento?.data || formatarDataISO(dataAgenda)}">
+  </div>
 
+  <div>
     <label>Horário</label>
     <input id="agHorario" type="time" value="${agendamento?.horario || horarioPre || "08:00"}">
-
-    <label>Serviço</label>
+  </div>
+</div>
     <select id="agServico" onchange="preencherDadosServicoAgendamento(); verificarPacoteDisponivel();">
       <option value="">Selecione</option>
       ${servicos.map(s=>`
@@ -926,32 +930,46 @@ const alertasClienteHtml =
     </select>
 <div id="areaPacoteAgendamento"></div>
 
-<label>Duração</label>
+<div class="form-grid-2">
+
+  <div>
+    <label>Duração</label>
     <input id="agDuracao" type="number" value="${agendamento?.duracao || 30}">
+  </div>
 
-    <label>Valor</label>
-    <input id="agValor" type="number" value="${agendamento?.valor || 0}" oninput="calcularTotalAgendamento()">
-
-    <label>Desconto</label>
-    <input id="agDesconto" type="number" value="${agendamento?.desconto || 0}" oninput="calcularTotalAgendamento()">
-
-    <label>Tipo de desconto</label>
-    <select id="agTipoDesconto" onchange="calcularTotalAgendamento()">
-      <option value="valor" ${agendamento?.tipo_desconto === "valor" ? "selected" : ""}>R$</option>
-      <option value="porcentagem" ${agendamento?.tipo_desconto === "porcentagem" ? "selected" : ""}>%</option>
-    </select>
-
-    <label>Total</label>
-    <input id="agTotal" type="number" value="${agendamento?.total || 0}" readonly>
-
+  <div>
     <label>Status</label>
     <select id="agStatus">
       ${["Agendado","Confirmado","Finalizado","Cancelado","Faltou","Reagendado"].map(st=>`
         <option value="${st}" ${agendamento?.status === st ? "selected" : ""}>${st}</option>
       `).join("")}
     </select>
+  </div>
 
-    <label>Observações</label>
+  <div>
+    <label>Valor</label>
+    <input id="agValor" type="number" value="${agendamento?.valor || 0}" oninput="calcularTotalAgendamento()">
+  </div>
+
+  <div>
+    <label>Total</label>
+    <input id="agTotal" type="number" value="${agendamento?.total || 0}" readonly>
+  </div>
+
+  <div>
+    <label>Desconto</label>
+    <input id="agDesconto" type="number" value="${agendamento?.desconto || 0}" oninput="calcularTotalAgendamento()">
+  </div>
+
+  <div>
+    <label>Tipo de desconto</label>
+    <select id="agTipoDesconto" onchange="calcularTotalAgendamento()">
+      <option value="valor" ${agendamento?.tipo_desconto === "valor" ? "selected" : ""}>R$</option>
+      <option value="porcentagem" ${agendamento?.tipo_desconto === "porcentagem" ? "selected" : ""}>%</option>
+    </select>
+  </div>
+
+</div>
     <textarea id="agObservacoes">${agendamento?.observacoes || ""}</textarea>
   ${pode("agenda_recorrencia") ? `
   <label style="display:flex;gap:10px;align-items:center;">
