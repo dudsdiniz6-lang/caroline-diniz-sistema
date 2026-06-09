@@ -661,8 +661,8 @@ textarea{
 .agenda-topo{
   display:flex;
   align-items:flex-start;
-  justify-content:space-between;
-  gap:20px;
+  justify-content:flex-start;
+  gap:35px;
 }
 
 .agenda-acoes-topo{
@@ -670,6 +670,7 @@ textarea{
   align-items:center;
   gap:8px;
   flex-wrap:nowrap;
+  margin-top:8px;
 }
 
 .agenda-acoes-topo input{
