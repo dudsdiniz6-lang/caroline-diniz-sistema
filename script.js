@@ -216,7 +216,23 @@ function atualizarTextoDataAgenda(){
   const campo = document.getElementById("dataAgendaTexto");
 
   if(campo){
-    campo.innerText = formatarDataBR(dataAgenda);
+
+    const diasSemana = [
+      "domingo",
+      "segunda-feira",
+      "terça-feira",
+      "quarta-feira",
+      "quinta-feira",
+      "sexta-feira",
+      "sábado"
+    ];
+
+    const diaSemana =
+      diasSemana[dataAgenda.getDay()];
+
+    campo.innerText =
+      `${formatarDataBR(dataAgenda)} • ${diaSemana}`;
+
   }
 
   const calendario = document.getElementById("calendarioAgenda");
@@ -226,60 +242,6 @@ function atualizarTextoDataAgenda(){
   }
 
 }
-
-async function abrirModalCliente(id = null){
-
-  let cliente = null;
-
-  if(id){
-
-    const resposta = await supabaseClient
-      .from("clientes")
-      .select("*")
-      .eq("id", id)
-      .single();
-
-    cliente = resposta.data;
-
-  }
-
-  abrirModal(`
-    <h2>${id ? "Editar cliente" : "Novo cliente"}</h2>
-
-    <input id="clienteId" type="hidden" value="${cliente?.id || ""}">
-
-    <label>Nome</label>
-    <input id="clienteNome" value="${cliente?.nome || ""}" placeholder="Nome da cliente">
-
-    <label>Telefone</label>
-    <input id="clienteTelefone" value="${cliente?.telefone || ""}" placeholder="Telefone">
-
-    <label>Aniversário</label>
-    <input id="clienteAniversario" type="date" value="${cliente?.aniversario || ""}">
-
-    <label>Observações</label>
-    <textarea id="clienteObservacoes" placeholder="Observações">${cliente?.observacoes || ""}</textarea>
-    <label style="display:flex;gap:10px;align-items:center;">
-  <input
-    id="clienteVip"
-    type="checkbox"
-    style="width:auto;height:auto;"
-    ${cliente?.vip ? "checked" : ""}
-  >
-  Cliente VIP ⭐
-</label>
-
-    <button class="principal" onclick="salvarCliente()">
-      Salvar
-    </button>
-
-    <button onclick="fecharModal()">
-      Cancelar
-    </button>
-  `);
-
-}
-
 async function salvarCliente(){
 
   const id = document.getElementById("clienteId").value;
@@ -772,12 +734,14 @@ grade.innerHTML = `
 
               <div class="agenda-coluna-corpo" style="height:${alturaAgenda}px;">
 
-                ${horarios.map(h=>`
-                  <div
-                    class="agenda-slot"
-                    onclick="abrirOpcoesHorarioAgenda('${profissional.id}', '${h}')"
-                  ></div>
-                `).join("")}
+             ${horarios.map(h=>`
+  <div
+    class="agenda-slot"
+    onclick="abrirOpcoesHorarioAgenda('${profissional.id}', '${h}')"
+  >
+    <small class="horario-slot-profissional">${h}</small>
+  </div>
+`).join("")}
 
                 ${bloqueiosProf.map(b=>{
 
@@ -5747,4 +5711,16 @@ async function excluirCaixa(caixaId){
   carregarCaixas();
 
   alert("Caixa excluído.");
+}
+.agenda-slot{
+  position:relative;
+}
+
+.horario-slot-profissional{
+  position:absolute;
+  top:4px;
+  left:6px;
+  font-size:10px;
+  color:#bbb;
+  pointer-events:none;
 }
