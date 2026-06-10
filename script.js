@@ -3662,59 +3662,15 @@ async function carregarAlertasClienteAgenda(clienteId){
 }
 async function carregarResumoAlertasAgenda(){
 
-  const local =
-    document.getElementById("resumoAlertasAgenda");
+  const local = document.getElementById("resumoAlertasAgenda");
 
   if(!local) return;
 
-  const hoje = new Date();
-
-  const hojeMesDia =
-    formatarDataISO(hoje).slice(5);
-
-  const clientesResp = await supabaseClient
-    .from("clientes")
-    .select("id,nome,aniversario,vip")
-    .eq("ativo", true);
-
-  const clientes =
-    clientesResp.data || [];
-
-  const aniversariantes =
-    clientes.filter(c =>
-      c.aniversario &&
-      String(c.aniversario).slice(5) === hojeMesDia
-    );
-
-  const vips =
-    clientes.filter(c => c.vip);
-
   local.innerHTML = `
-    <div
-      class="alerta-resumo"
-      onclick="abrirCentralAlertas()"
-    >
-      🔔 ${aniversariantes.length} aniversários • ${vips.length} VIPs
+    <div class="alerta-resumo" onclick="abrirCentralAlertas()">
+      🔔 0 aniversários • 0 VIPs
     </div>
   `;
-}
-async function abrirCentralAlertas(){
-
-  abrirModal(`
-    <h2>Central de Alertas</h2>
-
-    <div id="conteudoCentralAlertas">
-      Carregando alertas...
-    </div>
-
-    <br>
-
-    <button onclick="fecharModal()">
-      Fechar
-    </button>
-  `);
-
-  await carregarCentralAlertasConteudo();
 }
 async function carregarCentralAlertasConteudo(){
 
