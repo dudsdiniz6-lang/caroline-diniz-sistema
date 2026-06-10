@@ -734,13 +734,12 @@ grade.innerHTML = `
 
               <div class="agenda-coluna-corpo" style="height:${alturaAgenda}px;">
 
-             ${horarios.map(h=>`
+            ${horarios.map(h=>`
   <div
     class="agenda-slot"
+    data-horario="${h}"
     onclick="abrirOpcoesHorarioAgenda('${profissional.id}', '${h}')"
-  >
-    <small class="horario-slot-profissional">${h}</small>
-  </div>
+  ></div>
 `).join("")}
 
                 ${bloqueiosProf.map(b=>{
