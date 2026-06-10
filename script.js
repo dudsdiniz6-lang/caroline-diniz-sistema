@@ -5650,33 +5650,3 @@ async function excluirCaixa(caixaId){
 
   alert("Caixa excluído.");
 }
-.agenda-slot{
-  position:relative;
-}
-
-.horario-slot-profissional{
-  position:absolute;
-  top:4px;
-  left:6px;
-  font-size:10px;
-  color:#bbb;
-  pointer-events:none;
-}
-.agenda-slot{
-  position:relative;
-}
-
-.agenda-slot::after{
-  content:attr(data-horario);
-  position:absolute;
-  top:4px;
-  left:6px;
-  font-size:10px;
-  color:#999;
-  opacity:0;
-  transition:.2s;
-}
-
-.agenda-slot:hover::after{
-  opacity:1;
-}
