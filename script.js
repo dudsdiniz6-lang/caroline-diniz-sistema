@@ -735,7 +735,6 @@ grade.innerHTML = `
               <div class="agenda-coluna-corpo" style="height:${alturaAgenda}px;">
 
             ${horarios.map(h=>`
- ${horarios.map(h=>`
   <div
     class="agenda-slot"
     onclick="abrirOpcoesHorarioAgenda('${profissional.id}', '${h}')"
