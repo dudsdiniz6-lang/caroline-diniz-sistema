@@ -3072,7 +3072,8 @@ async function gerarRelatorioProfissional(){
     `)
     .gte("data", dataInicio)
     .lte("data", dataFim)
-    .eq("cancelada", false);
+    .in("status", ["Fechada", "Aberta", "Parcial"])
+    .neq("cancelada", true);
 
   if(profissionalId){
     query = query.eq("profissional_id", profissionalId);
@@ -3087,42 +3088,37 @@ async function gerarRelatorioProfissional(){
 
   const resumo = {};
 
-(data || []).forEach((comanda)=>{
+  (data || []).forEach((comanda)=>{
 
-  const profissional = comanda.profissionais?.nome || "Sem profissional";
+    const profissional = comanda.profissionais?.nome || "Sem profissional";
 
-  const itensUnicos = [];
-  const chavesItens = new Set();
+    const itensUnicos = [];
+    const chavesItens = new Set();
 
-  (comanda.comanda_itens || []).forEach((item)=>{
-    const chave = `${comanda.id}-${item.descricao}-${item.valor}`;
+    (comanda.comanda_itens || []).forEach((item)=>{
+      const chave = `${comanda.id}-${item.descricao}-${item.valor}`;
 
-    if(!chavesItens.has(chave)){
-      chavesItens.add(chave);
-      itensUnicos.push(item);
-    }
-  });
+      if(!chavesItens.has(chave)){
+        chavesItens.add(chave);
+        itensUnicos.push(item);
+      }
+    });
 
-  itensUnicos.forEach((item)=>{
+    itensUnicos.forEach((item)=>{
 
-    const servico = item.descricao || "Serviço";
+      const servico = item.descricao || "Serviço";
 
-    if(!resumo[profissional]){
-      resumo[profissional] = {};
-    }
+      if(!resumo[profissional]){
+        resumo[profissional] = {};
+      }
 
-    if(!resumo[profissional][servico]){
-      resumo[profissional][servico] = {
-        quantidade: 0,
-        valor: 0,
-        comissao: 0
-      };
-    }
-
-    // continua o restante do seu código aqui...
-  });
-
-});
+      if(!resumo[profissional][servico]){
+        resumo[profissional][servico] = {
+          quantidade: 0,
+          valor: 0,
+          comissao: 0
+        };
+      }
 
       resumo[profissional][servico].quantidade += 1;
       resumo[profissional][servico].valor += Number(item.valor || 0);
