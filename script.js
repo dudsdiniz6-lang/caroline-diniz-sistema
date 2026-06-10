@@ -3690,24 +3690,12 @@ async function carregarResumoAlertasAgenda(){
     clientes.filter(c => c.vip);
 
   local.innerHTML = `
-
     <div
       class="alerta-resumo"
       onclick="abrirCentralAlertas()"
     >
-
-      🔔
-
-      ${aniversariantes.length}
-      aniversários
-
-      •
-
-      ${vips.length}
-      VIPs
-
+      🔔 ${aniversariantes.length} aniversários • ${vips.length} VIPs
     </div>
-
   `;
 }
 async function abrirCentralAlertas(){
