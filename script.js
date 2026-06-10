@@ -737,7 +737,6 @@ grade.innerHTML = `
             ${horarios.map(h=>`
   <div
     class="agenda-slot"
-    data-horario="${h}"
     onclick="abrirOpcoesHorarioAgenda('${profissional.id}', '${h}')"
   ></div>
 `).join("")}
