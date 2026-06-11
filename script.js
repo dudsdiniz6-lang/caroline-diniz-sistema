@@ -733,7 +733,9 @@ grade.innerHTML = `
   <div
     class="agenda-slot"
     onclick="abrirOpcoesHorarioAgenda('${profissional.id}', '${h}')"
-  ></div>
+  >
+    <span class="hora-slot">${h}</span>
+  </div>
 `).join("")}
 
                 ${bloqueiosProf.map(b=>{
