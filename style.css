@@ -742,4 +742,21 @@ textarea{
 .agenda-slot{
   position:relative;
 }
+.agenda-slot{
+  position:relative;
+}
 
+.hora-slot{
+  position:absolute;
+  top:5px;
+  left:6px;
+  font-size:11px;
+  font-weight:600;
+  color:#c9a18d;
+  opacity:.9;
+  pointer-events:none;
+}
+
+.agenda-slot:hover .hora-slot{
+  color:#ff5a1f;
+}
