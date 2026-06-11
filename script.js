@@ -227,12 +227,8 @@ function atualizarTextoDataAgenda(){
       "sábado"
     ];
 
-    const diaSemana =
-      diasSemana[dataAgenda.getDay()];
-
     campo.innerText =
-      `${formatarDataBR(dataAgenda)} • ${diaSemana}`;
-
+      `${formatarDataBR(dataAgenda)} • ${diasSemana[dataAgenda.getDay()]}`;
   }
 
   const calendario = document.getElementById("calendarioAgenda");
@@ -240,7 +236,6 @@ function atualizarTextoDataAgenda(){
   if(calendario){
     calendario.value = formatarDataISO(dataAgenda);
   }
-
 }
 async function salvarCliente(){
 
