@@ -1375,20 +1375,40 @@ async function carregarCaixas(){
 
     const movimentacoes = movs || [];
 
-    const entradas = movimentacoes.filter(m => m.tipo === "Entrada");
-    const saidas = movimentacoes.filter(m => m.tipo === "Saída");
+    const entradasPagamento = movimentacoes.filter(m =>
+      m.tipo === "Entrada" &&
+      m.forma_pagamento_id
+    );
 
-    const totalEntradas = entradas.reduce((soma, m)=> soma + Number(m.valor || 0), 0);
-    const totalSaidas = saidas.reduce((soma, m)=> soma + Number(m.valor || 0), 0);
+    const reforcos = movimentacoes.filter(m =>
+      m.tipo === "Entrada" &&
+      !m.forma_pagamento_id
+    );
+
+    const sangrias = movimentacoes.filter(m =>
+      m.tipo === "Saída"
+    );
+
+    const totalEntradasPagamento = entradasPagamento
+      .reduce((soma, m)=> soma + Number(m.valor || 0), 0);
+
+    const totalReforcos = reforcos
+      .reduce((soma, m)=> soma + Number(m.valor || 0), 0);
+
+    const totalSangrias = sangrias
+      .reduce((soma, m)=> soma + Number(m.valor || 0), 0);
 
     const totalEsperado =
-      Number(caixa.abertura || 0) + totalEntradas - totalSaidas;
+      Number(caixa.abertura || 0) +
+      totalEntradasPagamento +
+      totalReforcos -
+      totalSangrias;
 
     const porForma = {};
 
-    entradas.forEach(m=>{
+    entradasPagamento.forEach(m=>{
 
-      const forma = m.formas_pagamento?.nome || m.descricao || "Entrada";
+      const forma = m.formas_pagamento?.nome || "Forma não informada";
 
       if(!porForma[forma]){
         porForma[forma] = {
@@ -1400,7 +1420,7 @@ async function carregarCaixas(){
       porForma[forma].total += Number(m.valor || 0);
 
       porForma[forma].itens.push({
-        cliente: m.comandas?.clientes?.nome || m.descricao || "Movimentação",
+        cliente: m.comandas?.clientes?.nome || "Cliente não informado",
         valor: Number(m.valor || 0)
       });
 
@@ -1411,9 +1431,22 @@ async function carregarCaixas(){
 
         <h3>Caixa ${formatarDataComanda(caixa.data)}</h3>
 
-        <p><strong>Status:</strong> ${caixa.status}</p>
-        <p><strong>Aberto por:</strong> ${caixa.aberto_por || "-"}</p>
-        <p><strong>Abertura:</strong> ${dinheiro(caixa.abertura || 0)}</p>
+        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin:15px 0;">
+          <div class="card" style="margin:0;">
+            <small>Status</small>
+            <h3>${caixa.status}</h3>
+          </div>
+
+          <div class="card" style="margin:0;">
+            <small>Aberto por</small>
+            <h3>${caixa.aberto_por || "-"}</h3>
+          </div>
+
+          <div class="card" style="margin:0;">
+            <small>Abertura</small>
+            <h3>${dinheiro(caixa.abertura || 0)}</h3>
+          </div>
+        </div>
 
         ${caixa.status === "Fechado" ? `
           <p><strong>Fechamento:</strong> ${dinheiro(caixa.fechamento || 0)}</p>
@@ -1422,24 +1455,44 @@ async function carregarCaixas(){
 
         <hr>
 
-        <h4>Entradas por forma de pagamento</h4>
+        <h3>Entradas por forma de pagamento</h3>
 
         ${Object.keys(porForma).length ? Object.keys(porForma).map(forma=>`
-          <div style="margin:12px 0;">
-            <strong>${forma}: ${dinheiro(porForma[forma].total)}</strong>
+          <div style="margin:16px 0;padding:12px;border:1px solid #eee;border-radius:14px;">
+            <h4>${forma}: ${dinheiro(porForma[forma].total)}</h4>
 
             ${porForma[forma].itens.map(item=>`
-              <p style="margin:4px 0 0 12px;">
+              <p style="margin:5px 0 0 12px;">
                 ${item.cliente} — ${dinheiro(item.valor)}
               </p>
             `).join("")}
           </div>
-        `).join("") : "<p>Nenhuma entrada registrada.</p>"}
+        `).join("") : "<p>Nenhuma entrada de pagamento registrada.</p>"}
 
         <hr>
 
-        <p><strong>Total de entradas:</strong> ${dinheiro(totalEntradas)}</p>
-        <p><strong>Total de saídas/sangrias:</strong> ${dinheiro(totalSaidas)}</p>
+        <h3>Reforços</h3>
+
+        ${reforcos.length ? reforcos.map(m=>`
+          <p>${m.descricao || "Reforço de caixa"} — ${dinheiro(m.valor)}</p>
+        `).join("") : "<p>Nenhum reforço registrado.</p>"}
+
+        <h3>Sangrias</h3>
+
+        ${sangrias.length ? sangrias.map(m=>`
+          <p>${m.descricao || "Sangria de caixa"} — ${dinheiro(m.valor)}</p>
+        `).join("") : "<p>Nenhuma sangria registrada.</p>"}
+
+        <hr>
+
+        <h3>Resumo final</h3>
+
+        ${Object.keys(porForma).map(forma=>`
+          <p><strong>${forma}:</strong> ${dinheiro(porForma[forma].total)}</p>
+        `).join("")}
+
+        <p><strong>Reforços:</strong> ${dinheiro(totalReforcos)}</p>
+        <p><strong>Sangrias:</strong> ${dinheiro(totalSangrias)}</p>
         <p><strong>Total esperado:</strong> ${dinheiro(totalEsperado)}</p>
 
         <br>
@@ -1468,7 +1521,6 @@ async function carregarCaixas(){
     `;
   }
 }
-
 async function abrirCaixa(){
 
   const caixaAberto = await buscarCaixaAberto();
