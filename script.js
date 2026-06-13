@@ -5647,3 +5647,53 @@ async function excluirCaixa(caixaId){
 
   alert("Caixa excluído.");
 }
+async function abrirModalCliente(id = null){
+
+  let cliente = null;
+
+  if(id){
+    const resposta = await supabaseClient
+      .from("clientes")
+      .select("*")
+      .eq("id", id)
+      .single();
+
+    cliente = resposta.data;
+  }
+
+  abrirModal(`
+    <h2>${id ? "Editar cliente" : "Novo cliente"}</h2>
+
+    <input id="clienteId" type="hidden" value="${cliente?.id || ""}">
+
+    <label>Nome</label>
+    <input id="clienteNome" value="${cliente?.nome || ""}" placeholder="Nome da cliente">
+
+    <label>Telefone</label>
+    <input id="clienteTelefone" value="${cliente?.telefone || ""}" placeholder="Telefone">
+
+    <label>Aniversário</label>
+    <input id="clienteAniversario" type="date" value="${cliente?.aniversario || ""}">
+
+    <label>Observações</label>
+    <textarea id="clienteObservacoes">${cliente?.observacoes || ""}</textarea>
+
+    <label style="display:flex;gap:10px;align-items:center;">
+      <input
+        id="clienteVip"
+        type="checkbox"
+        style="width:auto;height:auto;"
+        ${cliente?.vip ? "checked" : ""}
+      >
+      Cliente VIP ⭐
+    </label>
+
+    <button class="principal" onclick="salvarCliente()">
+      Salvar
+    </button>
+
+    <button onclick="fecharModal()">
+      Cancelar
+    </button>
+  `);
+}
