@@ -5833,3 +5833,62 @@ function alternarDetalheCaixa(caixaId){
   detalhe.style.display =
     detalhe.style.display === "none" ? "block" : "none";
 }
+async function abrirCadastroClienteRapidoAgendamento(){
+
+  abrirModal(`
+    <h2>Novo cliente</h2>
+
+    <label>Nome</label>
+    <input id="clienteRapidoNome" placeholder="Nome da cliente">
+
+    <label>Telefone</label>
+    <input id="clienteRapidoTelefone" placeholder="Telefone">
+
+    <button
+      class="principal"
+      onclick="salvarClienteRapidoAgendamento()"
+    >
+      Salvar cliente
+    </button>
+
+    <button onclick="fecharModal()">
+      Cancelar
+    </button>
+  `);
+
+}
+async function salvarClienteRapidoAgendamento(){
+
+  const nome =
+    document.getElementById("clienteRapidoNome").value.trim();
+
+  const telefone =
+    document.getElementById("clienteRapidoTelefone").value.trim();
+
+  if(!nome){
+    alert("Digite o nome da cliente.");
+    return;
+  }
+
+  const { data, error } = await supabaseClient
+    .from("clientes")
+    .insert([{
+      nome,
+      telefone,
+      ativo: true
+    }])
+    .select()
+    .single();
+
+  if(error){
+    alert("Erro ao salvar cliente: " + error.message);
+    return;
+  }
+
+  fecharModal();
+
+  document.getElementById("agCliente").value = data.id;
+  document.getElementById("agClienteBusca").value = data.nome;
+
+  alert("Cliente cadastrado com sucesso.");
+}
