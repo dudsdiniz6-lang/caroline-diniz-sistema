@@ -5472,7 +5472,8 @@ async function carregarFormasPagamentoNosSelects(){
   });
 }
 async function salvarFaturamentoClienteDiaPago(){
-    const botaoConfirmar = document.querySelector(
+
+  const botaoConfirmar = document.querySelector(
     'button[onclick="salvarFaturamentoClienteDiaPago()"]'
   );
 
@@ -5499,18 +5500,17 @@ async function salvarFaturamentoClienteDiaPago(){
     alert("Nenhum serviço selecionado para faturar.");
     return;
   }
-  const idsAgendamentos = itensPagos.map(item => item.id);
+
+  const idsAgendamentos =
+    itensPagos.map(item => item.id);
 
   const jaFaturadosResp = await supabaseClient
     .from("comandas")
-    .select("agendamento_id")
+    .select("id")
     .in("agendamento_id", idsAgendamentos)
     .neq("cancelada", true);
 
-  const idsJaFaturados = (jaFaturadosResp.data || [])
-    .map(c => Number(c.agendamento_id));
-
-  if(idsJaFaturados.length > 0){
+  if((jaFaturadosResp.data || []).length > 0){
     alert("Um ou mais serviços selecionados já foram faturados. Atualize a agenda e tente novamente.");
 
     if(botaoConfirmar){
@@ -5521,6 +5521,7 @@ async function salvarFaturamentoClienteDiaPago(){
 
     return;
   }
+
   const pagamentosInformados = Array.from(
     document.querySelectorAll(".linha-pagamento")
   ).map(linha => ({
@@ -5533,6 +5534,13 @@ async function salvarFaturamentoClienteDiaPago(){
 
     if(pagamentosInformados.length === 0){
       alert("Informe pelo menos uma forma de pagamento.");
+
+      if(botaoConfirmar){
+        botaoConfirmar.dataset.salvando = "false";
+        botaoConfirmar.disabled = false;
+        botaoConfirmar.innerText = "Confirmar faturamento";
+      }
+
       return;
     }
 
@@ -5541,6 +5549,13 @@ async function salvarFaturamentoClienteDiaPago(){
 
     if(Number(totalPagamentos.toFixed(2)) !== Number(totalReceber.toFixed(2))){
       alert("A soma dos pagamentos precisa ser igual ao total selecionado.");
+
+      if(botaoConfirmar){
+        botaoConfirmar.dataset.salvando = "false";
+        botaoConfirmar.disabled = false;
+        botaoConfirmar.innerText = "Confirmar faturamento";
+      }
+
       return;
     }
 
@@ -5566,6 +5581,42 @@ async function salvarFaturamentoClienteDiaPago(){
 
   const grupo = grupoResp.data;
 
+  const profissionaisUnicos = [
+    ...new Set(itensPagos.map(item => item.profissional_id).filter(Boolean))
+  ];
+
+  const profissionalPrincipal =
+    profissionaisUnicos.length === 1
+      ? profissionaisUnicos[0]
+      : null;
+
+  const comandaResp = await supabaseClient
+    .from("comandas")
+    .insert([{
+      unidade_id: unidadeAtualId,
+      faturamento_grupo_id: grupo.id,
+      agendamento_id: primeiroItem.id,
+      cliente_id: primeiroItem.cliente_id,
+      profissional_id: profissionalPrincipal,
+      data: primeiroItem.data,
+      subtotal: itensPagos.reduce((soma, item)=> soma + Number(item.valor || 0), 0),
+      desconto: itensPagos.reduce((soma, item)=> soma + Number(item.desconto || 0), 0),
+      total: totalReceber,
+      status: tipoRecebimento === "receber_agora" ? "Fechada" : "Aberta",
+      cancelada: false
+    }])
+    .select()
+    .single();
+
+  if(comandaResp.error){
+    alert("Erro ao criar comanda: " + comandaResp.error.message);
+    return;
+  }
+
+  const comanda = comandaResp.data;
+
+  const itensComanda = [];
+
   for(const item of itensPagos){
 
     const percentualComissao = await buscarPercentualComissao(
@@ -5574,84 +5625,59 @@ async function salvarFaturamentoClienteDiaPago(){
       item.servicos?.comissao_padrao || 0
     );
 
-    const comandaResp = await supabaseClient
-      .from("comandas")
-      .insert([{
-        unidade_id: unidadeAtualId,
-        faturamento_grupo_id: grupo.id,
-        agendamento_id: item.id,
-        cliente_id: item.cliente_id,
-        profissional_id: item.profissional_id,
-        data: item.data,
-        subtotal: item.valor,
-        desconto: item.desconto,
-        total: item.total,
-        status: tipoRecebimento === "receber_agora" ? "Fechada" : "Aberta",
-        cancelada: false
-      }])
-      .select()
-      .single();
+    itensComanda.push({
+      comanda_id: comanda.id,
+      servico_id: item.servico_id,
+      profissional_id: item.profissional_id,
+      descricao: item.servicos?.nome || "Serviço",
+      valor: item.total,
+      comissao_percentual: percentualComissao
+    });
 
-    if(comandaResp.error){
-      alert("Erro ao criar comanda: " + comandaResp.error.message);
-      return;
-    }
+  }
 
-    const comanda = comandaResp.data;
+  const itensResp = await supabaseClient
+    .from("comanda_itens")
+    .insert(itensComanda);
 
-    await supabaseClient
-      .from("comanda_itens")
-      .insert([{
-        comanda_id: comanda.id,
-        servico_id: item.servico_id,
-        descricao: item.servicos?.nome || "Serviço",
-        valor: item.total,
-        comissao_percentual: percentualComissao
-      }]);
+  if(itensResp.error){
+    alert("Erro ao salvar itens da comanda: " + itensResp.error.message);
+    return;
+  }
 
-    if(tipoRecebimento === "receber_agora"){
+  if(tipoRecebimento === "receber_agora"){
 
-      for(const pagamento of pagamentosInformados){
+    for(const pagamento of pagamentosInformados){
 
-        const proporcao =
-          totalReceber > 0
-            ? Number(item.total || 0) / totalReceber
-            : 0;
+      await supabaseClient
+        .from("pagamentos")
+        .insert([{
+          comanda_id: comanda.id,
+          forma_pagamento_id: pagamento.formaPagamentoId,
+          valor: pagamento.valor,
+          data: primeiroItem.data
+        }]);
 
-        const valorPagamentoItem =
-          Number((pagamento.valor * proporcao).toFixed(2));
+      if(pagamento.formaNome !== "Crédito da Cliente"){
 
-        await supabaseClient
-          .from("pagamentos")
-          .insert([{
-            comanda_id: comanda.id,
-            forma_pagamento_id: pagamento.formaPagamentoId,
-            valor: valorPagamentoItem,
-            data: item.data
-          }]);
-
-        if(pagamento.formaNome !== "Crédito da Cliente"){
-
-          await registrarEntradaCaixa(
-            comanda.id,
-            pagamento.formaPagamentoId,
-            valorPagamentoItem
-          );
-
-        }
+        await registrarEntradaCaixa(
+          comanda.id,
+          pagamento.formaPagamentoId,
+          pagamento.valor
+        );
 
       }
 
     }
 
-    await supabaseClient
-      .from("agendamentos")
-      .update({
-        status: "Finalizado"
-      })
-      .eq("id", item.id);
-
   }
+
+  await supabaseClient
+    .from("agendamentos")
+    .update({
+      status: "Finalizado"
+    })
+    .in("id", idsAgendamentos);
 
   fecharModal();
   carregarAgenda();
