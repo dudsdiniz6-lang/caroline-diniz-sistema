@@ -2411,31 +2411,18 @@ async function excluirAgendamento(id){
     return;
   }
 
-  const { data: comanda } = await supabaseClient
+ const { data: comanda } = await supabaseClient
   .from("comandas")
   .select("*")
   .eq("agendamento_id", id)
   .maybeSingle();
-  if(comanda){
 
-    const confirmar = confirm(
-      "Este atendimento já foi faturado.\n\nAo cancelar, o sistema irá cancelar a comanda, retirar o valor do financeiro/caixa e manter histórico.\n\nDeseja continuar?"
-    );
+if(comanda){
+  alert("Este atendimento já foi faturado. Para cancelar, vá até a aba Comandas e cancele a comanda.");
+  return;
+}
 
-    if(!confirmar) return;
-
-    const motivo = prompt("Informe o motivo do cancelamento:");
-
-    if(!motivo){
-      alert("Informe o motivo do cancelamento.");
-      return;
-    }
-
-    await cancelarAtendimentoFaturado(agendamento, comanda, motivo);
-    return;
-  }
-
-  let modo = "unico";
+let modo = "unico";
 
   if(agendamento.recorrencia_id){
 
