@@ -994,7 +994,11 @@ const alertasClienteHtml =
   </div>
 
 </div>
-    <textarea id="agObservacoes">${agendamento?.observacoes || ""}</textarea>
+    <textarea
+  id="agObservacoes"
+  rows="2"
+  style="min-height:60px;resize:vertical;"
+>${agendamento?.observacoes || ""}</textarea>
   ${pode("agenda_recorrencia") ? `
   <label style="display:flex;gap:10px;align-items:center;">
     <input
