@@ -1000,43 +1000,63 @@ const alertasClienteHtml =
   style="min-height:60px;resize:vertical;"
 >${agendamento?.observacoes || ""}</textarea>
   ${pode("agenda_recorrencia") ? `
-  <label style="display:flex;gap:10px;align-items:center;">
-    <input
-      id="agRepetir"
-      type="checkbox"
-      style="width:auto;height:auto;"
-      ${agendamento?.recorrencia_ativa ? "checked" : ""}
-    >
-    Repetir agendamento
-  </label>
+ <label class="bloco-recorrencia-titulo">
+  <input
+    id="agRepetir"
+    type="checkbox"
+    style="width:auto;height:auto;"
+    ${agendamento?.recorrencia_ativa ? "checked" : ""}
+  >
+  Repetir agendamento
+</label>
 
-  <div id="areaRecorrenciaAgendamento">
-    <label>Intervalo entre repetições</label>
+<div id="areaRecorrenciaAgendamento" class="card-recorrencia">
 
-    <div style="display:flex;gap:8px;align-items:center;">
-      <button type="button" onclick="alterarIntervaloRecorrencia(-1)">-</button>
+  <div class="linha-recorrencia">
 
-      <input
-        id="agIntervaloRepeticao"
-        type="number"
-        min="1"
-        value="${agendamento?.recorrencia_intervalo_dias || 7}"
-        style="width:100px;margin-bottom:0;"
-      >
+    <div style="flex:1;">
+      <small>Repetir a cada</small>
 
-      <button type="button" onclick="alterarIntervaloRecorrencia(1)">+</button>
+      <div class="controle-recorrencia">
 
-      <span>dias</span>
+        <button
+          type="button"
+          onclick="alterarIntervaloRecorrencia(-1)"
+        >
+          −
+        </button>
+
+        <input
+          id="agIntervaloRepeticao"
+          type="number"
+          min="1"
+          value="${agendamento?.recorrencia_intervalo_dias || 7}"
+        >
+
+        <button
+          type="button"
+          onclick="alterarIntervaloRecorrencia(1)"
+        >
+          +
+        </button>
+
+      </div>
+
     </div>
 
-    <label>Repetir até</label>
-    <input
-      id="agRepetirAte"
-      type="date"
-      value="${agendamento?.recorrencia_ate || ""}"
-    >
+    <div style="flex:1;">
+      <small>Até a data</small>
+
+      <input
+        id="agRepetirAte"
+        type="date"
+        value="${agendamento?.recorrencia_ate || ""}"
+      >
+    </div>
+
   </div>
-` : `
+
+</div>
   <input id="agRepetir" type="hidden">
   <input id="agIntervaloRepeticao" type="hidden" value="7">
   <input id="agRepetirAte" type="hidden">
