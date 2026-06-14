@@ -5659,12 +5659,12 @@ async function salvarFaturamentoClienteDiaPago(){
 
   }
 
-  await supabaseClient
-    .from("agendamentos")
-    .update({
-      status: "Finalizado"
-    })
-    .in("id", idsAgendamentos);
+await supabaseClient
+  .from("agendamentos")
+  .update({
+    status: "Finalizado"
+  })
+  .in("id", idsAgendamentos);
 
   fecharModal();
   carregarAgenda();
