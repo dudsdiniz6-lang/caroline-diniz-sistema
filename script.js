@@ -2411,18 +2411,18 @@ async function excluirAgendamento(id){
     return;
   }
 
- const { data: comanda } = await supabaseClient
-  .from("comandas")
-  .select("*")
-  .eq("agendamento_id", id)
-  .maybeSingle();
+  const { data: comanda } = await supabaseClient
+    .from("comandas")
+    .select("*")
+    .eq("agendamento_id", id)
+    .maybeSingle();
 
-if(comanda){
-  alert("Este atendimento já foi faturado. Para cancelar, vá até a aba Comandas e cancele a comanda.");
-  return;
-}
+  if(comanda){
+    alert("Este atendimento já foi faturado. Para cancelar, vá até a aba Comandas e cancele a comanda.");
+    return;
+  }
 
-let modo = "unico";
+  let modo = "unico";
 
   if(agendamento.recorrencia_id){
 
@@ -2457,10 +2457,10 @@ let modo = "unico";
 
     resposta = await supabaseClient
       .from("agendamentos")
-     .update({
-  status: "Cancelado"
-})
-.eq("id", id);
+      .update({
+        status: "Cancelado"
+      })
+      .eq("id", id);
 
   }
 
