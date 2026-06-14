@@ -5472,6 +5472,19 @@ async function carregarFormasPagamentoNosSelects(){
   });
 }
 async function salvarFaturamentoClienteDiaPago(){
+    const botaoConfirmar = document.querySelector(
+    'button[onclick="salvarFaturamentoClienteDiaPago()"]'
+  );
+
+  if(botaoConfirmar?.dataset.salvando === "true"){
+    return;
+  }
+
+  if(botaoConfirmar){
+    botaoConfirmar.dataset.salvando = "true";
+    botaoConfirmar.disabled = true;
+    botaoConfirmar.innerText = "Salvando...";
+  }
 
   const tipoRecebimento =
     document.getElementById("fatTipoRecebimento").value;
@@ -5486,7 +5499,28 @@ async function salvarFaturamentoClienteDiaPago(){
     alert("Nenhum serviço selecionado para faturar.");
     return;
   }
+  const idsAgendamentos = itensPagos.map(item => item.id);
 
+  const jaFaturadosResp = await supabaseClient
+    .from("comandas")
+    .select("agendamento_id")
+    .in("agendamento_id", idsAgendamentos)
+    .neq("cancelada", true);
+
+  const idsJaFaturados = (jaFaturadosResp.data || [])
+    .map(c => Number(c.agendamento_id));
+
+  if(idsJaFaturados.length > 0){
+    alert("Um ou mais serviços selecionados já foram faturados. Atualize a agenda e tente novamente.");
+
+    if(botaoConfirmar){
+      botaoConfirmar.dataset.salvando = "false";
+      botaoConfirmar.disabled = false;
+      botaoConfirmar.innerText = "Confirmar faturamento";
+    }
+
+    return;
+  }
   const pagamentosInformados = Array.from(
     document.querySelectorAll(".linha-pagamento")
   ).map(linha => ({
