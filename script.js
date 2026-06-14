@@ -5378,6 +5378,12 @@ async function confirmarFaturamentoClienteDia(){
     alert("Selecione pelo menos um serviço para faturar.");
     return;
   }
+  const caixa = await buscarCaixaAberto();
+
+if(!caixa){
+  alert("Não existe caixa aberto. Abra o caixa antes de faturar.");
+  return;
+}
 
   const itensSelecionados = (window.itensFaturamentoClienteCache || [])
     .filter(item => selecionados.includes(Number(item.id)));
