@@ -881,10 +881,10 @@ const alertasClienteHtml =
     <h2>${id ? "Editar agendamento" : "Novo agendamento"}</h2>
 
     <input id="agendamentoId" type="hidden" value="${agendamento?.id || ""}">
-
 <label>Cliente</label>
 
 <div style="display:flex;gap:8px;align-items:center;">
+
   <input
     id="agClienteBusca"
     placeholder="Digite o nome ou telefone da cliente..."
@@ -896,22 +896,24 @@ const alertasClienteHtml =
   <button
     type="button"
     onclick="abrirCadastroClienteRapidoAgendamento()"
-    title="Cadastrar nova cliente"
   >
     +
   </button>
+
 </div>
 
 <div class="busca-cliente-agenda">
-    placeholder="Digite o nome ou telefone da cliente..."
-    value="${agendamento ? (clientes.find(c => String(c.id) === String(agendamento.cliente_id))?.nome || "") : ""}"
-    oninput="filtrarClientesAgendamento()"
+
+  <input
+    id="agCliente"
+    type="hidden"
+    value="${agendamento?.cliente_id || ""}"
   >
 
-  <input id="agCliente" type="hidden" value="${agendamento?.cliente_id || ""}">
-
   <div id="resultadoBuscaClientesAgendamento" class="resultado-busca"></div>
+
   ${alertasClienteHtml}
+
 </div>
 
     <label>Profissional</label>
