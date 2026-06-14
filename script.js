@@ -895,7 +895,7 @@ const alertasClienteHtml =
 
   <button
     type="button"
-    onclick="abrirCadastroClienteRapidoAgendamento()"
+    onclick="mostrarCadastroClienteRapidoAgendamento()"
   >
     +
   </button>
@@ -913,6 +913,8 @@ const alertasClienteHtml =
   <div id="resultadoBuscaClientesAgendamento" class="resultado-busca"></div>
 
   ${alertasClienteHtml}
+
+  <div id="areaClienteRapidoAgendamento"></div>
 
 </div>
 
@@ -5891,4 +5893,68 @@ async function salvarClienteRapidoAgendamento(){
   document.getElementById("agClienteBusca").value = data.nome;
 
   alert("Cliente cadastrado com sucesso.");
+}
+function mostrarCadastroClienteRapidoAgendamento(){
+
+  const area = document.getElementById("areaClienteRapidoAgendamento");
+
+  if(!area){
+    alert("Área de cadastro rápido não encontrada.");
+    return;
+  }
+
+  area.innerHTML = `
+    <div class="card" style="margin:12px 0;">
+      <h3>Cadastrar nova cliente</h3>
+
+      <label>Nome</label>
+      <input id="clienteRapidoNome" placeholder="Nome da cliente">
+
+      <label>Telefone</label>
+      <input id="clienteRapidoTelefone" placeholder="Telefone">
+
+      <button
+        class="principal"
+        type="button"
+        onclick="salvarClienteRapidoAgendamento()"
+      >
+        Salvar cliente
+      </button>
+    </div>
+  `;
+}
+
+async function salvarClienteRapidoAgendamento(){
+
+  const nome = document.getElementById("clienteRapidoNome")?.value.trim();
+  const telefone = document.getElementById("clienteRapidoTelefone")?.value.trim();
+
+  if(!nome){
+    alert("Digite o nome da cliente.");
+    return;
+  }
+
+  const { data, error } = await supabaseClient
+    .from("clientes")
+    .insert([{
+      unidade_id: unidadeAtualId,
+      nome,
+      telefone,
+      ativo: true
+    }])
+    .select()
+    .single();
+
+  if(error){
+    alert("Erro ao salvar cliente: " + error.message);
+    return;
+  }
+
+  document.getElementById("agCliente").value = data.id;
+  document.getElementById("agClienteBusca").value = data.nome;
+
+  const area = document.getElementById("areaClienteRapidoAgendamento");
+  if(area) area.innerHTML = "";
+
+  alert("Cliente cadastrada e selecionada.");
 }
