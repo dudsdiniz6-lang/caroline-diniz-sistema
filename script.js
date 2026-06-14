@@ -1536,14 +1536,19 @@ async function carregarCaixas(){
       </button>
     ` : ""}
 
-    ${pode("caixa_excluir") ? `
-      <button onclick="excluirCaixa(${caixa.id})">
-        Excluir caixa
-      </button>
-    ` : ""}
+ ${pode("caixa_excluir") ? `
+  <button onclick="excluirCaixa(${caixa.id})">
+    Excluir caixa
+  </button>
+` : ""}
 
   </div>
 `;
+
+  }
+
+}
+
 async function abrirCaixa(){
 
   const caixaAberto = await buscarCaixaAberto();
