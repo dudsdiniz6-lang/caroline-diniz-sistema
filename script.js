@@ -2996,9 +2996,15 @@ async function carregarComandas(){
             </strong>
           </p>
 
-          <button onclick="abrirComanda(${comanda.id})">
-            Visualizar
-          </button>
+         <button onclick="abrirComanda(${comanda.id})">
+  Visualizar
+</button>
+
+${comanda.status !== "Cancelada" && comanda.cancelada !== true ? `
+  <button onclick="cancelarComandaPelaAba(${comanda.id})">
+    Cancelar faturamento
+  </button>
+` : ""}
 
         </div>
       `;
@@ -5328,7 +5334,22 @@ async function abrirFaturamentoClienteDia(agendamentoId){
     .neq("status", "Cancelado")
     .order("horario");
 
-  const itens = agendamentosDia || [];
+let itens = agendamentosDia || [];
+
+const idsAgendamentos = itens.map(item => item.id);
+
+const comandasExistentesResp = await supabaseClient
+  .from("comandas")
+  .select("agendamento_id")
+  .in("agendamento_id", idsAgendamentos)
+  .neq("cancelada", true);
+
+const idsJaFaturados = (comandasExistentesResp.data || [])
+  .map(c => c.agendamento_id);
+
+itens = itens.filter(item =>
+  !idsJaFaturados.includes(item.id)
+);
 
   if(itens.length === 0){
     alert("Não há serviços pendentes para faturar desta cliente neste dia.");
@@ -6091,4 +6112,38 @@ async function salvarClienteRapidoAgendamento(){
   if(area) area.innerHTML = "";
 
   alert("Cliente cadastrada e selecionada.");
+}
+async function cancelarComandaPelaAba(comandaId){
+
+  const { data: comanda, error } = await supabaseClient
+    .from("comandas")
+    .select("*")
+    .eq("id", comandaId)
+    .single();
+
+  if(error || !comanda){
+    alert("Comanda não encontrada.");
+    return;
+  }
+
+  const motivo = prompt("Informe o motivo do cancelamento:");
+
+  if(!motivo){
+    alert("Informe o motivo do cancelamento.");
+    return;
+  }
+
+  const agendamentoFake = {
+    id: comanda.agendamento_id,
+    cliente_id: comanda.cliente_id,
+    profissional_id: comanda.profissional_id
+  };
+
+  await cancelarAtendimentoFaturado(
+    agendamentoFake,
+    comanda,
+    motivo
+  );
+
+  carregarComandas();
 }
