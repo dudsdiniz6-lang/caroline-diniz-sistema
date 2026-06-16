@@ -140,6 +140,10 @@ function esconderBotaoMenu(texto){
 }
 
 function mostrarTela(nome){
+  if(nome === "dashboard" && !pode("dashboard_visualizar")){
+  alert("Você não tem permissão para visualizar o dashboard.");
+  return;
+}
 
   document.querySelectorAll(".tela").forEach((tela)=>{
     tela.classList.remove("ativa");
