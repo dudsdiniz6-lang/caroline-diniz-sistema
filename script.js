@@ -6464,5 +6464,19 @@ function porcentagemMeta(valor, meta){
 
 </div>
 
+<div class="dashboard-ranking">
+
+  <h2>Ranking de profissionais hoje</h2>
+
+  ${rankingOrdenado.length ? rankingOrdenado.map((p, index)=>`
+    <div class="ranking-linha">
+      <span>${index + 1}. ${p.nome}</span>
+      <strong>${dinheiro(p.faturamento)}</strong>
+      <small>${p.atendimentos} atendimento(s) • Comissão ${dinheiro(p.comissao)}</small>
+    </div>
+  `).join("") : "<p>Nenhum faturamento hoje.</p>"}
+
+</div>
+
 `;
 }
