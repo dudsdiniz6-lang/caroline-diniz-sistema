@@ -4519,11 +4519,8 @@ async function carregarPermissoesUsuario(){
 }
 
 function temPermissao(chave){
-
-  if(usuarioLogado?.tipo === "dono"){
-    return true;
-  }
-
+  return true;
+}
   if(usuarioLogado?.perfil === "dono"){
     return true;
   }
