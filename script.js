@@ -151,6 +151,7 @@ function mostrarTela(nome){
     tela.classList.add("ativa");
   }
 
+  if(nome === "dashboard") carregarDashboard();
   if(nome === "agenda") carregarAgenda();
   if(nome === "clientes") carregarClientes();
   if(nome === "profissionais") carregarProfissionais();
@@ -185,7 +186,8 @@ function iniciarSistema(){
 
   atualizarTextoDataAgenda();
 
-  carregarAgenda();
+  mostrarTela("dashboard");
+
   carregarClientes();
   carregarProfissionais();
   carregarServicos();
@@ -6221,4 +6223,109 @@ async function registrarHistoricoOperacao(
       dados: dados
     }]);
 
+}
+async function carregarDashboard(){
+
+  const area = document.getElementById("areaDashboard");
+
+  if(!area) return;
+
+  area.innerHTML = "Carregando dashboard...";
+
+  const hoje = formatarDataISO(new Date());
+
+  const comandasResp = await supabaseClient
+    .from("comandas")
+    .select("*")
+    .eq("data", hoje)
+    .neq("cancelada", true);
+
+  const agendamentosResp = await supabaseClient
+    .from("agendamentos")
+    .select("*")
+    .eq("data", hoje)
+    .neq("status", "Cancelado");
+
+  const caixaResp = await supabaseClient
+    .from("caixas")
+    .select("*")
+    .eq("status", "Aberto")
+    .maybeSingle();
+
+  const clientesResp = await supabaseClient
+    .from("clientes")
+    .select("*")
+    .eq("ativo", true);
+
+  const comandas = comandasResp.data || [];
+  const agendamentos = agendamentosResp.data || [];
+  const clientes = clientesResp.data || [];
+
+  const faturamentoHoje = comandas
+    .reduce((soma, c)=> soma + Number(c.total || 0), 0);
+
+  const clientesAtendidos = agendamentos
+    .filter(a => a.status === "Finalizado")
+    .length;
+
+  const totalAgenda = agendamentos.length;
+
+  const ticketMedio =
+    comandas.length > 0
+      ? faturamentoHoje / comandas.length
+      : 0;
+
+  const clientesRisco = clientes.filter(c => {
+
+    if(!c.ultima_visita) return false;
+
+    const ultima = new Date(c.ultima_visita);
+    const hojeData = new Date();
+
+    const dias =
+      (hojeData - ultima) / (1000 * 60 * 60 * 24);
+
+    return dias >= 60;
+
+  }).length;
+
+  area.innerHTML = `
+
+    <div class="dashboard-grid">
+
+      <div class="dashboard-card">
+        <h3>Faturamento hoje</h3>
+        <strong>${dinheiro(faturamentoHoje)}</strong>
+      </div>
+
+      <div class="dashboard-card">
+        <h3>Caixa</h3>
+        <strong>
+          ${caixaResp.data ? "ABERTO" : "FECHADO"}
+        </strong>
+      </div>
+
+      <div class="dashboard-card">
+        <h3>Clientes atendidas</h3>
+        <strong>${clientesAtendidos}</strong>
+      </div>
+
+      <div class="dashboard-card">
+        <h3>Agendamentos hoje</h3>
+        <strong>${totalAgenda}</strong>
+      </div>
+
+      <div class="dashboard-card">
+        <h3>Ticket médio</h3>
+        <strong>${dinheiro(ticketMedio)}</strong>
+      </div>
+
+      <div class="dashboard-card">
+        <h3>Clientes em risco</h3>
+        <strong>${clientesRisco}</strong>
+      </div>
+
+    </div>
+
+  `;
 }
