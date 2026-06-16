@@ -4751,9 +4751,8 @@ async function gerarComissoesPorPeriodo(){
     `)
     .gte("data", inicio)
     .lte("data", fim)
-    .in("status", ["Fechada", "Aberta"])
-.neq("status", "Cancelada")
-.neq("cancelada", true)
+    .in("status", ["Fechada", "Aberta", "Parcial"])
+    .neq("cancelada", true)
     .order("data", { ascending:true });
 
   if(error){
@@ -4768,7 +4767,21 @@ async function gerarComissoesPorPeriodo(){
     const profissional = comanda.profissionais?.nome || "Sem profissional";
     const cliente = comanda.clientes?.nome || "Cliente não informado";
 
+    const itensUnicos = [];
+    const chaves = new Set();
+
     (comanda.comanda_itens || []).forEach((item)=>{
+
+      const chave = `${comanda.id}-${item.descricao}-${item.valor}-${item.comissao_percentual}`;
+
+      if(!chaves.has(chave)){
+        chaves.add(chave);
+        itensUnicos.push(item);
+      }
+
+    });
+
+    itensUnicos.forEach((item)=>{
 
       if(!porProfissional[profissional]){
         porProfissional[profissional] = {
@@ -4823,7 +4836,7 @@ async function gerarComissoesPorPeriodo(){
           <div
             class="linha"
             style="cursor:pointer;"
-           onclick="abrirPaginaDetalheComissao('${profissional.replace(/'/g, "\\'")}')"
+            onclick="abrirPaginaDetalheComissao('${profissional.replace(/'/g, "\\'")}')"
           >
             <span>${profissional}</span>
             <span>${dados.totalAtendimentos}</span>
