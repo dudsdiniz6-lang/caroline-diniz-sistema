@@ -6367,11 +6367,43 @@ function porcentagemMeta(valor, meta){
       </div>
 
       <div class="dashboard-card">
-        <h3>Clientes em risco</h3>
-        <strong>${clientesRisco}</strong>
-      </div>
+  <h3>Clientes em risco</h3>
+  <strong>${clientesRisco}</strong>
+</div>
 
-    </div>
+<div class="dashboard-card">
+  <h3>Meta diária</h3>
+  <strong>${dinheiro(faturamentoHoje)} / ${dinheiro(metaDiaria)}</strong>
+  <div class="barra-meta">
+    <div style="width:${porcentagemMeta(faturamentoHoje, metaDiaria)}%"></div>
+  </div>
+</div>
 
-  `;
+<div class="dashboard-card">
+  <h3>Meta semanal</h3>
+  <strong>${dinheiro(faturamentoSemana)} / ${dinheiro(metaSemanal)}</strong>
+  <div class="barra-meta">
+    <div style="width:${porcentagemMeta(faturamentoSemana, metaSemanal)}%"></div>
+  </div>
+</div>
+
+<div class="dashboard-card">
+  <h3>Meta mensal</h3>
+  <strong>${dinheiro(faturamentoMes)} / ${dinheiro(metaMensal)}</strong>
+  <div class="barra-meta">
+    <div style="width:${porcentagemMeta(faturamentoMes, metaMensal)}%"></div>
+  </div>
+</div>
+
+<div class="dashboard-card">
+  <h3>Meta anual</h3>
+  <strong>${dinheiro(faturamentoAno)} / ${dinheiro(metaAnual)}</strong>
+  <div class="barra-meta">
+    <div style="width:${porcentagemMeta(faturamentoAno, metaAnual)}%"></div>
+  </div>
+</div>
+
+</div>
+
+`;
 }
