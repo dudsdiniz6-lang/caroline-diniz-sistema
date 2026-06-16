@@ -6256,10 +6256,28 @@ async function carregarDashboard(){
     .from("clientes")
     .select("*")
     .eq("ativo", true);
+  const metasResp = await supabaseClient
+  .from("metas_financeiras")
+  .select("*")
+  .eq("unidade_id", unidadeAtualId)
+  .eq("ativo", true);
 
   const comandas = comandasResp.data || [];
   const agendamentos = agendamentosResp.data || [];
   const clientes = clientesResp.data || [];
+  const metas = metasResp.data || [];
+
+const metaDiaria =
+  Number(metas.find(m => m.tipo === "diaria")?.valor || 0);
+
+const metaSemanal =
+  Number(metas.find(m => m.tipo === "semanal")?.valor || 0);
+
+const metaMensal =
+  Number(metas.find(m => m.tipo === "mensal")?.valor || 0);
+
+const metaAnual =
+  Number(metas.find(m => m.tipo === "anual")?.valor || 0);
 
   const faturamentoHoje = comandas
     .reduce((soma, c)=> soma + Number(c.total || 0), 0);
