@@ -916,3 +916,18 @@ textarea{
   color:#ff5a1f;
   display:block;
 }
+.barra-meta{
+  width:100%;
+  height:10px;
+  background:#f1f1f1;
+  border-radius:30px;
+  margin-top:12px;
+  overflow:hidden;
+}
+
+.barra-meta div{
+  height:100%;
+  background:#ff5a1f;
+  border-radius:30px;
+  transition:.3s;
+}
