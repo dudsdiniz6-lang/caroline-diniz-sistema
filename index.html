@@ -29,6 +29,7 @@
       <h2>Caroline Diniz</h2>
 
       <nav>
+        <button onclick="mostrarTela('dashboard')">Dashboard</button>
         <button onclick="mostrarTela('agenda')">Agenda</button>
         <button onclick="mostrarTela('clientes')">Clientes</button>
         <button onclick="mostrarTela('profissionais')">Profissionais</button>
@@ -46,7 +47,17 @@
 
    <main class="main">
 
- <section id="tela-agenda" class="tela ativa">
+<section id="tela-dashboard" class="tela ativa">
+  <div class="topo">
+    <h1>Dashboard</h1>
+    <button class="principal" onclick="carregarDashboard()">
+      Atualizar
+    </button>
+  </div>
+
+  <div id="areaDashboard"></div>
+</section>
+  <section id="tela-agenda" class="tela">
 
   <div class="topo agenda-topo">
     <div>
