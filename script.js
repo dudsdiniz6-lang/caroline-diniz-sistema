@@ -6517,8 +6517,9 @@ async function carregarFormasPagamentoConfig(){
 
   const { data, error } = await supabaseClient
     .from("formas_pagamento")
-    .select("*")
-    .order("nome");
+.select("*")
+.neq("cancelada", true)
+.order("nome");
 
   if(error){
     area.innerHTML = "Erro ao carregar formas de pagamento.";
@@ -6552,9 +6553,15 @@ async function carregarFormasPagamentoConfig(){
           </small>
         </span>
 
-        <button onclick="toggleFormaPagamento(${forma.id})">
-          ${ativo ? "Desativar" : "Ativar"}
-        </button>
+      <div style="display:flex;gap:8px;">
+  <button onclick="toggleFormaPagamento(${forma.id})">
+    ${ativo ? "Desativar" : "Ativar"}
+  </button>
+
+  <button onclick="cancelarFormaPagamento(${forma.id})">
+    Cancelar
+  </button>
+</div>
 
       </div>
     `;
@@ -6609,6 +6616,30 @@ async function toggleFormaPagamento(id){
 
   if(error){
     alert("Erro ao alterar forma de pagamento: " + error.message);
+    return;
+  }
+
+  carregarFormasPagamentoConfig();
+}
+async function cancelarFormaPagamento(id){
+
+  const confirmar = confirm(
+    "Deseja cancelar esta forma de pagamento? Ela sairá da lista, mas o histórico financeiro será preservado."
+  );
+
+  if(!confirmar) return;
+
+  const { error } = await supabaseClient
+    .from("formas_pagamento")
+    .update({
+      ativo: false,
+      cancelada: true,
+      cancelada_em: new Date().toISOString()
+    })
+    .eq("id", id);
+
+  if(error){
+    alert("Erro ao cancelar forma de pagamento: " + error.message);
     return;
   }
 
