@@ -20,11 +20,6 @@ function dinheiro(valor){
   return `R$ ${Number(valor || 0).toFixed(2)}`;
 }
 function pode(chave){
-
-  if(typeof temPermissao === "function"){
-    return temPermissao(chave);
-  }
-
   return true;
 }
 
@@ -4520,16 +4515,6 @@ async function carregarPermissoesUsuario(){
 
 function temPermissao(chave){
   return true;
-}
-  if(usuarioLogado?.perfil === "dono"){
-    return true;
-  }
-
-  if(usuarioLogado?.usuario === "dono"){
-    return true;
-  }
-
-  return permissoesUsuario.includes(chave);
 }
 function adicionarItemPacote(){
 
