@@ -931,3 +931,35 @@ textarea{
   border-radius:30px;
   transition:.3s;
 }
+.dashboard-ranking{
+  background:#fff;
+  border:1px solid #eee;
+  border-radius:18px;
+  padding:22px;
+  margin-top:24px;
+}
+
+.ranking-linha{
+  display:grid;
+  grid-template-columns:1.5fr 140px 1.5fr;
+  gap:16px;
+  align-items:center;
+  padding:12px 0;
+  border-bottom:1px solid #f1f1f1;
+}
+
+.ranking-linha:last-child{
+  border-bottom:none;
+}
+
+.ranking-linha span{
+  font-weight:600;
+}
+
+.ranking-linha strong{
+  color:#ff5a1f;
+}
+
+.ranking-linha small{
+  color:#777;
+}
