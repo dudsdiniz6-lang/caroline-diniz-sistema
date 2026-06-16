@@ -6521,7 +6521,7 @@ async function carregarFormasPagamentoConfig(){
     .order("nome");
 
   if(error){
-    area.innerHTML = "Erro ao carregar.";
+    area.innerHTML = "Erro ao carregar formas de pagamento.";
     return;
   }
 
@@ -6529,22 +6529,31 @@ async function carregarFormasPagamentoConfig(){
 
   (data || []).forEach((forma)=>{
 
+    const ativo = forma.ativo === true;
+
     area.innerHTML += `
       <div
         style="
           display:flex;
           justify-content:space-between;
+          align-items:center;
           margin-bottom:10px;
           padding:10px;
           border:1px solid #eee;
           border-radius:10px;
+          opacity:${ativo ? "1" : ".45"};
         "
       >
 
-        <span>${forma.nome}</span>
+        <span>
+          ${forma.nome}
+          <small style="display:block;color:#777;">
+            ${ativo ? "Ativa" : "Desativada"}
+          </small>
+        </span>
 
-        <button onclick="toggleFormaPagamento(${forma.id}, ${forma.ativo})">
-          ${forma.ativo ? "Desativar" : "Ativar"}
+        <button onclick="toggleFormaPagamento(${forma.id})">
+          ${ativo ? "Desativar" : "Ativar"}
         </button>
 
       </div>
@@ -6553,7 +6562,6 @@ async function carregarFormasPagamentoConfig(){
   });
 
 }
-
 async function criarFormaPagamentoConfig(){
 
   const nome = document.getElementById("novaFormaPagamentoNome").value.trim();
@@ -6579,12 +6587,23 @@ async function criarFormaPagamentoConfig(){
 
   carregarFormasPagamentoConfig();
 }
-async function toggleFormaPagamento(id, ativoAtual){
+async function toggleFormaPagamento(id){
+
+  const { data: forma, error: erroBusca } = await supabaseClient
+    .from("formas_pagamento")
+    .select("*")
+    .eq("id", id)
+    .single();
+
+  if(erroBusca || !forma){
+    alert("Forma de pagamento não encontrada.");
+    return;
+  }
 
   const { error } = await supabaseClient
     .from("formas_pagamento")
     .update({
-      ativo: !ativoAtual
+      ativo: !forma.ativo
     })
     .eq("id", id);
 
