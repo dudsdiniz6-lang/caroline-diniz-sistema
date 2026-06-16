@@ -884,3 +884,35 @@ textarea{
   border-radius:8px;
   cursor:pointer;
 }
+.dashboard-grid{
+  display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(240px,1fr));
+  gap:20px;
+  margin-top:20px;
+}
+
+.dashboard-card{
+  background:#ffffff;
+  border-radius:18px;
+  padding:22px;
+  border:1px solid #ececec;
+  box-shadow:0 4px 10px rgba(0,0,0,.04);
+  transition:.2s;
+}
+
+.dashboard-card:hover{
+  transform:translateY(-2px);
+}
+
+.dashboard-card h3{
+  font-size:15px;
+  color:#666;
+  margin-bottom:12px;
+  font-weight:500;
+}
+
+.dashboard-card strong{
+  font-size:28px;
+  color:#ff5a1f;
+  display:block;
+}
