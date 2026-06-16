@@ -3120,29 +3120,27 @@ function adicionarDias(data, dias){
 
 async function criarAgendamentosRecorrentes(dadosBase){
 
-  const repetir = document.getElementById("agRepetir")?.checked || false;
-  const repetirAte = document.getElementById("agRepetirAte")?.value;
+  const repetirAte = dadosBase.recorrencia_ate;
+  const intervaloDias = Number(dadosBase.recorrencia_intervalo_dias || 7);
 
-  if(!repetir || !repetirAte){
+  if(!repetirAte){
     return;
   }
 
   const inicio = new Date(dadosBase.data + "T00:00:00");
-  const fim = new Date(repetirAte + "T00:00:00");
+  const fim = new Date(repetirAte + "T23:59:59");
 
   if(fim <= inicio){
     alert("A data final da repetição precisa ser depois da data inicial.");
     return;
   }
 
-  const recorrenciaId = dadosBase.recorrencia_id || gerarIdRecorrencia();
+  const recorrenciaId =
+    dadosBase.recorrencia_id || gerarIdRecorrencia();
 
   const novosAgendamentos = [];
 
-const intervaloDias =
-  Number(document.getElementById("agIntervaloRepeticao")?.value || 7);
-
-let dataAtual = adicionarDias(inicio, intervaloDias);
+  let dataAtual = adicionarDias(inicio, intervaloDias);
 
   while(dataAtual <= fim){
 
@@ -3151,19 +3149,25 @@ let dataAtual = adicionarDias(inicio, intervaloDias);
       data: formatarDataISO(dataAtual),
       recorrencia_id: recorrenciaId,
       recorrencia_ativa: true,
-     recorrencia_frequencia: "personalizada",
-recorrencia_intervalo_dias: intervaloDias,
+      recorrencia_frequencia: "personalizada",
+      recorrencia_intervalo_dias: intervaloDias,
       recorrencia_ate: repetirAte,
       status: "Agendado"
     });
 
-  dataAtual = adicionarDias(dataAtual, intervaloDias);
+    dataAtual = adicionarDias(dataAtual, intervaloDias);
   }
 
   if(novosAgendamentos.length > 0){
-    await supabaseClient
+
+    const { error } = await supabaseClient
       .from("agendamentos")
       .insert(novosAgendamentos);
+
+    if(error){
+      alert("Erro ao criar recorrências: " + error.message);
+    }
+
   }
 }
 function mudarDataAgendaPeloCalendario(){
