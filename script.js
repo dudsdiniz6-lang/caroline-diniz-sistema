@@ -4057,8 +4057,33 @@ async function carregarConfiguracoes(){
       </button>
 
     </div>
+<div class="card">
 
+  <h3>Formas de pagamento</h3>
+
+  <div id="listaFormasPagamentoConfig">
+    Carregando formas...
+  </div>
+
+  <br>
+
+  <label>Nova forma de pagamento</label>
+  <input
+    id="novaFormaPagamentoNome"
+    placeholder="Ex: Voucher, Transferência, Link de pagamento"
+  >
+
+  <button
+    class="principal"
+    onclick="criarFormaPagamentoConfig()"
+  >
+    Adicionar forma
+  </button>
+
+</div>
   `;
+  carregarFormasPagamentoConfig();
+
 }
 
 async function salvarConfiguracoes(){
@@ -6488,4 +6513,74 @@ function porcentagemMeta(valor, meta){
 </div>
 
 `;
+}
+async function carregarFormasPagamentoConfig(){
+
+  const area = document.getElementById("listaFormasPagamentoConfig");
+
+  if(!area) return;
+
+  const { data, error } = await supabaseClient
+    .from("formas_pagamento")
+    .select("*")
+    .order("nome");
+
+  if(error){
+    area.innerHTML = "Erro ao carregar.";
+    return;
+  }
+
+  area.innerHTML = "";
+
+  (data || []).forEach((forma)=>{
+
+    area.innerHTML += `
+      <div
+        style="
+          display:flex;
+          justify-content:space-between;
+          margin-bottom:10px;
+          padding:10px;
+          border:1px solid #eee;
+          border-radius:10px;
+        "
+      >
+
+        <span>${forma.nome}</span>
+
+        <button onclick="toggleFormaPagamento(${forma.id}, ${forma.ativo})">
+          ${forma.ativo ? "Desativar" : "Ativar"}
+        </button>
+
+      </div>
+    `;
+
+  });
+
+}
+
+async function criarFormaPagamentoConfig(){
+
+  const nome = document.getElementById("novaFormaPagamentoNome").value.trim();
+
+  if(!nome){
+    alert("Digite um nome.");
+    return;
+  }
+
+  const { error } = await supabaseClient
+    .from("formas_pagamento")
+    .insert([{
+      nome,
+      ativo: true
+    }]);
+
+  if(error){
+    alert("Erro: " + error.message);
+    return;
+  }
+
+  document.getElementById("novaFormaPagamentoNome").value = "";
+
+  carregarFormasPagamentoConfig();
 }
