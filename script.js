@@ -5927,6 +5927,19 @@ async function confirmarFechamentoCaixa(caixaId, esperado){
     return;
   }
 
+  await registrarHistoricoOperacao(
+    "fechamento_caixa",
+    String(caixaId),
+    "Fechamento de caixa realizado",
+    {
+      caixa_id: caixaId,
+      valor_esperado: esperado,
+      valor_contado: valorContado,
+      diferenca: diferenca,
+      observacao: observacao
+    }
+  );
+
   fecharModal();
   carregarCaixas();
 
@@ -5956,6 +5969,15 @@ async function excluirCaixa(caixaId){
     alert("Erro ao excluir caixa: " + error.message);
     return;
   }
+
+  await registrarHistoricoOperacao(
+    "exclusao_caixa",
+    String(caixaId),
+    "Caixa excluído do sistema",
+    {
+      caixa_id: caixaId
+    }
+  );
 
   carregarCaixas();
 
