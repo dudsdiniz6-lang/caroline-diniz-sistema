@@ -6584,3 +6584,19 @@ async function criarFormaPagamentoConfig(){
 
   carregarFormasPagamentoConfig();
 }
+async function toggleFormaPagamento(id, ativoAtual){
+
+  const { error } = await supabaseClient
+    .from("formas_pagamento")
+    .update({
+      ativo: !ativoAtual
+    })
+    .eq("id", id);
+
+  if(error){
+    alert("Erro ao alterar forma de pagamento: " + error.message);
+    return;
+  }
+
+  carregarFormasPagamentoConfig();
+}
