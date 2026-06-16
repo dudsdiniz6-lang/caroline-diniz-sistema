@@ -4519,6 +4519,19 @@ async function carregarPermissoesUsuario(){
 }
 
 function temPermissao(chave){
+
+  if(usuarioLogado?.tipo === "dono"){
+    return true;
+  }
+
+  if(usuarioLogado?.perfil === "dono"){
+    return true;
+  }
+
+  if(usuarioLogado?.usuario === "dono"){
+    return true;
+  }
+
   return permissoesUsuario.includes(chave);
 }
 function adicionarItemPacote(){
