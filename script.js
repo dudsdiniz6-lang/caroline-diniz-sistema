@@ -6410,6 +6410,20 @@ function porcentagemMeta(valor, meta){
         <h3>Ticket médio</h3>
         <strong>${dinheiro(ticketMedio)}</strong>
       </div>
+      <div class="dashboard-card">
+  <h3>Profissional destaque hoje</h3>
+  <strong>${profissionalTop}</strong>
+</div>
+
+<div class="dashboard-card">
+  <h3>Mais atendimentos hoje</h3>
+  <strong>${profissionalMaisAtendimentos}</strong>
+</div>
+
+<div class="dashboard-card">
+  <h3>Comissão gerada hoje</h3>
+  <strong>${dinheiro(comissaoHoje)}</strong>
+</div>
 
       <div class="dashboard-card">
   <h3>Clientes em risco</h3>
