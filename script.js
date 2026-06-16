@@ -1655,14 +1655,23 @@ async function abrirCaixa(){
       aberto_por: usuarioLogado?.nome || usuarioLogado?.usuario || "Usuário"
     }]);
 
-  if(error){
-    alert("Erro ao abrir caixa: " + error.message);
-    return;
+if(error){
+  alert("Erro ao abrir caixa: " + error.message);
+  return;
+}
+
+await registrarHistoricoOperacao(
+  "abertura_caixa",
+  "CAIXA",
+  "Abertura de caixa realizada",
+  {
+    valor_abertura: valor
   }
+);
 
-  carregarCaixas();
+carregarCaixas();
 
-  alert("Caixa aberto com sucesso.");
+alert("Caixa aberto com sucesso.");
 }
 async function buscarCaixaAberto(){
 
@@ -5823,6 +5832,18 @@ async function salvarMovimentacaoCaixa(caixaId, tipo){
     alert("Erro ao salvar movimentação: " + error.message);
     return;
   }
+
+  await registrarHistoricoOperacao(
+    tipo === "Entrada" ? "reforco_caixa" : "sangria_caixa",
+    String(caixaId),
+    tipo === "Entrada" ? "Reforço de caixa registrado" : "Sangria de caixa registrada",
+    {
+      caixa_id: caixaId,
+      tipo,
+      valor,
+      descricao
+    }
+  );
 
   fecharModal();
   carregarCaixas();
