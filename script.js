@@ -4702,7 +4702,16 @@ async function cancelarAtendimentoFaturado(agendamento, comanda, motivo){
       status: "Cancelado"
     })
     .in("id", idsAgendamentos);
-
+await registrarHistoricoOperacao(
+  "cancelamento_faturamento",
+  String(comanda.id),
+  "Cancelamento de faturamento realizado",
+  {
+    cliente_id: comanda.cliente_id,
+    valor: comanda.total,
+    motivo: motivo
+  }
+);
   fecharModal();
   carregarAgenda();
 
