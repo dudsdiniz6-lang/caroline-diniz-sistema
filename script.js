@@ -4110,6 +4110,7 @@ async function carregarGestores(){
 }
 const permissoesPadraoSistema = [
 
+  { grupo:"Dashboard", chave:"dashboard_visualizar", nome:"Visualizar dashboard" },
   { grupo:"Agenda", chave:"agenda_visualizar", nome:"Visualizar agenda" },
   { grupo:"Agenda", chave:"agenda_adicionar", nome:"Adicionar agendamentos" },
   { grupo:"Agenda", chave:"agenda_editar", nome:"Editar agendamentos" },
