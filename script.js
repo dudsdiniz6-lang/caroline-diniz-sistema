@@ -6234,11 +6234,15 @@ async function carregarDashboard(){
 
   const hoje = formatarDataISO(new Date());
 
-  const comandasResp = await supabaseClient
-    .from("comandas")
-    .select("*")
-    .eq("data", hoje)
-    .neq("cancelada", true);
+ const comandasResp = await supabaseClient
+  .from("comandas")
+  .select(`
+    *,
+    profissionais(nome),
+    comanda_itens(valor, comissao_percentual)
+  `)
+  .eq("data", hoje)
+  .neq("cancelada", true);
 
   const agendamentosResp = await supabaseClient
     .from("agendamentos")
@@ -6281,6 +6285,47 @@ const metaAnual =
 
   const faturamentoHoje = comandas
     .reduce((soma, c)=> soma + Number(c.total || 0), 0);
+  const rankingProfissionais = {};
+
+comandas.forEach((comanda)=>{
+
+  const profissional =
+    comanda.profissionais?.nome || "Sem profissional";
+
+  if(!rankingProfissionais[profissional]){
+    rankingProfissionais[profissional] = {
+      faturamento: 0,
+      atendimentos: 0,
+      comissao: 0
+    };
+  }
+
+  rankingProfissionais[profissional].faturamento +=
+    Number(comanda.total || 0);
+
+  rankingProfissionais[profissional].atendimentos += 1;
+
+  (comanda.comanda_itens || []).forEach(item=>{
+    rankingProfissionais[profissional].comissao +=
+      Number(item.valor || 0) *
+      (Number(item.comissao_percentual || 0) / 100);
+  });
+
+});
+
+const rankingOrdenado = Object.entries(rankingProfissionais)
+  .map(([nome, dados]) => ({ nome, ...dados }))
+  .sort((a,b) => b.faturamento - a.faturamento);
+
+const profissionalTop =
+  rankingOrdenado[0]?.nome || "-";
+
+const profissionalMaisAtendimentos =
+  [...rankingOrdenado]
+    .sort((a,b) => b.atendimentos - a.atendimentos)[0]?.nome || "-";
+
+const comissaoHoje =
+  rankingOrdenado.reduce((soma, p)=> soma + Number(p.comissao || 0), 0);
 
   const clientesAtendidos = agendamentos
     .filter(a => a.status === "Finalizado")
