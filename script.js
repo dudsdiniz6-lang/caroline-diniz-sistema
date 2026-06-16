@@ -6292,6 +6292,34 @@ const metaAnual =
     comandas.length > 0
       ? faturamentoHoje / comandas.length
       : 0;
+  const inicioSemana = new Date();
+inicioSemana.setDate(inicioSemana.getDate() - inicioSemana.getDay());
+
+const inicioMes = new Date();
+inicioMes.setDate(1);
+
+const inicioAno = new Date(new Date().getFullYear(), 0, 1);
+
+async function calcularFaturamentoPeriodo(inicio, fim){
+  const resp = await supabaseClient
+    .from("comandas")
+    .select("total")
+    .gte("data", formatarDataISO(inicio))
+    .lte("data", formatarDataISO(fim))
+    .neq("cancelada", true);
+
+  return (resp.data || [])
+    .reduce((soma, c)=> soma + Number(c.total || 0), 0);
+}
+
+const faturamentoSemana = await calcularFaturamentoPeriodo(inicioSemana, new Date());
+const faturamentoMes = await calcularFaturamentoPeriodo(inicioMes, new Date());
+const faturamentoAno = await calcularFaturamentoPeriodo(inicioAno, new Date());
+
+function porcentagemMeta(valor, meta){
+  if(!meta || meta <= 0) return 0;
+  return Math.min((valor / meta) * 100, 100);
+}
 
   const clientesRisco = clientes.filter(c => {
 
