@@ -1420,7 +1420,11 @@ async function carregarCaixas(){
       .eq("caixa_id", caixa.id)
       .neq("cancelada", true);
 
-    const movimentacoes = movs || [];
+const movimentacoes = (movs || []).filter(m =>
+  m.cancelada !== true &&
+  m.comandas?.status !== "Cancelada" &&
+  m.comandas?.cancelada !== true
+);
 
     const entradasPagamento = movimentacoes.filter(m =>
       m.tipo === "Entrada" &&
