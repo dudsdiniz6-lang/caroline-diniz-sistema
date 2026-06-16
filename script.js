@@ -6147,3 +6147,26 @@ async function cancelarComandaPelaAba(comandaId){
 
   carregarComandas();
 }
+async function registrarHistoricoOperacao(
+  tipo,
+  referencia,
+  descricao,
+  dados = {}
+){
+
+  await supabaseClient
+    .from("historico_operacoes")
+    .insert([{
+      usuario_id: usuarioLogado?.id || null,
+      usuario_nome:
+        usuarioLogado?.nome ||
+        usuarioLogado?.usuario ||
+        "Sistema",
+
+      tipo: tipo,
+      referencia: referencia,
+      descricao: descricao,
+      dados: dados
+    }]);
+
+}
