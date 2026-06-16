@@ -5615,7 +5615,6 @@ async function salvarFaturamentoClienteDiaPago(){
     itensComanda.push({
       comanda_id: comanda.id,
       servico_id: item.servico_id,
-      profissional_id: item.profissional_id,
       descricao: item.servicos?.nome || "Serviço",
       valor: item.total,
       comissao_percentual: percentualComissao
