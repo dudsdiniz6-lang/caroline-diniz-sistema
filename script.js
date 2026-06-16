@@ -4614,51 +4614,89 @@ async function salvarFaturamentoPacote(agendamentoId){
 }
 async function cancelarAtendimentoFaturado(agendamento, comanda, motivo){
 
+  const agora = new Date().toISOString();
+
+  let comandasCancelar = [];
+
+  if(comanda.faturamento_grupo_id){
+
+    const { data: comandasGrupo } = await supabaseClient
+      .from("comandas")
+      .select("*")
+      .eq("faturamento_grupo_id", comanda.faturamento_grupo_id);
+
+    comandasCancelar = comandasGrupo || [];
+
+  }else{
+
+    comandasCancelar = [comanda];
+
+  }
+
+  const idsComandas = comandasCancelar.map(c => c.id);
+  const idsAgendamentos = comandasCancelar
+    .map(c => c.agendamento_id)
+    .filter(Boolean);
+
   await supabaseClient
     .from("historico_cancelamentos")
     .insert([{
-      tipo: "atendimento_faturado",
-      referencia_id: agendamento.id,
-      cliente_id: agendamento.cliente_id,
-      profissional_id: agendamento.profissional_id,
-      valor: comanda.total || 0,
+      tipo: "faturamento",
+      referencia_id: comanda.faturamento_grupo_id || comanda.id,
+      cliente_id: comanda.cliente_id,
+      profissional_id: comanda.profissional_id,
+      valor: comandasCancelar.reduce((soma, c)=> soma + Number(c.total || 0), 0),
       motivo,
       dados_antigos: {
         agendamento,
-        comanda
+        comanda,
+        comandas_canceladas: comandasCancelar
       }
     }]);
+
+  if(comanda.faturamento_grupo_id){
+
+    await supabaseClient
+      .from("faturamentos_grupos")
+      .update({
+        status: "Cancelado",
+        cancelado_em: agora,
+        motivo_cancelamento: motivo
+      })
+      .eq("id", comanda.faturamento_grupo_id);
+
+  }
 
   await supabaseClient
     .from("comandas")
     .update({
       status: "Cancelada",
       cancelada: true,
-      cancelada_em: new Date().toISOString(),
+      cancelada_em: agora,
       motivo_cancelamento: motivo
     })
-    .eq("id", comanda.id);
+    .in("id", idsComandas);
 
   await supabaseClient
     .from("caixa_movimentacoes")
     .update({
       cancelada: true,
-      cancelada_em: new Date().toISOString(),
+      cancelada_em: agora,
       motivo_cancelamento: motivo
     })
-    .eq("comanda_id", comanda.id);
+    .in("comanda_id", idsComandas);
 
   await supabaseClient
     .from("agendamentos")
     .update({
       status: "Cancelado"
     })
-    .eq("id", agendamento.id);
+    .in("id", idsAgendamentos);
 
   fecharModal();
   carregarAgenda();
 
-  alert("Atendimento faturado cancelado com histórico.");
+  alert("Faturamento cancelado com histórico. Comissões, caixa e relatórios financeiros serão desconsiderados.");
 }
 
 async function carregarComissoes(){
