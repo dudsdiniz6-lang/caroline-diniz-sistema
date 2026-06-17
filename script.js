@@ -3174,11 +3174,17 @@ async function criarAgendamentosRecorrentes(dadosBase){
   const intervaloDias = Number(dadosBase.recorrencia_intervalo_dias || 7);
 
   if(!repetirAte){
+    alert("Informe até quando deseja repetir o agendamento.");
+    return;
+  }
+
+  if(!intervaloDias || intervaloDias <= 0){
+    alert("Informe um intervalo válido para a recorrência.");
     return;
   }
 
   const inicio = new Date(dadosBase.data + "T00:00:00");
-  const fim = new Date(repetirAte + "T23:59:59");
+  const fim = new Date(repetirAte + "T00:00:00");
 
   if(fim <= inicio){
     alert("A data final da repetição precisa ser depois da data inicial.");
@@ -3190,7 +3196,8 @@ async function criarAgendamentosRecorrentes(dadosBase){
 
   const novosAgendamentos = [];
 
-  let dataAtual = adicionarDias(inicio, intervaloDias);
+  let dataAtual = new Date(inicio);
+  dataAtual.setDate(dataAtual.getDate() + intervaloDias);
 
   while(dataAtual <= fim){
 
@@ -3205,19 +3212,21 @@ async function criarAgendamentosRecorrentes(dadosBase){
       status: "Agendado"
     });
 
-    dataAtual = adicionarDias(dataAtual, intervaloDias);
+    dataAtual.setDate(dataAtual.getDate() + intervaloDias);
   }
 
-  if(novosAgendamentos.length > 0){
+  if(novosAgendamentos.length === 0){
+    alert("Nenhum agendamento recorrente foi criado. Confira a data final.");
+    return;
+  }
 
-    const { error } = await supabaseClient
-      .from("agendamentos")
-      .insert(novosAgendamentos);
+  const { error } = await supabaseClient
+    .from("agendamentos")
+    .insert(novosAgendamentos);
 
-    if(error){
-      alert("Erro ao criar recorrências: " + error.message);
-    }
-
+  if(error){
+    alert("Erro ao criar recorrências: " + error.message);
+    return;
   }
 }
 function mudarDataAgendaPeloCalendario(){
