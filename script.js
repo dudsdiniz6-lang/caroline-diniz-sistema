@@ -2347,14 +2347,15 @@ async function salvarAgendamento(){
   const id = document.getElementById("agendamentoId").value;
   const checkboxPacote = document.getElementById("agUsarPacote");
 
-  const repetir = document.getElementById("agRepetir")?.checked || false;
-  const repetirAte = document.getElementById("agRepetirAte")?.value || null;
-  const intervaloDias = Number(document.getElementById("agIntervaloRepeticao")?.value || 7);
-  console.log("DEBUG RECORRENCIA", {
-  repetir,
-  repetirAte,
-  intervaloDias
-});
+const campoRepetir = document.getElementById("agRepetir");
+const repetirAte = document.getElementById("agRepetirAte")?.value || null;
+const intervaloDias = Number(document.getElementById("agIntervaloRepeticao")?.value || 7);
+
+const repetir =
+  campoRepetir &&
+  campoRepetir.type !== "hidden" &&
+  campoRepetir.checked === true &&
+  repetirAte;
 
   const dados = {
     unidade_id: unidadeAtualId,
@@ -2437,72 +2438,50 @@ async function salvarAgendamento(){
 
   }else{
 
-    const agendamentosParaInserir = [];
+}else{
 
-    if(repetir){
+  const agendamentosParaInserir = [];
 
-      if(!repetirAte){
-        alert("Informe até quando deseja repetir o agendamento.");
-        return;
-      }
+  if(repetir){
 
-      if(!intervaloDias || intervaloDias <= 0){
-        alert("Informe um intervalo válido.");
-        return;
-      }
-
-      const recorrenciaId = gerarIdRecorrencia();
-
-      const inicio = new Date(dados.data + "T00:00:00");
-      const fim = new Date(repetirAte + "T00:00:00");
-
-      if(fim <= inicio){
-        alert("A data final da repetição precisa ser depois da data inicial.");
-        return;
-      }
-
-      let dataAtual = new Date(inicio);
-
-      while(dataAtual <= fim){
-
-        agendamentosParaInserir.push({
-          ...dados,
-          data: formatarDataISO(dataAtual),
-          status: "Agendado",
-          recorrencia_id: recorrenciaId,
-          recorrencia_ativa: true,
-          recorrencia_frequencia: "personalizada",
-          recorrencia_intervalo_dias: intervaloDias,
-          recorrencia_ate: repetirAte
-        });
-
-        dataAtual.setDate(dataAtual.getDate() + intervaloDias);
-      }
-
-    }else{
-
-      agendamentosParaInserir.push(dados);
-
+    if(!repetirAte){
+      alert("Informe até quando deseja repetir o agendamento.");
+      return;
     }
 
-    resposta = await supabaseClient
-      .from("agendamentos")
-      .insert(agendamentosParaInserir);
+    const recorrenciaId = gerarIdRecorrencia();
+
+    const inicio = new Date(dados.data + "T00:00:00");
+    const fim = new Date(repetirAte + "T00:00:00");
+
+    let dataAtual = new Date(inicio);
+
+    while(dataAtual <= fim){
+
+      agendamentosParaInserir.push({
+        ...dados,
+        data: formatarDataISO(dataAtual),
+        status: "Agendado",
+        recorrencia_id: recorrenciaId,
+        recorrencia_ativa: true,
+        recorrencia_frequencia: "personalizada",
+        recorrencia_intervalo_dias: intervaloDias,
+        recorrencia_ate: repetirAte
+      });
+
+      dataAtual.setDate(dataAtual.getDate() + intervaloDias);
+    }
+
+  }else{
+
+    agendamentosParaInserir.push(dados);
 
   }
 
-  if(resposta.error){
-    alert("Erro ao salvar agendamento: " + resposta.error.message);
-    return;
-  }
+  resposta = await supabaseClient
+    .from("agendamentos")
+    .insert(agendamentosParaInserir);
 
-  dataAgenda = new Date(dados.data + "T00:00:00");
-
-  fecharModal();
-  atualizarTextoDataAgenda();
-  carregarAgenda();
-
-  alert("Agendamento salvo com sucesso.");
 }
 async function excluirAgendamento(id){
 
