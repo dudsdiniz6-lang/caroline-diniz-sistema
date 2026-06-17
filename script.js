@@ -6652,3 +6652,59 @@ async function cancelarFormaPagamento(id){
 
   carregarFormasPagamentoConfig();
 }
+async function abrirModalCategoriaServico(){
+
+  abrirModal(`
+    <h2>Nova categoria</h2>
+
+    <label>Nome da categoria</label>
+    <input id="novaCategoriaServico">
+
+    <button class="principal" onclick="salvarCategoriaServico()">
+      Salvar
+    </button>
+
+    <button onclick="fecharModal()">
+      Cancelar
+    </button>
+  `);
+
+}
+async function salvarCategoriaServico(){
+
+  const nome = document
+    .getElementById("novaCategoriaServico")
+    .value
+    .trim();
+
+  if(!nome){
+    alert("Digite o nome.");
+    return;
+  }
+
+  const { error } = await supabaseClient
+    .from("categorias_servicos")
+    .insert([{
+      nome,
+      ativo:true
+    }]);
+
+  if(error){
+    alert("Erro: " + error.message);
+    return;
+  }
+
+  fecharModal();
+
+  alert("Categoria criada.");
+}
+async function carregarCategoriasServico(){
+
+  const { data } = await supabaseClient
+    .from("categorias_servicos")
+    .select("*")
+    .eq("ativo", true)
+    .order("nome");
+
+  return data || [];
+}
