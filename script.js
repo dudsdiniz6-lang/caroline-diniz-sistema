@@ -2446,7 +2446,7 @@ dados.recorrencia_intervalo_dias =
     .insert([dados]);
 
   if(!resposta.error && repetir){
-    await criarAgendamentosRecorrentes(dados);
+  await criarRecorrenciasAgendamentoSeguro(dados);
   }
 }
   if(resposta.error){
@@ -6762,4 +6762,72 @@ async function carregarCategoriasServico(){
     .order("nome");
 
   return data || [];
+}
+async function criarRecorrenciasAgendamentoSeguro(dadosBase){
+
+  const repetirAte = dadosBase.recorrencia_ate;
+  const intervaloDias = Number(dadosBase.recorrencia_intervalo_dias || 7);
+
+  if(!repetirAte){
+    alert("Informe até quando deseja repetir o agendamento.");
+    return;
+  }
+
+  const inicio = new Date(dadosBase.data + "T00:00:00");
+  const fim = new Date(repetirAte + "T00:00:00");
+
+  if(fim <= inicio){
+    alert("A data final precisa ser depois da data inicial.");
+    return;
+  }
+
+  const novos = [];
+
+  let atual = new Date(inicio);
+  atual.setDate(atual.getDate() + intervaloDias);
+
+  while(atual <= fim){
+
+    novos.push({
+      unidade_id: dadosBase.unidade_id,
+      cliente_id: dadosBase.cliente_id,
+      profissional_id: dadosBase.profissional_id,
+      data: formatarDataISO(atual),
+      horario: dadosBase.horario,
+      servico_id: dadosBase.servico_id,
+      duracao: dadosBase.duracao,
+      valor: dadosBase.valor,
+      desconto: dadosBase.desconto,
+      tipo_desconto: dadosBase.tipo_desconto,
+      total: dadosBase.total,
+      status: "Agendado",
+      observacoes: dadosBase.observacoes,
+      usar_pacote: dadosBase.usar_pacote,
+      pacote_cliente_id: dadosBase.pacote_cliente_id,
+      pacote_saldo_id: dadosBase.pacote_saldo_id,
+      recorrencia_id: dadosBase.recorrencia_id,
+      recorrencia_ativa: true,
+      recorrencia_frequencia: "personalizada",
+      recorrencia_intervalo_dias: intervaloDias,
+      recorrencia_ate: repetirAte
+    });
+
+    atual.setDate(atual.getDate() + intervaloDias);
+  }
+
+  if(novos.length === 0){
+    alert("Nenhuma recorrência foi criada.");
+    return;
+  }
+
+  const { error } = await supabaseClient
+    .from("agendamentos")
+    .insert(novos);
+
+  if(error){
+    alert("Erro ao criar recorrências: " + error.message);
+    return;
+  }
+
+  alert(`${novos.length} agendamento(s) recorrente(s) criado(s).`);
 }
