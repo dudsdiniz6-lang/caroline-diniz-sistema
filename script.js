@@ -568,13 +568,28 @@ async function abrirModalServico(id = null){
 
   }
 
+  const categorias = await carregarCategoriasServico();
+
   abrirModal(`
     <h2>${id ? "Editar serviço" : "Novo serviço"}</h2>
 
     <input id="servicoId" type="hidden" value="${servico?.id || ""}">
 
     <label>Categoria</label>
-    <input id="servicoCategoria" value="${servico?.categoria || ""}" placeholder="Ex: Cabelo, Unhas, Estética">
+    <select id="servicoCategoria">
+
+      <option value="">Selecione</option>
+
+      ${categorias.map(cat => `
+        <option
+          value="${cat.id}"
+          ${String(servico?.categoria_id || "") === String(cat.id) ? "selected" : ""}
+        >
+          ${cat.nome}
+        </option>
+      `).join("")}
+
+    </select>
 
     <label>Nome do serviço</label>
     <input id="servicoNome" value="${servico?.nome || ""}" placeholder="Nome do serviço">
@@ -603,9 +618,12 @@ async function salvarServico(){
 
   const id = document.getElementById("servicoId").value;
 
+  const categoriaId =
+    document.getElementById("servicoCategoria").value;
+
   const dados = {
     unidade_id: unidadeAtualId,
-    categoria: document.getElementById("servicoCategoria").value.trim(),
+    categoria_id: categoriaId ? Number(categoriaId) : null,
     nome: document.getElementById("servicoNome").value.trim(),
     duracao: Number(document.getElementById("servicoDuracao").value || 30),
     valor: Number(document.getElementById("servicoValor").value || 0),
