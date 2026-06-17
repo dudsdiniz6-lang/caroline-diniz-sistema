@@ -6516,10 +6516,9 @@ async function carregarFormasPagamentoConfig(){
   if(!area) return;
 
   const { data, error } = await supabaseClient
-    .from("formas_pagamento")
-.select("*")
-.neq("cancelada", true)
-.order("nome");
+  .from("formas_pagamento")
+  .select("*")
+  .order("nome");
 
   if(error){
     area.innerHTML = "Erro ao carregar formas de pagamento.";
@@ -6527,8 +6526,11 @@ async function carregarFormasPagamentoConfig(){
   }
 
   area.innerHTML = "";
+  const formasVisiveis = (data || []).filter(forma =>
+  forma.cancelada !== true
+);
 
-  (data || []).forEach((forma)=>{
+ formasVisiveis.forEach((forma)=>{
 
     const ativo = forma.ativo === true;
 
