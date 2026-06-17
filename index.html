@@ -125,7 +125,13 @@
       <section id="tela-servicos" class="tela">
         <div class="topo">
           <h1>Serviços</h1>
-          <button class="principal" onclick="abrirModalServico()">Novo serviço</button>
+        <div style="display:flex;gap:10px;">
+  <button class="principal" onclick="abrirModalServico()">Novo serviço</button>
+
+  <button onclick="abrirModalCategoriaServico()">
+    Nova categoria
+  </button>
+</div>
         </div>
 
         <div id="listaServicos" class="tabela"></div>
