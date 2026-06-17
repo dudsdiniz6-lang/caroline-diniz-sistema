@@ -2347,15 +2347,10 @@ async function salvarAgendamento(){
   const id = document.getElementById("agendamentoId").value;
   const checkboxPacote = document.getElementById("agUsarPacote");
 
-const campoRepetir = document.getElementById("agRepetir");
-const repetirAte = document.getElementById("agRepetirAte")?.value || null;
-const intervaloDias = Number(document.getElementById("agIntervaloRepeticao")?.value || 7);
+  const repetirAte = document.getElementById("agRepetirAte")?.value || "";
+  const intervaloDias = Number(document.getElementById("agIntervaloRepeticao")?.value || 7);
 
-const repetir =
-  campoRepetir &&
-  campoRepetir.type !== "hidden" &&
-  campoRepetir.checked === true &&
-  repetirAte;
+  const repetir = repetirAte !== "";
 
   const dados = {
     unidade_id: unidadeAtualId,
@@ -2395,169 +2390,80 @@ const repetir =
 
   if(id){
 
-    const agendamentoAtualResp = await supabaseClient
+    resposta = await supabaseClient
       .from("agendamentos")
-      .select("*")
-      .eq("id", id)
-      .single();
+      .update(dados)
+      .eq("id", id);
 
-    const agendamentoAtual = agendamentoAtualResp.data;
+  }else{
 
-    let modo = "unico";
+    const agendamentosParaInserir = [];
 
-    if(agendamentoAtual?.recorrencia_id){
+    if(repetir){
 
-      const escolha = prompt(
-        "Este é um agendamento recorrente.\n\nDigite:\n1 - Alterar apenas este horário\n2 - Alterar este e todos os futuros"
-      );
-
-      if(escolha === "2"){
-        modo = "futuros";
-      }else if(escolha !== "1"){
+      if(!intervaloDias || intervaloDias <= 0){
+        alert("Informe um intervalo válido.");
         return;
       }
 
-    }
+      const inicio = new Date(dados.data + "T00:00:00");
+      const fim = new Date(repetirAte + "T00:00:00");
 
-    if(modo === "futuros"){
+      if(fim <= inicio){
+        alert("A data final da repetição precisa ser depois da data inicial.");
+        return;
+      }
 
-      resposta = await supabaseClient
-        .from("agendamentos")
-        .update(dados)
-        .eq("recorrencia_id", agendamentoAtual.recorrencia_id)
-        .gte("data", agendamentoAtual.data);
+      const recorrenciaId = gerarIdRecorrencia();
+
+      let dataAtual = new Date(inicio);
+
+      while(dataAtual <= fim){
+
+        agendamentosParaInserir.push({
+          ...dados,
+          data: formatarDataISO(dataAtual),
+          status: "Agendado",
+          recorrencia_id: recorrenciaId,
+          recorrencia_ativa: true,
+          recorrencia_frequencia: "personalizada",
+          recorrencia_intervalo_dias: intervaloDias,
+          recorrencia_ate: repetirAte
+        });
+
+        dataAtual.setDate(dataAtual.getDate() + intervaloDias);
+      }
 
     }else{
 
-      resposta = await supabaseClient
-        .from("agendamentos")
-        .update(dados)
-        .eq("id", id);
+      agendamentosParaInserir.push(dados);
 
     }
-
-  }else{
-
-}else{
-
-  const agendamentosParaInserir = [];
-
-  if(repetir){
-
-    if(!repetirAte){
-      alert("Informe até quando deseja repetir o agendamento.");
-      return;
-    }
-
-    const recorrenciaId = gerarIdRecorrencia();
-
-    const inicio = new Date(dados.data + "T00:00:00");
-    const fim = new Date(repetirAte + "T00:00:00");
-
-    let dataAtual = new Date(inicio);
-
-    while(dataAtual <= fim){
-
-      agendamentosParaInserir.push({
-        ...dados,
-        data: formatarDataISO(dataAtual),
-        status: "Agendado",
-        recorrencia_id: recorrenciaId,
-        recorrencia_ativa: true,
-        recorrencia_frequencia: "personalizada",
-        recorrencia_intervalo_dias: intervaloDias,
-        recorrencia_ate: repetirAte
-      });
-
-      dataAtual.setDate(dataAtual.getDate() + intervaloDias);
-    }
-
-  }else{
-
-    agendamentosParaInserir.push(dados);
-
-  }
-
-  resposta = await supabaseClient
-    .from("agendamentos")
-    .insert(agendamentosParaInserir);
-
-}
-async function excluirAgendamento(id){
-
-  const { data: agendamento, error: erroBusca } = await supabaseClient
-    .from("agendamentos")
-    .select("*")
-    .eq("id", id)
-    .single();
-
-  if(erroBusca || !agendamento){
-    alert("Agendamento não encontrado.");
-    return;
-  }
-
-  const { data: comanda } = await supabaseClient
-    .from("comandas")
-    .select("*")
-    .eq("agendamento_id", id)
-    .maybeSingle();
-
-  if(comanda){
-    alert("Este atendimento já foi faturado. Para cancelar, vá até a aba Comandas e cancele a comanda.");
-    return;
-  }
-
-  let modo = "unico";
-
-  if(agendamento.recorrencia_id){
-
-    const escolha = prompt(
-      "Este é um agendamento recorrente.\n\nDigite:\n1 - Excluir apenas este horário\n2 - Excluir este e todos os futuros"
-    );
-
-    if(escolha === "2"){
-      modo = "futuros";
-    }else if(escolha !== "1"){
-      return;
-    }
-
-  }else{
-
-    const confirmar = confirm("Deseja excluir este agendamento?");
-    if(!confirmar) return;
-
-  }
-
-  let resposta;
-
-  if(modo === "futuros"){
 
     resposta = await supabaseClient
       .from("agendamentos")
-      .delete()
-      .eq("recorrencia_id", agendamento.recorrencia_id)
-      .gte("data", agendamento.data);
+      .insert(agendamentosParaInserir);
 
-  }else{
-
-    resposta = await supabaseClient
-      .from("agendamentos")
-      .update({
-        status: "Cancelado"
-      })
-      .eq("id", id);
+    if(!resposta.error && repetir){
+      alert(`${agendamentosParaInserir.length} agendamento(s) criados na recorrência.`);
+    }
 
   }
 
   if(resposta.error){
-    alert("Erro ao excluir agendamento: " + resposta.error.message);
+    alert("Erro ao salvar agendamento: " + resposta.error.message);
     return;
   }
 
+  dataAgenda = new Date(dados.data + "T00:00:00");
+
   fecharModal();
+  atualizarTextoDataAgenda();
   carregarAgenda();
 
-  alert("Agendamento excluído.");
+  if(!repetir){
+    alert("Agendamento salvo com sucesso.");
+  }
 }
 function somarMinutosHorario(horario, duracao){
 
