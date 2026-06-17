@@ -2350,6 +2350,11 @@ async function salvarAgendamento(){
   const repetir = document.getElementById("agRepetir")?.checked || false;
   const repetirAte = document.getElementById("agRepetirAte")?.value || null;
   const intervaloDias = Number(document.getElementById("agIntervaloRepeticao")?.value || 7);
+  console.log("DEBUG RECORRENCIA", {
+  repetir,
+  repetirAte,
+  intervaloDias
+});
 
   const dados = {
     unidade_id: unidadeAtualId,
