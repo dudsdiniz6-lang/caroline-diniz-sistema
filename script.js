@@ -508,13 +508,27 @@ async function carregarServicos(){
 
   if(!lista) return;
 
-  lista.innerHTML = "";
+  lista.innerHTML = "Carregando serviços...";
 
-  const { data, error } = await supabaseClient
+  const categoriaFiltro =
+    document.getElementById("filtroCategoriaServico")?.value || "";
+
+  const categorias = await carregarCategoriasServico();
+
+  let query = supabaseClient
     .from("servicos")
-    .select("*")
+    .select(`
+      *,
+      categorias_servicos(nome)
+    `)
     .eq("ativo", true)
-    .order("categoria");
+    .order("nome");
+
+  if(categoriaFiltro){
+    query = query.eq("categoria_id", Number(categoriaFiltro));
+  }
+
+  const { data, error } = await query;
 
   if(error){
     lista.innerHTML = "<div class='card'>Erro ao carregar serviços.</div>";
@@ -527,6 +541,21 @@ async function carregarServicos(){
   }
 
   lista.innerHTML = `
+    <div class="filtros" style="grid-column:1/-1;margin-bottom:15px;">
+      <select id="filtroCategoriaServico" onchange="carregarServicos()">
+        <option value="">Todas as categorias</option>
+
+        ${categorias.map(cat=>`
+          <option
+            value="${cat.id}"
+            ${String(categoriaFiltro) === String(cat.id) ? "selected" : ""}
+          >
+            ${cat.nome}
+          </option>
+        `).join("")}
+      </select>
+    </div>
+
     <div class="linha-tabela cabecalho">
       <span>Categoria</span>
       <span>Serviço</span>
@@ -540,7 +569,7 @@ async function carregarServicos(){
 
     lista.innerHTML += `
       <div class="linha-tabela" onclick="abrirModalServico(${servico.id})">
-        <span>${servico.categoria || "-"}</span>
+        <span>${servico.categorias_servicos?.nome || "-"}</span>
         <span>${servico.nome}</span>
         <span>${servico.duracao || 30} min</span>
         <span>${dinheiro(servico.valor)}</span>
@@ -551,7 +580,6 @@ async function carregarServicos(){
   });
 
 }
-
 async function abrirModalServico(id = null){
 
   let servico = null;
