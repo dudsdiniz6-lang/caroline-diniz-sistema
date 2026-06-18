@@ -856,26 +856,52 @@ grade.innerHTML = `
     </div>
   `;
 }
+function obterConfigAgenda(){
+
+  const horaInicio =
+    localStorage.getItem("agenda_hora_inicio") || "07:00";
+
+  const horaFim =
+    localStorage.getItem("agenda_hora_fim") || "20:00";
+
+  const alturaBloco =
+    Number(localStorage.getItem("agenda_altura_bloco") || 48);
+
+  return {
+    horaInicio,
+    horaFim,
+    alturaBloco
+  };
+}
 function calcularTopAgenda(horario){
 
-  const [hora, minuto] = horario.split(":").map(Number);
+  const config = obterConfigAgenda();
 
-  const inicio = 7 * 60;
+  const [hora, minuto] = horario.split(":").map(Number);
+  const [horaInicio, minutoInicio] = config.horaInicio.split(":").map(Number);
+
+  const inicio = horaInicio * 60 + minutoInicio;
   const atual = hora * 60 + minuto;
 
-  return ((atual - inicio) / 30) * 48;
+  return ((atual - inicio) / 30) * config.alturaBloco;
 }
-
 function gerarHorariosAgenda(){
+
+  const config = obterConfigAgenda();
+
+  const [horaInicial] = config.horaInicio.split(":").map(Number);
+  const [horaFinal] = config.horaFim.split(":").map(Number);
 
   const horarios = [];
 
-  for(let hora = 7; hora <= 20; hora++){
+  for(let hora = horaInicial; hora <= horaFinal; hora++){
+
     horarios.push(`${String(hora).padStart(2,"0")}:00`);
 
-    if(hora !== 20){
+    if(hora !== horaFinal){
       horarios.push(`${String(hora).padStart(2,"0")}:30`);
     }
+
   }
 
   return horarios;
@@ -4112,26 +4138,42 @@ async function salvarConfiguracoes(){
   const dias =
     document.getElementById("cfgClientesRiscoDias").value;
 
+  const horaInicio =
+    document.getElementById("cfgAgendaHoraInicio").value;
+
+  const horaFim =
+    document.getElementById("cfgAgendaHoraFim").value;
+
+  const alturaBloco =
+    document.getElementById("cfgAgendaAlturaBloco").value;
+
   await supabaseClient
     .from("configuracoes_sistema")
     .update({ valor: dias })
     .eq("chave", "clientes_em_risco_dias");
 
-  alert("Configurações salvas.");
-}
-async function salvarConfiguracoes(){
-
-  const dias =
-    document.getElementById("cfgClientesRiscoDias").value;
+  await supabaseClient
+    .from("configuracoes_sistema")
+    .update({ valor: horaInicio })
+    .eq("chave", "agenda_hora_inicio");
 
   await supabaseClient
     .from("configuracoes_sistema")
-    .update({
-      valor: dias
-    })
-    .eq("chave", "clientes_em_risco_dias");
+    .update({ valor: horaFim })
+    .eq("chave", "agenda_hora_fim");
+
+  await supabaseClient
+    .from("configuracoes_sistema")
+    .update({ valor: alturaBloco })
+    .eq("chave", "agenda_altura_bloco");
+
+  localStorage.setItem("agenda_hora_inicio", horaInicio);
+  localStorage.setItem("agenda_hora_fim", horaFim);
+  localStorage.setItem("agenda_altura_bloco", alturaBloco);
 
   alert("Configurações salvas.");
+
+  carregarAgenda();
 }
 
 async function carregarGestores(){
