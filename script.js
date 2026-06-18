@@ -339,9 +339,13 @@ async function carregarClientes(){
 
         <br><br>
 
-        <button class="principal" onclick="abrirModalCliente(${cliente.id})">
-          Editar
-        </button>
+       <button class="principal" onclick="abrirModalCliente(${cliente.id})">
+  Editar
+</button>
+
+<button onclick="abrirHistoricoCliente(${cliente.id})">
+  Histórico
+</button>
       </div>
     `;
 
@@ -6078,12 +6082,18 @@ async function abrirModalCliente(id = null){
     </label>
 
     <button class="principal" onclick="salvarCliente()">
-      Salvar
-    </button>
+  Salvar
+</button>
 
-    <button onclick="fecharModal()">
-      Cancelar
-    </button>
+${id ? `
+  <button onclick="abrirHistoricoCliente(${id})">
+    Histórico da cliente
+  </button>
+` : ""}
+
+<button onclick="fecharModal()">
+  Cancelar
+</button>
   `);
 }
 function alternarDetalheCaixa(caixaId){
