@@ -6803,3 +6803,102 @@ async function criarRecorrenciasAgendamentoSeguro(dadosBase){
 
   alert(`${novos.length} agendamento(s) recorrente(s) criado(s).`);
 }
+async function abrirHistoricoCliente(clienteId){
+
+  const { data: cliente, error: erroCliente } = await supabaseClient
+    .from("clientes")
+    .select("*")
+    .eq("id", clienteId)
+    .single();
+
+  if(erroCliente || !cliente){
+    alert("Cliente não encontrada.");
+    return;
+  }
+
+  const hoje = formatarDataISO(new Date());
+
+  const atendimentosResp = await supabaseClient
+    .from("agendamentos")
+    .select(`
+      *,
+      profissionais(nome),
+      servicos(nome)
+    `)
+    .eq("cliente_id", clienteId)
+    .lt("data", hoje)
+    .neq("status", "Cancelado")
+    .order("data", { ascending:false });
+
+  const futurosResp = await supabaseClient
+    .from("agendamentos")
+    .select(`
+      *,
+      profissionais(nome),
+      servicos(nome)
+    `)
+    .eq("cliente_id", clienteId)
+    .gte("data", hoje)
+    .neq("status", "Cancelado")
+    .order("data", { ascending:true })
+    .order("horario", { ascending:true });
+
+  const atendimentos = atendimentosResp.data || [];
+  const futuros = futurosResp.data || [];
+
+  const telefoneLimpo =
+    String(cliente.telefone || "").replace(/\D/g, "");
+
+  const telefoneWhats =
+    telefoneLimpo.startsWith("55")
+      ? telefoneLimpo
+      : `55${telefoneLimpo}`;
+
+  abrirModal(`
+    <h2>Histórico da cliente</h2>
+
+    <div class="card">
+      <h3>${cliente.nome}</h3>
+      <p><strong>Telefone:</strong> ${cliente.telefone || "-"}</p>
+      <p><strong>Observações:</strong> ${cliente.observacoes || "-"}</p>
+
+      ${telefoneLimpo ? `
+        <button onclick="window.open('https://wa.me/${telefoneWhats}', '_blank')">
+          WhatsApp
+        </button>
+      ` : ""}
+    </div>
+
+    <div class="card">
+      <h3>Agendamentos futuros</h3>
+
+      ${futuros.length ? futuros.map(a=>`
+        <div class="linha-historico-cliente">
+          <strong>${formatarDataComanda(a.data)} às ${formatarHorarioBonito(a.horario)}</strong>
+          <span>${a.servicos?.nome || "Serviço"}</span>
+          <small>${a.profissionais?.nome || "Profissional"} • ${a.status || "-"}</small>
+        </div>
+      `).join("") : "<p>Nenhum agendamento futuro.</p>"}
+    </div>
+
+    <div class="card">
+      <h3>Histórico de atendimentos</h3>
+
+      ${atendimentos.length ? atendimentos.map(a=>`
+        <div class="linha-historico-cliente">
+          <strong>${formatarDataComanda(a.data)} às ${formatarHorarioBonito(a.horario)}</strong>
+          <span>${a.servicos?.nome || "Serviço"}</span>
+          <small>${a.profissionais?.nome || "Profissional"} • ${a.status || "-"}</small>
+        </div>
+      `).join("") : "<p>Nenhum atendimento anterior encontrado.</p>"}
+    </div>
+
+    <button onclick="abrirModalCliente(${clienteId})">
+      Voltar
+    </button>
+
+    <button onclick="fecharModal()">
+      Fechar
+    </button>
+  `);
+}
