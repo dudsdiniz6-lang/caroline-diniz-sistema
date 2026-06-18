@@ -6902,3 +6902,82 @@ async function abrirHistoricoCliente(clienteId){
     </button>
   `);
 }
+async function excluirAgendamento(id){
+
+  const { data: agendamento, error } = await supabaseClient
+    .from("agendamentos")
+    .select("*")
+    .eq("id", id)
+    .single();
+
+  if(error || !agendamento){
+    alert("Agendamento não encontrado.");
+    return;
+  }
+
+  const { data: comanda } = await supabaseClient
+    .from("comandas")
+    .select("*")
+    .eq("agendamento_id", id)
+    .neq("cancelada", true)
+    .maybeSingle();
+
+  if(comanda){
+    alert("Este atendimento já foi faturado. Para cancelar, vá até a aba Comandas e cancele a comanda.");
+    return;
+  }
+
+  let modo = "unico";
+
+  if(agendamento.recorrencia_id){
+
+    const escolha = prompt(
+      "Este é um agendamento recorrente.\n\nDigite:\n1 - Cancelar apenas este horário\n2 - Cancelar este e todos os futuros"
+    );
+
+    if(escolha === "2"){
+      modo = "futuros";
+    }else if(escolha !== "1"){
+      return;
+    }
+
+  }else{
+
+    const confirmar = confirm("Deseja cancelar este agendamento?");
+    if(!confirmar) return;
+
+  }
+
+  let resposta;
+
+  if(modo === "futuros"){
+
+    resposta = await supabaseClient
+      .from("agendamentos")
+      .update({
+        status: "Cancelado"
+      })
+      .eq("recorrencia_id", agendamento.recorrencia_id)
+      .gte("data", agendamento.data);
+
+  }else{
+
+    resposta = await supabaseClient
+      .from("agendamentos")
+      .update({
+        status: "Cancelado"
+      })
+      .eq("id", id);
+
+  }
+
+  if(resposta.error){
+    alert("Erro ao cancelar agendamento: " + resposta.error.message);
+    return;
+  }
+
+  fecharModal();
+  carregarAgenda();
+
+  alert("Agendamento cancelado.");
+}
