@@ -963,3 +963,26 @@ textarea{
 .ranking-linha small{
   color:#777;
 }
+.linha-historico-cliente{
+  padding:12px 0;
+  border-bottom:1px solid #eee;
+}
+
+.linha-historico-cliente:last-child{
+  border-bottom:none;
+}
+
+.linha-historico-cliente strong,
+.linha-historico-cliente span,
+.linha-historico-cliente small{
+  display:block;
+}
+
+.linha-historico-cliente span{
+  margin-top:4px;
+}
+
+.linha-historico-cliente small{
+  color:#777;
+  margin-top:3px;
+}
