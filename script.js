@@ -4954,7 +4954,9 @@ async function gerarComissoesPorPeriodo(){
 
 });
 
-  window.comissoesPeriodoCache = porProfissional;
+});
+
+window.comissoesPeriodoCache = porProfissional;
 
   const profissionais = Object.keys(porProfissional);
 
