@@ -1629,7 +1629,7 @@ lista.innerHTML += `
 
       </div>
 
-     {caixa.status === "Fechado" ? `
+${caixa.status === "Fechado" ? `
         <div class="caixa-linha">
           <span>Fechamento</span>
           <strong>${dinheiro(caixa.fechamento || 0)}</strong>
