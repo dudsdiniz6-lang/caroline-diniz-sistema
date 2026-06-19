@@ -1629,7 +1629,7 @@ lista.innerHTML += `
 
       </div>
 
-      ${caixa.status === "Fechado" ? `
+     {caixa.status === "Fechado" ? `
         <div class="caixa-linha">
           <span>Fechamento</span>
           <strong>${dinheiro(caixa.fechamento || 0)}</strong>
@@ -1639,6 +1639,13 @@ lista.innerHTML += `
           <span>Diferença</span>
           <strong>${dinheiro(caixa.diferenca || 0)}</strong>
         </div>
+
+       ${usuarioLogado?.perfil === "dono" || pode("caixa_reabrir") ? `
+          <button onclick="reabrirCaixa(${caixa.id})">
+            Reabrir caixa
+          </button>
+        ` : ""}
+
       ` : ""}
 
       <h3>Entradas por forma de pagamento</h3>
@@ -4203,6 +4210,7 @@ async function carregarGestores(){
 const permissoesPadraoSistema = [
 
   { grupo:"Dashboard", chave:"dashboard_visualizar", nome:"Visualizar dashboard" },
+  { grupo:"Caixa", chave:"caixa_reabrir", nome:"Reabrir caixa fechado" },
   { grupo:"Agenda", chave:"agenda_visualizar", nome:"Visualizar agenda" },
   { grupo:"Agenda", chave:"agenda_adicionar", nome:"Adicionar agendamentos" },
   { grupo:"Agenda", chave:"agenda_editar", nome:"Editar agendamentos" },
@@ -7021,4 +7029,51 @@ async function excluirAgendamento(id){
   carregarAgenda();
 
   alert("Agendamento cancelado.");
+}
+async function reabrirCaixa(caixaId){
+
+if(
+  usuarioLogado?.perfil !== "dono" &&
+  !pode("caixa_reabrir")
+){
+  alert("Você não tem permissão para reabrir caixa.");
+  return;
+}
+
+  const motivo = prompt("Informe o motivo da reabertura do caixa:");
+
+  if(!motivo){
+    alert("Informe o motivo.");
+    return;
+  }
+
+  const { error } = await supabaseClient
+    .from("caixas")
+    .update({
+      status: "Aberto",
+      fechamento: null,
+      diferenca: null,
+      observacao_fechamento: null,
+      fechado_em: null
+    })
+    .eq("id", caixaId);
+
+  if(error){
+    alert("Erro ao reabrir caixa: " + error.message);
+    return;
+  }
+
+  await registrarHistoricoOperacao(
+    "reabertura_caixa",
+    String(caixaId),
+    "Caixa reaberto",
+    {
+      caixa_id: caixaId,
+      motivo
+    }
+  );
+
+  carregarCaixas();
+
+  alert("Caixa reaberto com sucesso.");
 }
