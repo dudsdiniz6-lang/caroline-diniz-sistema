@@ -4803,13 +4803,12 @@ async function cancelarAtendimentoFaturado(agendamento, comanda, motivo){
       motivo_cancelamento: motivo
     })
     .in("comanda_id", idsComandas);
-
-  await supabaseClient
-    .from("agendamentos")
-    .update({
-      status: "Cancelado"
-    })
-    .in("id", idsAgendamentos);
+await supabaseClient
+  .from("agendamentos")
+  .update({
+    status: "Agendado"
+  })
+  .in("id", idsAgendamentos);
 await registrarHistoricoOperacao(
   "cancelamento_faturamento",
   String(comanda.id),
