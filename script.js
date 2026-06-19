@@ -4954,26 +4954,6 @@ async function gerarComissoesPorPeriodo(){
 
 });
 
-      const valorReal = Number(item.valor || 0);
-      const percentual = Number(item.comissao_percentual || 0);
-      const valorComissao = valorReal * (percentual / 100);
-
-      porProfissional[profissional].totalComissao += valorComissao;
-      porProfissional[profissional].totalAtendimentos += 1;
-
-      porProfissional[profissional].itens.push({
-        data: comanda.data,
-        cliente,
-        servico: item.descricao || "Serviço",
-        valorReal,
-        percentual,
-        valorComissao
-      });
-
-    });
-
-  });
-
   window.comissoesPeriodoCache = porProfissional;
 
   const profissionais = Object.keys(porProfissional);
