@@ -3289,10 +3289,16 @@ async function gerarRelatorioProfissional(){
   let query = supabaseClient
     .from("comandas")
     .select(`
-      *,
-      profissionais(nome),
-      comanda_itens(descricao, valor, comissao_percentual)
-    `)
+  *,
+  clientes(nome),
+  profissionais(nome),
+  comanda_itens(
+    descricao,
+    valor,
+    comissao_percentual,
+    profissional_id
+  )
+`)
     .gte("data", dataInicio)
     .lte("data", dataFim)
     .in("status", ["Fechada", "Aberta", "Parcial"])
@@ -3312,8 +3318,6 @@ async function gerarRelatorioProfissional(){
   const resumo = {};
 
   (data || []).forEach((comanda)=>{
-
-    const profissional = comanda.profissionais?.nome || "Sem profissional";
 
     const itensUnicos = [];
     const chavesItens = new Set();
@@ -4915,15 +4919,40 @@ async function gerarComissoesPorPeriodo(){
 
     });
 
-    itensUnicos.forEach((item)=>{
+   itensUnicos.forEach((item)=>{
 
-      if(!porProfissional[profissional]){
-        porProfissional[profissional] = {
-          totalComissao: 0,
-          totalAtendimentos: 0,
-          itens: []
-        };
-      }
+  const profissionalId = item.profissional_id || comanda.profissional_id;
+
+  const profissionalNome =
+    profissionalId === comanda.profissional_id
+      ? (comanda.profissionais?.nome || "Sem profissional")
+      : `Profissional ${profissionalId}`;
+
+  if(!porProfissional[profissionalNome]){
+    porProfissional[profissionalNome] = {
+      totalComissao: 0,
+      totalAtendimentos: 0,
+      itens: []
+    };
+  }
+
+  const valorReal = Number(item.valor || 0);
+  const percentual = Number(item.comissao_percentual || 0);
+  const valorComissao = valorReal * (percentual / 100);
+
+  porProfissional[profissionalNome].totalComissao += valorComissao;
+  porProfissional[profissionalNome].totalAtendimentos += 1;
+
+  porProfissional[profissionalNome].itens.push({
+    data: comanda.data,
+    cliente,
+    servico: item.descricao || "Serviço",
+    valorReal,
+    percentual,
+    valorComissao
+  });
+
+});
 
       const valorReal = Number(item.valor || 0);
       const percentual = Number(item.comissao_percentual || 0);
@@ -5812,13 +5841,15 @@ async function salvarFaturamentoClienteDiaPago(){
       item.servicos?.comissao_padrao || 0
     );
 
-    itensComanda.push({
-      comanda_id: comanda.id,
-      servico_id: item.servico_id,
-      descricao: item.servicos?.nome || "Serviço",
-      valor: item.total,
-      comissao_percentual: percentualComissao
-    });
+   itensComanda.push({
+  comanda_id: comanda.id,
+  servico_id: item.servico_id,
+  agendamento_id: item.id,
+  profissional_id: item.profissional_id,
+  descricao: item.servicos?.nome || "Serviço",
+  valor: item.total,
+  comissao_percentual: percentualComissao
+});
 
   }
 
