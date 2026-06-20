@@ -4871,7 +4871,6 @@ async function carregarComissoes(){
 async function gerarComissoesPorPeriodo(){
 
   const area = document.getElementById("resultadoComissoes");
-
   if(!area) return;
 
   const inicio = document.getElementById("comissaoDataInicio")?.value;
@@ -4879,13 +4878,30 @@ async function gerarComissoesPorPeriodo(){
 
   area.innerHTML = "Carregando comissões...";
 
+  const profissionaisResp = await supabaseClient
+    .from("profissionais")
+    .select("id,nome");
+
+  const mapaProfissionais = {};
+
+  (profissionaisResp.data || []).forEach(p=>{
+    mapaProfissionais[p.id] = p.nome;
+  });
+
   const { data, error } = await supabaseClient
     .from("comandas")
     .select(`
       *,
       clientes(nome),
       profissionais(nome),
-      comanda_itens(descricao, valor, comissao_percentual)
+      comanda_itens(
+        id,
+        descricao,
+        valor,
+        comissao_percentual,
+        profissional_id,
+        agendamento_id
+      )
     `)
     .gte("data", inicio)
     .lte("data", fim)
@@ -4902,61 +4918,47 @@ async function gerarComissoesPorPeriodo(){
 
   (data || []).forEach((comanda)=>{
 
-    const profissional = comanda.profissionais?.nome || "Sem profissional";
     const cliente = comanda.clientes?.nome || "Cliente não informado";
-
-    const itensUnicos = [];
-    const chaves = new Set();
 
     (comanda.comanda_itens || []).forEach((item)=>{
 
-      const chave = `${comanda.id}-${item.descricao}-${item.valor}-${item.comissao_percentual}`;
+      const profissionalId =
+        item.profissional_id || comanda.profissional_id;
 
-      if(!chaves.has(chave)){
-        chaves.add(chave);
-        itensUnicos.push(item);
+      const profissional =
+        mapaProfissionais[profissionalId] ||
+        comanda.profissionais?.nome ||
+        "Sem profissional";
+
+      if(!porProfissional[profissional]){
+        porProfissional[profissional] = {
+          totalComissao: 0,
+          totalAtendimentos: 0,
+          itens: []
+        };
       }
+
+      const valorReal = Number(item.valor || 0);
+      const percentual = Number(item.comissao_percentual || 0);
+      const valorComissao = valorReal * (percentual / 100);
+
+      porProfissional[profissional].totalComissao += valorComissao;
+      porProfissional[profissional].totalAtendimentos += 1;
+
+      porProfissional[profissional].itens.push({
+        data: comanda.data,
+        cliente,
+        servico: item.descricao || "Serviço",
+        valorReal,
+        percentual,
+        valorComissao
+      });
 
     });
 
-   itensUnicos.forEach((item)=>{
-
-  const profissionalId = item.profissional_id || comanda.profissional_id;
-
-  const profissionalNome =
-    profissionalId === comanda.profissional_id
-      ? (comanda.profissionais?.nome || "Sem profissional")
-      : `Profissional ${profissionalId}`;
-
-  if(!porProfissional[profissionalNome]){
-    porProfissional[profissionalNome] = {
-      totalComissao: 0,
-      totalAtendimentos: 0,
-      itens: []
-    };
-  }
-
-  const valorReal = Number(item.valor || 0);
-  const percentual = Number(item.comissao_percentual || 0);
-  const valorComissao = valorReal * (percentual / 100);
-
-  porProfissional[profissionalNome].totalComissao += valorComissao;
-  porProfissional[profissionalNome].totalAtendimentos += 1;
-
-  porProfissional[profissionalNome].itens.push({
-    data: comanda.data,
-    cliente,
-    servico: item.descricao || "Serviço",
-    valorReal,
-    percentual,
-    valorComissao
   });
 
-});
-
-});
-
-window.comissoesPeriodoCache = porProfissional;
+  window.comissoesPeriodoCache = porProfissional;
 
   const profissionais = Object.keys(porProfissional);
 
@@ -5823,7 +5825,7 @@ async function salvarFaturamentoClienteDiaPago(){
       item.servicos?.comissao_padrao || 0
     );
 
-   itensComanda.push({
+itensComanda.push({
   comanda_id: comanda.id,
   servico_id: item.servico_id,
   agendamento_id: item.id,
