@@ -4764,9 +4764,25 @@ async function cancelarAtendimentoFaturado(agendamento, comanda, motivo){
   }
 
   const idsComandas = comandasCancelar.map(c => c.id);
-  const idsAgendamentos = comandasCancelar
-    .map(c => c.agendamento_id)
-    .filter(Boolean);
+ let idsAgendamentos = comandasCancelar
+  .map(c => c.agendamento_id)
+  .filter(Boolean);
+
+const itensResp = await supabaseClient
+  .from("comanda_itens")
+  .select("agendamento_id")
+  .in("comanda_id", idsComandas);
+
+const idsItensAgendamentos = (itensResp.data || [])
+  .map(item => item.agendamento_id)
+  .filter(Boolean);
+
+idsAgendamentos = [
+  ...new Set([
+    ...idsAgendamentos,
+    ...idsItensAgendamentos
+  ])
+];
 
   await supabaseClient
     .from("historico_cancelamentos")
@@ -4815,12 +4831,16 @@ async function cancelarAtendimentoFaturado(agendamento, comanda, motivo){
       motivo_cancelamento: motivo
     })
     .in("comanda_id", idsComandas);
-await supabaseClient
-  .from("agendamentos")
-  .update({
-    status: "Agendado"
-  })
-  .in("id", idsAgendamentos);
+if(idsAgendamentos.length > 0){
+
+  await supabaseClient
+    .from("agendamentos")
+    .update({
+      status: "Agendado"
+    })
+    .in("id", idsAgendamentos);
+
+}
 await registrarHistoricoOperacao(
   "cancelamento_faturamento",
   String(comanda.id),
