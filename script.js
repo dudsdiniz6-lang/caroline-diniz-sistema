@@ -4783,6 +4783,44 @@ idsAgendamentos = [
     ...idsItensAgendamentos
   ])
 ];
+  const comandasComItensResp = await supabaseClient
+  .from("comandas")
+  .select(`
+    cliente_id,
+    data,
+    comanda_itens(servico_id)
+  `)
+  .in("id", idsComandas);
+
+const servicosCancelados = [];
+
+(comandasComItensResp.data || []).forEach(c=>{
+  (c.comanda_itens || []).forEach(item=>{
+    if(item.servico_id){
+      servicosCancelados.push(item.servico_id);
+    }
+  });
+});
+
+if(servicosCancelados.length > 0){
+
+  const agsResp = await supabaseClient
+    .from("agendamentos")
+    .select("id")
+    .eq("cliente_id", comanda.cliente_id)
+    .eq("data", comanda.data)
+    .in("servico_id", servicosCancelados);
+
+  const idsPorServico = (agsResp.data || []).map(a => a.id);
+
+  idsAgendamentos = [
+    ...new Set([
+      ...idsAgendamentos,
+      ...idsPorServico
+    ])
+  ];
+
+}
 
   await supabaseClient
     .from("historico_cancelamentos")
