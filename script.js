@@ -1727,40 +1727,26 @@ async function abrirCaixa(){
     return;
   }
 
-  const valor = Number(prompt("Informe o valor de abertura do caixa:") || 0);
+  abrirModal(`
+    <h2>Abrir caixa</h2>
 
-  if(valor <= 0){
-    alert("O valor de abertura precisa ser maior que zero.");
-    return;
-  }
+    <label>Valor de abertura</label>
+    <input
+      id="valorAberturaCaixa"
+      type="number"
+      min="0.01"
+      step="0.01"
+      placeholder="Ex: 300"
+    >
 
-  const { error } = await supabaseClient
-    .from("caixas")
-    .insert([{
-      unidade_id: unidadeAtualId,
-      data: formatarDataISO(new Date()),
-      abertura: valor,
-      status: "Aberto",
-      aberto_por: usuarioLogado?.nome || usuarioLogado?.usuario || "Usuário"
-    }]);
+    <button class="principal" onclick="confirmarAberturaCaixa()">
+      Confirmar abertura
+    </button>
 
-if(error){
-  alert("Erro ao abrir caixa: " + error.message);
-  return;
-}
-
-await registrarHistoricoOperacao(
-  "abertura_caixa",
-  "CAIXA",
-  "Abertura de caixa realizada",
-  {
-    valor_abertura: valor
-  }
-);
-
-carregarCaixas();
-
-alert("Caixa aberto com sucesso.");
+    <button onclick="fecharModal()">
+      Cancelar
+    </button>
+  `);
 }
 async function buscarCaixaAberto(){
 
@@ -7149,4 +7135,50 @@ if(
   carregarCaixas();
 
   alert("Caixa reaberto com sucesso.");
+}
+async function confirmarAberturaCaixa(){
+
+  const valor = Number(document.getElementById("valorAberturaCaixa").value || 0);
+
+  if(valor <= 0){
+    alert("O valor de abertura precisa ser maior que zero.");
+    return;
+  }
+
+  const caixaAberto = await buscarCaixaAberto();
+
+  if(caixaAberto){
+    alert("Já existe um caixa aberto. Feche o caixa atual antes de abrir outro.");
+    fecharModal();
+    return;
+  }
+
+  const { error } = await supabaseClient
+    .from("caixas")
+    .insert([{
+      unidade_id: unidadeAtualId,
+      data: formatarDataISO(new Date()),
+      abertura: valor,
+      status: "Aberto",
+      aberto_por: usuarioLogado?.nome || usuarioLogado?.usuario || "Usuário"
+    }]);
+
+  if(error){
+    alert("Erro ao abrir caixa: " + error.message);
+    return;
+  }
+
+  await registrarHistoricoOperacao(
+    "abertura_caixa",
+    "CAIXA",
+    "Abertura de caixa realizada",
+    {
+      valor_abertura: valor
+    }
+  );
+
+  fecharModal();
+  carregarCaixas();
+
+  alert("Caixa aberto com sucesso.");
 }
