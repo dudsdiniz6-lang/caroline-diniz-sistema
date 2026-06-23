@@ -517,8 +517,10 @@ async function carregarServicos(){
   const categoriaFiltro =
     document.getElementById("filtroCategoriaServico")?.value || "";
 
-  const busca =
-    document.getElementById("buscaServico")?.value?.toLowerCase().trim() || "";
+  const campoBusca = document.getElementById("buscaServico");
+
+const buscaOriginal = campoBusca?.value || "";
+const busca = buscaOriginal.toLowerCase().trim();
 
   const categorias = await carregarCategoriasServico();
 
@@ -556,7 +558,7 @@ async function carregarServicos(){
       <input
         id="buscaServico"
         placeholder="Pesquisar serviço..."
-        value="${busca}"
+      value="${buscaOriginal}"
         oninput="carregarServicos()"
       >
 
