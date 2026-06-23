@@ -2355,14 +2355,36 @@ async function consumirSaldoPacoteAgendamento(agendamento){
 }
 function preencherDadosServicoAgendamento(){
 
-  const select = document.getElementById("agServico");
-  const option = select.options[select.selectedIndex];
+  const servicoId = document.getElementById("agServico")?.value;
 
-  const valor = Number(option?.dataset?.valor || 0);
-  const duracao = Number(option?.dataset?.duracao || 30);
+  if(!servicoId) return;
 
-  document.getElementById("agValor").value = valor;
-  document.getElementById("agDuracao").value = duracao;
+  const servico = servicosAgendamentoCache.find(s =>
+    String(s.id) === String(servicoId)
+  );
+
+  if(!servico) return;
+
+  const campoDuracao = document.getElementById("agDuracao");
+  const campoValor = document.getElementById("agValor");
+  const campoDesconto = document.getElementById("agDesconto");
+  const campoTipoDesconto = document.getElementById("agTipoDesconto");
+
+  if(campoDuracao){
+    campoDuracao.value = servico.duracao || 30;
+  }
+
+  if(campoValor){
+    campoValor.value = Number(servico.valor || 0);
+  }
+
+  if(campoDesconto && !campoDesconto.value){
+    campoDesconto.value = 0;
+  }
+
+  if(campoTipoDesconto && !campoTipoDesconto.value){
+    campoTipoDesconto.value = "valor";
+  }
 
   calcularTotalAgendamento();
 }
