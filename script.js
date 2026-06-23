@@ -2556,12 +2556,24 @@ async function salvarAgendamento(){
   dataAgenda = new Date(dados.data + "T00:00:00");
 
   fecharModal();
-  atualizarTextoDataAgenda();
-  carregarAgenda();
+atualizarTextoDataAgenda();
+carregarAgenda();
 
-  if(!repetir){
-    alert("Agendamento salvo com sucesso.");
+await registrarHistoricoOperacao(
+  id ? "edicao_agendamento" : "criacao_agendamento",
+  String(dados.cliente_id),
+  id ? "Agendamento alterado" : "Novo agendamento criado",
+  {
+    cliente_id: dados.cliente_id,
+    profissional_id: dados.profissional_id,
+    data: dados.data,
+    horario: dados.horario,
+    servico_id: dados.servico_id,
+    valor: dados.total
   }
+);
+
+alert("Agendamento salvo com sucesso.");
 }
 function somarMinutosHorario(horario, duracao){
 
