@@ -517,6 +517,9 @@ async function carregarServicos(){
   const categoriaFiltro =
     document.getElementById("filtroCategoriaServico")?.value || "";
 
+  const busca =
+    document.getElementById("buscaServico")?.value?.toLowerCase().trim() || "";
+
   const categorias = await carregarCategoriasServico();
 
   let query = supabaseClient
@@ -539,13 +542,24 @@ async function carregarServicos(){
     return;
   }
 
-  if(!data || data.length === 0){
-    lista.innerHTML = "<div class='card'>Nenhum serviço cadastrado.</div>";
-    return;
+  let servicos = data || [];
+
+  if(busca){
+    servicos = servicos.filter(servico =>
+      servico.nome?.toLowerCase().includes(busca) ||
+      servico.categorias_servicos?.nome?.toLowerCase().includes(busca)
+    );
   }
 
   lista.innerHTML = `
-    <div class="filtros" style="grid-column:1/-1;margin-bottom:15px;">
+    <div class="servicos-filtros">
+      <input
+        id="buscaServico"
+        placeholder="Pesquisar serviço..."
+        value="${busca}"
+        oninput="carregarServicos()"
+      >
+
       <select id="filtroCategoriaServico" onchange="carregarServicos()">
         <option value="">Todas as categorias</option>
 
@@ -560,29 +574,27 @@ async function carregarServicos(){
       </select>
     </div>
 
-    <div class="linha-tabela cabecalho">
-      <span>Categoria</span>
-      <span>Serviço</span>
-      <span>Duração</span>
-      <span>Valor</span>
-      <span>Comissão</span>
+    <div class="servicos-grid">
+      ${servicos.length ? servicos.map(servico=>`
+        <div class="servico-card" onclick="abrirModalServico(${servico.id})">
+
+          <div>
+            <small>${servico.categorias_servicos?.nome || "Sem categoria"}</small>
+            <h3>${servico.nome}</h3>
+          </div>
+
+          <div class="servico-info">
+            <span>${servico.duracao || 30} min</span>
+            <strong>${dinheiro(servico.valor)}</strong>
+            <em>${servico.comissao_padrao || 0}% comissão</em>
+          </div>
+
+        </div>
+      `).join("") : `
+        <div class="card">Nenhum serviço encontrado.</div>
+      `}
     </div>
   `;
-
-  data.forEach((servico)=>{
-
-    lista.innerHTML += `
-      <div class="linha-tabela" onclick="abrirModalServico(${servico.id})">
-        <span>${servico.categorias_servicos?.nome || "-"}</span>
-        <span>${servico.nome}</span>
-        <span>${servico.duracao || 30} min</span>
-        <span>${dinheiro(servico.valor)}</span>
-        <span>${servico.comissao_padrao || 0}%</span>
-      </div>
-    `;
-
-  });
-
 }
 async function abrirModalServico(id = null){
 
@@ -1021,19 +1033,22 @@ const alertasClienteHtml =
     <input id="agHorario" type="time" value="${agendamento?.horario || horarioPre || "08:00"}">
   </div>
 </div>
-    <select id="agServico" onchange="preencherDadosServicoAgendamento(); verificarPacoteDisponivel();">
-      <option value="">Selecione</option>
-      ${servicos.map(s=>`
-        <option 
-          value="${s.id}"
-          data-valor="${s.valor}"
-          data-duracao="${s.duracao}"
-          ${String(agendamento?.servico_id || "") === String(s.id) ? "selected" : ""}
-        >
-          ${s.nome} - ${dinheiro(s.valor)}
-        </option>
-      `).join("")}
-    </select>
+   <label>Serviço</label>
+
+<input
+  id="agServicoBusca"
+  placeholder="Digite para buscar o serviço..."
+  value="${agendamento ? (servicos.find(s => String(s.id) === String(agendamento.servico_id))?.nome || "") : ""}"
+  oninput="filtrarServicosAgendamento()"
+>
+
+<input
+  id="agServico"
+  type="hidden"
+  value="${agendamento?.servico_id || ""}"
+>
+
+<div id="resultadoBuscaServicosAgendamento" class="resultado-busca"></div>
 <div id="areaPacoteAgendamento"></div>
 
 <div class="form-grid-2">
@@ -1169,7 +1184,7 @@ ${id && pode("agenda_excluir") ? `
   Cancelar
 </button>
 `);
-
+carregarServicosParaBuscaAgendamento(servicos);
 calcularTotalAgendamento();
 carregarClientesParaBuscaAgendamento();
 }
@@ -7181,4 +7196,58 @@ async function confirmarAberturaCaixa(){
   carregarCaixas();
 
   alert("Caixa aberto com sucesso.");
+}
+let servicosAgendamentoCache = [];
+
+function carregarServicosParaBuscaAgendamento(servicos){
+  servicosAgendamentoCache = servicos || [];
+}
+
+function filtrarServicosAgendamento(){
+
+  const termo = document.getElementById("agServicoBusca")?.value?.toLowerCase().trim() || "";
+  const resultado = document.getElementById("resultadoBuscaServicosAgendamento");
+
+  if(!resultado) return;
+
+  resultado.innerHTML = "";
+
+  if(!termo){
+    return;
+  }
+
+  const filtrados = servicosAgendamentoCache
+    .filter(s => s.nome?.toLowerCase().includes(termo))
+    .slice(0, 10);
+
+  filtrados.forEach((servico)=>{
+
+    resultado.innerHTML += `
+      <div
+        class="item-busca"
+        onclick="selecionarServicoAgendamento(${servico.id})"
+      >
+        <strong>${servico.nome}</strong>
+        <small>${dinheiro(servico.valor)} • ${servico.duracao || 30} min</small>
+      </div>
+    `;
+
+  });
+}
+
+function selecionarServicoAgendamento(servicoId){
+
+  const servico = servicosAgendamentoCache.find(s =>
+    String(s.id) === String(servicoId)
+  );
+
+  if(!servico) return;
+
+  document.getElementById("agServico").value = servico.id;
+  document.getElementById("agServicoBusca").value = servico.nome;
+
+  document.getElementById("resultadoBuscaServicosAgendamento").innerHTML = "";
+
+  preencherDadosServicoAgendamento();
+  verificarPacoteDisponivel();
 }
