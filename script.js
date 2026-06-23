@@ -5974,7 +5974,30 @@ await supabaseClient
     status: "Finalizado"
   })
   .in("id", idsAgendamentos);
-
+await registrarHistoricoOperacao(
+  "faturamento_cliente",
+  String(comanda.id),
+  "Cliente faturada",
+  {
+    comanda_id: comanda.id,
+    faturamento_grupo_id: grupo.id,
+    cliente_id: primeiroItem.cliente_id,
+    total: totalReceber,
+    tipo_recebimento: tipoRecebimento,
+    agendamentos: idsAgendamentos,
+    itens: itensComanda.map(item => ({
+      servico_id: item.servico_id,
+      profissional_id: item.profissional_id,
+      valor: item.valor,
+      comissao_percentual: item.comissao_percentual
+    })),
+    pagamentos: pagamentosInformados.map(p => ({
+      forma_pagamento_id: p.formaPagamentoId,
+      forma: p.formaNome,
+      valor: p.valor
+    }))
+  }
+);
   fecharModal();
   carregarAgenda();
 
@@ -7137,6 +7160,16 @@ async function excluirAgendamento(id){
 
   fecharModal();
   carregarAgenda();
+  await registrarHistoricoOperacao(
+  "cancelamento_agendamento",
+  String(id),
+  "Agendamento cancelado",
+  {
+    agendamento_id: id,
+    cliente_id: agendamento?.cliente_id || null,
+    profissional_id: agendamento?.profissional_id || null
+  }
+);
 
   alert("Agendamento cancelado.");
 }
