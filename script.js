@@ -7383,3 +7383,58 @@ function somarMinutosHorario(horario, duracao){
 
   return `${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}`;
 }
+async function carregarAuditoria(){
+
+  const lista = document.getElementById("listaAuditoria");
+
+  if(!lista) return;
+
+  lista.innerHTML = "Carregando auditoria...";
+
+  const busca =
+    document.getElementById("buscaAuditoria")?.value?.toLowerCase() || "";
+
+  const { data, error } = await supabaseClient
+    .from("historico_operacoes")
+    .select("*")
+    .order("criado_em", { ascending: false })
+    .limit(100);
+
+  if(error){
+    lista.innerHTML = "<div class='card'>Erro ao carregar auditoria.</div>";
+    return;
+  }
+
+  let registros = data || [];
+
+  if(busca){
+
+    registros = registros.filter(item =>
+      (item.usuario_nome || "").toLowerCase().includes(busca) ||
+      (item.tipo || "").toLowerCase().includes(busca) ||
+      (item.descricao || "").toLowerCase().includes(busca)
+    );
+
+  }
+
+  if(registros.length === 0){
+    lista.innerHTML = "<div class='card'>Nenhum registro encontrado.</div>";
+    return;
+  }
+
+  lista.innerHTML = "";
+
+  registros.forEach((item)=>{
+
+    lista.innerHTML += `
+      <div class="card">
+        <strong>${item.usuario_nome || "Sistema"}</strong><br>
+        <small>${item.tipo}</small><br>
+        <small>${item.descricao}</small><br>
+        <small>${new Date(item.criado_em).toLocaleString("pt-BR")}</small>
+      </div>
+    `;
+
+  });
+
+}
