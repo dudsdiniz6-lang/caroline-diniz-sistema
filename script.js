@@ -1,4 +1,4 @@
-const SUPABASE_URL = "https://hndksymtlzqtbzgrvfkh.supabase.co";
+..............const SUPABASE_URL = "https://hndksymtlzqtbzgrvfkh.supabase.co";
 const SUPABASE_KEY = "sb_publishable_F4-5yOEa-lfaK5I-arqfMg_-j9pU0N8";
 
 const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
@@ -7356,4 +7356,17 @@ function selecionarServicoAgendamento(servicoId){
 
   preencherDadosServicoAgendamento();
   verificarPacoteDisponivel();
+}
+function somarMinutosHorario(horario, duracao){
+
+  if(!horario) return "00:00";
+
+  const [hora, minuto] = String(horario).split(":").map(Number);
+
+  const total = (hora * 60) + minuto + Number(duracao || 0);
+
+  const h = Math.floor(total / 60);
+  const m = total % 60;
+
+  return `${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}`;
 }
