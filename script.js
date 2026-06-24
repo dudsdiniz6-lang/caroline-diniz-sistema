@@ -7747,6 +7747,9 @@ async function salvarPerguntaAnamnese(){
       modelo_id: modeloAnamneseAtual,
       pergunta,
       tipo,
+      opcoes: null,
+      obrigatoria: false,
+      ordem: 0,
       ativo: true
     }]);
 
