@@ -160,6 +160,7 @@ function mostrarTela(nome){
   if(nome === "clientes") carregarClientes();
   if(nome === "profissionais") carregarProfissionais();
   if(nome === "servicos") carregarServicos();
+  if(nome === "prontuarios") carregarProntuarios();
   if(nome === "pacotes") carregarPacotes();
   if(nome === "comandas") carregarComandas();
   if(nome === "caixa") carregarCaixas();
