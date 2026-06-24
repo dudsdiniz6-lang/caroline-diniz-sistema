@@ -7654,3 +7654,75 @@ async function salvarModeloAnamnese(){
 function abrirModalAnamneseCliente(){
   alert("Próxima etapa: vincular ficha ao cliente.");
 }
+async function abrirPerguntasModeloAnamnese(modeloId){
+
+  modeloAnamneseAtual = modeloId;
+
+  document.querySelectorAll(".tela").forEach((tela)=>{
+    tela.classList.remove("ativa");
+  });
+
+  document
+    .getElementById("tela-perguntas-anamnese")
+    .classList.add("ativa");
+
+  carregarPerguntasAnamnese();
+}
+async function carregarPerguntasAnamnese(){
+
+  const lista =
+    document.getElementById("listaPerguntasAnamnese");
+
+  if(!lista) return;
+
+  lista.innerHTML = "Carregando perguntas...";
+
+  const { data, error } = await supabaseClient
+    .from("anamnese_perguntas")
+    .select("*")
+    .eq("modelo_id", modeloAnamneseAtual)
+    .eq("ativo", true)
+    .order("ordem");
+
+  if(error){
+    lista.innerHTML = "<div class='card'>Erro ao carregar perguntas.</div>";
+    return;
+  }
+
+  if(!data || data.length === 0){
+    lista.innerHTML = "<div class='card'>Nenhuma pergunta cadastrada.</div>";
+    return;
+  }
+
+  lista.innerHTML = data.map(pergunta => `
+    <div class="card">
+      <strong>${pergunta.pergunta}</strong>
+      <p>Tipo: ${pergunta.tipo}</p>
+    </div>
+  `).join("");
+}
+function abrirModalPerguntaAnamnese(){
+
+  abrirModal(`
+    <h2>Nova pergunta</h2>
+
+    <label>Pergunta</label>
+    <input id="perguntaAnamneseTexto">
+
+    <label>Tipo</label>
+    <select id="perguntaAnamneseTipo">
+      <option value="texto">Texto</option>
+      <option value="sim_nao">Sim / Não</option>
+      <option value="numero">Número</option>
+      <option value="multipla_escolha">Múltipla escolha</option>
+    </select>
+
+    <button class="principal" onclick="salvarPerguntaAnamnese()">
+      Salvar
+    </button>
+
+    <button onclick="fecharModal()">
+      Cancelar
+    </button>
+  `);
+}
