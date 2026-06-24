@@ -7561,16 +7561,20 @@ async function carregarProntuarios(){
 
   if(!area) return;
 
-  area.innerHTML = `
-  
-    <div class="card">
-      <h3>Modelos de Anamnese</h3>
-      <p>Crie modelos personalizados para cada tratamento.</p>
-      <button onclick="abrirModalModeloAnamnese()">
-        Gerenciar modelos
-      </button>
-    </div>
+  area.innerHTML = "Carregando prontuários...";
 
+  const { data: modelos, error } = await supabaseClient
+    .from("anamnese_modelos")
+    .select("*")
+    .eq("ativo", true)
+    .order("nome");
+
+  if(error){
+    area.innerHTML = "<div class='card'>Erro ao carregar modelos.</div>";
+    return;
+  }
+
+  area.innerHTML = `
     <div class="card">
       <h3>Fichas de Clientes</h3>
       <p>Vincule prontuários e acompanhe evolução.</p>
@@ -7580,13 +7584,16 @@ async function carregarProntuarios(){
     </div>
 
     <div class="card">
-      <h3>Evolução e Fotos</h3>
-      <p>Acompanhe fotos, respostas e histórico.</p>
-      <button>
-        Em breve
-      </button>
+      <h3>Modelos cadastrados</h3>
+      ${modelos.length ? modelos.map(modelo=>`
+        <div class="caixa-linha">
+          <span>${modelo.nome}</span>
+          <button onclick="abrirPerguntasModeloAnamnese(${modelo.id})">
+            Perguntas
+          </button>
+        </div>
+      `).join("") : "<p>Nenhum modelo cadastrado.</p>"}
     </div>
-
   `;
 }
 function abrirModalModeloAnamnese(){
