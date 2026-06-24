@@ -7698,23 +7698,50 @@ async function carregarPerguntasAnamnese(){
     <div class="card">
       <strong>${pergunta.pergunta}</strong>
       <p>Tipo: ${pergunta.tipo}</p>
+
+      <div style="display:flex;gap:8px;margin-top:10px;">
+        <button onclick="abrirModalPerguntaAnamnese(${pergunta.id})">
+          Editar
+        </button>
+
+        <button onclick="desativarPerguntaAnamnese(${pergunta.id})">
+          Remover
+        </button>
+      </div>
     </div>
   `).join("");
 }
-function abrirModalPerguntaAnamnese(){
+async function abrirModalPerguntaAnamnese(id = null){
+
+  let perguntaAtual = null;
+
+  if(id){
+    const resp = await supabaseClient
+      .from("anamnese_perguntas")
+      .select("*")
+      .eq("id", id)
+      .single();
+
+    perguntaAtual = resp.data;
+  }
 
   abrirModal(`
-    <h2>Nova pergunta</h2>
+    <h2>${id ? "Editar pergunta" : "Nova pergunta"}</h2>
+
+    <input id="perguntaAnamneseId" type="hidden" value="${perguntaAtual?.id || ""}">
 
     <label>Pergunta</label>
-    <input id="perguntaAnamneseTexto">
+    <input
+      id="perguntaAnamneseTexto"
+      value="${perguntaAtual?.pergunta || ""}"
+    >
 
     <label>Tipo</label>
     <select id="perguntaAnamneseTipo">
-      <option value="texto">Texto</option>
-      <option value="sim_nao">Sim / Não</option>
-      <option value="numero">Número</option>
-      <option value="multipla_escolha">Múltipla escolha</option>
+      <option value="texto" ${perguntaAtual?.tipo === "texto" ? "selected" : ""}>Texto</option>
+      <option value="sim_nao" ${perguntaAtual?.tipo === "sim_nao" ? "selected" : ""}>Sim / Não</option>
+      <option value="numero" ${perguntaAtual?.tipo === "numero" ? "selected" : ""}>Número</option>
+      <option value="multipla_escolha" ${perguntaAtual?.tipo === "multipla_escolha" ? "selected" : ""}>Múltipla escolha</option>
     </select>
 
     <button class="principal" onclick="salvarPerguntaAnamnese()">
@@ -7728,6 +7755,7 @@ function abrirModalPerguntaAnamnese(){
 }
 async function salvarPerguntaAnamnese(){
 
+  const id = document.getElementById("perguntaAnamneseId")?.value || "";
   const pergunta = document.getElementById("perguntaAnamneseTexto").value.trim();
   const tipo = document.getElementById("perguntaAnamneseTipo").value;
 
@@ -7741,25 +7769,56 @@ async function salvarPerguntaAnamnese(){
     return;
   }
 
-  const { error } = await supabaseClient
-    .from("anamnese_perguntas")
-    .insert([{
-      modelo_id: modeloAnamneseAtual,
-      pergunta,
-      tipo,
-      opcoes: null,
-      obrigatoria: false,
-      ordem: 0,
-      ativo: true
-    }]);
+  const dados = {
+    modelo_id: modeloAnamneseAtual,
+    pergunta,
+    tipo,
+    opcoes: null,
+    obrigatoria: false,
+    ordem: 0,
+    ativo: true
+  };
 
-  if(error){
-    alert("Erro ao salvar pergunta: " + error.message);
+  let resposta;
+
+  if(id){
+    resposta = await supabaseClient
+      .from("anamnese_perguntas")
+      .update(dados)
+      .eq("id", id);
+  }else{
+    resposta = await supabaseClient
+      .from("anamnese_perguntas")
+      .insert([dados]);
+  }
+
+  if(resposta.error){
+    alert("Erro ao salvar pergunta: " + resposta.error.message);
     return;
   }
 
   fecharModal();
   carregarPerguntasAnamnese();
 
-  alert("Pergunta criada.");
+  alert("Pergunta salva.");
+}
+async function desativarPerguntaAnamnese(id){
+
+  const confirmar = confirm("Deseja remover esta pergunta do modelo?");
+
+  if(!confirmar) return;
+
+  const { error } = await supabaseClient
+    .from("anamnese_perguntas")
+    .update({
+      ativo: false
+    })
+    .eq("id", id);
+
+  if(error){
+    alert("Erro ao remover pergunta: " + error.message);
+    return;
+  }
+
+  carregarPerguntasAnamnese();
 }
