@@ -41,6 +41,7 @@
         <button onclick="mostrarTela('gestores')">Gestores</button>
         <button onclick="mostrarTela('caixa')">Caixa</button>
         <button onclick="mostrarTela('comissoes')">Comissões</button>
+        <button onclick="mostrarTela('auditoria')">Auditoria</button>
         <button onclick="sairSistema()">Sair</button>
       </nav>
     </aside>
@@ -263,7 +264,30 @@
   <div id="areaComissaoDetalhe"></div>
 
 </section>
-    </main>
+
+<section id="tela-auditoria" class="tela">
+
+  <div class="topo">
+    <h1>Auditoria</h1>
+
+    <button class="principal" onclick="carregarAuditoria()">
+      Atualizar
+    </button>
+  </div>
+
+  <div class="filtros">
+    <input
+      id="buscaAuditoria"
+      placeholder="Pesquisar por usuário, tipo ou descrição..."
+      oninput="carregarAuditoria()"
+    >
+  </div>
+
+  <div id="listaAuditoria" class="cards"></div>
+
+</section>
+
+</main>
   </div>
 
   <div id="modal" class="modal">
