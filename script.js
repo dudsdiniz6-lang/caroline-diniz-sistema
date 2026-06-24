@@ -7,11 +7,11 @@ let usuarioLogado = null;
 let permissoesUsuario = [];
 let unidadeAtualId = 1;
 let dataAgenda = new Date();
+let modeloAnamneseAtual = null;
 
 function formatarDataBR(data){
   return data.toLocaleDateString("pt-BR");
 }
-
 function formatarDataISO(data){
 
   const ano = data.getFullYear();
