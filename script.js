@@ -7452,6 +7452,15 @@ const { data, error } = await supabaseClient
     `;
 
   }).join("");
+  for(const item of registros){
+
+  const areaDetalhe = document.getElementById(`auditoria-${item.id}`);
+
+  if(areaDetalhe){
+    areaDetalhe.innerHTML = await montarResumoAuditoria(item.dados || {});
+  }
+
+}
 }
 function formatarTipoAuditoria(tipo){
 
