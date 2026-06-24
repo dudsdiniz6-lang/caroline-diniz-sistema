@@ -7397,13 +7397,13 @@ async function carregarAuditoria(){
   lista.innerHTML = "Carregando auditoria...";
 
   const busca =
-    document.getElementById("buscaAuditoria")?.value?.toLowerCase() || "";
+    document.getElementById("buscaAuditoria")?.value?.toLowerCase().trim() || "";
 
   const { data, error } = await supabaseClient
     .from("historico_operacoes")
     .select("*")
     .order("criado_em", { ascending: false })
-    .limit(100);
+    .limit(150);
 
   if(error){
     lista.innerHTML = "<div class='card'>Erro ao carregar auditoria.</div>";
@@ -7413,13 +7413,12 @@ async function carregarAuditoria(){
   let registros = data || [];
 
   if(busca){
-
     registros = registros.filter(item =>
       (item.usuario_nome || "").toLowerCase().includes(busca) ||
       (item.tipo || "").toLowerCase().includes(busca) ||
-      (item.descricao || "").toLowerCase().includes(busca)
+      (item.descricao || "").toLowerCase().includes(busca) ||
+      JSON.stringify(item.dados || {}).toLowerCase().includes(busca)
     );
-
   }
 
   if(registros.length === 0){
@@ -7427,19 +7426,80 @@ async function carregarAuditoria(){
     return;
   }
 
-  lista.innerHTML = "";
+  lista.innerHTML = registros.map(item=>{
 
-  registros.forEach((item)=>{
+    const dados = item.dados || {};
 
-    lista.innerHTML += `
-      <div class="card">
-        <strong>${item.usuario_nome || "Sistema"}</strong><br>
-        <small>${item.tipo}</small><br>
-        <small>${item.descricao}</small><br>
-        <small>${new Date(item.criado_em).toLocaleString("pt-BR")}</small>
+    return `
+      <div class="auditoria-card">
+
+        <div class="auditoria-topo">
+          <div>
+            <strong>${item.usuario_nome || "Sistema"}</strong>
+            <small>${new Date(item.criado_em).toLocaleString("pt-BR")}</small>
+          </div>
+
+          <span>${formatarTipoAuditoria(item.tipo)}</span>
+        </div>
+
+        <h3>${item.descricao || "-"}</h3>
+
+        <div class="auditoria-dados">
+          ${montarResumoAuditoria(dados)}
+        </div>
+
       </div>
     `;
 
-  });
+  }).join("");
+}
+function formatarTipoAuditoria(tipo){
 
+  const nomes = {
+    criacao_agendamento: "Agendamento criado",
+    edicao_agendamento: "Agendamento editado",
+    cancelamento_agendamento: "Agendamento cancelado",
+    faturamento_cliente: "Faturamento",
+    cancelamento_faturamento: "Cancelamento",
+    abertura_caixa: "Abertura de caixa",
+    fechamento_caixa: "Fechamento de caixa",
+    reabertura_caixa: "Reabertura de caixa",
+    criacao_cliente: "Cliente criada",
+    edicao_cliente: "Cliente editada",
+    criacao_servico: "Serviço criado",
+    edicao_servico: "Serviço editado"
+  };
+
+  return nomes[tipo] || tipo || "Operação";
+}
+
+function montarResumoAuditoria(dados){
+
+  if(!dados || Object.keys(dados).length === 0){
+    return "<small>Sem detalhes adicionais.</small>";
+  }
+
+  const linhas = [];
+
+  if(dados.cliente_id) linhas.push(`<p><strong>Cliente ID:</strong> ${dados.cliente_id}</p>`);
+  if(dados.profissional_id) linhas.push(`<p><strong>Profissional ID:</strong> ${dados.profissional_id}</p>`);
+  if(dados.data) linhas.push(`<p><strong>Data:</strong> ${dados.data}</p>`);
+  if(dados.horario) linhas.push(`<p><strong>Horário:</strong> ${dados.horario}</p>`);
+  if(dados.servico_id) linhas.push(`<p><strong>Serviço ID:</strong> ${dados.servico_id}</p>`);
+  if(dados.valor) linhas.push(`<p><strong>Valor:</strong> ${dinheiro(dados.valor)}</p>`);
+  if(dados.total) linhas.push(`<p><strong>Total:</strong> ${dinheiro(dados.total)}</p>`);
+  if(dados.motivo) linhas.push(`<p><strong>Motivo:</strong> ${dados.motivo}</p>`);
+
+  if(dados.pagamentos?.length){
+    linhas.push(`<p><strong>Pagamentos:</strong></p>`);
+    dados.pagamentos.forEach(p=>{
+      linhas.push(`<p>${p.forma || "Forma"}: ${dinheiro(p.valor)}</p>`);
+    });
+  }
+
+  if(dados.itens?.length){
+    linhas.push(`<p><strong>Itens:</strong> ${dados.itens.length}</p>`);
+  }
+
+  return linhas.join("") || `<pre>${JSON.stringify(dados, null, 2)}</pre>`;
 }
