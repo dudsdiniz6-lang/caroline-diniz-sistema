@@ -2461,7 +2461,6 @@ async function salvarAgendamento(){
 
   const repetirAte = document.getElementById("agRepetirAte")?.value || "";
   const intervaloDias = Number(document.getElementById("agIntervaloRepeticao")?.value || 7);
-
   const repetir = repetirAte !== "";
 
   const dados = {
@@ -2500,50 +2499,50 @@ async function salvarAgendamento(){
 
   let resposta;
 
- if(id){
+  if(id){
 
-  const agendamentoAtualResp = await supabaseClient
-    .from("agendamentos")
-    .select("*")
-    .eq("id", id)
-    .single();
+    const agendamentoAtualResp = await supabaseClient
+      .from("agendamentos")
+      .select("*")
+      .eq("id", id)
+      .single();
 
-  const agendamentoAtual = agendamentoAtualResp.data;
+    const agendamentoAtual = agendamentoAtualResp.data;
 
-  let modo = "unico";
+    let modo = "unico";
 
-  if(agendamentoAtual?.recorrencia_id){
+    if(agendamentoAtual?.recorrencia_id){
 
-    const escolha = prompt(
-      "Este é um agendamento recorrente.\n\nDigite:\n1 - Alterar apenas este horário\n2 - Alterar este e todos os futuros"
-    );
+      const escolha = prompt(
+        "Este é um agendamento recorrente.\n\nDigite:\n1 - Alterar apenas este horário\n2 - Alterar este e todos os futuros"
+      );
 
-    if(escolha === "2"){
-      modo = "futuros";
-    }else if(escolha !== "1"){
-      return;
+      if(escolha === "2"){
+        modo = "futuros";
+      }else if(escolha !== "1"){
+        return;
+      }
+
     }
 
-  }
+    if(modo === "futuros"){
 
-  if(modo === "futuros"){
+      resposta = await supabaseClient
+        .from("agendamentos")
+        .update(dados)
+        .eq("recorrencia_id", agendamentoAtual.recorrencia_id)
+        .gte("data", agendamentoAtual.data);
 
-    resposta = await supabaseClient
-      .from("agendamentos")
-      .update(dados)
-      .eq("recorrencia_id", agendamentoAtual.recorrencia_id)
-      .gte("data", agendamentoAtual.data);
+    }else{
+
+      resposta = await supabaseClient
+        .from("agendamentos")
+        .update(dados)
+        .eq("id", id);
+
+    }
 
   }else{
-
-    resposta = await supabaseClient
-      .from("agendamentos")
-      .update(dados)
-      .eq("id", id);
-
-  }
-
-}else{
 
     const agendamentosParaInserir = [];
 
@@ -2592,10 +2591,6 @@ async function salvarAgendamento(){
       .from("agendamentos")
       .insert(agendamentosParaInserir);
 
-    if(!resposta.error && repetir){
-      alert(`${agendamentosParaInserir.length} agendamento(s) criados na recorrência.`);
-    }
-
   }
 
   if(resposta.error){
@@ -2606,35 +2601,27 @@ async function salvarAgendamento(){
   dataAgenda = new Date(dados.data + "T00:00:00");
 
   fecharModal();
-atualizarTextoDataAgenda();
-carregarAgenda();
+  atualizarTextoDataAgenda();
+  carregarAgenda();
 
-await registrarHistoricoOperacao(
-  id ? "edicao_agendamento" : "criacao_agendamento",
-  String(dados.cliente_id),
-  id ? "Agendamento alterado" : "Novo agendamento criado",
-  {
-    cliente_id: dados.cliente_id,
-    profissional_id: dados.profissional_id,
-    data: dados.data,
-    horario: dados.horario,
-    servico_id: dados.servico_id,
-    valor: dados.total
-  }
-);
+  await registrarHistoricoOperacao(
+    id ? "edicao_agendamento" : "criacao_agendamento",
+    String(dados.cliente_id),
+    id ? "Agendamento alterado" : "Novo agendamento criado",
+    {
+      cliente_id: dados.cliente_id,
+      profissional_id: dados.profissional_id,
+      data: dados.data,
+      horario: dados.horario,
+      servico_id: dados.servico_id,
+      valor: dados.total,
+      recorrente: repetir,
+      repetir_ate: repetirAte || null,
+      intervalo_dias: repetir ? intervaloDias : null
+    }
+  );
 
-alert("Agendamento salvo com sucesso.");
-}
-function somarMinutosHorario(horario, duracao){
-
-  const [hora, minuto] = horario.split(":").map(Number);
-
-  const total = hora * 60 + minuto + Number(duracao || 0);
-
-  const h = Math.floor(total / 60);
-  const m = total % 60;
-
-  return `${String(h).padStart(2,"0")}:${String(m).padStart(2,"0")}`;
+  alert("Agendamento salvo com sucesso.");
 }
 
 function formatarHorarioBonito(horario){
