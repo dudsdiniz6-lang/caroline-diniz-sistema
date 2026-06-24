@@ -7590,9 +7590,60 @@ async function carregarProntuarios(){
   `;
 }
 function abrirModalModeloAnamnese(){
-  alert("Próxima etapa: criação de modelos de anamnese.");
-}
 
+  abrirModal(`
+    <h2>Novo modelo de anamnese</h2>
+
+    <label>Nome do modelo</label>
+    <input
+      id="modeloAnamneseNome"
+      placeholder="Ex: Anamnese Capilar, Facial, Corporal"
+    >
+
+    <label>Descrição</label>
+    <textarea
+      id="modeloAnamneseDescricao"
+      placeholder="Descreva quando este modelo será usado"
+    ></textarea>
+
+    <button class="principal" onclick="salvarModeloAnamnese()">
+      Salvar modelo
+    </button>
+
+    <button onclick="fecharModal()">
+      Cancelar
+    </button>
+  `);
+}
+async function salvarModeloAnamnese(){
+
+  const nome = document.getElementById("modeloAnamneseNome").value.trim();
+  const descricao = document.getElementById("modeloAnamneseDescricao").value.trim();
+
+  if(!nome){
+    alert("Digite o nome do modelo.");
+    return;
+  }
+
+  const { error } = await supabaseClient
+    .from("anamnese_modelos")
+    .insert([{
+      unidade_id: unidadeAtualId,
+      nome,
+      descricao,
+      ativo: true
+    }]);
+
+  if(error){
+    alert("Erro ao salvar modelo: " + error.message);
+    return;
+  }
+
+  fecharModal();
+  carregarProntuarios();
+
+  alert("Modelo criado com sucesso.");
+}
 function abrirModalAnamneseCliente(){
   alert("Próxima etapa: vincular ficha ao cliente.");
 }
