@@ -689,6 +689,18 @@ async function salvarServico(){
 
   const id = document.getElementById("servicoId").value;
 
+  let servicoAntes = null;
+
+  if(id){
+    const antesResp = await supabaseClient
+      .from("servicos")
+      .select("*")
+      .eq("id", id)
+      .single();
+
+    servicoAntes = antesResp.data || null;
+  }
+
   const categoriaId =
     document.getElementById("servicoCategoria").value;
 
@@ -720,7 +732,9 @@ async function salvarServico(){
 
     resposta = await supabaseClient
       .from("servicos")
-      .insert([dados]);
+      .insert([dados])
+      .select()
+      .single();
 
   }
 
@@ -728,6 +742,17 @@ async function salvarServico(){
     alert("Erro ao salvar serviço: " + resposta.error.message);
     return;
   }
+
+  await registrarHistoricoOperacao(
+    id ? "edicao_servico" : "criacao_servico",
+    String(id || resposta.data?.id || ""),
+    id ? "Serviço alterado" : "Novo serviço criado",
+    {
+      servico_id: id || resposta.data?.id || null,
+      antes: servicoAntes,
+      depois: dados
+    }
+  );
 
   fecharModal();
 
