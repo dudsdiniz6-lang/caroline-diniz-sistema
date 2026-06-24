@@ -7399,9 +7399,9 @@ async function carregarAuditoria(){
   const busca =
     document.getElementById("buscaAuditoria")?.value?.toLowerCase().trim() || "";
 
-  const { data, error } = await supabaseClient
-    .from("historico_operacoes")
-    .select("*")
+const { data, error } = await supabaseClient
+  .from("historico_operacoes")
+  .select("*")
     .order("criado_em", { ascending: false })
     .limit(150);
 
@@ -7445,7 +7445,7 @@ async function carregarAuditoria(){
         <h3>${item.descricao || "-"}</h3>
 
         <div class="auditoria-dados">
-          ${montarResumoAuditoria(dados)}
+        <div id="auditoria-${item.id}">Carregando detalhes...</div>
         </div>
 
       </div>
@@ -7473,33 +7473,75 @@ function formatarTipoAuditoria(tipo){
   return nomes[tipo] || tipo || "Operação";
 }
 
-function montarResumoAuditoria(dados){
+async function montarResumoAuditoria(dados){
 
   if(!dados || Object.keys(dados).length === 0){
     return "<small>Sem detalhes adicionais.</small>";
   }
 
+  let clienteNome = "";
+  let profissionalNome = "";
+  let servicoNome = "";
+
+  if(dados.cliente_id){
+    const resp = await supabaseClient
+      .from("clientes")
+      .select("nome")
+      .eq("id", dados.cliente_id)
+      .single();
+
+    clienteNome = resp.data?.nome || "";
+  }
+
+  if(dados.profissional_id){
+    const resp = await supabaseClient
+      .from("profissionais")
+      .select("nome")
+      .eq("id", dados.profissional_id)
+      .single();
+
+    profissionalNome = resp.data?.nome || "";
+  }
+
+  if(dados.servico_id){
+    const resp = await supabaseClient
+      .from("servicos")
+      .select("nome")
+      .eq("id", dados.servico_id)
+      .single();
+
+    servicoNome = resp.data?.nome || "";
+  }
+
   const linhas = [];
 
-  if(dados.cliente_id) linhas.push(`<p><strong>Cliente ID:</strong> ${dados.cliente_id}</p>`);
-  if(dados.profissional_id) linhas.push(`<p><strong>Profissional ID:</strong> ${dados.profissional_id}</p>`);
-  if(dados.data) linhas.push(`<p><strong>Data:</strong> ${dados.data}</p>`);
-  if(dados.horario) linhas.push(`<p><strong>Horário:</strong> ${dados.horario}</p>`);
-  if(dados.servico_id) linhas.push(`<p><strong>Serviço ID:</strong> ${dados.servico_id}</p>`);
-  if(dados.valor) linhas.push(`<p><strong>Valor:</strong> ${dinheiro(dados.valor)}</p>`);
-  if(dados.total) linhas.push(`<p><strong>Total:</strong> ${dinheiro(dados.total)}</p>`);
-  if(dados.motivo) linhas.push(`<p><strong>Motivo:</strong> ${dados.motivo}</p>`);
-
-  if(dados.pagamentos?.length){
-    linhas.push(`<p><strong>Pagamentos:</strong></p>`);
-    dados.pagamentos.forEach(p=>{
-      linhas.push(`<p>${p.forma || "Forma"}: ${dinheiro(p.valor)}</p>`);
-    });
+  if(clienteNome){
+    linhas.push(`<p><strong>Cliente:</strong> ${clienteNome}</p>`);
   }
 
-  if(dados.itens?.length){
-    linhas.push(`<p><strong>Itens:</strong> ${dados.itens.length}</p>`);
+  if(profissionalNome){
+    linhas.push(`<p><strong>Profissional:</strong> ${profissionalNome}</p>`);
   }
 
-  return linhas.join("") || `<pre>${JSON.stringify(dados, null, 2)}</pre>`;
+  if(servicoNome){
+    linhas.push(`<p><strong>Serviço:</strong> ${servicoNome}</p>`);
+  }
+
+  if(dados.data){
+    linhas.push(`<p><strong>Data:</strong> ${dados.data}</p>`);
+  }
+
+  if(dados.horario){
+    linhas.push(`<p><strong>Horário:</strong> ${dados.horario}</p>`);
+  }
+
+  if(dados.valor){
+    linhas.push(`<p><strong>Valor:</strong> ${dinheiro(dados.valor)}</p>`);
+  }
+
+  if(dados.total){
+    linhas.push(`<p><strong>Total:</strong> ${dinheiro(dados.total)}</p>`);
+  }
+
+  return linhas.join("");
 }
