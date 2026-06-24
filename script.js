@@ -2602,28 +2602,31 @@ async function salvarAgendamento(){
 
   dataAgenda = new Date(dados.data + "T00:00:00");
 
-  fecharModal();
-  atualizarTextoDataAgenda();
-  carregarAgenda();
+const nomeCliente =
+  document.getElementById("agClienteBusca")?.value || "Cliente";
 
-  await registrarHistoricoOperacao(
-    id ? "edicao_agendamento" : "criacao_agendamento",
-    String(dados.cliente_id),
-    id ? "Agendamento alterado" : "Novo agendamento criado",
-    {
-      cliente_id: dados.cliente_id,
-      profissional_id: dados.profissional_id,
-      data: dados.data,
-      horario: dados.horario,
-      servico_id: dados.servico_id,
-      valor: dados.total,
-      recorrente: repetir,
-      repetir_ate: repetirAte || null,
-      intervalo_dias: repetir ? intervaloDias : null
-    }
-  );
+fecharModal();
+atualizarTextoDataAgenda();
+carregarAgenda();
 
-  alert("Agendamento salvo com sucesso.");
+await registrarHistoricoOperacao(
+  id ? "edicao_agendamento" : "criacao_agendamento",
+  String(dados.cliente_id),
+  `${id ? "Agendamento alterado" : "Novo agendamento"} - ${nomeCliente}`,
+  {
+    cliente_id: dados.cliente_id,
+    profissional_id: dados.profissional_id,
+    data: dados.data,
+    horario: dados.horario,
+    servico_id: dados.servico_id,
+    valor: dados.total,
+    recorrente: repetir,
+    repetir_ate: repetirAte || null,
+    intervalo_dias: repetir ? intervaloDias : null
+  }
+);
+
+alert("Agendamento salvo com sucesso.");
 }
 
 function formatarHorarioBonito(horario){
