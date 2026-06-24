@@ -247,15 +247,27 @@ async function salvarCliente(){
 
   const id = document.getElementById("clienteId").value;
 
- const dados = {
-  unidade_id: unidadeAtualId,
-  nome: document.getElementById("clienteNome").value.trim(),
-  telefone: document.getElementById("clienteTelefone").value.trim(),
-  aniversario: document.getElementById("clienteAniversario").value || null,
-  observacoes: document.getElementById("clienteObservacoes").value.trim(),
-  vip: document.getElementById("clienteVip").checked,
-  ativo: true
-};
+  let clienteAntes = null;
+
+  if(id){
+    const antesResp = await supabaseClient
+      .from("clientes")
+      .select("*")
+      .eq("id", id)
+      .single();
+
+    clienteAntes = antesResp.data || null;
+  }
+
+  const dados = {
+    unidade_id: unidadeAtualId,
+    nome: document.getElementById("clienteNome").value.trim(),
+    telefone: document.getElementById("clienteTelefone").value.trim(),
+    aniversario: document.getElementById("clienteAniversario").value || null,
+    observacoes: document.getElementById("clienteObservacoes").value.trim(),
+    vip: document.getElementById("clienteVip").checked,
+    ativo: true
+  };
 
   if(!dados.nome){
     alert("Digite o nome da cliente.");
@@ -275,7 +287,9 @@ async function salvarCliente(){
 
     resposta = await supabaseClient
       .from("clientes")
-      .insert([dados]);
+      .insert([dados])
+      .select()
+      .single();
 
   }
 
@@ -283,6 +297,17 @@ async function salvarCliente(){
     alert("Erro ao salvar cliente: " + resposta.error.message);
     return;
   }
+
+  await registrarHistoricoOperacao(
+    id ? "edicao_cliente" : "criacao_cliente",
+    String(id || resposta.data?.id || ""),
+    id ? "Cliente alterada" : "Nova cliente criada",
+    {
+      cliente_id: id || resposta.data?.id || null,
+      antes: clienteAntes,
+      depois: dados
+    }
+  );
 
   fecharModal();
   carregarClientes();
