@@ -7651,22 +7651,60 @@ async function salvarModeloAnamnese(){
 
   alert("Modelo criado com sucesso.");
 }
-function abrirModalAnamneseCliente(){
-  alert("Próxima etapa: vincular ficha ao cliente.");
-}
-async function abrirPerguntasModeloAnamnese(modeloId){
+async function abrirModalAnamneseCliente(){
 
-  modeloAnamneseAtual = modeloId;
+  const clientesResp = await supabaseClient
+    .from("clientes")
+    .select("*")
+    .eq("ativo", true)
+    .order("nome");
 
-  document.querySelectorAll(".tela").forEach((tela)=>{
-    tela.classList.remove("ativa");
-  });
+  const modelosResp = await supabaseClient
+    .from("anamnese_modelos")
+    .select("*")
+    .eq("ativo", true)
+    .order("nome");
 
-  document
-    .getElementById("tela-perguntas-anamnese")
-    .classList.add("ativa");
+  const clientes = clientesResp.data || [];
+  const modelos = modelosResp.data || [];
 
-  carregarPerguntasAnamnese();
+  abrirModal(`
+    <h2>Nova ficha de prontuário</h2>
+
+    <label>Cliente</label>
+    <select id="anamneseCliente">
+
+      <option value="">Selecione</option>
+
+      ${clientes.map(cliente=>`
+        <option value="${cliente.id}">
+          ${cliente.nome}
+        </option>
+      `).join("")}
+
+    </select>
+
+    <label>Modelo</label>
+    <select id="anamneseModelo">
+
+      <option value="">Selecione</option>
+
+      ${modelos.map(modelo=>`
+        <option value="${modelo.id}">
+          ${modelo.nome}
+        </option>
+      `).join("")}
+
+    </select>
+
+    <button class="principal" onclick="salvarAnamneseCliente()">
+      Criar ficha
+    </button>
+
+    <button onclick="fecharModal()">
+      Cancelar
+    </button>
+  `);
 }
 async function carregarPerguntasAnamnese(){
 
@@ -7821,4 +7859,41 @@ async function desativarPerguntaAnamnese(id){
   }
 
   carregarPerguntasAnamnese();
+}
+async function salvarAnamneseCliente(){
+
+  const clienteId =
+    document.getElementById("anamneseCliente").value;
+
+  const modeloId =
+    document.getElementById("anamneseModelo").value;
+
+  if(!clienteId){
+    alert("Selecione a cliente.");
+    return;
+  }
+
+  if(!modeloId){
+    alert("Selecione o modelo.");
+    return;
+  }
+
+  const { error } = await supabaseClient
+    .from("anamneses_clientes")
+    .insert([{
+      unidade_id: unidadeAtualId,
+      cliente_id: Number(clienteId),
+      modelo_id: Number(modeloId),
+      status: "Em preenchimento"
+    }]);
+
+  if(error){
+    alert("Erro ao criar ficha: " + error.message);
+    return;
+  }
+
+  fecharModal();
+  carregarProntuarios();
+
+  alert("Ficha criada com sucesso.");
 }
