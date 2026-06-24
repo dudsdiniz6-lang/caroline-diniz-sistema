@@ -138,7 +138,25 @@
 
         <div id="listaServicos" class="tabela"></div>
       </section>
+<section id="tela-prontuarios" class="tela">
 
+  <div class="topo">
+    <h1>Prontuários</h1>
+
+    <div style="display:flex;gap:10px;">
+      <button class="principal" onclick="abrirModalModeloAnamnese()">
+        Novo modelo
+      </button>
+
+      <button onclick="abrirModalAnamneseCliente()">
+        Nova ficha
+      </button>
+    </div>
+  </div>
+
+  <div id="areaProntuarios" class="cards"></div>
+
+</section>
       <section id="tela-pacotes" class="tela">
         <div class="topo">
           <h1>Pacotes</h1>
