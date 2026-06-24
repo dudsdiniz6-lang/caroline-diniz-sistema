@@ -7555,3 +7555,44 @@ async function montarResumoAuditoria(dados){
 
   return linhas.join("");
 }
+async function carregarProntuarios(){
+
+  const area = document.getElementById("areaProntuarios");
+
+  if(!area) return;
+
+  area.innerHTML = `
+  
+    <div class="card">
+      <h3>Modelos de Anamnese</h3>
+      <p>Crie modelos personalizados para cada tratamento.</p>
+      <button onclick="abrirModalModeloAnamnese()">
+        Gerenciar modelos
+      </button>
+    </div>
+
+    <div class="card">
+      <h3>Fichas de Clientes</h3>
+      <p>Vincule prontuários e acompanhe evolução.</p>
+      <button onclick="abrirModalAnamneseCliente()">
+        Nova ficha
+      </button>
+    </div>
+
+    <div class="card">
+      <h3>Evolução e Fotos</h3>
+      <p>Acompanhe fotos, respostas e histórico.</p>
+      <button>
+        Em breve
+      </button>
+    </div>
+
+  `;
+}
+function abrirModalModeloAnamnese(){
+  alert("Próxima etapa: criação de modelos de anamnese.");
+}
+
+function abrirModalAnamneseCliente(){
+  alert("Próxima etapa: vincular ficha ao cliente.");
+}
