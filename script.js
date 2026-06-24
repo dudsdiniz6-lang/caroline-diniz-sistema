@@ -7726,3 +7726,37 @@ function abrirModalPerguntaAnamnese(){
     </button>
   `);
 }
+async function salvarPerguntaAnamnese(){
+
+  const pergunta = document.getElementById("perguntaAnamneseTexto").value.trim();
+  const tipo = document.getElementById("perguntaAnamneseTipo").value;
+
+  if(!modeloAnamneseAtual){
+    alert("Modelo de anamnese não selecionado.");
+    return;
+  }
+
+  if(!pergunta){
+    alert("Digite a pergunta.");
+    return;
+  }
+
+  const { error } = await supabaseClient
+    .from("anamnese_perguntas")
+    .insert([{
+      modelo_id: modeloAnamneseAtual,
+      pergunta,
+      tipo,
+      ativo: true
+    }]);
+
+  if(error){
+    alert("Erro ao salvar pergunta: " + error.message);
+    return;
+  }
+
+  fecharModal();
+  carregarPerguntasAnamnese();
+
+  alert("Pergunta criada.");
+}
