@@ -1098,3 +1098,26 @@ textarea{
   padding:10px;
   border-radius:10px;
 }
+.badge-status{
+  display:inline-block;
+  padding:4px 10px;
+  border-radius:999px;
+  font-size:12px;
+  font-weight:700;
+  margin-top:4px;
+}
+
+.badge-status.amarelo{
+  background:#fff4d6;
+  color:#9a6b00;
+}
+
+.badge-status.azul{
+  background:#e8f1ff;
+  color:#1d5fa7;
+}
+
+.badge-status.verde{
+  background:#e7f8ed;
+  color:#1f7a3f;
+}
