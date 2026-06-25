@@ -8129,3 +8129,57 @@ function badgeStatusAnamnese(status){
 
   return `<span class="badge-status amarelo">Em preenchimento</span>`;
 }
+async function alterarStatusFichaAnamnese(fichaId){
+
+  const novoStatus = prompt(
+    "Digite o novo status:\n\n1 - Em preenchimento\n2 - Finalizado\n3 - Assinado"
+  );
+
+  let status = "";
+
+  if(novoStatus === "1") status = "Em preenchimento";
+  if(novoStatus === "2") status = "Finalizado";
+  if(novoStatus === "3") status = "Assinado";
+
+  if(!status){
+    alert("Status inválido.");
+    return;
+  }
+
+  const { error } = await supabaseClient
+    .from("anamneses_clientes")
+    .update({ status })
+    .eq("id", fichaId);
+
+  if(error){
+    alert("Erro ao alterar status: " + error.message);
+    return;
+  }
+
+  carregarProntuarios();
+}
+async function excluirFichaAnamnese(fichaId){
+
+  const confirmar = confirm(
+    "Deseja excluir esta ficha? As respostas vinculadas também serão removidas."
+  );
+
+  if(!confirmar) return;
+
+  await supabaseClient
+    .from("anamnese_respostas")
+    .delete()
+    .eq("anamnese_cliente_id", fichaId);
+
+  const { error } = await supabaseClient
+    .from("anamneses_clientes")
+    .delete()
+    .eq("id", fichaId);
+
+  if(error){
+    alert("Erro ao excluir ficha: " + error.message);
+    return;
+  }
+
+  carregarProntuarios();
+}
