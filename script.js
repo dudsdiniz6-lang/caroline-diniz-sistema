@@ -7634,7 +7634,8 @@ const fichasFiltradas = busca
         <div class="caixa-linha">
           <span>
             <strong>${ficha.clientes?.nome || "Cliente"}</strong><br>
-            <small>${ficha.anamnese_modelos?.nome || "Modelo"} • ${ficha.status}</small>
+            <small>${ficha.anamnese_modelos?.nome || "Modelo"}</small><br>
+${badgeStatusAnamnese(ficha.status)}
           </span>
 
           <button onclick="abrirFichaAnamnese(${ficha.id})">
@@ -8105,4 +8106,16 @@ async function abrirPerguntasModeloAnamnese(modeloId){
     .classList.add("ativa");
 
   carregarPerguntasAnamnese();
+}
+function badgeStatusAnamnese(status){
+
+  if(status === "Assinado"){
+    return `<span class="badge-status verde">Assinado</span>`;
+  }
+
+  if(status === "Finalizado"){
+    return `<span class="badge-status azul">Finalizado</span>`;
+  }
+
+  return `<span class="badge-status amarelo">Em preenchimento</span>`;
 }
