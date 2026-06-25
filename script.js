@@ -7623,14 +7623,14 @@ const fichasFiltradas = busca
     <input
       id="buscaProntuario"
       placeholder="Pesquisar por cliente ou modelo..."
-      vvalue="${buscaOriginalProntuario}"
+   value="${buscaOriginalProntuario}"
       oninput="carregarProntuarios()"
       style="margin-bottom:15px;"
     >
 
     <h3>Fichas de clientes</h3>
 
-    ${fichasFiltradas.length ? fichasFiltradas.map(ficha=>`
+ ${fichasFiltradas.length ? fichasFiltradas.map(ficha=>`
         <div class="caixa-linha">
           <span>
             <strong>${ficha.clientes?.nome || "Cliente"}</strong><br>
@@ -7641,7 +7641,7 @@ const fichasFiltradas = busca
             Abrir prontuário
           </button>
         </div>
-`) : "<p>Nenhuma ficha encontrada.</p>"}
+`).join("") : "<p>Nenhuma ficha encontrada.</p>"}
     </div>
   `;
 }
@@ -8091,4 +8091,18 @@ async function salvarRespostasAnamnese(){
   carregarProntuarios();
 
   alert("Respostas salvas.");
+}
+async function abrirPerguntasModeloAnamnese(modeloId){
+
+  modeloAnamneseAtual = modeloId;
+
+  document.querySelectorAll(".tela").forEach((tela)=>{
+    tela.classList.remove("ativa");
+  });
+
+  document
+    .getElementById("tela-perguntas-anamnese")
+    .classList.add("ativa");
+
+  carregarPerguntasAnamnese();
 }
