@@ -7638,9 +7638,19 @@ const fichasFiltradas = busca
 ${badgeStatusAnamnese(ficha.status)}
           </span>
 
-          <button onclick="abrirFichaAnamnese(${ficha.id})">
-            Abrir prontuário
-          </button>
+        <div style="display:flex;gap:8px;">
+  <button onclick="abrirFichaAnamnese(${ficha.id})">
+    Abrir
+  </button>
+
+  <button onclick="alterarStatusFichaAnamnese(${ficha.id})">
+    Status
+  </button>
+
+  <button onclick="excluirFichaAnamnese(${ficha.id})">
+    Excluir
+  </button>
+</div>
         </div>
 `).join("") : "<p>Nenhuma ficha encontrada.</p>"}
     </div>
