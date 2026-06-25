@@ -7563,23 +7563,30 @@ async function carregarProntuarios(){
 
   area.innerHTML = "Carregando prontuários...";
 
-  const { data: modelos, error } = await supabaseClient
+  const modelosResp = await supabaseClient
     .from("anamnese_modelos")
     .select("*")
     .eq("ativo", true)
     .order("nome");
 
-  if(error){
-    area.innerHTML = "<div class='card'>Erro ao carregar modelos.</div>";
-    return;
-  }
+  const fichasResp = await supabaseClient
+    .from("anamneses_clientes")
+    .select(`
+      *,
+      clientes(nome, telefone),
+      anamnese_modelos(nome)
+    `)
+    .order("criado_em", { ascending:false });
+
+  const modelos = modelosResp.data || [];
+  const fichas = fichasResp.data || [];
 
   area.innerHTML = `
     <div class="card">
-      <h3>Fichas de Clientes</h3>
-      <p>Vincule prontuários e acompanhe evolução.</p>
-      <button onclick="abrirModalAnamneseCliente()">
-        Nova ficha
+      <h3>Nova ficha</h3>
+      <p>Vincule um modelo de anamnese a uma cliente.</p>
+      <button class="principal" onclick="abrirModalAnamneseCliente()">
+        Criar ficha
       </button>
     </div>
 
@@ -7593,6 +7600,23 @@ async function carregarProntuarios(){
           </button>
         </div>
       `).join("") : "<p>Nenhum modelo cadastrado.</p>"}
+    </div>
+
+    <div class="card" style="grid-column:1/-1;">
+      <h3>Fichas de clientes</h3>
+
+      ${fichas.length ? fichas.map(ficha=>`
+        <div class="caixa-linha">
+          <span>
+            <strong>${ficha.clientes?.nome || "Cliente"}</strong><br>
+            <small>${ficha.anamnese_modelos?.nome || "Modelo"} • ${ficha.status}</small>
+          </span>
+
+          <button onclick="abrirFichaAnamnese(${ficha.id})">
+            Abrir prontuário
+          </button>
+        </div>
+      `).join("") : "<p>Nenhuma ficha criada.</p>"}
     </div>
   `;
 }
