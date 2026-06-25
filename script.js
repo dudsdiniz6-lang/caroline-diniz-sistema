@@ -7580,6 +7580,15 @@ async function carregarProntuarios(){
 
   const modelos = modelosResp.data || [];
   const fichas = fichasResp.data || [];
+  const busca =
+  document.getElementById("buscaProntuario")?.value?.toLowerCase().trim() || "";
+
+const fichasFiltradas = busca
+  ? fichas.filter(ficha =>
+      (ficha.clientes?.nome || "").toLowerCase().includes(busca) ||
+      (ficha.anamnese_modelos?.nome || "").toLowerCase().includes(busca)
+    )
+  : fichas;
 
   area.innerHTML = `
     <div class="card">
@@ -7602,10 +7611,18 @@ async function carregarProntuarios(){
       `).join("") : "<p>Nenhum modelo cadastrado.</p>"}
     </div>
 
-    <div class="card" style="grid-column:1/-1;">
-      <h3>Fichas de clientes</h3>
+  <div class="card" style="grid-column:1/-1;">
+    <input
+      id="buscaProntuario"
+      placeholder="Pesquisar por cliente ou modelo..."
+      value="${busca}"
+      oninput="carregarProntuarios()"
+      style="margin-bottom:15px;"
+    >
 
-      ${fichas.length ? fichas.map(ficha=>`
+    <h3>Fichas de clientes</h3>
+
+    ${fichasFiltradas.length ? fichasFiltradas.map(ficha=>`
         <div class="caixa-linha">
           <span>
             <strong>${ficha.clientes?.nome || "Cliente"}</strong><br>
@@ -7616,7 +7633,7 @@ async function carregarProntuarios(){
             Abrir prontuário
           </button>
         </div>
-      `).join("") : "<p>Nenhuma ficha criada.</p>"}
+`) : "<p>Nenhuma ficha encontrada.</p>"}
     </div>
   `;
 }
