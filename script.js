@@ -8032,3 +8032,63 @@ async function abrirFichaAnamnese(fichaId){
     </button>
   `);
 }
+async function salvarRespostasAnamnese(){
+
+  const fichaId = document.getElementById("fichaAnamneseId")?.value;
+
+  if(!fichaId){
+    alert("Ficha não encontrada.");
+    return;
+  }
+
+  const campos = Array.from(
+    document.querySelectorAll(".resposta-anamnese")
+  );
+
+  for(const campo of campos){
+
+    const perguntaId = Number(campo.dataset.perguntaId);
+    const resposta = campo.value || "";
+
+    const existenteResp = await supabaseClient
+      .from("anamnese_respostas")
+      .select("id")
+      .eq("anamnese_cliente_id", fichaId)
+      .eq("pergunta_id", perguntaId)
+      .maybeSingle();
+
+    if(existenteResp.data){
+
+      await supabaseClient
+        .from("anamnese_respostas")
+        .update({
+          resposta
+        })
+        .eq("id", existenteResp.data.id);
+
+    }else{
+
+      await supabaseClient
+        .from("anamnese_respostas")
+        .insert([{
+          anamnese_cliente_id: Number(fichaId),
+          pergunta_id: perguntaId,
+          resposta
+        }]);
+
+    }
+
+  }
+
+  await supabaseClient
+    .from("anamneses_clientes")
+    .update({
+      status: "Em preenchimento"
+    })
+    .eq("id", fichaId);
+
+  fecharModal();
+  carregarProntuarios();
+
+  alert("Respostas salvas.");
+}
