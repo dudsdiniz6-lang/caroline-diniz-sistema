@@ -7606,9 +7606,15 @@ const fichasFiltradas = busca
       ${modelos.length ? modelos.map(modelo=>`
         <div class="caixa-linha">
           <span>${modelo.nome}</span>
-          <button onclick="abrirPerguntasModeloAnamnese(${modelo.id})">
-            Perguntas
-          </button>
+          <div style="display:flex;gap:8px;">
+  <button onclick="abrirModalModeloAnamnese(${modelo.id})">
+    Editar
+  </button>
+
+  <button onclick="abrirPerguntasModeloAnamnese(${modelo.id})">
+    Perguntas
+  </button>
+</div>
         </div>
       `).join("") : "<p>Nenhum modelo cadastrado.</p>"}
     </div>
@@ -7667,6 +7673,7 @@ function abrirModalModeloAnamnese(){
 }
 async function salvarModeloAnamnese(){
 
+  const id = document.getElementById("modeloAnamneseId")?.value || "";
   const nome = document.getElementById("modeloAnamneseNome").value.trim();
   const descricao = document.getElementById("modeloAnamneseDescricao").value.trim();
 
@@ -7675,73 +7682,70 @@ async function salvarModeloAnamnese(){
     return;
   }
 
-  const { error } = await supabaseClient
-    .from("anamnese_modelos")
-    .insert([{
-      unidade_id: unidadeAtualId,
-      nome,
-      descricao,
-      ativo: true
-    }]);
+  const dados = {
+    unidade_id: unidadeAtualId,
+    nome,
+    descricao,
+    ativo: true
+  };
 
-  if(error){
-    alert("Erro ao salvar modelo: " + error.message);
+  let resposta;
+
+  if(id){
+    resposta = await supabaseClient
+      .from("anamnese_modelos")
+      .update(dados)
+      .eq("id", id);
+  }else{
+    resposta = await supabaseClient
+      .from("anamnese_modelos")
+      .insert([dados]);
+  }
+
+  if(resposta.error){
+    alert("Erro ao salvar modelo: " + resposta.error.message);
     return;
   }
 
   fecharModal();
   carregarProntuarios();
 
-  alert("Modelo criado com sucesso.");
+  alert("Modelo salvo com sucesso.");
 }
-async function abrirModalAnamneseCliente(){
+async function abrirModalModeloAnamnese(id = null){
 
-  const clientesResp = await supabaseClient
-    .from("clientes")
-    .select("*")
-    .eq("ativo", true)
-    .order("nome");
+  let modelo = null;
 
-  const modelosResp = await supabaseClient
-    .from("anamnese_modelos")
-    .select("*")
-    .eq("ativo", true)
-    .order("nome");
+  if(id){
+    const resp = await supabaseClient
+      .from("anamnese_modelos")
+      .select("*")
+      .eq("id", id)
+      .single();
 
-  const clientes = clientesResp.data || [];
-  const modelos = modelosResp.data || [];
+    modelo = resp.data;
+  }
 
   abrirModal(`
-    <h2>Nova ficha de prontuário</h2>
+    <h2>${id ? "Editar modelo" : "Novo modelo de anamnese"}</h2>
 
-    <label>Cliente</label>
-    <select id="anamneseCliente">
+    <input id="modeloAnamneseId" type="hidden" value="${modelo?.id || ""}">
 
-      <option value="">Selecione</option>
+    <label>Nome do modelo</label>
+    <input
+      id="modeloAnamneseNome"
+      value="${modelo?.nome || ""}"
+      placeholder="Ex: Anamnese Capilar, Facial, Corporal"
+    >
 
-      ${clientes.map(cliente=>`
-        <option value="${cliente.id}">
-          ${cliente.nome}
-        </option>
-      `).join("")}
+    <label>Descrição</label>
+    <textarea
+      id="modeloAnamneseDescricao"
+      placeholder="Descreva quando este modelo será usado"
+    >${modelo?.descricao || ""}</textarea>
 
-    </select>
-
-    <label>Modelo</label>
-    <select id="anamneseModelo">
-
-      <option value="">Selecione</option>
-
-      ${modelos.map(modelo=>`
-        <option value="${modelo.id}">
-          ${modelo.nome}
-        </option>
-      `).join("")}
-
-    </select>
-
-    <button class="principal" onclick="salvarAnamneseCliente()">
-      Criar ficha
+    <button class="principal" onclick="salvarModeloAnamnese()">
+      Salvar modelo
     </button>
 
     <button onclick="fecharModal()">
@@ -7939,4 +7943,92 @@ async function salvarAnamneseCliente(){
   carregarProntuarios();
 
   alert("Ficha criada com sucesso.");
+}
+async function abrirFichaAnamnese(fichaId){
+
+  const fichaResp = await supabaseClient
+    .from("anamneses_clientes")
+    .select(`
+      *,
+      clientes(nome, telefone),
+      anamnese_modelos(nome)
+    `)
+    .eq("id", fichaId)
+    .single();
+
+  const ficha = fichaResp.data;
+
+  if(!ficha){
+    alert("Ficha não encontrada.");
+    return;
+  }
+
+  const perguntasResp = await supabaseClient
+    .from("anamnese_perguntas")
+    .select("*")
+    .eq("modelo_id", ficha.modelo_id)
+    .eq("ativo", true)
+    .order("ordem");
+
+  const respostasResp = await supabaseClient
+    .from("anamnese_respostas")
+    .select("*")
+    .eq("anamnese_cliente_id", fichaId);
+
+  const perguntas = perguntasResp.data || [];
+  const respostas = respostasResp.data || [];
+
+  abrirModal(`
+    <h2>${ficha.anamnese_modelos?.nome || "Prontuário"}</h2>
+
+    <p><strong>Cliente:</strong> ${ficha.clientes?.nome || "-"}</p>
+    <p><strong>Status:</strong> ${ficha.status}</p>
+
+    <input id="fichaAnamneseId" type="hidden" value="${ficha.id}">
+
+    ${perguntas.map(pergunta=>{
+
+      const respostaAtual =
+        respostas.find(r => String(r.pergunta_id) === String(pergunta.id))?.resposta || "";
+
+      if(pergunta.tipo === "sim_nao"){
+        return `
+          <label>${pergunta.pergunta}</label>
+          <select class="resposta-anamnese" data-pergunta-id="${pergunta.id}">
+            <option value="">Selecione</option>
+            <option value="Sim" ${respostaAtual === "Sim" ? "selected" : ""}>Sim</option>
+            <option value="Não" ${respostaAtual === "Não" ? "selected" : ""}>Não</option>
+          </select>
+        `;
+      }
+
+      if(pergunta.tipo === "numero"){
+        return `
+          <label>${pergunta.pergunta}</label>
+          <input
+            class="resposta-anamnese"
+            data-pergunta-id="${pergunta.id}"
+            type="number"
+            value="${respostaAtual}"
+          >
+        `;
+      }
+
+      return `
+        <label>${pergunta.pergunta}</label>
+        <textarea
+          class="resposta-anamnese"
+          data-pergunta-id="${pergunta.id}"
+        >${respostaAtual}</textarea>
+      `;
+    }).join("")}
+
+    <button class="principal" onclick="salvarRespostasAnamnese()">
+      Salvar respostas
+    </button>
+
+    <button onclick="fecharModal()">
+      Fechar
+    </button>
+  `);
 }
