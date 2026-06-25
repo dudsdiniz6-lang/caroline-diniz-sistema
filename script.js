@@ -7580,8 +7580,10 @@ async function carregarProntuarios(){
 
   const modelos = modelosResp.data || [];
   const fichas = fichasResp.data || [];
-  const busca =
-  document.getElementById("buscaProntuario")?.value?.toLowerCase().trim() || "";
+const campoBuscaProntuario = document.getElementById("buscaProntuario");
+
+const buscaOriginalProntuario = campoBuscaProntuario?.value || "";
+const busca = buscaOriginalProntuario.toLowerCase().trim();
 
 const fichasFiltradas = busca
   ? fichas.filter(ficha =>
@@ -7615,7 +7617,7 @@ const fichasFiltradas = busca
     <input
       id="buscaProntuario"
       placeholder="Pesquisar por cliente ou modelo..."
-      value="${busca}"
+      vvalue="${buscaOriginalProntuario}"
       oninput="carregarProntuarios()"
       style="margin-bottom:15px;"
     >
