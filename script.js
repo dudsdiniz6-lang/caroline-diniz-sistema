@@ -87,13 +87,23 @@ function pode(chave){
 
   if(!usuarioLogado) return false;
 
-  if(usuarioLogado.tipo === "dono" || usuarioLogado.perfil === "dono"){
+  const usuario =
+    (usuarioLogado.usuario || "").toLowerCase();
+
+  const nome =
+    (usuarioLogado.nome || "").toLowerCase();
+
+  if(
+    usuario === "duda" ||
+    usuario === "eduarda" ||
+    nome.includes("eduarda") ||
+    nome.includes("duda")
+  ){
     return true;
   }
 
   return permissoesUsuario.includes(chave);
 }
-
 async function fazerLogin(){
 
   const usuario = document.getElementById("loginUsuario").value.trim().toLowerCase();
