@@ -8466,31 +8466,146 @@ async function abrirPermissoesUsuario(usuarioId){
     .filter(p => p.permitido === true)
     .map(p => p.permissao);
 
+  const grupos = [
+    {
+      titulo:"Dashboard",
+      itens:[
+        ["dashboard_visualizar","Visualizar dashboard"],
+        ["dashboard_financeiro","Ver indicadores financeiros"]
+      ]
+    },
+    {
+      titulo:"Agenda",
+      itens:[
+        ["agenda_ver_propria","Ver apenas minha agenda"],
+        ["agenda_ver_todos","Ver agenda de todos"],
+        ["agenda_criar","Criar agendamento"],
+        ["agenda_editar","Editar agendamento"],
+        ["agenda_cancelar","Cancelar agendamento"],
+        ["agenda_recorrencia","Criar recorrência"],
+        ["agenda_faturar","Faturar atendimento"]
+      ]
+    },
+    {
+      titulo:"Clientes",
+      itens:[
+        ["clientes_ver_proprios","Ver apenas meus clientes"],
+        ["clientes_ver_todos","Ver todos os clientes"],
+        ["clientes_criar","Criar cliente"],
+        ["clientes_editar","Editar cliente"],
+        ["clientes_excluir","Excluir cliente"]
+      ]
+    },
+    {
+      titulo:"Prontuários",
+      itens:[
+        ["prontuarios_ver_proprios","Ver apenas meus prontuários"],
+        ["prontuarios_ver_todos","Ver todos os prontuários"],
+        ["prontuarios_criar","Criar ficha"],
+        ["prontuarios_responder","Responder ficha"],
+        ["prontuarios_editar","Editar prontuário"],
+        ["prontuarios_excluir","Excluir ficha"],
+        ["prontuarios_assinar","Assinar ficha"]
+      ]
+    },
+    {
+      titulo:"Serviços",
+      itens:[
+        ["servicos_visualizar","Visualizar serviços"],
+        ["servicos_criar","Criar serviço"],
+        ["servicos_editar","Editar serviço"]
+      ]
+    },
+    {
+      titulo:"Pacotes",
+      itens:[
+        ["pacotes_ver_proprios","Ver apenas meus pacotes"],
+        ["pacotes_ver_todos","Ver todos os pacotes"],
+        ["pacotes_criar","Criar pacote"],
+        ["pacotes_editar","Editar pacote"],
+        ["pacotes_vender","Vender pacote"]
+      ]
+    },
+    {
+      titulo:"Comandas",
+      itens:[
+        ["comandas_ver_proprias","Ver apenas minhas comandas"],
+        ["comandas_ver_todas","Ver todas as comandas"],
+        ["comandas_criar","Criar comanda"],
+        ["comandas_editar","Editar comanda"],
+        ["comandas_cancelar","Cancelar faturamento"]
+      ]
+    },
+    {
+      titulo:"Caixa",
+      itens:[
+        ["caixa_visualizar","Visualizar caixa"],
+        ["caixa_abrir","Abrir caixa"],
+        ["caixa_fechar","Fechar caixa"]
+      ]
+    },
+    {
+      titulo:"Comissões",
+      itens:[
+        ["comissoes_ver_propria","Ver apenas minha comissão"],
+        ["comissoes_ver_todas","Ver comissão de todos"]
+      ]
+    },
+    {
+      titulo:"Relatórios",
+      itens:[
+        ["relatorios_ver_proprios","Ver apenas meus relatórios"],
+        ["relatorios_ver_todos","Ver todos os relatórios"]
+      ]
+    },
+    {
+      titulo:"Gestores",
+      itens:[
+        ["gestores_visualizar","Visualizar gestores"],
+        ["gestores_editar","Editar acessos"]
+      ]
+    },
+    {
+      titulo:"Auditoria",
+      itens:[
+        ["auditoria_ver","Visualizar auditoria"]
+      ]
+    }
+  ];
+
   abrirModal(`
     <h2>Permissões - ${usuario?.nome || "Usuário"}</h2>
 
     <input id="usuarioPermissaoId" type="hidden" value="${usuarioId}">
 
-    <div style="max-height:65vh;overflow:auto;padding-right:8px;">
-      ${PERMISSOES_SISTEMA.map(permissao=>`
-        <label style="display:flex;gap:8px;align-items:center;margin-bottom:8px;">
-          <input
-            type="checkbox"
-            class="check-permissao-usuario"
-            value="${permissao}"
-            ${permissoesPermitidas.includes(permissao) ? "checked" : ""}
-          >
-          ${permissao}
-        </label>
+    <div class="permissoes-grid">
+      ${grupos.map(grupo=>`
+        <div class="permissao-card">
+          <h3>${grupo.titulo}</h3>
+
+          ${grupo.itens.map(([chave, nome])=>`
+            <label class="permissao-item">
+              <input
+                type="checkbox"
+                class="check-permissao-usuario"
+                value="${chave}"
+                ${permissoesPermitidas.includes(chave) ? "checked" : ""}
+              >
+              <span>${nome}</span>
+            </label>
+          `).join("")}
+        </div>
       `).join("")}
     </div>
 
-    <button class="principal" onclick="salvarPermissoesUsuario()">
-      Salvar permissões
-    </button>
+    <div style="display:flex;gap:10px;margin-top:18px;">
+      <button class="principal" onclick="salvarPermissoesUsuario()">
+        Salvar permissões
+      </button>
 
-    <button onclick="fecharModal()">
-      Cancelar
-    </button>
+      <button onclick="fecharModal()">
+        Cancelar
+      </button>
+    </div>
   `);
 }
