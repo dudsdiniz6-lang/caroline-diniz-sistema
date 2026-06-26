@@ -8034,6 +8034,53 @@ async function abrirFichaAnamnese(fichaId){
       `;
     }).join("")}
 
+    <div class="card" style="margin-top:20px;">
+      <h3>Assinatura digital</h3>
+
+      <p>
+        Declaro que as informações preenchidas são verdadeiras e autorizo o uso
+        dessas informações para avaliação e acompanhamento estético.
+      </p>
+
+      <label>CPF da cliente</label>
+      <input
+        id="cpfAssinanteAnamnese"
+        value="${ficha.cpf_assinante || ""}"
+        placeholder="CPF da cliente"
+      >
+
+      <label>Assinatura</label>
+
+      ${
+        ficha.assinatura_base64
+          ? `
+            <img
+              src="${ficha.assinatura_base64}"
+              style="width:100%;max-height:160px;border:1px solid #ddd;border-radius:10px;background:#fff;"
+            >
+            <p><small>Assinada em: ${ficha.assinado_em ? new Date(ficha.assinado_em).toLocaleString("pt-BR") : "-"}</small></p>
+          `
+          : `
+            <canvas
+              id="canvasAssinaturaAnamnese"
+              width="500"
+              height="180"
+              style="width:100%;height:180px;border:1px solid #ddd;border-radius:10px;background:#fff;touch-action:none;"
+            ></canvas>
+
+            <div style="display:flex;gap:8px;margin-top:10px;">
+              <button onclick="limparAssinaturaAnamnese()">
+                Limpar assinatura
+              </button>
+
+              <button class="principal" onclick="salvarAssinaturaAnamnese()">
+                Salvar assinatura
+              </button>
+            </div>
+          `
+      }
+    </div>
+
     <button class="principal" onclick="salvarRespostasAnamnese()">
       Salvar respostas
     </button>
@@ -8042,6 +8089,10 @@ async function abrirFichaAnamnese(fichaId){
       Fechar
     </button>
   `);
+
+  if(!ficha.assinatura_base64){
+    iniciarCanvasAssinaturaAnamnese();
+  }
 }
 async function salvarRespostasAnamnese(){
 
