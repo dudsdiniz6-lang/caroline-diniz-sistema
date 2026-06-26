@@ -84,7 +84,14 @@ function dinheiro(valor){
   return `R$ ${Number(valor || 0).toFixed(2)}`;
 }
 function pode(chave){
-  return true;
+
+  if(!usuarioLogado) return false;
+
+  if(usuarioLogado.tipo === "dono" || usuarioLogado.perfil === "dono"){
+    return true;
+  }
+
+  return permissoesUsuario.includes(chave);
 }
 
 async function fazerLogin(){
@@ -4772,21 +4779,25 @@ async function carregarPermissoesUsuario(){
 
   permissoesUsuario = [];
 
-  if(!usuarioLogado?.perfil_acesso_id){
+  if(!usuarioLogado?.id){
     return;
   }
 
-  const { data } = await supabaseClient
-    .from("permissoes_acesso")
+  const { data, error } = await supabaseClient
+    .from("usuarios_permissoes")
     .select("*")
-    .eq("perfil_id", usuarioLogado.perfil_acesso_id)
+    .eq("usuario_id", usuarioLogado.id)
     .eq("permitido", true);
 
-  permissoesUsuario = (data || []).map(p => p.chave);
-}
+  if(error){
+    console.error("Erro ao carregar permissões:", error);
+    return;
+  }
 
+  permissoesUsuario = (data || []).map(p => p.permissao);
+}
 function temPermissao(chave){
-  return true;
+  return pode(chave);
 }
 function adicionarItemPacote(){
 
