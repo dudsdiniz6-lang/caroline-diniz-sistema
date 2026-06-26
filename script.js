@@ -8446,3 +8446,51 @@ async function salvarAssinaturaAnamnese(){
 
   alert("Assinatura salva com sucesso.");
 }
+async function abrirPermissoesUsuario(usuarioId){
+
+  const usuarioResp = await supabaseClient
+    .from("usuarios_sistema")
+    .select("*")
+    .eq("id", usuarioId)
+    .single();
+
+  const permissoesResp = await supabaseClient
+    .from("usuarios_permissoes")
+    .select("*")
+    .eq("usuario_id", usuarioId);
+
+  const usuario = usuarioResp.data;
+  const permissoesSalvas = permissoesResp.data || [];
+
+  const permissoesPermitidas = permissoesSalvas
+    .filter(p => p.permitido === true)
+    .map(p => p.permissao);
+
+  abrirModal(`
+    <h2>Permissões - ${usuario?.nome || "Usuário"}</h2>
+
+    <input id="usuarioPermissaoId" type="hidden" value="${usuarioId}">
+
+    <div style="max-height:65vh;overflow:auto;padding-right:8px;">
+      ${PERMISSOES_SISTEMA.map(permissao=>`
+        <label style="display:flex;gap:8px;align-items:center;margin-bottom:8px;">
+          <input
+            type="checkbox"
+            class="check-permissao-usuario"
+            value="${permissao}"
+            ${permissoesPermitidas.includes(permissao) ? "checked" : ""}
+          >
+          ${permissao}
+        </label>
+      `).join("")}
+    </div>
+
+    <button class="principal" onclick="salvarPermissoesUsuario()">
+      Salvar permissões
+    </button>
+
+    <button onclick="fecharModal()">
+      Cancelar
+    </button>
+  `);
+}
