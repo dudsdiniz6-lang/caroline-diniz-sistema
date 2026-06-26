@@ -8234,3 +8234,103 @@ async function excluirFichaAnamnese(fichaId){
 
   carregarProntuarios();
 }
+let assinaturaAnamneseDesenhando = false;
+
+function iniciarCanvasAssinaturaAnamnese(){
+
+  const canvas = document.getElementById("canvasAssinaturaAnamnese");
+
+  if(!canvas) return;
+
+  const ctx = canvas.getContext("2d");
+
+  ctx.lineWidth = 2;
+  ctx.lineCap = "round";
+
+  function posicao(evento){
+
+    const rect = canvas.getBoundingClientRect();
+
+    const toque = evento.touches ? evento.touches[0] : evento;
+
+    return {
+      x: (toque.clientX - rect.left) * (canvas.width / rect.width),
+      y: (toque.clientY - rect.top) * (canvas.height / rect.height)
+    };
+  }
+
+  function iniciar(evento){
+    assinaturaAnamneseDesenhando = true;
+    const p = posicao(evento);
+    ctx.beginPath();
+    ctx.moveTo(p.x, p.y);
+    evento.preventDefault();
+  }
+
+  function desenhar(evento){
+
+    if(!assinaturaAnamneseDesenhando) return;
+
+    const p = posicao(evento);
+    ctx.lineTo(p.x, p.y);
+    ctx.stroke();
+    evento.preventDefault();
+  }
+
+  function parar(){
+    assinaturaAnamneseDesenhando = false;
+  }
+
+  canvas.addEventListener("mousedown", iniciar);
+  canvas.addEventListener("mousemove", desenhar);
+  canvas.addEventListener("mouseup", parar);
+  canvas.addEventListener("mouseleave", parar);
+
+  canvas.addEventListener("touchstart", iniciar);
+  canvas.addEventListener("touchmove", desenhar);
+  canvas.addEventListener("touchend", parar);
+}
+function limparAssinaturaAnamnese(){
+
+  const canvas = document.getElementById("canvasAssinaturaAnamnese");
+
+  if(!canvas) return;
+
+  const ctx = canvas.getContext("2d");
+
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+}
+async function salvarAssinaturaAnamnese(){
+
+  const fichaId = document.getElementById("fichaAnamneseId")?.value;
+  const cpf = document.getElementById("cpfAssinanteAnamnese")?.value?.trim() || "";
+  const canvas = document.getElementById("canvasAssinaturaAnamnese");
+
+  if(!fichaId || !canvas){
+    alert("Ficha ou assinatura não encontrada.");
+    return;
+  }
+
+  const assinaturaBase64 = canvas.toDataURL("image/png");
+
+  const { error } = await supabaseClient
+    .from("anamneses_clientes")
+    .update({
+      cpf_assinante: cpf,
+      assinatura_base64: assinaturaBase64,
+      usuario_responsavel: usuarioLogado?.nome || usuarioLogado?.usuario || "Sistema",
+      assinado_em: new Date().toISOString(),
+      status: "Assinado"
+    })
+    .eq("id", fichaId);
+
+  if(error){
+    alert("Erro ao salvar assinatura: " + error.message);
+    return;
+  }
+
+  fecharModal();
+  carregarProntuarios();
+
+  alert("Assinatura salva com sucesso.");
+}
