@@ -4273,20 +4273,73 @@ async function carregarGestores(){
 
   if(!area) return;
 
+  const usuariosResp = await supabaseClient
+    .from("usuarios_sistema")
+    .select(`
+      *,
+      profissionais(nome)
+    `)
+    .eq("ativo", true)
+    .order("nome");
+
+  const usuarios = usuariosResp.data || [];
+
   area.innerHTML = `
 
     <div class="card">
-      <h3>Gestores e Acessos</h3>
 
-      <button class="principal" onclick="carregarPerfisAcesso()">
-        Perfis de acesso
-      </button>
+      <div style="display:flex;justify-content:space-between;align-items:center;">
 
-      <br><br>
+        <h3>Usuários do sistema</h3>
 
-      <button class="principal" onclick="carregarUsuariosSistema()">
-        Usuários do sistema
-      </button>
+        <button
+          class="principal"
+          onclick="abrirModalNovoUsuario()"
+        >
+          Novo usuário
+        </button>
+
+      </div>
+
+      <br>
+
+      ${usuarios.length ? usuarios.map(usuario => `
+
+        <div class="caixa-linha">
+
+          <span>
+            <strong>${usuario.nome}</strong><br>
+
+            <small>
+              Login: ${usuario.usuario}
+            </small><br>
+
+            <small>
+              Profissional:
+              ${usuario.profissionais?.nome || "Não vinculado"}
+            </small>
+          </span>
+
+          <div style="display:flex;gap:8px;">
+
+            <button
+              onclick="abrirPermissoesUsuario(${usuario.id})"
+            >
+              Permissões
+            </button>
+
+            <button
+              onclick="editarUsuarioSistema(${usuario.id})"
+            >
+              Editar
+            </button>
+
+          </div>
+
+        </div>
+
+      `).join("") : "<p>Nenhum usuário cadastrado.</p>"}
+
     </div>
 
   `;
