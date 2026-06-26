@@ -4789,14 +4789,14 @@ async function carregarPermissoesUsuario(){
 
   permissoesUsuario = [];
 
-  if(!usuarioLogado?.id){
+  if(!usuarioLogado?.perfil_acesso_id){
     return;
   }
 
   const { data, error } = await supabaseClient
-    .from("usuarios_permissoes")
+    .from("perfis_permissoes")
     .select("*")
-    .eq("usuario_id", usuarioLogado.id)
+    .eq("perfil_id", usuarioLogado.perfil_acesso_id)
     .eq("permitido", true);
 
   if(error){
@@ -4805,6 +4805,8 @@ async function carregarPermissoesUsuario(){
   }
 
   permissoesUsuario = (data || []).map(p => p.permissao);
+
+  console.log("Permissões carregadas:", permissoesUsuario);
 }
 function temPermissao(chave){
   return pode(chave);
