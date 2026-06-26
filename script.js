@@ -8609,3 +8609,41 @@ async function abrirPermissoesUsuario(usuarioId){
     </div>
   `);
 }
+async function salvarPermissoesUsuario(){
+
+  const usuarioId = document.getElementById("usuarioPermissaoId")?.value;
+
+  if(!usuarioId){
+    alert("Usuário não encontrado.");
+    return;
+  }
+
+  const checks = Array.from(
+    document.querySelectorAll(".check-permissao-usuario")
+  );
+
+  await supabaseClient
+    .from("usuarios_permissoes")
+    .delete()
+    .eq("usuario_id", usuarioId);
+
+  const permissoes = checks.map(check => ({
+    usuario_id: Number(usuarioId),
+    permissao: check.value,
+    permitido: check.checked
+  }));
+
+  const { error } = await supabaseClient
+    .from("usuarios_permissoes")
+    .insert(permissoes);
+
+  if(error){
+    alert("Erro ao salvar permissões: " + error.message);
+    return;
+  }
+
+  fecharModal();
+  carregarGestores();
+
+  alert("Permissões salvas com sucesso.");
+}
