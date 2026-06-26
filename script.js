@@ -8647,3 +8647,89 @@ async function salvarPermissoesUsuario(){
 
   alert("Permissões salvas com sucesso.");
 }
+async function editarUsuarioSistema(usuarioId){
+
+  const usuarioResp = await supabaseClient
+    .from("usuarios_sistema")
+    .select("*")
+    .eq("id", usuarioId)
+    .single();
+
+  const profissionaisResp = await supabaseClient
+    .from("profissionais")
+    .select("*")
+    .eq("ativo", true)
+    .order("nome");
+
+  const usuario = usuarioResp.data;
+  const profissionais = profissionaisResp.data || [];
+
+  abrirModal(`
+    <h2>Editar usuário</h2>
+
+    <input id="usuarioSistemaId" type="hidden" value="${usuario.id}">
+
+    <label>Nome</label>
+    <input id="usuarioSistemaNome" value="${usuario.nome || ""}">
+
+    <label>Login</label>
+    <input id="usuarioSistemaLogin" value="${usuario.usuario || ""}">
+
+    <label>Senha</label>
+    <input id="usuarioSistemaSenha" value="${usuario.senha || ""}">
+
+    <label>Profissional vinculado</label>
+    <select id="usuarioProfissionalId">
+      <option value="">Não vinculado</option>
+
+      ${profissionais.map(p=>`
+        <option
+          value="${p.id}"
+          ${String(usuario.profissional_id || "") === String(p.id) ? "selected" : ""}
+        >
+          ${p.nome}
+        </option>
+      `).join("")}
+    </select>
+
+    <button class="principal" onclick="salvarUsuarioSistema()">
+      Salvar usuário
+    </button>
+
+    <button onclick="fecharModal()">Cancelar</button>
+  `);
+}
+async function salvarUsuarioSistema(){
+
+  const id = document.getElementById("usuarioSistemaId").value;
+
+  const profissionalId =
+    document.getElementById("usuarioProfissionalId").value;
+
+  const dados = {
+    nome: document.getElementById("usuarioSistemaNome").value.trim(),
+    usuario: document.getElementById("usuarioSistemaLogin").value.trim(),
+    senha: document.getElementById("usuarioSistemaSenha").value.trim(),
+    profissional_id: profissionalId ? Number(profissionalId) : null
+  };
+
+  if(!dados.nome || !dados.usuario || !dados.senha){
+    alert("Preencha nome, login e senha.");
+    return;
+  }
+
+  const { error } = await supabaseClient
+    .from("usuarios_sistema")
+    .update(dados)
+    .eq("id", id);
+
+  if(error){
+    alert("Erro ao salvar usuário: " + error.message);
+    return;
+  }
+
+  fecharModal();
+  carregarGestores();
+
+  alert("Usuário salvo com sucesso.");
+}
