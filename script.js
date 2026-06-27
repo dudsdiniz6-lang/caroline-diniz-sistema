@@ -8551,78 +8551,135 @@ async function editarPerfilSistema(perfilId){
 
   const perfil = perfilResp.data;
 
-  const permissoes = [
+  const grupos = [
 
-    ["dashboard_visualizar","Dashboard - visualizar"],
+    {
+      titulo:"AGENDA",
+      itens:[
+        ["agenda_visualizar","Visualizar módulo agenda"],
+        ["agenda_ver_propria","Ver apenas própria agenda"],
+        ["agenda_ver_todos","Ver agenda de todos"],
+        ["agenda_criar","Criar agendamento"],
+        ["agenda_editar","Editar agendamento"],
+        ["agenda_cancelar","Cancelar agendamento"],
+        ["agenda_recorrencia","Criar recorrência"],
+        ["agenda_faturar","Faturar atendimento"]
+      ]
+    },
 
-    ["agenda_visualizar","Agenda - visualizar"],
-    ["agenda_ver_propria","Agenda - ver própria"],
-    ["agenda_ver_todos","Agenda - ver todas"],
-    ["agenda_criar","Agenda - criar"],
-    ["agenda_editar","Agenda - editar"],
-    ["agenda_cancelar","Agenda - cancelar"],
+    {
+      titulo:"CLIENTES",
+      itens:[
+        ["clientes_visualizar","Visualizar módulo clientes"],
+        ["clientes_criar","Criar cliente"],
+        ["clientes_editar","Editar cliente"],
+        ["clientes_excluir","Excluir cliente"]
+      ]
+    },
 
-    ["clientes_visualizar","Clientes - visualizar"],
-    ["clientes_criar","Clientes - criar"],
-    ["clientes_editar","Clientes - editar"],
-    ["clientes_excluir","Clientes - excluir"],
+    {
+      titulo:"PRONTUÁRIOS",
+      itens:[
+        ["prontuarios_visualizar","Visualizar prontuários"],
+        ["prontuarios_criar","Criar ficha"],
+        ["prontuarios_editar","Editar respostas"]
+      ]
+    },
 
-    ["prontuarios_visualizar","Prontuários - visualizar"],
-    ["prontuarios_criar","Prontuários - criar"],
-    ["prontuarios_editar","Prontuários - editar"],
+    {
+      titulo:"COMISSÕES",
+      itens:[
+        ["comissoes_visualizar","Visualizar comissões"],
+        ["comissoes_ver_propria","Ver própria comissão"],
+        ["comissoes_ver_todas","Ver comissão de todos"]
+      ]
+    },
 
-    ["caixa_visualizar","Caixa - visualizar"],
-    ["caixa_abrir","Caixa - abrir"],
-    ["caixa_fechar","Caixa - fechar"],
-
-    ["comissoes_visualizar","Comissões - visualizar"],
-    ["comissoes_ver_propria","Comissões - ver própria"],
-    ["comissoes_ver_todas","Comissões - ver todas"],
-
-    ["gestores_visualizar","Gestores - visualizar"]
+    {
+      titulo:"CAIXA",
+      itens:[
+        ["caixa_visualizar","Visualizar caixa"],
+        ["caixa_abrir","Abrir caixa"],
+        ["caixa_fechar","Fechar caixa"]
+      ]
+    }
 
   ];
 
-  const permissoesSalvasResp = await supabaseClient
+  const permissoesResp = await supabaseClient
     .from("perfis_permissoes")
     .select("*")
     .eq("perfil_id", perfilId);
 
-  const salvas = permissoesSalvasResp.data || [];
+  const salvas = permissoesResp.data || [];
 
   abrirModal(`
 
-    <h2>Permissões - ${perfil.nome}</h2>
+    <h2>${perfil.nome}</h2>
 
-    <input id="perfilPermissaoId" type="hidden" value="${perfilId}">
+    <input
+      id="perfilPermissaoId"
+      type="hidden"
+      value="${perfilId}"
+    >
 
-    ${permissoes.map(([chave,nome])=>`
+    <div style="
+      display:grid;
+      grid-template-columns:repeat(2,1fr);
+      gap:20px;
+      max-height:500px;
+      overflow:auto;
+    ">
 
-      <label style="display:flex;gap:10px;margin-bottom:10px;">
+      ${grupos.map(grupo=>`
 
-        <input
-          type="checkbox"
-          class="checkPermissaoPerfil"
-          value="${chave}"
+        <div style="
+          border:1px solid #eee;
+          border-radius:16px;
+          padding:20px;
+        ">
 
-          ${salvas.find(p=>p.permissao === chave)?.permitido ? "checked" : ""}
-        >
+          <h3>${grupo.titulo}</h3>
 
-        ${nome}
+          ${grupo.itens.map(([chave,nome])=>`
 
-      </label>
+            <label style="
+              display:flex;
+              gap:10px;
+              margin-bottom:12px;
+              align-items:center;
+            ">
 
-    `).join("")}
+              <input
+                type="checkbox"
+                class="checkPermissaoPerfil"
+                value="${chave}"
+
+                ${salvas.find(p=>p.permissao===chave)?.permitido ? "checked" : ""}
+              >
+
+              ${nome}
+
+            </label>
+
+          `).join("")}
+
+        </div>
+
+      `).join("")}
+
+    </div>
 
     <br>
 
-    <button class="principal"
-      onclick="salvarPermissoesPerfilV2()">
-      Salvar
+    <button
+      class="principal"
+      onclick="salvarPermissoesPerfilV2()"
+    >
+      Salvar permissões
     </button>
 
   `);
-
 }
 async function salvarPermissoesPerfilV2(){
 
