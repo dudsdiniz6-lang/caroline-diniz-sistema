@@ -8551,61 +8551,179 @@ async function editarPerfilSistema(perfilId){
 
   const perfil = perfilResp.data;
 
-  const grupos = [
+ const grupos = [
 
-    {
-      titulo:"AGENDA",
-      itens:[
-        ["agenda_visualizar","Visualizar módulo agenda"],
-        ["agenda_ver_propria","Ver apenas própria agenda"],
-        ["agenda_ver_todos","Ver agenda de todos"],
-        ["agenda_criar","Criar agendamento"],
-        ["agenda_editar","Editar agendamento"],
-        ["agenda_cancelar","Cancelar agendamento"],
-        ["agenda_recorrencia","Criar recorrência"],
-        ["agenda_faturar","Faturar atendimento"]
-      ]
-    },
+{
+  titulo:"DASHBOARD",
+  itens:[
+    ["dashboard_visualizar","Visualizar dashboard"],
+    ["dashboard_financeiro","Visualizar financeiro"],
+    ["dashboard_metas","Visualizar metas"],
+    ["dashboard_ranking","Visualizar ranking"]
+  ]
+},
 
-    {
-      titulo:"CLIENTES",
-      itens:[
-        ["clientes_visualizar","Visualizar módulo clientes"],
-        ["clientes_criar","Criar cliente"],
-        ["clientes_editar","Editar cliente"],
-        ["clientes_excluir","Excluir cliente"]
-      ]
-    },
+{
+  titulo:"AGENDA",
+  itens:[
+    ["agenda_visualizar","Visualizar módulo agenda"],
 
-    {
-      titulo:"PRONTUÁRIOS",
-      itens:[
-        ["prontuarios_visualizar","Visualizar prontuários"],
-        ["prontuarios_criar","Criar ficha"],
-        ["prontuarios_editar","Editar respostas"]
-      ]
-    },
+    ["agenda_ver_propria","Ver apenas própria agenda"],
+    ["agenda_ver_todos","Ver agenda de todos"],
 
-    {
-      titulo:"COMISSÕES",
-      itens:[
-        ["comissoes_visualizar","Visualizar comissões"],
-        ["comissoes_ver_propria","Ver própria comissão"],
-        ["comissoes_ver_todas","Ver comissão de todos"]
-      ]
-    },
+    ["agenda_criar","Criar agendamento"],
+    ["agenda_editar","Editar agendamento"],
+    ["agenda_cancelar","Cancelar agendamento"],
+    ["agenda_recorrencia","Criar recorrência"],
+    ["agenda_bloqueio","Criar bloqueios"],
+    ["agenda_faturar","Faturar atendimento"]
+  ]
+},
 
-    {
-      titulo:"CAIXA",
-      itens:[
-        ["caixa_visualizar","Visualizar caixa"],
-        ["caixa_abrir","Abrir caixa"],
-        ["caixa_fechar","Fechar caixa"]
-      ]
-    }
+{
+  titulo:"CLIENTES",
+  itens:[
+    ["clientes_visualizar","Visualizar módulo clientes"],
 
-  ];
+    ["clientes_ver_proprios","Ver apenas meus clientes"],
+    ["clientes_ver_todos","Ver todos clientes"],
 
+    ["clientes_criar","Criar cliente"],
+    ["clientes_editar","Editar cliente"],
+    ["clientes_excluir","Excluir cliente"],
+    ["clientes_vip","Marcar VIP"],
+    ["clientes_observacoes","Ver observações internas"],
+    ["clientes_historico","Ver histórico completo"]
+  ]
+},
+
+{
+  titulo:"PROFISSIONAIS",
+  itens:[
+    ["profissionais_visualizar","Visualizar profissionais"],
+    ["profissionais_criar","Criar profissional"],
+    ["profissionais_editar","Editar profissional"],
+    ["profissionais_excluir","Excluir profissional"],
+    ["profissionais_comissao","Alterar comissão profissional"]
+  ]
+},
+
+{
+  titulo:"SERVIÇOS",
+  itens:[
+    ["servicos_visualizar","Visualizar serviços"],
+    ["servicos_criar","Criar serviço"],
+    ["servicos_editar","Editar serviço"],
+    ["servicos_excluir","Excluir serviço"],
+    ["servicos_valor","Alterar valor"],
+    ["servicos_comissao","Alterar comissão"]
+  ]
+},
+
+{
+  titulo:"PRONTUÁRIOS",
+  itens:[
+    ["prontuarios_visualizar","Visualizar prontuários"],
+
+    ["prontuarios_ver_proprios","Ver apenas meus prontuários"],
+    ["prontuarios_ver_todos","Ver todos prontuários"],
+
+    ["prontuarios_criar","Criar ficha"],
+    ["prontuarios_editar","Editar respostas"],
+    ["prontuarios_modelos","Criar modelos"],
+    ["prontuarios_perguntas","Criar perguntas"],
+    ["prontuarios_assinatura","Assinatura digital"],
+    ["prontuarios_excluir","Excluir ficha"]
+  ]
+},
+
+{
+  titulo:"PACOTES",
+  itens:[
+    ["pacotes_visualizar","Visualizar pacotes"],
+    ["pacotes_criar","Criar pacote"],
+    ["pacotes_editar","Editar pacote"],
+    ["pacotes_vender","Vender pacote"],
+    ["pacotes_consumir","Consumir saldo"],
+    ["pacotes_cancelar","Cancelar pacote"]
+  ]
+},
+
+{
+  titulo:"COMANDAS",
+  itens:[
+    ["comandas_visualizar","Visualizar comandas"],
+    ["comandas_criar","Criar comanda"],
+    ["comandas_editar","Editar comanda"],
+    ["comandas_faturar","Faturar cliente"],
+    ["comandas_cancelar","Cancelar faturamento"],
+    ["comandas_desconto","Aplicar desconto"]
+  ]
+},
+
+{
+  titulo:"CAIXA",
+  itens:[
+    ["caixa_visualizar","Visualizar caixa"],
+    ["caixa_abrir","Abrir caixa"],
+    ["caixa_fechar","Fechar caixa"],
+    ["caixa_sangria","Sangria"],
+    ["caixa_reforco","Reforço"],
+    ["caixa_reabrir","Reabrir caixa"]
+  ]
+},
+
+{
+  titulo:"COMISSÕES",
+  itens:[
+    ["comissoes_visualizar","Visualizar comissões"],
+
+    ["comissoes_ver_propria","Ver própria comissão"],
+    ["comissoes_ver_todas","Ver comissão de todos"],
+
+    ["comissoes_gerar","Gerar comissão"],
+    ["comissoes_editar","Editar comissão"],
+    ["comissoes_pagar","Marcar paga"]
+  ]
+},
+
+{
+  titulo:"RELATÓRIOS",
+  itens:[
+    ["relatorios_visualizar","Visualizar relatórios"],
+    ["relatorios_exportar","Exportar relatórios"],
+    ["relatorios_financeiros","Relatórios financeiros"]
+  ]
+},
+
+{
+  titulo:"CONFIGURAÇÕES",
+  itens:[
+    ["configuracoes_visualizar","Visualizar configurações"],
+    ["configuracoes_editar","Editar configurações"]
+  ]
+},
+
+{
+  titulo:"GESTORES",
+  itens:[
+    ["gestores_visualizar","Visualizar gestores"],
+    ["gestores_criar_usuario","Criar usuário"],
+    ["gestores_editar_usuario","Editar usuário"],
+    ["gestores_criar_perfil","Criar perfil"],
+    ["gestores_permissoes","Editar permissões"]
+  ]
+},
+
+{
+  titulo:"AUDITORIA",
+  itens:[
+    ["auditoria_visualizar","Visualizar auditoria"],
+    ["auditoria_financeira","Auditoria financeira"]
+  ]
+}
+
+];
   const permissoesResp = await supabaseClient
     .from("perfis_permissoes")
     .select("*")
