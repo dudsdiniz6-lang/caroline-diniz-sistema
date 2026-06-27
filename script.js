@@ -8243,44 +8243,7 @@ async function salvarAssinaturaAnamnese(){
   alert("Assinatura salva com sucesso.");
 }
 
-async function salvarPermissoesUsuario(){
 
-  const usuarioId = document.getElementById("usuarioPermissaoId")?.value;
-
-  if(!usuarioId){
-    alert("Usuário não encontrado.");
-    return;
-  }
-
-  const checks = Array.from(
-    document.querySelectorAll(".check-permissao-usuario")
-  );
-
-  await supabaseClient
-    .from("usuarios_permissoes")
-    .delete()
-    .eq("usuario_id", usuarioId);
-
-  const permissoes = checks.map(check => ({
-    usuario_id: Number(usuarioId),
-    permissao: check.value,
-    permitido: check.checked
-  }));
-
-  const { error } = await supabaseClient
-    .from("usuarios_permissoes")
-    .insert(permissoes);
-
-  if(error){
-    alert("Erro ao salvar permissões: " + error.message);
-    return;
-  }
-
-  fecharModal();
-  carregarGestores();
-
-  alert("Permissões salvas com sucesso.");
-}
 async function editarUsuarioSistema(usuarioId){
 
   const usuarioResp = await supabaseClient
@@ -8302,8 +8265,6 @@ async function editarUsuarioSistema(usuarioId){
 
 const usuario = usuarioResp.data;
 const profissionais = profissionaisResp.data || [];
-const perfis = perfisResp.data || [];
-  const profissionais = profissionaisResp.data || [];
 
   abrirModal(`
     <h2>Editar usuário</h2>
