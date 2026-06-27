@@ -8541,3 +8541,115 @@ async function salvarNovoPerfil(){
   carregarPerfisSistemaV2();
 
 }
+async function editarPerfilSistema(perfilId){
+
+  const perfilResp = await supabaseClient
+    .from("perfis_acesso")
+    .select("*")
+    .eq("id", perfilId)
+    .single();
+
+  const perfil = perfilResp.data;
+
+  const permissoes = [
+
+    ["dashboard_visualizar","Dashboard - visualizar"],
+
+    ["agenda_visualizar","Agenda - visualizar"],
+    ["agenda_ver_propria","Agenda - ver própria"],
+    ["agenda_ver_todos","Agenda - ver todas"],
+    ["agenda_criar","Agenda - criar"],
+    ["agenda_editar","Agenda - editar"],
+    ["agenda_cancelar","Agenda - cancelar"],
+
+    ["clientes_visualizar","Clientes - visualizar"],
+    ["clientes_criar","Clientes - criar"],
+    ["clientes_editar","Clientes - editar"],
+    ["clientes_excluir","Clientes - excluir"],
+
+    ["prontuarios_visualizar","Prontuários - visualizar"],
+    ["prontuarios_criar","Prontuários - criar"],
+    ["prontuarios_editar","Prontuários - editar"],
+
+    ["caixa_visualizar","Caixa - visualizar"],
+    ["caixa_abrir","Caixa - abrir"],
+    ["caixa_fechar","Caixa - fechar"],
+
+    ["comissoes_visualizar","Comissões - visualizar"],
+    ["comissoes_ver_propria","Comissões - ver própria"],
+    ["comissoes_ver_todas","Comissões - ver todas"],
+
+    ["gestores_visualizar","Gestores - visualizar"]
+
+  ];
+
+  const permissoesSalvasResp = await supabaseClient
+    .from("perfis_permissoes")
+    .select("*")
+    .eq("perfil_id", perfilId);
+
+  const salvas = permissoesSalvasResp.data || [];
+
+  abrirModal(`
+
+    <h2>Permissões - ${perfil.nome}</h2>
+
+    <input id="perfilPermissaoId" type="hidden" value="${perfilId}">
+
+    ${permissoes.map(([chave,nome])=>`
+
+      <label style="display:flex;gap:10px;margin-bottom:10px;">
+
+        <input
+          type="checkbox"
+          class="checkPermissaoPerfil"
+          value="${chave}"
+
+          ${salvas.find(p=>p.permissao === chave)?.permitido ? "checked" : ""}
+        >
+
+        ${nome}
+
+      </label>
+
+    `).join("")}
+
+    <br>
+
+    <button class="principal"
+      onclick="salvarPermissoesPerfilV2()">
+      Salvar
+    </button>
+
+  `);
+
+}
+async function salvarPermissoesPerfilV2(){
+
+  const perfilId =
+    document.getElementById("perfilPermissaoId").value;
+
+  const checks = Array.from(
+    document.querySelectorAll(".checkPermissaoPerfil")
+  );
+
+  await supabaseClient
+    .from("perfis_permissoes")
+    .delete()
+    .eq("perfil_id", perfilId);
+
+  const dados = checks.map(check => ({
+    perfil_id: Number(perfilId),
+    permissao: check.value,
+    permitido: check.checked
+  }));
+
+  await supabaseClient
+    .from("perfis_permissoes")
+    .insert(dados);
+
+  alert("Permissões salvas.");
+
+  fecharModal();
+
+}
