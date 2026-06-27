@@ -8476,7 +8476,6 @@ async function carregarUsuariosSistemaV2(){
   `;
 }
 async function carregarPerfisSistemaV2(){
-async function carregarPerfisSistemaV2(){
 
   const area = document.getElementById("areaGestores");
 
@@ -8540,5 +8539,44 @@ async function carregarPerfisSistemaV2(){
 async function abrirModalNovoUsuarioV2(){
 
   alert("Vamos construir modal novo");
+
+}
+async function abrirModalNovoPerfil(){
+
+  abrirModal(`
+
+    <h2>Novo perfil</h2>
+
+    <label>Nome perfil</label>
+
+    <input id="novoPerfilNome">
+
+    <button class="principal"
+      onclick="salvarNovoPerfil()">
+      Salvar
+    </button>
+
+  `);
+
+}
+async function salvarNovoPerfil(){
+
+  const nome =
+    document.getElementById("novoPerfilNome").value.trim();
+
+  if(!nome){
+    alert("Digite o nome.");
+    return;
+  }
+
+  await supabaseClient
+    .from("perfis_acesso")
+    .insert({
+      nome
+    });
+
+  fecharModal();
+
+  carregarPerfisSistemaV2();
 
 }
