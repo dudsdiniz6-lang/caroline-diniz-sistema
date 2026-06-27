@@ -8369,11 +8369,92 @@ async function salvarUsuarioSistema(){
 }
 async function carregarUsuariosSistemaV2(){
 
-  alert("Módulo usuários será reconstruído agora.");
+  const area = document.getElementById("areaGestores");
 
+  const usuariosResp = await supabaseClient
+    .from("usuarios_sistema")
+    .select(`
+      *,
+      profissionais(nome),
+      perfis_acesso(nome)
+    `)
+    .order("nome");
+
+  const usuarios = usuariosResp.data || [];
+
+  area.innerHTML = `
+
+    <div class="card">
+
+      <div style="
+        display:flex;
+        justify-content:space-between;
+        align-items:center;
+      ">
+
+        <h2>Usuários do sistema</h2>
+
+        <button
+          class="principal"
+          onclick="abrirModalNovoUsuarioV2()"
+        >
+          Novo usuário
+        </button>
+
+      </div>
+
+      <br>
+
+      ${usuarios.map(usuario => `
+
+        <div class="caixa-linha">
+
+          <span>
+
+            <strong>${usuario.nome}</strong><br>
+
+            <small>
+              Login: ${usuario.usuario}
+            </small><br>
+
+            <small>
+              Perfil:
+              ${usuario.perfis_acesso?.nome || "Sem perfil"}
+            </small><br>
+
+            <small>
+              Profissional:
+              ${usuario.profissionais?.nome || "Não vinculado"}
+            </small>
+
+          </span>
+
+          <button
+            onclick="editarUsuarioSistema(${usuario.id})"
+          >
+            Editar
+          </button>
+
+        </div>
+
+      `).join("")}
+
+      <br>
+
+      <button onclick="carregarGestores()">
+        Voltar
+      </button>
+
+    </div>
+  `;
 }
 async function carregarPerfisSistemaV2(){
 
   alert("Módulo perfis será reconstruído agora.");
+
+}
+async function abrirModalNovoUsuarioV2(){
+
+  alert("Vamos construir modal novo");
 
 }
