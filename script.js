@@ -7037,6 +7037,11 @@ async function abrirHistoricoCliente(clienteId){
 }
 async function excluirAgendamento(id){
 
+  if(!pode("agenda_cancelar")){
+    alert("Você não tem permissão para cancelar agendamentos.");
+    return;
+  }
+
   const { data: agendamento, error } = await supabaseClient
     .from("agendamentos")
     .select("*")
