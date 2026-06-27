@@ -8295,7 +8295,14 @@ async function editarUsuarioSistema(usuarioId){
     .eq("ativo", true)
     .order("nome");
 
-  const usuario = usuarioResp.data;
+ const perfisResp = await supabaseClient
+  .from("perfis_acesso")
+  .select("*")
+  .order("nome");
+
+const usuario = usuarioResp.data;
+const profissionais = profissionaisResp.data || [];
+const perfis = perfisResp.data || [];
   const profissionais = profissionaisResp.data || [];
 
   abrirModal(`
@@ -8312,6 +8319,21 @@ async function editarUsuarioSistema(usuarioId){
     <label>Senha</label>
     <input id="usuarioSistemaSenha" value="${usuario.senha || ""}">
 
+
+   <label>Perfil</label>
+
+<select id="usuarioPerfilId">
+
+  ${perfis.map(p=>`
+    <option
+      value="${p.id}"
+      ${String(usuario.perfil_acesso_id || "") === String(p.id) ? "selected" : ""}
+    >
+      ${p.nome}
+    </option>
+  `).join("")}
+
+</select>
     <label>Profissional vinculado</label>
     <select id="usuarioProfissionalId">
       <option value="">Não vinculado</option>
@@ -8339,13 +8361,18 @@ async function salvarUsuarioSistema(){
 
   const profissionalId =
     document.getElementById("usuarioProfissionalId").value;
+  const perfilId =
+  document.getElementById("usuarioPerfilId").value;
 
-  const dados = {
-    nome: document.getElementById("usuarioSistemaNome").value.trim(),
-    usuario: document.getElementById("usuarioSistemaLogin").value.trim(),
-    senha: document.getElementById("usuarioSistemaSenha").value.trim(),
-    profissional_id: profissionalId ? Number(profissionalId) : null
-  };
+ const dados = {
+  nome: document.getElementById("usuarioSistemaNome").value.trim(),
+  usuario: document.getElementById("usuarioSistemaLogin").value.trim(),
+  senha: document.getElementById("usuarioSistemaSenha").value.trim(),
+
+  perfil_acesso_id: perfilId ? Number(perfilId) : null,
+
+  profissional_id: profissionalId ? Number(profissionalId) : null
+};
 
   if(!dados.nome || !dados.usuario || !dados.senha){
     alert("Preencha nome, login e senha.");
