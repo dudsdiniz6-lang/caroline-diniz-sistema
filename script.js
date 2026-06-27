@@ -4349,278 +4349,51 @@ async function carregarGestores(){
 
   if(!area) return;
 
-  const usuariosResp = await supabaseClient
-    .from("usuarios_sistema")
-    .select(`
-      *,
-      profissionais(nome)
-    `)
-    .eq("ativo", true)
-    .order("nome");
-
-  const usuarios = usuariosResp.data || [];
-
   area.innerHTML = `
 
-    <div class="card">
+    <div style="
+      display:grid;
+      grid-template-columns:repeat(3,1fr);
+      gap:20px;
+    ">
 
-      <div style="display:flex;justify-content:space-between;align-items:center;">
-
-        <h3>Usuários do sistema</h3>
+      <div class="card">
+        <h3>Usuários</h3>
+        <p>Gerenciar usuários do sistema.</p>
 
         <button
           class="principal"
-          onclick="abrirModalNovoUsuario()"
+          onclick="carregarUsuariosSistemaV2()"
         >
-          Novo usuário
+          Abrir
         </button>
-
       </div>
 
-      <br>
+      <div class="card">
+        <h3>Perfis</h3>
+        <p>Criar e editar perfis.</p>
 
-      ${usuarios.length ? usuarios.map(usuario => `
+        <button
+          class="principal"
+          onclick="carregarPerfisSistemaV2()"
+        >
+          Abrir
+        </button>
+      </div>
 
-        <div class="caixa-linha">
+      <div class="card">
+        <h3>Permissões</h3>
+        <p>Permissões por perfil.</p>
 
-          <span>
-            <strong>${usuario.nome}</strong><br>
-
-            <small>
-              Login: ${usuario.usuario}
-            </small><br>
-
-            <small>
-              Profissional:
-              ${usuario.profissionais?.nome || "Não vinculado"}
-            </small>
-          </span>
-
-          <div style="display:flex;gap:8px;">
-
-            <button
-              onclick="abrirPermissoesUsuario(${usuario.id})"
-            >
-              Permissões
-            </button>
-
-            <button
-              onclick="editarUsuarioSistema(${usuario.id})"
-            >
-              Editar
-            </button>
-
-          </div>
-
-        </div>
-
-      `).join("") : "<p>Nenhum usuário cadastrado.</p>"}
+        <button
+          class="principal"
+          onclick="alert('Vamos construir agora')"
+        >
+          Abrir
+        </button>
+      </div>
 
     </div>
-
-  `;
-}
-const permissoesPadraoSistema = [
-
-  { grupo:"Dashboard", chave:"dashboard_visualizar", nome:"Visualizar dashboard" },
-  { grupo:"Caixa", chave:"caixa_reabrir", nome:"Reabrir caixa fechado" },
-  { grupo:"Agenda", chave:"agenda_visualizar", nome:"Visualizar agenda" },
-  { grupo:"Agenda", chave:"agenda_adicionar", nome:"Adicionar agendamentos" },
-  { grupo:"Agenda", chave:"agenda_editar", nome:"Editar agendamentos" },
-  { grupo:"Agenda", chave:"agenda_excluir", nome:"Excluir agendamentos" },
-  { grupo:"Agenda", chave:"agenda_faturar", nome:"Faturar atendimentos" },
-  { grupo:"Agenda", chave:"agenda_recorrencia", nome:"Criar agendamentos recorrentes" },
-  { grupo:"Agenda", chave:"agenda_ver_todas_profissionais", nome:"Ver agenda de todas as profissionais" },
-  { grupo:"Agenda", chave:"agenda_ver_apenas_propria", nome:"Ver apenas a própria agenda" },
-
-  { grupo:"Caixa", chave:"caixa_excluir", nome:"Excluir caixa" },
-
-  { grupo:"Clientes", chave:"clientes_visualizar", nome:"Visualizar clientes" },
-  { grupo:"Clientes", chave:"clientes_adicionar", nome:"Adicionar novos clientes" },
-  { grupo:"Clientes", chave:"clientes_editar", nome:"Editar clientes" },
-  { grupo:"Clientes", chave:"clientes_excluir", nome:"Excluir clientes" },
-  { grupo:"Clientes", chave:"clientes_anamnese", nome:"Adicionar ficha de anamnese" },
-  { grupo:"Clientes", chave:"clientes_vip", nome:"Marcar cliente VIP" },
-  { grupo:"Clientes", chave:"clientes_ver_todos", nome:"Ver todos os clientes" },
-{ grupo:"Clientes", chave:"clientes_ver_apenas_atendidos", nome:"Ver apenas clientes atendidos por esse profissional" },
-
-  { grupo:"Profissionais", chave:"profissionais_visualizar", nome:"Visualizar profissionais" },
-  { grupo:"Profissionais", chave:"profissionais_adicionar", nome:"Adicionar profissionais" },
-  { grupo:"Profissionais", chave:"profissionais_editar", nome:"Alterar dados de profissionais" },
-  { grupo:"Profissionais", chave:"profissionais_excluir", nome:"Apagar profissionais" },
-  { grupo:"Profissionais", chave:"profissionais_comissao", nome:"Alterar comissões dos profissionais" },
-
-  { grupo:"Serviços", chave:"servicos_visualizar", nome:"Visualizar serviços" },
-  { grupo:"Serviços", chave:"servicos_adicionar", nome:"Adicionar serviços" },
-  { grupo:"Serviços", chave:"servicos_editar", nome:"Editar serviços" },
-  { grupo:"Serviços", chave:"servicos_excluir", nome:"Excluir serviços" },
-  { grupo:"Serviços", chave:"servicos_comissao", nome:"Alterar comissão padrão dos serviços" },
-
-  { grupo:"Pacotes", chave:"pacotes_visualizar", nome:"Visualizar pacotes" },
-  { grupo:"Pacotes", chave:"pacotes_adicionar", nome:"Cadastrar pacotes" },
-  { grupo:"Pacotes", chave:"pacotes_editar", nome:"Editar pacotes" },
-  { grupo:"Pacotes", chave:"pacotes_vender", nome:"Vender pacotes" },
-  { grupo:"Pacotes", chave:"pacotes_cancelar", nome:"Cancelar créditos/pacotes" },
-  { grupo:"Pacotes", chave:"pacotes_estender", nome:"Estender validade de pacote" },
-
-  { grupo:"Comandas", chave:"comandas_visualizar", nome:"Visualizar comandas" },
-  { grupo:"Comandas", chave:"comandas_receber", nome:"Receber comandas" },
-  { grupo:"Comandas", chave:"comandas_pagamento_parcial", nome:"Lançar pagamento parcial" },
-  { grupo:"Comandas", chave:"comandas_cancelar", nome:"Cancelar comandas" },
-
-  { grupo:"Caixa", chave:"caixa_visualizar", nome:"Visualizar caixa" },
-  { grupo:"Caixa", chave:"caixa_abrir", nome:"Abrir caixa" },
-  { grupo:"Caixa", chave:"caixa_fechar", nome:"Fechar caixa" },
-  { grupo:"Caixa", chave:"caixa_movimentar", nome:"Lançar entradas/saídas" },
-  { grupo:"Caixa", chave:"caixa_excluir", nome:"Excluir caixa" },
-
-  { grupo:"Comissões", chave:"comissoes_visualizar", nome:"Visualizar comissões" },
-  { grupo:"Comissões", chave:"comissoes_pagar", nome:"Marcar comissão como paga" },
-  { grupo:"Comissões", chave:"comissoes_ver_todas", nome:"Ver comissão de todos os profissionais" },
-{ grupo:"Comissões", chave:"comissoes_ver_apenas_propria", nome:"Ver apenas a própria comissão" },
-
-  { grupo:"Relatórios", chave:"rel_profissional", nome:"Abrir relatório de atendimento por profissional" },
-  { grupo:"Relatórios", chave:"rel_pacotes_vencendo", nome:"Abrir relatório de pacotes vencendo" },
-  { grupo:"Relatórios", chave:"rel_vendas_geral", nome:"Abrir resumo geral de vendas" },
-  { grupo:"Relatórios", chave:"rel_pacotes", nome:"Abrir resumo de pacotes" },
-  { grupo:"Relatórios", chave:"rel_clientes_sumidos", nome:"Abrir relatório de clientes sumidos" },
-  { grupo:"Relatórios", chave:"rel_clientes_devendo", nome:"Abrir relatório de clientes devendo" },
-
-  { grupo:"Alertas", chave:"alertas_visualizar", nome:"Visualizar central de alertas" },
-  { grupo:"Alertas", chave:"alertas_whatsapp", nome:"Enviar WhatsApp pelos alertas" },
-
-  { grupo:"Configurações", chave:"configuracoes_visualizar", nome:"Visualizar configurações" },
-  { grupo:"Configurações", chave:"configuracoes_editar", nome:"Editar configurações do sistema" },
-
-  { grupo:"Gestores", chave:"gestores_visualizar", nome:"Visualizar gestores/acessos" },
-  { grupo:"Gestores", chave:"gestores_editar", nome:"Editar permissões de acesso" },
-  { grupo:"Gestores", chave:"gestores_usuarios", nome:"Criar/editar usuários do sistema" }
-
-];
-
-async function abrirPerfilAcesso(nomePerfil){
-
-  const area = document.getElementById("areaGestores");
-
-  area.innerHTML = "Carregando permissões...";
-
-  const { data: perfil } = await supabaseClient
-    .from("perfis_acesso")
-    .select("*")
-    .eq("nome", nomePerfil)
-    .single();
-
-  const { data: permissoes } = await supabaseClient
-    .from("permissoes_acesso")
-    .select("*")
-    .eq("perfil_id", perfil.id);
-
-  const grupos = {};
-
-  permissoesPadraoSistema.forEach((item)=>{
-    if(!grupos[item.grupo]){
-      grupos[item.grupo] = [];
-    }
-
-    grupos[item.grupo].push(item);
-  });
-
-  let htmlPermissoes = "";
-
-  Object.keys(grupos).forEach((grupo)=>{
-
-    htmlPermissoes += `
-      <h3 style="margin-top:22px;">${grupo}</h3>
-    `;
-
-    grupos[grupo].forEach((p)=>{
-
-      const marcada =
-        permissoes?.find(x => x.chave === p.chave)?.permitido || false;
-
-      htmlPermissoes += `
-        <label style="display:flex;gap:10px;align-items:center;margin-bottom:8px;">
-          <input
-            type="checkbox"
-            class="permissaoPerfil"
-            data-chave="${p.chave}"
-            style="width:auto;height:auto;"
-            ${marcada ? "checked" : ""}
-          >
-          ${p.nome}
-        </label>
-      `;
-    });
-
-  });
-
-  area.innerHTML = `
-    <div class="card">
-      <h2>${nomePerfil}</h2>
-
-      ${htmlPermissoes}
-
-      <br>
-
-      <button class="principal" onclick="salvarPermissoesPerfil(${perfil.id}, '${nomePerfil}')">
-        Salvar permissões
-      </button>
-
-      <button onclick="carregarGestores()">
-        Voltar
-      </button>
-    </div>
-  `;
-}
-
-async function salvarPermissoesPerfil(perfilId, nomePerfil){
-
-  const checks = document.querySelectorAll(".permissaoPerfil");
-
-  await supabaseClient
-    .from("permissoes_acesso")
-    .delete()
-    .eq("perfil_id", perfilId);
-
-  const registros = Array.from(checks).map(campo=>({
-    perfil_id: perfilId,
-    chave: campo.dataset.chave,
-    permitido: campo.checked
-  }));
-
-  await supabaseClient
-    .from("permissoes_acesso")
-    .insert(registros);
-
-  alert("Permissões salvas.");
-
-  abrirPerfilAcesso(nomePerfil);
-}
-async function carregarPerfisAcesso(){
-
-  const area = document.getElementById("areaGestores");
-
-  area.innerHTML = `
-
-    <div class="card">
-      <h3>Perfis do sistema</h3>
-
-      <button class="principal" onclick="abrirPerfilAcesso('Dono')">Dono</button>
-      <br><br>
-
-      <button class="principal" onclick="abrirPerfilAcesso('Gestor')">Gestor</button>
-      <br><br>
-
-      <button class="principal" onclick="abrirPerfilAcesso('Recepcionista')">Recepcionista</button>
-      <br><br>
-
-      <button class="principal" onclick="abrirPerfilAcesso('Profissional')">Profissional</button>
-
-      <br><br>
-
-      <button onclick="carregarGestores()">Voltar</button>
-    </div>
-
   `;
 }
 async function carregarUsuariosSistema(){
@@ -8469,169 +8242,7 @@ async function salvarAssinaturaAnamnese(){
 
   alert("Assinatura salva com sucesso.");
 }
-async function abrirPermissoesUsuario(usuarioId){
 
-  const usuarioResp = await supabaseClient
-    .from("usuarios_sistema")
-    .select("*")
-    .eq("id", usuarioId)
-    .single();
-
-  const permissoesResp = await supabaseClient
-    .from("usuarios_permissoes")
-    .select("*")
-    .eq("usuario_id", usuarioId);
-
-  const usuario = usuarioResp.data;
-  const permissoesSalvas = permissoesResp.data || [];
-
-  const permissoesPermitidas = permissoesSalvas
-    .filter(p => p.permitido === true)
-    .map(p => p.permissao);
-
-  const grupos = [
-    {
-      titulo:"Dashboard",
-      itens:[
-        ["dashboard_visualizar","Visualizar dashboard"],
-        ["dashboard_financeiro","Ver indicadores financeiros"]
-      ]
-    },
-    {
-      titulo:"Agenda",
-      itens:[
-        ["agenda_ver_propria","Ver apenas minha agenda"],
-        ["agenda_ver_todos","Ver agenda de todos"],
-        ["agenda_criar","Criar agendamento"],
-        ["agenda_editar","Editar agendamento"],
-        ["agenda_cancelar","Cancelar agendamento"],
-        ["agenda_recorrencia","Criar recorrência"],
-        ["agenda_faturar","Faturar atendimento"]
-      ]
-    },
-    {
-      titulo:"Clientes",
-      itens:[
-        ["clientes_ver_proprios","Ver apenas meus clientes"],
-        ["clientes_ver_todos","Ver todos os clientes"],
-        ["clientes_criar","Criar cliente"],
-        ["clientes_editar","Editar cliente"],
-        ["clientes_excluir","Excluir cliente"]
-      ]
-    },
-    {
-      titulo:"Prontuários",
-      itens:[
-        ["prontuarios_ver_proprios","Ver apenas meus prontuários"],
-        ["prontuarios_ver_todos","Ver todos os prontuários"],
-        ["prontuarios_criar","Criar ficha"],
-        ["prontuarios_responder","Responder ficha"],
-        ["prontuarios_editar","Editar prontuário"],
-        ["prontuarios_excluir","Excluir ficha"],
-        ["prontuarios_assinar","Assinar ficha"]
-      ]
-    },
-    {
-      titulo:"Serviços",
-      itens:[
-        ["servicos_visualizar","Visualizar serviços"],
-        ["servicos_criar","Criar serviço"],
-        ["servicos_editar","Editar serviço"]
-      ]
-    },
-    {
-      titulo:"Pacotes",
-      itens:[
-        ["pacotes_ver_proprios","Ver apenas meus pacotes"],
-        ["pacotes_ver_todos","Ver todos os pacotes"],
-        ["pacotes_criar","Criar pacote"],
-        ["pacotes_editar","Editar pacote"],
-        ["pacotes_vender","Vender pacote"]
-      ]
-    },
-    {
-      titulo:"Comandas",
-      itens:[
-        ["comandas_ver_proprias","Ver apenas minhas comandas"],
-        ["comandas_ver_todas","Ver todas as comandas"],
-        ["comandas_criar","Criar comanda"],
-        ["comandas_editar","Editar comanda"],
-        ["comandas_cancelar","Cancelar faturamento"]
-      ]
-    },
-    {
-      titulo:"Caixa",
-      itens:[
-        ["caixa_visualizar","Visualizar caixa"],
-        ["caixa_abrir","Abrir caixa"],
-        ["caixa_fechar","Fechar caixa"]
-      ]
-    },
-    {
-      titulo:"Comissões",
-      itens:[
-        ["comissoes_ver_propria","Ver apenas minha comissão"],
-        ["comissoes_ver_todas","Ver comissão de todos"]
-      ]
-    },
-    {
-      titulo:"Relatórios",
-      itens:[
-        ["relatorios_ver_proprios","Ver apenas meus relatórios"],
-        ["relatorios_ver_todos","Ver todos os relatórios"]
-      ]
-    },
-    {
-      titulo:"Gestores",
-      itens:[
-        ["gestores_visualizar","Visualizar gestores"],
-        ["gestores_editar","Editar acessos"]
-      ]
-    },
-    {
-      titulo:"Auditoria",
-      itens:[
-        ["auditoria_ver","Visualizar auditoria"]
-      ]
-    }
-  ];
-
-  abrirModal(`
-    <h2>Permissões - ${usuario?.nome || "Usuário"}</h2>
-
-    <input id="usuarioPermissaoId" type="hidden" value="${usuarioId}">
-
-    <div class="permissoes-grid">
-      ${grupos.map(grupo=>`
-        <div class="permissao-card">
-          <h3>${grupo.titulo}</h3>
-
-          ${grupo.itens.map(([chave, nome])=>`
-            <label class="permissao-item">
-              <input
-                type="checkbox"
-                class="check-permissao-usuario"
-                value="${chave}"
-                ${permissoesPermitidas.includes(chave) ? "checked" : ""}
-              >
-              <span>${nome}</span>
-            </label>
-          `).join("")}
-        </div>
-      `).join("")}
-    </div>
-
-    <div style="display:flex;gap:10px;margin-top:18px;">
-      <button class="principal" onclick="salvarPermissoesUsuario()">
-        Salvar permissões
-      </button>
-
-      <button onclick="fecharModal()">
-        Cancelar
-      </button>
-    </div>
-  `);
-}
 async function salvarPermissoesUsuario(){
 
   const usuarioId = document.getElementById("usuarioPermissaoId")?.value;
@@ -8755,4 +8366,14 @@ async function salvarUsuarioSistema(){
   carregarGestores();
 
   alert("Usuário salvo com sucesso.");
+}
+async function carregarUsuariosSistemaV2(){
+
+  alert("Módulo usuários será reconstruído agora.");
+
+}
+async function carregarPerfisSistemaV2(){
+
+  alert("Módulo perfis será reconstruído agora.");
+
 }
