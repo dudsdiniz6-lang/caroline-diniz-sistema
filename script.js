@@ -8476,12 +8476,108 @@ async function carregarUsuariosSistemaV2(){
   `;
 }
 async function carregarPerfisSistemaV2(){
+async function carregarPerfisSistemaV2(){
 
-  alert("Módulo perfis será reconstruído agora.");
+  const area = document.getElementById("areaGestores");
 
+  const perfisResp = await supabaseClient
+    .from("perfis_acesso")
+    .select("*")
+    .order("nome");
+
+  const perfis = perfisResp.data || [];
+
+  area.innerHTML = `
+
+    <div class="card">
+
+      <div style="
+        display:flex;
+        justify-content:space-between;
+        align-items:center;
+      ">
+
+        <h2>Perfis do sistema</h2>
+
+        <button
+          class="principal"
+          onclick="abrirModalNovoPerfil()"
+        >
+          Novo perfil
+        </button>
+
+      </div>
+
+      <br>
+
+      ${perfis.map(perfil => `
+
+        <div class="caixa-linha">
+
+          <span>
+            <strong>${perfil.nome}</strong>
+          </span>
+
+          <button
+            onclick="editarPerfilSistema(${perfil.id})"
+          >
+            Editar
+          </button>
+
+        </div>
+
+      `).join("")}
+
+      <br>
+
+      <button onclick="carregarGestores()">
+        Voltar
+      </button>
+
+    </div>
+  `;
 }
 async function abrirModalNovoUsuarioV2(){
 
   alert("Vamos construir modal novo");
+
+}
+async function abrirModalNovoPerfil(){
+
+  abrirModal(`
+
+    <h2>Novo perfil</h2>
+
+    <label>Nome perfil</label>
+
+    <input id="novoPerfilNome">
+
+    <button class="principal"
+      onclick="salvarNovoPerfil()">
+      Salvar
+    </button>
+
+  `);
+
+}
+  async function salvarNovoPerfil(){
+
+  const nome =
+    document.getElementById("novoPerfilNome").value.trim();
+
+  if(!nome){
+    alert("Digite o nome.");
+    return;
+  }
+
+  await supabaseClient
+    .from("perfis_acesso")
+    .insert({
+      nome
+    });
+
+  fecharModal();
+
+  carregarPerfisSistemaV2();
 
 }
