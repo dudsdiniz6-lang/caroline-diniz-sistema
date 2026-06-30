@@ -8251,6 +8251,11 @@ async function salvarAssinaturaAnamnese(){
 
 async function editarUsuarioSistema(usuarioId){
 
+  if(!pode("gestores_editar_usuario")){
+    alert("Você não tem permissão para editar usuários.");
+    return;
+  }
+
   const usuarioResp = await supabaseClient
     .from("usuarios_sistema")
     .select("*")
@@ -8263,13 +8268,14 @@ async function editarUsuarioSistema(usuarioId){
     .eq("ativo", true)
     .order("nome");
 
- const perfisResp = await supabaseClient
-  .from("perfis_acesso")
-  .select("*")
-  .order("nome");
+  const perfisResp = await supabaseClient
+    .from("perfis_acesso")
+    .select("*")
+    .order("nome");
 
-const usuario = usuarioResp.data;
-const profissionais = profissionaisResp.data || [];
+  const usuario = usuarioResp.data;
+  const profissionais = profissionaisResp.data || [];
+  const perfis = perfisResp.data || [];
 
   abrirModal(`
     <h2>Editar usuário</h2>
