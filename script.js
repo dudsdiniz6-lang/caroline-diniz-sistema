@@ -5723,6 +5723,11 @@ async function carregarFormasPagamentoNosSelects(){
 }
 async function salvarFaturamentoClienteDiaPago(){
 
+  if(!pode("comandas_faturar")){
+    alert("Você não tem permissão para faturar atendimentos.");
+    return;
+  }
+
   const botaoConfirmar = document.querySelector(
     'button[onclick="salvarFaturamentoClienteDiaPago()"]'
   );
