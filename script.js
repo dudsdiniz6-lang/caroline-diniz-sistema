@@ -4385,12 +4385,12 @@ async function carregarGestores(){
         <h3>Permissões</h3>
         <p>Permissões por perfil.</p>
 
-        <button
-          class="principal"
-          onclick="alert('Vamos construir agora')"
-        >
-          Abrir
-        </button>
+      <button
+  class="principal"
+  onclick="carregarPermissoesSistemaV2()"
+>
+  Abrir
+</button>
       </div>
 
     </div>
@@ -8838,4 +8838,72 @@ async function salvarPermissoesPerfilV2(){
 
   fecharModal();
 
+}
+async function carregarPermissoesSistemaV2(){
+
+  const area = document.getElementById("areaGestores");
+
+  if(!area) return;
+
+  const perfisResp = await supabaseClient
+    .from("perfis_acesso")
+    .select("*")
+    .order("nome");
+
+  const perfis = perfisResp.data || [];
+
+  area.innerHTML = `
+
+    <div class="card">
+
+      <div style="
+        display:flex;
+        justify-content:space-between;
+        align-items:center;
+        margin-bottom:18px;
+      ">
+        <div>
+          <h2>Permissões por perfil</h2>
+          <p style="margin:4px 0;color:#777;">
+            Configure o que cada perfil pode acessar no sistema.
+          </p>
+        </div>
+
+        <button onclick="carregarGestores()">
+          Voltar
+        </button>
+      </div>
+
+      <div style="
+        display:grid;
+        grid-template-columns:repeat(auto-fit,minmax(240px,1fr));
+        gap:16px;
+      ">
+
+        ${perfis.map(perfil=>`
+
+          <div class="permissao-card">
+
+            <h3>${perfil.nome}</h3>
+
+            <p style="color:#777;font-size:14px;">
+              Editar acessos laterais, ações e permissões deste perfil.
+            </p>
+
+            <button
+              class="principal"
+              onclick="editarPerfilSistema(${perfil.id})"
+            >
+              Configurar permissões
+            </button>
+
+          </div>
+
+        `).join("")}
+
+      </div>
+
+    </div>
+
+  `;
 }
