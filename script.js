@@ -7182,8 +7182,12 @@ if(
 }
 async function confirmarAberturaCaixa(){
 
-  const valor = Number(document.getElementById("valorAberturaCaixa").value || 0);
+  if(!pode("caixa_abrir")){
+    alert("Você não tem permissão para abrir caixa.");
+    return;
+  }
 
+  const valor = Number(document.getElementById("valorAberturaCaixa").value || 0);
   if(valor <= 0){
     alert("O valor de abertura precisa ser maior que zero.");
     return;
