@@ -1865,6 +1865,10 @@ ${caixa.status === "Fechado" ? `
 
 
 async function abrirCaixa(){
+  if(!pode("caixa_abrir")){
+  alert("Você não tem permissão para abrir caixa.");
+  return;
+}
 
   const caixaAberto = await buscarCaixaAberto();
 
