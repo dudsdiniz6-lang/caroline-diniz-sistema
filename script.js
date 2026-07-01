@@ -1293,7 +1293,7 @@ ${pode("agenda_recorrencia") ? `
   <input id="agRepetirAte" type="hidden">
 `}
 
-${(!id && pode("agenda_adicionar")) || (id && pode("agenda_editar")) ? `
+${(!id && pode("agenda_criar")) || (id && pode("agenda_editar")) ? `
   <button class="principal" onclick="salvarAgendamento()">
     Salvar
   </button>
@@ -1305,7 +1305,7 @@ ${id && pode("agenda_faturar") ? `
   </button>
 ` : ""}
 
-${id && pode("agenda_excluir") ? `
+${id && pode("agenda_cancelar") ? `
   <button onclick="excluirAgendamento(${id})">
     Excluir
   </button>
