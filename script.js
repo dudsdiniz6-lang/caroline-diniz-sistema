@@ -3295,7 +3295,7 @@ async function carregarComandas(){
   Visualizar
 </button>
 
-${comanda.status !== "Cancelada" && comanda.cancelada !== true ? `
+${comanda.status !== "Cancelada" && comanda.cancelada !== true && pode("comandas_cancelar") ? `
   <button onclick="cancelarComandaPelaAba(${comanda.id})">
     Cancelar faturamento
   </button>
