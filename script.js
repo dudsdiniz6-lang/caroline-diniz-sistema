@@ -217,10 +217,41 @@ function esconderBotaoMenu(texto){
 }
 
 function mostrarTela(nome){
+
   if(nome === "dashboard" && !pode("dashboard_visualizar")){
-  alert("Você não tem permissão para visualizar o dashboard.");
-  return;
-}
+    alert("Você não tem permissão para visualizar o dashboard.");
+    return;
+  }
+
+  if(nome === "caixa" && !pode("caixa_visualizar")){
+    alert("Você não tem permissão para acessar caixa.");
+    return;
+  }
+
+  if(nome === "comandas" && !pode("comandas_visualizar")){
+    alert("Você não tem permissão para acessar comandas.");
+    return;
+  }
+
+  if(nome === "configuracoes" && !pode("configuracoes_visualizar")){
+    alert("Você não tem permissão para acessar configurações.");
+    return;
+  }
+
+  if(nome === "auditoria" && !pode("auditoria_visualizar")){
+    alert("Você não tem permissão para acessar auditoria.");
+    return;
+  }
+
+  if(nome === "gestores" && !pode("gestores_visualizar")){
+    alert("Você não tem permissão para acessar gestores.");
+    return;
+  }
+
+  if(nome === "relatorios" && !pode("relatorios_visualizar")){
+    alert("Você não tem permissão para acessar relatórios.");
+    return;
+  }
 
   document.querySelectorAll(".tela").forEach((tela)=>{
     tela.classList.remove("ativa");
@@ -1774,28 +1805,37 @@ lista.innerHTML += `
         <small>Total esperado</small>
       </div>
     </div>
+<div class="caixa-acoes">
 
-    <div class="caixa-acoes">
-      ${caixa.status === "Aberto" ? `
-        <button class="principal" onclick="abrirReforcoCaixa(${caixa.id})">
-          Reforço
-        </button>
+  ${caixa.status === "Aberto" ? `
 
-        <button onclick="abrirSangriaCaixa(${caixa.id})">
-          Sangria
-        </button>
+    ${pode("caixa_reforco") ? `
+      <button class="principal" onclick="abrirReforcoCaixa(${caixa.id})">
+        Reforço
+      </button>
+    ` : ""}
 
-        <button onclick="abrirFechamentoCaixa(${caixa.id})">
-          Fechar caixa
-        </button>
-      ` : ""}
+    ${pode("caixa_sangria") ? `
+      <button onclick="abrirSangriaCaixa(${caixa.id})">
+        Sangria
+      </button>
+    ` : ""}
 
-      ${pode("caixa_excluir") ? `
-        <button onclick="excluirCaixa(${caixa.id})">
-          Excluir caixa
-        </button>
-      ` : ""}
-    </div>
+    ${pode("caixa_fechar") ? `
+      <button onclick="abrirFechamentoCaixa(${caixa.id})">
+        Fechar caixa
+      </button>
+    ` : ""}
+
+  ` : ""}
+
+  ${pode("caixa_excluir") ? `
+    <button onclick="excluirCaixa(${caixa.id})">
+      Excluir caixa
+    </button>
+  ` : ""}
+
+</div>
 
     <div
       id="detalheCaixa_${caixa.id}"
@@ -6075,6 +6115,11 @@ await registrarHistoricoOperacao(
 }
 function abrirReforcoCaixa(caixaId){
 
+  if(!pode("caixa_reforco")){
+    alert("Você não tem permissão para adicionar reforço de caixa.");
+    return;
+  }
+
   abrirModal(`
     <h2>Reforço de caixa</h2>
 
@@ -6093,6 +6138,11 @@ function abrirReforcoCaixa(caixaId){
 }
 
 function abrirSangriaCaixa(caixaId){
+
+  if(!pode("caixa_sangria")){
+    alert("Você não tem permissão para realizar sangria de caixa.");
+    return;
+  }
 
   abrirModal(`
     <h2>Sangria de caixa</h2>
@@ -6160,6 +6210,11 @@ async function salvarMovimentacaoCaixa(caixaId, tipo){
   alert("Movimentação registrada.");
 }
 async function abrirFechamentoCaixa(caixaId){
+
+  if(!pode("caixa_fechar")){
+    alert("Você não tem permissão para fechar caixa.");
+    return;
+  }
 
   const { data: caixa } = await supabaseClient
     .from("caixas")
