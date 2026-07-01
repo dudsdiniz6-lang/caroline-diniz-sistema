@@ -2540,6 +2540,16 @@ function calcularTotalAgendamento(){
 async function salvarAgendamento(){
 
   const id = document.getElementById("agendamentoId").value;
+
+  if(!id && !pode("agenda_criar")){
+    alert("Você não tem permissão para criar agendamentos.");
+    return;
+  }
+
+  if(id && !pode("agenda_editar")){
+    alert("Você não tem permissão para editar agendamentos.");
+    return;
+  }
   const checkboxPacote = document.getElementById("agUsarPacote");
 
   const repetirAte = document.getElementById("agRepetirAte")?.value || "";
