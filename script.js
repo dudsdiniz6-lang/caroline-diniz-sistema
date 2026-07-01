@@ -514,8 +514,17 @@ async function carregarProfissionais(){
 }
 async function abrirModalProfissional(id = null){
 
-  let profissional = null;
+  if(!id && !pode("profissionais_criar")){
+    alert("Você não tem permissão para criar profissionais.");
+    return;
+  }
 
+  if(id && !pode("profissionais_editar")){
+    alert("Você não tem permissão para editar profissionais.");
+    return;
+  }
+
+  let profissional = null;
   if(id){
 
     const resposta = await supabaseClient
