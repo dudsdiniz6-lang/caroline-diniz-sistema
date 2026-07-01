@@ -128,7 +128,7 @@ async function fazerLogin(){
     return;
   }
 
- usuarioLogado = data;
+usuarioLogado = data;
 
 localStorage.setItem("usuarioLogado", JSON.stringify(data));
 
@@ -137,7 +137,8 @@ await carregarPermissoesUsuario();
 document.getElementById("login-screen").style.display = "none";
 document.getElementById("app").style.display = "flex";
 
-aplicarPermissoes();
+aplicarPermissoesMenu();
+
 iniciarSistema();
 }
 
@@ -157,10 +158,10 @@ function verificarLoginSalvo(){
   document.getElementById("login-screen").style.display = "none";
   document.getElementById("app").style.display = "flex";
 
-carregarPermissoesUsuario().then(()=>{
-  aplicarPermissoes();
-  iniciarSistema();
-});
+  carregarPermissoesUsuario().then(()=>{
+    aplicarPermissoesMenu();
+    iniciarSistema();
+  });
 }
 
 function aplicarPermissoes(){
@@ -325,6 +326,16 @@ function atualizarTextoDataAgenda(){
 async function salvarCliente(){
 
   const id = document.getElementById("clienteId").value;
+
+  if(!id && !pode("clientes_criar")){
+    alert("Você não tem permissão para criar clientes.");
+    return;
+  }
+
+  if(id && !pode("clientes_editar")){
+    alert("Você não tem permissão para editar clientes.");
+    return;
+  }
 
   let clienteAntes = null;
 
@@ -8950,4 +8961,63 @@ async function carregarPermissoesSistemaV2(){
     </div>
 
   `;
+}
+function aplicarPermissoesMenu(){
+
+  if(!pode("dashboard_visualizar")){
+    document.getElementById("menu-dashboard")?.remove();
+  }
+
+  if(!pode("agenda_visualizar")){
+    document.getElementById("menu-agenda")?.remove();
+  }
+
+  if(!pode("clientes_visualizar")){
+    document.getElementById("menu-clientes")?.remove();
+  }
+
+  if(!pode("profissionais_visualizar")){
+    document.getElementById("menu-profissionais")?.remove();
+  }
+
+  if(!pode("servicos_visualizar")){
+    document.getElementById("menu-servicos")?.remove();
+  }
+
+  if(!pode("prontuarios_visualizar")){
+    document.getElementById("menu-prontuarios")?.remove();
+  }
+
+  if(!pode("pacotes_visualizar")){
+    document.getElementById("menu-pacotes")?.remove();
+  }
+
+  if(!pode("comandas_visualizar")){
+    document.getElementById("menu-comandas")?.remove();
+  }
+
+  if(!pode("relatorios_visualizar")){
+    document.getElementById("menu-relatorios")?.remove();
+  }
+
+  if(!pode("configuracoes_visualizar")){
+    document.getElementById("menu-configuracoes")?.remove();
+  }
+
+  if(!pode("gestores_visualizar")){
+    document.getElementById("menu-gestores")?.remove();
+  }
+
+  if(!pode("caixa_visualizar")){
+    document.getElementById("menu-caixa")?.remove();
+  }
+
+  if(!pode("comissoes_visualizar")){
+    document.getElementById("menu-comissoes")?.remove();
+  }
+
+  if(!pode("auditoria_visualizar")){
+    document.getElementById("menu-auditoria")?.remove();
+  }
+
 }
