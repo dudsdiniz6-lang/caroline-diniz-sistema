@@ -4736,6 +4736,11 @@ async function salvarFaturamentoPacote(agendamentoId){
 }
 async function cancelarAtendimentoFaturado(agendamento, comanda, motivo){
 
+  if(!pode("comandas_cancelar")){
+    alert("Você não tem permissão para cancelar faturamentos.");
+    return;
+  }
+
   const agora = new Date().toISOString();
 
   let comandasCancelar = [];
