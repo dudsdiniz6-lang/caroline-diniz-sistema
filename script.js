@@ -475,11 +475,36 @@ async function carregarProfissionais(){
 
   lista.innerHTML = "";
 
-  const { data, error } = await supabaseClient
-    .from("profissionais")
-    .select("*")
-    .eq("ativo", true)
-    .order("ordem", { ascending:true });
+ let queryClientes = supabaseClient
+  .from("clientes")
+  .select("*")
+  .eq("ativo", true);
+
+if(pode("clientes_ver_proprios") && !pode("clientes_ver_todos")){
+
+  const profissionalId = usuarioLogado?.profissional_id;
+
+  const agendamentosResp = await supabaseClient
+    .from("agendamentos")
+    .select("cliente_id")
+    .eq("profissional_id", profissionalId);
+
+  const idsClientes = [
+    ...new Set(
+      (agendamentosResp.data || []).map(a => a.cliente_id)
+    )
+  ];
+
+  if(idsClientes.length === 0){
+    lista.innerHTML = "<div class='card'>Nenhum cliente encontrado.</div>";
+    return;
+  }
+
+  queryClientes = queryClientes.in("id", idsClientes);
+}
+
+const { data, error } = await queryClientes
+  .order("nome");
 
   if(error){
     lista.innerHTML = "<div class='card'>Erro ao carregar profissionais.</div>";
