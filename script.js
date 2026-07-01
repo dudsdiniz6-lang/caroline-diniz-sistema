@@ -893,9 +893,21 @@ async function carregarAgenda(){
     .eq("ativo", true)
     .eq("data", formatarDataISO(dataAgenda));
 
-  const profissionais = profissionaisResp.data || [];
+et profissionais = profissionaisResp.data || [];
   let agendamentos = agendamentosResp.data || [];
   const bloqueios = bloqueiosResp.data || [];
+  if(pode("agenda_ver_propria") && !pode("agenda_ver_todos")){
+
+  const profissionalIdUsuario = usuarioLogado?.profissional_id;
+
+  profissionais = profissionais.filter(p =>
+    String(p.id) === String(profissionalIdUsuario)
+  );
+
+  agendamentos = agendamentos.filter(a =>
+    String(a.profissional_id) === String(profissionalIdUsuario)
+  );
+}
 
   agendamentos = agendamentos.filter(a =>
     a.status !== "Cancelado"
