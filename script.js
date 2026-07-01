@@ -893,7 +893,7 @@ async function carregarAgenda(){
     .eq("ativo", true)
     .eq("data", formatarDataISO(dataAgenda));
 
-et profissionais = profissionaisResp.data || [];
+let profissionais = profissionaisResp.data || [];
   let agendamentos = agendamentosResp.data || [];
   const bloqueios = bloqueiosResp.data || [];
   if(pode("agenda_ver_propria") && !pode("agenda_ver_todos")){
