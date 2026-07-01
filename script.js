@@ -4982,9 +4982,18 @@ async function gerarComissoesPorPeriodo(){
 
   area.innerHTML = "Carregando comissões...";
 
-  const profissionaisResp = await supabaseClient
+  let profissionaisQuery = supabaseClient
     .from("profissionais")
     .select("id,nome");
+
+  if(pode("comissoes_ver_propria") && !pode("comissoes_ver_todas")){
+    profissionaisQuery = profissionaisQuery.eq(
+      "id",
+      usuarioLogado?.profissional_id
+    );
+  }
+
+  const profissionaisResp = await profissionaisQuery;
 
   const mapaProfissionais = {};
 
@@ -4992,7 +5001,7 @@ async function gerarComissoesPorPeriodo(){
     mapaProfissionais[p.id] = p.nome;
   });
 
-  const { data, error } = await supabaseClient
+  let comandasQuery = supabaseClient
     .from("comandas")
     .select(`
       *,
@@ -5010,7 +5019,16 @@ async function gerarComissoesPorPeriodo(){
     .gte("data", inicio)
     .lte("data", fim)
     .in("status", ["Fechada", "Aberta", "Parcial"])
-    .neq("cancelada", true)
+    .neq("cancelada", true);
+
+  if(pode("comissoes_ver_propria") && !pode("comissoes_ver_todas")){
+    comandasQuery = comandasQuery.eq(
+      "profissional_id",
+      usuarioLogado?.profissional_id
+    );
+  }
+
+  const { data, error } = await comandasQuery
     .order("data", { ascending:true });
 
   if(error){
@@ -5028,6 +5046,14 @@ async function gerarComissoesPorPeriodo(){
 
       const profissionalId =
         item.profissional_id || comanda.profissional_id;
+
+      if(
+        pode("comissoes_ver_propria") &&
+        !pode("comissoes_ver_todas") &&
+        String(profissionalId) !== String(usuarioLogado?.profissional_id)
+      ){
+        return;
+      }
 
       const profissional =
         mapaProfissionais[profissionalId] ||
