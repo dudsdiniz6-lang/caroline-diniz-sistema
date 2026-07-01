@@ -557,6 +557,10 @@ async function abrirModalProfissional(id = null){
 }
 
 async function salvarProfissional(){
+  if(!pode("profissionais_editar")){
+  alert("Você não tem permissão para alterar profissionais.");
+  return;
+}
 
   const id = document.getElementById("profissionalId").value;
 
@@ -765,6 +769,10 @@ async function abrirModalServico(id = null){
 }
 
 async function salvarServico(){
+  if(!pode("servicos_editar")){
+  alert("Você não tem permissão para alterar serviços.");
+  return;
+}
 
   const id = document.getElementById("servicoId").value;
 
@@ -2046,6 +2054,10 @@ async function abrirModalPacote(id = null){
   calcularTotalPacote();
 }
 async function salvarPacote(){
+  if(!pode("pacotes_criar")){
+  alert("Você não tem permissão para criar ou editar pacotes.");
+  return;
+}
 
   const id = document.getElementById("pacoteId").value;
 
@@ -4315,6 +4327,10 @@ async function carregarConfiguracoes(){
 }
 
 async function salvarConfiguracoes(){
+  if(!pode("configuracoes_editar")){
+  alert("Você não tem permissão para alterar configurações.");
+  return;
+}
 
   const dias =
     document.getElementById("cfgClientesRiscoDias").value;
