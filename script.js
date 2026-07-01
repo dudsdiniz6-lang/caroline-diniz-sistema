@@ -729,6 +729,16 @@ const busca = buscaOriginal.toLowerCase().trim();
 }
 async function abrirModalServico(id = null){
 
+  if(!id && !pode("servicos_criar")){
+    alert("Você não tem permissão para criar serviços.");
+    return;
+  }
+
+  if(id && !pode("servicos_editar")){
+    alert("Você não tem permissão para editar serviços.");
+    return;
+  }
+
   let servico = null;
 
   if(id){
