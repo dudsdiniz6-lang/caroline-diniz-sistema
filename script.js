@@ -222,6 +222,40 @@ function mostrarTela(nome){
     alert("Você não tem permissão para visualizar o dashboard.");
     return;
   }
+  if(nome === "agenda" && !pode("agenda_visualizar")){
+  alert("Você não tem permissão para acessar agenda.");
+  return;
+}
+
+if(nome === "clientes" && !pode("clientes_visualizar")){
+  alert("Você não tem permissão para acessar clientes.");
+  return;
+}
+
+if(nome === "profissionais" && !pode("profissionais_visualizar")){
+  alert("Você não tem permissão para acessar profissionais.");
+  return;
+}
+
+if(nome === "servicos" && !pode("servicos_visualizar")){
+  alert("Você não tem permissão para acessar serviços.");
+  return;
+}
+
+if(nome === "prontuarios" && !pode("prontuarios_visualizar")){
+  alert("Você não tem permissão para acessar prontuários.");
+  return;
+}
+
+if(nome === "pacotes" && !pode("pacotes_visualizar")){
+  alert("Você não tem permissão para acessar pacotes.");
+  return;
+}
+
+if(nome === "comissoes" && !pode("comissoes_visualizar")){
+  alert("Você não tem permissão para acessar comissões.");
+  return;
+}
 
   if(nome === "caixa" && !pode("caixa_visualizar")){
     alert("Você não tem permissão para acessar caixa.");
