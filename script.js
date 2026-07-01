@@ -1993,6 +1993,16 @@ async function registrarEntradaCaixa(comandaId, formaPagamentoId, valor){
 }
 async function abrirModalPacote(id = null){
 
+  if(!id && !pode("pacotes_criar")){
+    alert("Você não tem permissão para criar pacotes.");
+    return;
+  }
+
+  if(id && !pode("pacotes_editar")){
+    alert("Você não tem permissão para editar pacotes.");
+    return;
+  }
+
   const servicosResp = await supabaseClient
     .from("servicos")
     .select("*")
