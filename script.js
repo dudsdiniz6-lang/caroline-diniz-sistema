@@ -475,36 +475,11 @@ async function carregarProfissionais(){
 
   lista.innerHTML = "";
 
- let queryClientes = supabaseClient
-  .from("clientes")
-  .select("*")
-  .eq("ativo", true);
-
-if(pode("clientes_ver_proprios") && !pode("clientes_ver_todos")){
-
-  const profissionalId = usuarioLogado?.profissional_id;
-
-  const agendamentosResp = await supabaseClient
-    .from("agendamentos")
-    .select("cliente_id")
-    .eq("profissional_id", profissionalId);
-
-  const idsClientes = [
-    ...new Set(
-      (agendamentosResp.data || []).map(a => a.cliente_id)
-    )
-  ];
-
-  if(idsClientes.length === 0){
-    lista.innerHTML = "<div class='card'>Nenhum cliente encontrado.</div>";
-    return;
-  }
-
-  queryClientes = queryClientes.in("id", idsClientes);
-}
-
-const { data, error } = await queryClientes
-  .order("nome");
+  const { data, error } = await supabaseClient
+    .from("profissionais")
+    .select("*")
+    .eq("ativo", true)
+    .order("ordem");
 
   if(error){
     lista.innerHTML = "<div class='card'>Erro ao carregar profissionais.</div>";
@@ -526,16 +501,17 @@ const { data, error } = await queryClientes
 
         <br><br>
 
-        <button class="principal" onclick="abrirModalProfissional(${profissional.id})">
-          Editar
-        </button>
+        ${pode("profissionais_editar") ? `
+          <button class="principal" onclick="abrirModalProfissional(${profissional.id})">
+            Editar
+          </button>
+        ` : ""}
       </div>
     `;
 
   });
 
 }
-
 async function abrirModalProfissional(id = null){
 
   let profissional = null;
@@ -7610,7 +7586,30 @@ async function carregarProntuarios(){
     .order("criado_em", { ascending:false });
 
   const modelos = modelosResp.data || [];
-  const fichas = fichasResp.data || [];
+let fichas = fichasResp.data || [];
+
+
+if(pode("prontuarios_ver_proprios") && !pode("prontuarios_ver_todos")){
+
+  const profissionalId = usuarioLogado?.profissional_id;
+
+  const agendamentosResp = await supabaseClient
+    .from("agendamentos")
+    .select("cliente_id")
+    .eq("profissional_id", profissionalId);
+
+  const idsClientes = [
+    ...new Set(
+      (agendamentosResp.data || []).map(a => a.cliente_id)
+    )
+  ];
+
+  fichas = fichas.filter(ficha =>
+    idsClientes.includes(ficha.cliente_id)
+  );
+}
+
+
 const campoBuscaProntuario = document.getElementById("buscaProntuario");
 
 const buscaOriginalProntuario = campoBuscaProntuario?.value || "";
