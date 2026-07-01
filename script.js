@@ -5090,9 +5090,9 @@ async function gerarComissoesPorPeriodo(){
 
   window.comissoesPeriodoCache = porProfissional;
 
-  const profissionais = Object.keys(porProfissional);
+ const nomesProfissionaisComissao = Object.keys(porProfissional);
 
-  if(profissionais.length === 0){
+if(nomesProfissionaisComissao.length === 0){
     area.innerHTML = "<div class='card'>Nenhuma comissão encontrada no período.</div>";
     return;
   }
@@ -5105,7 +5105,7 @@ async function gerarComissoesPorPeriodo(){
         <span>Comissão total</span>
       </div>
 
-      ${profissionais.map((profissional)=>{
+${nomesProfissionaisComissao.map((profissional)=>{
 
         const dados = porProfissional[profissional];
 
