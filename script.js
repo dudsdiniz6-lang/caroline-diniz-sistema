@@ -104,6 +104,17 @@ function pode(chave){
 
   return permissoesUsuario.includes(chave);
 }
+async function gerarHashSenha(senha){
+  const encoder = new TextEncoder();
+  const data = encoder.encode(senha);
+  const hashBuffer = await crypto.subtle.digest("SHA-256", data);
+  const hashArray = Array.from(new Uint8Array(hashBuffer));
+
+  return hashArray
+    .map(byte => byte.toString(16).padStart(2, "0"))
+    .join("");
+}
+
 async function fazerLogin(){
 
   const usuario = document.getElementById("loginUsuario").value.trim().toLowerCase();
@@ -114,32 +125,50 @@ async function fazerLogin(){
     return;
   }
 
- const busca = document.getElementById("buscaCliente")?.value?.toLowerCase().trim() || "";
-  const { data, error } = await supabaseClient
+  const senhaHash = await gerarHashSenha(senha);
+
+  let { data, error } = await supabaseClient
     .from("usuarios_sistema")
     .select("*")
     .eq("usuario", usuario)
-    .eq("senha", senha)
+    .eq("senha_hash", senhaHash)
     .eq("ativo", true)
     .single();
 
   if(error || !data){
-    alert("Usuário ou senha inválidos.");
-    return;
+
+    const tentativaAntiga = await supabaseClient
+      .from("usuarios_sistema")
+      .select("*")
+      .eq("usuario", usuario)
+      .eq("senha", senha)
+      .eq("ativo", true)
+      .single();
+
+    if(tentativaAntiga.error || !tentativaAntiga.data){
+      alert("Usuário ou senha inválidos.");
+      return;
+    }
+
+    data = tentativaAntiga.data;
+
+    await supabaseClient
+      .from("usuarios_sistema")
+      .update({ senha_hash: senhaHash })
+      .eq("id", data.id);
   }
 
-usuarioLogado = data;
+  usuarioLogado = data;
+  localStorage.setItem("usuarioLogado", JSON.stringify(data));
 
-localStorage.setItem("usuarioLogado", JSON.stringify(data));
+  await carregarPermissoesUsuario();
 
-await carregarPermissoesUsuario();
+  document.getElementById("login-screen").style.display = "none";
+  document.getElementById("app").style.display = "flex";
 
-document.getElementById("login-screen").style.display = "none";
-document.getElementById("app").style.display = "flex";
+  aplicarPermissoesMenu();
 
-aplicarPermissoesMenu();
-
-iniciarSistema();
+  iniciarSistema();
 }
 
 function sairSistema(){
