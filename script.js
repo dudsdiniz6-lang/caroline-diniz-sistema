@@ -1754,7 +1754,6 @@ async function carregarPacotes(){
 async function carregarCaixas(){
 
   const lista = document.getElementById("listaCaixas");
-
   if(!lista) return;
 
   lista.innerHTML = "Carregando caixas...";
@@ -1787,17 +1786,19 @@ async function carregarCaixas(){
         comandas(
           id,
           total,
+          status,
+          cancelada,
           clientes(nome)
         )
       `)
       .eq("caixa_id", caixa.id)
       .neq("cancelada", true);
 
-const movimentacoes = (movs || []).filter(m =>
-  m.cancelada !== true &&
-  m.comandas?.status !== "Cancelada" &&
-  m.comandas?.cancelada !== true
-);
+    const movimentacoes = (movs || []).filter(m =>
+      m.cancelada !== true &&
+      m.comandas?.status !== "Cancelada" &&
+      m.comandas?.cancelada !== true
+    );
 
     const entradasPagamento = movimentacoes.filter(m =>
       m.tipo === "Entrada" &&
@@ -1822,11 +1823,18 @@ const movimentacoes = (movs || []).filter(m =>
     const totalSangrias = sangrias
       .reduce((soma, m)=> soma + Number(m.valor || 0), 0);
 
-    const totalEsperado =
+    const totalDinheiroEntradas = entradasPagamento
+      .filter(m => (m.formas_pagamento?.nome || "").toLowerCase().includes("dinheiro"))
+      .reduce((soma, m)=> soma + Number(m.valor || 0), 0);
+
+    const totalDinheiro =
       Number(caixa.abertura || 0) +
-      totalEntradasPagamento +
+      totalDinheiroEntradas +
       totalReforcos -
       totalSangrias;
+
+    const totalTodasFormas =
+      totalEntradasPagamento + totalReforcos - totalSangrias;
 
     const porForma = {};
 
@@ -1849,172 +1857,137 @@ const movimentacoes = (movs || []).filter(m =>
       });
 
     });
-lista.innerHTML += `
-  <div class="caixa-card">
 
-    <div
-      class="caixa-resumo-topo"
-      onclick="alternarDetalheCaixa(${caixa.id})"
-    >
-      <div>
-        <h3>Caixa ${formatarDataComanda(caixa.data)}</h3>
-        <small>
-          ${caixa.status} • ${caixa.aberto_por || "Usuário não informado"}
-        </small>
-      </div>
+    lista.innerHTML += `
+      <div class="caixa-card">
 
-      <div class="caixa-total">
-        ${dinheiro(totalEsperado)}
-        <small>Total esperado</small>
-      </div>
-    </div>
-<div class="caixa-acoes">
-
-  ${caixa.status === "Aberto" ? `
-
-    ${pode("caixa_reforco") ? `
-      <button class="principal" onclick="abrirReforcoCaixa(${caixa.id})">
-        Reforço
-      </button>
-    ` : ""}
-
-    ${pode("caixa_sangria") ? `
-      <button onclick="abrirSangriaCaixa(${caixa.id})">
-        Sangria
-      </button>
-    ` : ""}
-
-    ${pode("caixa_fechar") ? `
-      <button onclick="abrirFechamentoCaixa(${caixa.id})">
-        Fechar caixa
-      </button>
-    ` : ""}
-
-  ` : ""}
-
-  ${pode("caixa_excluir") ? `
-    <button onclick="excluirCaixa(${caixa.id})">
-      Excluir caixa
-    </button>
-  ` : ""}
-
-</div>
-
-    <div
-      id="detalheCaixa_${caixa.id}"
-      class="caixa-detalhe"
-    >
-
-      <div class="caixa-metricas">
-
-        <div class="caixa-metrica">
-          <small>Abertura</small>
-          <strong>${dinheiro(caixa.abertura || 0)}</strong>
+        <div
+          class="caixa-resumo-topo"
+          onclick="alternarDetalheCaixa(${caixa.id})"
+        >
+          <div>
+            <h3>Caixa ${formatarDataComanda(caixa.data)}</h3>
+            <small>
+              ${caixa.status} • ${caixa.aberto_por || "Usuário não informado"}
+            </small>
+          </div>
         </div>
 
-        <div class="caixa-metrica">
-          <small>Entradas</small>
-          <strong>${dinheiro(totalEntradasPagamento)}</strong>
+        <div class="caixa-acoes">
+
+          ${caixa.status === "Aberto" ? `
+
+            ${pode("caixa_reforco") ? `
+              <button class="principal" onclick="abrirReforcoCaixa(${caixa.id})">
+                Reforço
+              </button>
+            ` : ""}
+
+            ${pode("caixa_sangria") ? `
+              <button onclick="abrirSangriaCaixa(${caixa.id})">
+                Sangria
+              </button>
+            ` : ""}
+
+            ${pode("caixa_fechar") ? `
+              <button onclick="abrirFechamentoCaixa(${caixa.id})">
+                Fechar caixa
+              </button>
+            ` : ""}
+
+          ` : ""}
+
+          ${pode("caixa_excluir") ? `
+            <button onclick="excluirCaixa(${caixa.id})">
+              Excluir caixa
+            </button>
+          ` : ""}
+
         </div>
 
-        <div class="caixa-metrica">
-          <small>Reforços</small>
-          <strong>${dinheiro(totalReforcos)}</strong>
-        </div>
+        <div
+          id="detalheCaixa_${caixa.id}"
+          class="caixa-detalhe"
+        >
 
-        <div class="caixa-metrica">
-          <small>Sangrias</small>
-          <strong>${dinheiro(totalSangrias)}</strong>
-        </div>
+          <h3>Abertura do caixa</h3>
 
-      </div>
-
-${caixa.status === "Fechado" ? `
-        <div class="caixa-linha">
-          <span>Fechamento</span>
-          <strong>${dinheiro(caixa.fechamento || 0)}</strong>
-        </div>
-
-        <div class="caixa-linha">
-          <span>Diferença</span>
-          <strong>${dinheiro(caixa.diferenca || 0)}</strong>
-        </div>
-
-       ${usuarioLogado?.perfil === "dono" || pode("caixa_reabrir") ? `
-          <button onclick="reabrirCaixa(${caixa.id})">
-            Reabrir caixa
-          </button>
-        ` : ""}
-
-      ` : ""}
-
-      <h3>Entradas por forma de pagamento</h3>
-
-      ${Object.keys(porForma).length ? Object.keys(porForma).map(forma=>`
-        <div style="margin-bottom:18px;">
           <div class="caixa-linha">
-            <strong>${forma}</strong>
-            <strong>${dinheiro(porForma[forma].total)}</strong>
+            <span>Valor de abertura</span>
+            <strong>${dinheiro(caixa.abertura || 0)}</strong>
           </div>
 
-          ${porForma[forma].itens.map(item=>`
-            <div class="caixa-linha">
-              <small>${item.cliente}</small>
-              <span>${dinheiro(item.valor)}</span>
+          <h3>Entradas por forma de pagamento</h3>
+
+          ${Object.keys(porForma).length ? Object.keys(porForma).map(forma=>`
+            <div style="margin-bottom:18px;">
+              <div class="caixa-linha">
+                <strong>${forma}</strong>
+                <strong>${dinheiro(porForma[forma].total)}</strong>
+              </div>
+
+              ${porForma[forma].itens.map(item=>`
+                <div class="caixa-linha">
+                  <small>${item.cliente}</small>
+                  <span>${dinheiro(item.valor)}</span>
+                </div>
+              `).join("")}
             </div>
-          `).join("")}
+          `).join("") : "<p>Nenhuma entrada de pagamento registrada.</p>"}
+
+          <h3>Reforço</h3>
+
+          ${reforcos.length ? reforcos.map(m=>`
+            <div class="caixa-linha">
+              <span>${m.descricao || "Reforço de caixa"}</span>
+              <strong>${dinheiro(m.valor)}</strong>
+            </div>
+          `).join("") : "<p>Nenhum reforço registrado.</p>"}
+
+          <h3>Sangria</h3>
+
+          ${sangrias.length ? sangrias.map(m=>`
+            <div class="caixa-linha">
+              <span>${m.descricao || "Sangria de caixa"}</span>
+              <strong>${dinheiro(m.valor)}</strong>
+            </div>
+          `).join("") : "<p>Nenhuma sangria registrada.</p>"}
+
+          <h3>Resumo final</h3>
+
+          <div class="caixa-linha">
+            <span>Total em dinheiro</span>
+            <strong>${dinheiro(totalDinheiro)}</strong>
+          </div>
+
+          <div class="caixa-linha">
+            <span>Total todas as formas de pagamento</span>
+            <strong>${dinheiro(totalTodasFormas)}</strong>
+          </div>
+
+          ${caixa.status === "Fechado" ? `
+            <div class="caixa-linha">
+              <span>Fechamento informado</span>
+              <strong>${dinheiro(caixa.fechamento || 0)}</strong>
+            </div>
+
+            <div class="caixa-linha">
+              <span>Diferença</span>
+              <strong>${dinheiro(caixa.diferenca || 0)}</strong>
+            </div>
+
+            ${usuarioLogado?.perfil === "dono" || pode("caixa_reabrir") ? `
+              <button onclick="reabrirCaixa(${caixa.id})">
+                Reabrir caixa
+              </button>
+            ` : ""}
+          ` : ""}
+
         </div>
-      `).join("") : "<p>Nenhuma entrada de pagamento registrada.</p>"}
 
-      <h3>Reforços</h3>
-
-      ${reforcos.length ? reforcos.map(m=>`
-        <div class="caixa-linha">
-          <span>${m.descricao || "Reforço de caixa"}</span>
-          <strong>${dinheiro(m.valor)}</strong>
-        </div>
-      `).join("") : "<p>Nenhum reforço registrado.</p>"}
-
-      <h3>Sangrias</h3>
-
-      ${sangrias.length ? sangrias.map(m=>`
-        <div class="caixa-linha">
-          <span>${m.descricao || "Sangria de caixa"}</span>
-          <strong>${dinheiro(m.valor)}</strong>
-        </div>
-      `).join("") : "<p>Nenhuma sangria registrada.</p>"}
-
-      <h3>Resumo final</h3>
-
-      ${Object.keys(porForma).map(forma=>`
-        <div class="caixa-linha">
-          <span>${forma}</span>
-          <strong>${dinheiro(porForma[forma].total)}</strong>
-        </div>
-      `).join("")}
-
-      <div class="caixa-linha">
-        <span>Reforços</span>
-        <strong>${dinheiro(totalReforcos)}</strong>
       </div>
-
-      <div class="caixa-linha">
-        <span>Sangrias</span>
-        <strong>${dinheiro(totalSangrias)}</strong>
-      </div>
-
-      <div class="caixa-linha">
-        <strong>Total esperado</strong>
-        <strong>${dinheiro(totalEsperado)}</strong>
-      </div>
-
-    </div>
-
-  </div>
-`;
-
+    `;
   }
-
 }
 
 
