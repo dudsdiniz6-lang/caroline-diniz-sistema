@@ -4495,110 +4495,201 @@ async function carregarConfiguracoes(){
 
   if(!area) return;
 
-  const { data } = await supabaseClient
-    .from("configuracoes_sistema")
-    .select("*");
-
-  const diasRisco =
-    data?.find(c => c.chave === "clientes_em_risco_dias")
-      ?.valor || "60";
-
-  const horaInicio =
-    data?.find(c => c.chave === "agenda_hora_inicio")
-      ?.valor || "07:00";
-
-  const horaFim =
-    data?.find(c => c.chave === "agenda_hora_fim")
-      ?.valor || "20:00";
-
-  const alturaBloco =
-    data?.find(c => c.chave === "agenda_altura_bloco")
-      ?.valor || "48";
-
   area.innerHTML = `
+    <div class="config-layout">
 
-    <div class="card">
+      <div class="config-menu-interno">
+        <button class="principal" onclick="abrirAbaConfiguracao('geral')">
+          Geral
+        </button>
 
-      <h3>Clientes em risco</h3>
+        <button onclick="abrirAbaConfiguracao('formas')">
+          Formas de pagamento
+        </button>
 
-      <label>
-        Considerar cliente em risco após quantos dias sem retorno?
-      </label>
+        <button onclick="abrirAbaConfiguracao('politicas')">
+          Políticas do Sistema
+        </button>
+      </div>
 
-      <input
-        id="cfgClientesRiscoDias"
-        type="number"
-        value="${diasRisco}"
-      >
-
-    </div>
-
-    <div class="card">
-
-      <h3>Agenda</h3>
-
-      <label>Horário inicial exibido</label>
-      <input
-        id="cfgAgendaHoraInicio"
-        type="time"
-        value="${horaInicio}"
-      >
-
-      <label>Horário final exibido</label>
-      <input
-        id="cfgAgendaHoraFim"
-        type="time"
-        value="${horaFim}"
-      >
-
-      <label>Altura visual dos horários</label>
-      <input
-        id="cfgAgendaAlturaBloco"
-        type="number"
-        value="${alturaBloco}"
-      >
+      <div id="conteudoConfiguracoes" class="config-conteudo">
+        Carregando...
+      </div>
 
     </div>
+  `;
 
+  abrirAbaConfiguracao("geral");
+}
+async function carregarConfiguracoesFormasPagamento(){
+
+  const conteudo = document.getElementById("conteudoConfiguracoes");
+
+  conteudo.innerHTML = `
     <div class="card">
+
+      <h3>Formas de pagamento</h3>
+
+      <div id="listaFormasPagamentoConfig">
+        Carregando formas...
+      </div>
+
+      <br>
+
+      <label>Nova forma de pagamento</label>
+      <input
+        id="novaFormaPagamentoNome"
+        placeholder="Ex: Voucher, Transferência, Link de pagamento"
+      >
 
       <button
         class="principal"
-        onclick="salvarConfiguracoes()"
+        onclick="criarFormaPagamentoConfig()"
       >
-        Salvar
+        Adicionar forma
       </button>
 
     </div>
-<div class="card">
-
-  <h3>Formas de pagamento</h3>
-
-  <div id="listaFormasPagamentoConfig">
-    Carregando formas...
-  </div>
-
-  <br>
-
-  <label>Nova forma de pagamento</label>
-  <input
-    id="novaFormaPagamentoNome"
-    placeholder="Ex: Voucher, Transferência, Link de pagamento"
-  >
-
-  <button
-    class="principal"
-    onclick="criarFormaPagamentoConfig()"
-  >
-    Adicionar forma
-  </button>
-
-</div>
   `;
+
   carregarFormasPagamentoConfig();
-
 }
+async function carregarPoliticasSistemaTela(){
 
+  const conteudo = document.getElementById("conteudoConfiguracoes");
+
+  conteudo.innerHTML = `
+    <div class="card">
+      <h3>Políticas do Sistema</h3>
+      <div id="listaPoliticasSistema">Carregando políticas...</div>
+    </div>
+  `;
+
+  const lista = document.getElementById("listaPoliticasSistema");
+
+  const { data, error } = await supabaseClient
+    .from("politicas_sistema")
+    .select("*")
+    .eq("ativo", true)
+    .order("modulo", { ascending:true })
+    .order("nome", { ascending:true });
+
+  if(error){
+    lista.innerHTML = "Erro ao carregar políticas.";
+    return;
+  }
+
+  if(!data || data.length === 0){
+    lista.innerHTML = "Nenhuma política cadastrada.";
+    return;
+  }
+
+  const grupos = {};
+
+  data.forEach(p => {
+    if(!grupos[p.modulo]) grupos[p.modulo] = [];
+    grupos[p.modulo].push(p);
+  });
+
+  lista.innerHTML = Object.keys(grupos).map(modulo => `
+    <div class="card">
+      <h3>${modulo.toUpperCase()}</h3>
+
+      ${grupos[modulo].map(p => `
+        <div class="caixa-linha">
+          <div>
+            <strong>${p.nome}</strong><br>
+            <small>${p.descricao || ""}</small>
+          </div>
+
+          ${p.tipo === "boolean" ? `
+            <input
+              type="checkbox"
+              ${p.valor_boolean ? "checked" : ""}
+              onchange="salvarPoliticaBoolean(${p.id}, this.checked)"
+            >
+          ` : ""}
+
+          ${p.tipo === "numero" ? `
+            <input
+              type="number"
+              value="${p.valor_numero || 0}"
+              onchange="salvarPoliticaNumero(${p.id}, this.value)"
+            >
+          ` : ""}
+
+          ${p.tipo === "texto" ? `
+            <input
+              type="text"
+              value="${p.valor_texto || ""}"
+              onchange="salvarPoliticaTexto(${p.id}, this.value)"
+            >
+          ` : ""}
+        </div>
+      `).join("")}
+
+    </div>
+  `).join("");
+}
+async function salvarPoliticaBoolean(id, valor){
+
+  const { error } = await supabaseClient
+    .from("politicas_sistema")
+    .update({ valor_boolean: valor })
+    .eq("id", id);
+
+  if(error){
+    alert("Erro ao salvar política.");
+    return;
+  }
+
+  await carregarPoliticasSistema();
+}
+async function salvarPoliticaNumero(id, valor){
+
+  const { error } = await supabaseClient
+    .from("politicas_sistema")
+    .update({ valor_numero: Number(valor || 0) })
+    .eq("id", id);
+
+  if(error){
+    alert("Erro ao salvar política.");
+    return;
+  }
+
+  await carregarPoliticasSistema();
+}
+async function salvarPoliticaTexto(id, valor){
+
+  const { error } = await supabaseClient
+    .from("politicas_sistema")
+    .update({ valor_texto: valor })
+    .eq("id", id);
+
+  if(error){
+    alert("Erro ao salvar política.");
+    return;
+  }
+
+  await carregarPoliticasSistema();
+}
+async function abrirAbaConfiguracao(aba){
+
+  const conteudo = document.getElementById("conteudoConfiguracoes");
+  if(!conteudo) return;
+
+  if(aba === "geral"){
+    await carregarConfiguracoesGerais();
+  }
+
+  if(aba === "formas"){
+    await carregarConfiguracoesFormasPagamento();
+  }
+
+  if(aba === "politicas"){
+    await carregarPoliticasSistemaTela();
+  }
+}
 async function salvarConfiguracoes(){
   if(!pode("configuracoes_editar")){
   alert("Você não tem permissão para alterar configurações.");
