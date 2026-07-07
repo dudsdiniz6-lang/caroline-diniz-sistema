@@ -2825,13 +2825,16 @@ async function salvarAgendamento(){
     alert("Selecione um serviço.");
     return;
   }
+  if(politica("agenda.bloquear_conflito_profissional", true)){
+
   const temConflito = await existeConflitoAgendamento(dados, id || null);
 
-if(temConflito){
-  alert("Este horário já está ocupado para este profissional. Escolha outro horário.");
-  return;
-}
+  if(temConflito){
+    alert("Este horário já está ocupado para este profissional. Escolha outro horário.");
+    return;
+  }
 
+}
   let resposta;
 
   if(id){
