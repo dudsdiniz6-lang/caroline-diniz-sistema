@@ -6454,6 +6454,23 @@ async function salvarMovimentacaoCaixa(caixaId, tipo){
 
   alert("Movimentação registrada.");
 }
+async function existemComandasAbertasNoDia(dataCaixa){
+
+  const { data, error } = await supabaseClient
+    .from("comandas")
+    .select("id, clientes(nome)")
+    .eq("data", dataCaixa)
+    .eq("status", "Aberta")
+    .neq("cancelada", true);
+
+  if(error){
+    console.error("Erro ao verificar comandas abertas:", error);
+    alert("Erro ao verificar comandas abertas.");
+    return true;
+  }
+
+  return data || [];
+}
 async function abrirFechamentoCaixa(caixaId){
 
   if(!pode("caixa_fechar")){
@@ -6466,6 +6483,25 @@ async function abrirFechamentoCaixa(caixaId){
     .select("*")
     .eq("id", caixaId)
     .single();
+  if(politica("caixa.bloquear_fechamento_comanda_aberta", true)){
+
+  const comandasAbertas = await existemComandasAbertasNoDia(caixa.data);
+
+  if(comandasAbertas.length > 0){
+
+    const nomes = comandasAbertas
+      .map(c => c.clientes?.nome || `Comanda #${c.id}`)
+      .join("\n");
+
+    alert(
+      `Não é possível fechar o caixa.\n\n` +
+      `Existem ${comandasAbertas.length} comandas abertas neste dia:\n\n` +
+      nomes
+    );
+
+    return;
+  }
+}
 
   const { data: movs } = await supabaseClient
     .from("caixa_movimentacoes")
