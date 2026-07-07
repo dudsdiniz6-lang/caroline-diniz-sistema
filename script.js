@@ -2909,11 +2909,15 @@ const dadosRepeticao = {
   data: formatarDataISO(dataAtual)
 };
 
-const conflitoRepeticao = await existeConflitoAgendamento(dadosRepeticao);
+if(politica("agenda.bloquear_conflito_profissional", true)){
 
-if(conflitoRepeticao){
-  alert(`Conflito encontrado no dia ${formatarDataComanda(dadosRepeticao.data)} às ${dadosRepeticao.horario}. A repetição foi bloqueada.`);
-  return;
+  const conflitoRepeticao = await existeConflitoAgendamento(dadosRepeticao);
+
+  if(conflitoRepeticao){
+    alert(`Conflito encontrado no dia ${formatarDataComanda(dadosRepeticao.data)} às ${dadosRepeticao.horario}. A repetição foi bloqueada.`);
+    return;
+  }
+
 }
         agendamentosParaInserir.push({
           ...dados,
