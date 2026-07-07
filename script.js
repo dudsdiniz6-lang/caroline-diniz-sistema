@@ -2058,17 +2058,18 @@ async function buscarCaixaAberto(){
     .from("caixas")
     .select("*")
     .eq("status", "Aberto")
+    .eq("aberto_por_usuario_id", usuarioLogado?.id)
     .order("id", { ascending:false })
     .limit(1)
     .maybeSingle();
 
   if(error){
+    console.error("Erro ao buscar caixa aberto:", error);
     return null;
   }
 
   return data;
 }
-
 async function registrarEntradaCaixa(comandaId, formaPagamentoId, valor){
 
   const caixa = await buscarCaixaAberto();
@@ -7436,13 +7437,14 @@ async function confirmarAberturaCaixa(){
 
   const { error } = await supabaseClient
     .from("caixas")
-    .insert([{
-      unidade_id: unidadeAtualId,
-      data: formatarDataISO(new Date()),
-      abertura: valor,
-      status: "Aberto",
-      aberto_por: usuarioLogado?.nome || usuarioLogado?.usuario || "Usuário"
-    }]);
+   .insert([{
+  unidade_id: unidadeAtualId,
+  data: formatarDataISO(new Date()),
+  abertura: valor,
+  status: "Aberto",
+  aberto_por: usuarioLogado?.nome || usuarioLogado?.usuario || "Usuário",
+  aberto_por_usuario_id: usuarioLogado?.id
+}]);
 
   if(error){
     alert("Erro ao abrir caixa: " + error.message);
