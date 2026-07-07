@@ -401,39 +401,6 @@ function politica(chave, valorPadrao = false){
 
   return valorPadrao;
 }
-let politicasSistema = {};
-
-async function carregarPoliticasSistema(){
-
-  const { data, error } = await supabaseClient
-    .from("politicas_sistema")
-    .select("*")
-    .eq("ativo", true);
-
-  if(error){
-    console.error("Erro ao carregar políticas:", error);
-    politicasSistema = {};
-    return;
-  }
-
-  politicasSistema = {};
-
-  (data || []).forEach(p => {
-    const chaveCompleta = `${p.modulo}.${p.chave}`;
-
-    if(p.tipo === "boolean"){
-      politicasSistema[chaveCompleta] = p.valor_boolean;
-    }
-
-    if(p.tipo === "numero"){
-      politicasSistema[chaveCompleta] = Number(p.valor_numero || 0);
-    }
-
-    if(p.tipo === "texto"){
-      politicasSistema[chaveCompleta] = p.valor_texto || "";
-    }
-  });
-}
 
 function politica(chave, valorPadrao = false){
   if(Object.prototype.hasOwnProperty.call(politicasSistema, chave)){
