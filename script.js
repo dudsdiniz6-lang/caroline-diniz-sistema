@@ -2678,7 +2678,50 @@ function calcularTotalAgendamento(){
 
   document.getElementById("agTotal").value = total.toFixed(2);
 }
+function horarioParaMinutos(horario){
+  const [h, m] = horario.split(":").map(Number);
+  return (h * 60) + m;
+}
 
+function horariosConflitam(inicioA, duracaoA, inicioB, duracaoB){
+  const startA = horarioParaMinutos(inicioA);
+  const endA = startA + Number(duracaoA || 30);
+
+  const startB = horarioParaMinutos(inicioB);
+  const endB = startB + Number(duracaoB || 30);
+
+  return startA < endB && endA > startB;
+}
+
+async function existeConflitoAgendamento(dados, idIgnorar = null){
+
+  const { data, error } = await supabaseClient
+    .from("agendamentos")
+    .select("id, data, horario, duracao, status, cliente_id")
+    .eq("unidade_id", dados.unidade_id)
+    .eq("profissional_id", dados.profissional_id)
+    .eq("data", dados.data)
+    .neq("status", "Cancelado");
+
+  if(error){
+    console.error("Erro ao verificar conflito de agenda:", error);
+    alert("Erro ao verificar disponibilidade do horário.");
+    return true;
+  }
+
+  const agendamentos = data || [];
+
+  return agendamentos.some(ag => {
+    if(idIgnorar && Number(ag.id) === Number(idIgnorar)) return false;
+
+    return horariosConflitam(
+      dados.horario,
+      dados.duracao,
+      ag.horario,
+      ag.duracao
+    );
+  });
+}
 async function salvarAgendamento(){
 
   const id = document.getElementById("agendamentoId").value;
@@ -2731,6 +2774,12 @@ async function salvarAgendamento(){
     alert("Selecione um serviço.");
     return;
   }
+  const temConflito = await existeConflitoAgendamento(dados, id || null);
+
+if(temConflito){
+  alert("Este horário já está ocupado para este profissional. Escolha outro horário.");
+  return;
+}
 
   let resposta;
 
@@ -2801,7 +2850,17 @@ async function salvarAgendamento(){
       let dataAtual = new Date(inicio);
 
       while(dataAtual <= fim){
+const dadosRepeticao = {
+  ...dados,
+  data: formatarDataISO(dataAtual)
+};
 
+const conflitoRepeticao = await existeConflitoAgendamento(dadosRepeticao);
+
+if(conflitoRepeticao){
+  alert(`Conflito encontrado no dia ${formatarDataComanda(dadosRepeticao.data)} às ${dadosRepeticao.horario}. A repetição foi bloqueada.`);
+  return;
+}
         agendamentosParaInserir.push({
           ...dados,
           data: formatarDataISO(dataAtual),
