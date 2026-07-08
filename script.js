@@ -6325,9 +6325,7 @@ async function salvarFaturamentoClienteDiaPago(){
     'button[onclick="salvarFaturamentoClienteDiaPago()"]'
   );
 
-  if(botaoConfirmar?.dataset.salvando === "true"){
-    return;
-  }
+  if(botaoConfirmar?.dataset.salvando === "true") return;
 
   if(botaoConfirmar){
     botaoConfirmar.dataset.salvando = "true";
@@ -6335,22 +6333,16 @@ async function salvarFaturamentoClienteDiaPago(){
     botaoConfirmar.innerText = "Salvando...";
   }
 
-  const tipoRecebimento =
-    document.getElementById("fatTipoRecebimento").value;
-
-  const itensPagos =
-    window.itensFaturamentoClienteSelecionados || [];
-
-  const totalReceber =
-    Number(window.totalFaturamentoClienteSelecionado || 0);
+  const tipoRecebimento = document.getElementById("fatTipoRecebimento").value;
+  const itensPagos = window.itensFaturamentoClienteSelecionados || [];
+  const totalReceber = Number(window.totalFaturamentoClienteSelecionado || 0);
 
   if(itensPagos.length === 0){
     alert("Nenhum serviço selecionado para faturar.");
     return;
   }
 
-  const idsAgendamentos =
-    itensPagos.map(item => item.id);
+  const idsAgendamentos = itensPagos.map(item => item.id);
 
   const jaFaturadosResp = await supabaseClient
     .from("comandas")
@@ -6360,13 +6352,11 @@ async function salvarFaturamentoClienteDiaPago(){
 
   if((jaFaturadosResp.data || []).length > 0){
     alert("Um ou mais serviços selecionados já foram faturados. Atualize a agenda e tente novamente.");
-
     if(botaoConfirmar){
       botaoConfirmar.dataset.salvando = "false";
       botaoConfirmar.disabled = false;
       botaoConfirmar.innerText = "Confirmar faturamento";
     }
-
     return;
   }
 
@@ -6382,13 +6372,11 @@ async function salvarFaturamentoClienteDiaPago(){
 
     if(pagamentosInformados.length === 0){
       alert("Informe pelo menos uma forma de pagamento.");
-
       if(botaoConfirmar){
         botaoConfirmar.dataset.salvando = "false";
         botaoConfirmar.disabled = false;
         botaoConfirmar.innerText = "Confirmar faturamento";
       }
-
       return;
     }
 
@@ -6397,16 +6385,13 @@ async function salvarFaturamentoClienteDiaPago(){
 
     if(Number(totalPagamentos.toFixed(2)) !== Number(totalReceber.toFixed(2))){
       alert("A soma dos pagamentos precisa ser igual ao total selecionado.");
-
       if(botaoConfirmar){
         botaoConfirmar.dataset.salvando = "false";
         botaoConfirmar.disabled = false;
         botaoConfirmar.innerText = "Confirmar faturamento";
       }
-
       return;
     }
-
   }
 
   const primeiroItem = itensPagos[0];
@@ -6434,9 +6419,7 @@ async function salvarFaturamentoClienteDiaPago(){
   ];
 
   const profissionalPrincipal =
-    profissionaisUnicos.length === 1
-      ? profissionaisUnicos[0]
-      : null;
+    profissionaisUnicos.length === 1 ? profissionaisUnicos[0] : null;
 
   const comandaResp = await supabaseClient
     .from("comandas")
@@ -6450,7 +6433,7 @@ async function salvarFaturamentoClienteDiaPago(){
       subtotal: itensPagos.reduce((soma, item)=> soma + Number(item.valor || 0), 0),
       desconto: itensPagos.reduce((soma, item)=> soma + Number(item.desconto || 0), 0),
       total: totalReceber,
-      status: tipoRecebimento === "receber_agora" ? "Fechada" : "Aberta",
+      status: tipoRecebimento === "receber_agora" ? "Fechada" : "A Receber",
       cancelada: false
     }])
     .select()
@@ -6473,16 +6456,15 @@ async function salvarFaturamentoClienteDiaPago(){
       item.servicos?.comissao_padrao || 0
     );
 
-itensComanda.push({
-  comanda_id: comanda.id,
-  servico_id: item.servico_id,
-  agendamento_id: item.id,
-  profissional_id: item.profissional_id,
-  descricao: item.servicos?.nome || "Serviço",
-  valor: item.total,
-  comissao_percentual: percentualComissao
-});
-
+    itensComanda.push({
+      comanda_id: comanda.id,
+      servico_id: item.servico_id,
+      agendamento_id: item.id,
+      profissional_id: item.profissional_id,
+      descricao: item.servicos?.nome || "Serviço",
+      valor: item.total,
+      comissao_percentual: percentualComissao
+    });
   }
 
   const itensResp = await supabaseClient
@@ -6507,52 +6489,87 @@ itensComanda.push({
           data: primeiroItem.data
         }]);
 
-      if(pagamento.formaNome !== "Crédito da Cliente"){
+      await supabaseClient
+        .from("financeiro_lancamentos")
+        .insert([{
+          unidade_id: unidadeAtualId,
+          tipo: "RECEBIMENTO",
+          origem: "COMANDA",
+          origem_id: comanda.id,
+          cliente_id: primeiroItem.cliente_id,
+          profissional_id: profissionalPrincipal,
+          forma_pagamento_id: pagamento.formaPagamentoId,
+          valor: pagamento.valor,
+          data: new Date().toISOString(),
+          usuario_id: usuarioLogado?.id || null,
+          status: "ATIVO",
+          observacao: "Recebimento de faturamento"
+        }]);
 
+      if(pagamento.formaNome !== "Crédito da Cliente"){
         await registrarEntradaCaixa(
           comanda.id,
           pagamento.formaPagamentoId,
           pagamento.valor
         );
-
       }
-
     }
 
+  }else{
+
+    await supabaseClient
+      .from("financeiro_lancamentos")
+      .insert([{
+        unidade_id: unidadeAtualId,
+        tipo: "PENDENCIA",
+        origem: "COMANDA",
+        origem_id: comanda.id,
+        cliente_id: primeiroItem.cliente_id,
+        profissional_id: profissionalPrincipal,
+        valor: totalReceber,
+        data: new Date().toISOString(),
+        usuario_id: usuarioLogado?.id || null,
+        status: "ATIVO",
+        observacao: "Faturamento lançado como A Receber"
+      }]);
   }
 
-await supabaseClient
-  .from("agendamentos")
-  .update({
-    status: "Finalizado"
-  })
-  .in("id", idsAgendamentos);
-await registrarHistoricoOperacao(
-  "faturamento_cliente",
-  String(comanda.id),
-  "Cliente faturada",
-  {
-    comanda_id: comanda.id,
-    faturamento_grupo_id: grupo.id,
-    cliente_id: primeiroItem.cliente_id,
-    total: totalReceber,
-    tipo_recebimento: tipoRecebimento,
-    agendamentos: idsAgendamentos,
-    itens: itensComanda.map(item => ({
-      servico_id: item.servico_id,
-      profissional_id: item.profissional_id,
-      valor: item.valor,
-      comissao_percentual: item.comissao_percentual
-    })),
-    pagamentos: pagamentosInformados.map(p => ({
-      forma_pagamento_id: p.formaPagamentoId,
-      forma: p.formaNome,
-      valor: p.valor
-    }))
-  }
-);
+  await supabaseClient
+    .from("agendamentos")
+    .update({
+      status: "Finalizado"
+    })
+    .in("id", idsAgendamentos);
+
+  await registrarHistoricoOperacao(
+    "faturamento_cliente",
+    String(comanda.id),
+    "Cliente faturada",
+    {
+      comanda_id: comanda.id,
+      faturamento_grupo_id: grupo.id,
+      cliente_id: primeiroItem.cliente_id,
+      total: totalReceber,
+      tipo_recebimento: tipoRecebimento,
+      agendamentos: idsAgendamentos,
+      itens: itensComanda.map(item => ({
+        servico_id: item.servico_id,
+        profissional_id: item.profissional_id,
+        valor: item.valor,
+        comissao_percentual: item.comissao_percentual
+      })),
+      pagamentos: pagamentosInformados.map(p => ({
+        forma_pagamento_id: p.formaPagamentoId,
+        forma: p.formaNome,
+        valor: p.valor
+      }))
+    }
+  );
+
   fecharModal();
   carregarAgenda();
+  carregarComandas();
+  carregarPendenciasFinanceiras();
 
   alert("Faturamento concluído com sucesso.");
 }
