@@ -1153,3 +1153,14 @@ textarea{
 .permissao-item input{
   width:auto;
 }
+.bolinha-pendencia-agenda{
+  position:absolute;
+  top:6px;
+  right:6px;
+  width:11px;
+  height:11px;
+  border-radius:50%;
+  background:#b00020;
+  border:2px solid #fff;
+  box-shadow:0 0 0 1px rgba(0,0,0,.15);
+}
