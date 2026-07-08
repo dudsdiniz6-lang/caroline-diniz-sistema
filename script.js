@@ -4647,17 +4647,25 @@ async function abrirAbaFinanceiro(aba){
 
   if(aba === "pendencias"){
 
-    area.innerHTML = `
-      <h2>Pendências Financeiras</h2>
+  area.innerHTML = `
+    <h2>Pendências Financeiras</h2>
 
-      <div id="listaPendencias" class="cards">
-        Carregando...
-      </div>
-    `;
+    <input
+      id="buscaPendenciaCliente"
+      placeholder="Pesquisar cliente..."
+      oninput="carregarPendenciasFinanceiras()"
+    >
 
-    carregarPendenciasFinanceiras();
-    return;
-  }
+    <br><br>
+
+    <div id="listaPendencias" class="cards">
+      Carregando...
+    </div>
+  `;
+
+  carregarPendenciasFinanceiras();
+  return;
+}
 
   if(aba === "creditos"){
 
@@ -9667,8 +9675,9 @@ function aplicarPermissoesMenu(){
 async function carregarPendenciasFinanceiras(){
 
   const lista = document.getElementById("listaPendencias");
-
   if(!lista) return;
+
+  const busca = document.getElementById("buscaPendenciaCliente")?.value?.toLowerCase().trim() || "";
 
   lista.innerHTML = "Carregando...";
 
@@ -9680,45 +9689,264 @@ async function carregarPendenciasFinanceiras(){
     .order("data",{ascending:true});
 
   if(error){
-    console.error("Erro pendências:", error);
     lista.innerHTML = "Erro ao carregar pendências.";
     return;
   }
 
   if(!data || data.length === 0){
-    lista.innerHTML = `
-      <div class="card">
-        Nenhuma pendência financeira.
-      </div>
-    `;
+    lista.innerHTML = `<div class="card">Nenhuma pendência financeira.</div>`;
     return;
   }
 
+  const clientesIds = [...new Set(data.map(p => p.cliente_id).filter(Boolean))];
+
+  const clientesResp = await supabaseClient
+    .from("clientes")
+    .select("id,nome")
+    .in("id", clientesIds);
+
+  const clientes = clientesResp.data || [];
+
+  const pendencias = data.map(p => ({
+    ...p,
+    clienteNome: clientes.find(c => c.id === p.cliente_id)?.nome || "Cliente não informado"
+  })).filter(p =>
+    !busca || p.clienteNome.toLowerCase().includes(busca)
+  );
+
+  if(pendencias.length === 0){
+    lista.innerHTML = `<div class="card">Nenhuma pendência encontrada.</div>`;
+    return;
+  }
+
+  const porCliente = {};
+
+  pendencias.forEach(p => {
+    if(!porCliente[p.cliente_id]){
+      porCliente[p.cliente_id] = {
+        nome: p.clienteNome,
+        total: 0,
+        itens: []
+      };
+    }
+
+    porCliente[p.cliente_id].total += Number(p.valor || 0);
+    porCliente[p.cliente_id].itens.push(p);
+  });
+
   lista.innerHTML = "";
 
-  data.forEach(item=>{
+  Object.keys(porCliente).forEach(clienteId => {
+    const grupo = porCliente[clienteId];
 
     lista.innerHTML += `
       <div class="card">
 
-        <h3>Cliente ID: ${item.cliente_id || "Não informado"}</h3>
+        <h3>${grupo.nome}</h3>
 
         <p>
-          Valor:
-          <strong>${dinheiro(item.valor)}</strong>
+          Total em aberto:
+          <strong>${dinheiro(grupo.total)}</strong>
         </p>
 
         <p>
-          Data:
-          ${formatarDataComanda(item.data)}
+          Pendências:
+          ${grupo.itens.length}
         </p>
 
-        <button class="principal">
+        <button class="principal" onclick="abrirReceberPendenciasCliente(${clienteId})">
           Receber
         </button>
 
       </div>
     `;
-
   });
+}
+async function abrirReceberPendenciasCliente(clienteId){
+
+  const { data: cliente } = await supabaseClient
+    .from("clientes")
+    .select("*")
+    .eq("id", clienteId)
+    .single();
+
+  const { data: pendencias, error } = await supabaseClient
+    .from("financeiro_lancamentos")
+    .select("*")
+    .eq("cliente_id", clienteId)
+    .eq("tipo", "PENDENCIA")
+    .eq("status", "ATIVO")
+    .order("data", { ascending:true });
+
+  if(error || !pendencias || pendencias.length === 0){
+    alert("Nenhuma pendência encontrada.");
+    return;
+  }
+
+  const formasResp = await supabaseClient
+    .from("formas_pagamento")
+    .select("*")
+    .eq("ativo", true)
+    .order("nome");
+
+  const formas = formasResp.data || [];
+
+  const totalAberto = pendencias.reduce((soma, p)=> soma + Number(p.valor || 0), 0);
+
+  abrirModal(`
+    <h2>Receber pendências</h2>
+
+    <p><strong>Cliente:</strong> ${cliente?.nome || "-"}</p>
+    <p><strong>Total em aberto:</strong> ${dinheiro(totalAberto)}</p>
+
+    <hr>
+
+    <h3>Resumo do que deve</h3>
+
+    ${pendencias.map(p => `
+      <div class="caixa-linha">
+        <span>
+          ${formatarDataComanda(p.data)}
+          <br>
+          <small>${p.observacao || "Pendência financeira"}</small>
+        </span>
+        <strong>${dinheiro(p.valor)}</strong>
+      </div>
+    `).join("")}
+
+    <hr>
+
+    <label>Forma de pagamento</label>
+    <select id="pendenciaFormaPagamento">
+      <option value="">Selecione</option>
+      ${formas.map(f => `
+        <option value="${f.id}" data-nome="${f.nome}">
+          ${f.nome}
+        </option>
+      `).join("")}
+    </select>
+
+    <label>Valor pago agora</label>
+    <input
+      id="pendenciaValorPago"
+      type="number"
+      step="0.01"
+      value="${totalAberto}"
+    >
+
+    <button class="principal" onclick="confirmarRecebimentoPendenciasCliente(${clienteId})">
+      Confirmar recebimento
+    </button>
+
+    <button onclick="fecharModal()">
+      Cancelar
+    </button>
+  `);
+}
+async function confirmarRecebimentoPendenciasCliente(clienteId){
+
+  const formaPagamentoId = Number(document.getElementById("pendenciaFormaPagamento").value);
+  let valorPago = Number(document.getElementById("pendenciaValorPago").value || 0);
+
+  if(!formaPagamentoId){
+    alert("Selecione a forma de pagamento.");
+    return;
+  }
+
+  if(valorPago <= 0){
+    alert("Informe um valor válido.");
+    return;
+  }
+
+  const { data: pendencias, error } = await supabaseClient
+    .from("financeiro_lancamentos")
+    .select("*")
+    .eq("cliente_id", clienteId)
+    .eq("tipo", "PENDENCIA")
+    .eq("status", "ATIVO")
+    .order("data", { ascending:true });
+
+  if(error || !pendencias || pendencias.length === 0){
+    alert("Nenhuma pendência encontrada.");
+    return;
+  }
+
+  const totalAberto = pendencias.reduce((soma, p)=> soma + Number(p.valor || 0), 0);
+
+  if(valorPago > totalAberto){
+    alert("O valor pago não pode ser maior que o total em aberto.");
+    return;
+  }
+
+  await supabaseClient
+    .from("financeiro_lancamentos")
+    .insert([{
+      unidade_id: unidadeAtualId,
+      tipo: "RECEBIMENTO",
+      origem: "PENDENCIA_CLIENTE",
+      origem_id: null,
+      cliente_id: clienteId,
+      forma_pagamento_id: formaPagamentoId,
+      valor: valorPago,
+      data: new Date().toISOString(),
+      usuario_id: usuarioLogado?.id || null,
+      status: "ATIVO",
+      observacao: "Recebimento de pendências financeiras"
+    }]);
+
+  let restante = valorPago;
+
+  for(const p of pendencias){
+
+    if(restante <= 0) break;
+
+    const valorPendencia = Number(p.valor || 0);
+    const valorBaixado = Math.min(restante, valorPendencia);
+    const novoSaldo = valorPendencia - valorBaixado;
+
+    if(p.origem === "COMANDA" && p.origem_id){
+      await registrarEntradaCaixa(
+        p.origem_id,
+        formaPagamentoId,
+        valorBaixado
+      );
+    }
+
+    if(novoSaldo <= 0){
+
+      await supabaseClient
+        .from("financeiro_lancamentos")
+        .update({
+          status: "QUITADO"
+        })
+        .eq("id", p.id);
+
+      if(p.origem === "COMANDA" && p.origem_id){
+        await supabaseClient
+          .from("comandas")
+          .update({ status: "Fechada" })
+          .eq("id", p.origem_id);
+      }
+
+    }else{
+
+      await supabaseClient
+        .from("financeiro_lancamentos")
+        .update({
+          valor: novoSaldo,
+          observacao: (p.observacao || "") + ` | Parcial recebido: ${dinheiro(valorBaixado)}`
+        })
+        .eq("id", p.id);
+
+    }
+
+    restante -= valorBaixado;
+  }
+
+  fecharModal();
+  carregarPendenciasFinanceiras();
+  carregarComandas();
+  carregarCaixas();
+
+  alert("Recebimento registrado com sucesso.");
 }
