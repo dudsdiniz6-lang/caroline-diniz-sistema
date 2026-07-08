@@ -9909,3 +9909,18 @@ async function confirmarRecebimentoPendenciasCliente(clienteId){
 
   alert("Recebimento registrado com sucesso.");
 }
+.alerta-financeiro-cliente{
+    background:#fff4f4;
+    border:1px solid #d66;
+    border-radius:10px;
+    padding:12px;
+    margin:12px 0;
+}
+
+.alerta-financeiro-cliente strong{
+    color:#9f1d1d;
+}
+
+.alerta-financeiro-cliente p{
+    margin:6px 0 10px;
+}
