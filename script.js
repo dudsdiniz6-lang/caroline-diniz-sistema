@@ -4077,6 +4077,52 @@ async function abrirReceberComanda(comandaId){
     return;
   }
 
+  const total = Number(comanda.total || 0);
+  const recebido = (comanda.pagamentos || [])
+    .reduce((soma, p) => soma + Number(p.valor || 0), 0);
+
+  const saldo = Math.max(total - recebido, 0);
+
+  abrirModal(`
+    <h2>Finalizar comanda #${comanda.id}</h2>
+
+    <p><strong>Cliente:</strong> ${comanda.clientes?.nome || "-"}</p>
+    <p><strong>Total:</strong> ${dinheiro(total)}</p>
+    <p><strong>Recebido:</strong> ${dinheiro(recebido)}</p>
+    <p><strong>Saldo:</strong> ${dinheiro(saldo)}</p>
+
+    <hr>
+
+    <button class="principal" onclick="abrirRecebimentoAgora(${comanda.id})">
+      Receber agora
+    </button>
+
+    <button onclick="lancarComandaAReceber(${comanda.id})">
+      Cliente vai pagar depois
+    </button>
+
+    <button onclick="abrirComanda(${comanda.id})">
+      Voltar
+    </button>
+  `);
+}
+async function abrirRecebimentoAgora(comandaId){
+
+  const { data: comanda, error } = await supabaseClient
+    .from("comandas")
+    .select(`
+      *,
+      clientes(nome),
+      pagamentos(valor, formas_pagamento(nome))
+    `)
+    .eq("id", comandaId)
+    .single();
+
+  if(error || !comanda){
+    alert("Erro ao abrir recebimento.");
+    return;
+  }
+
   const formasResp = await supabaseClient
     .from("formas_pagamento")
     .select("*")
@@ -4092,11 +4138,9 @@ async function abrirReceberComanda(comandaId){
   const saldo = Math.max(total - recebido, 0);
 
   abrirModal(`
-    <h2>Receber comanda #${comanda.id}</h2>
+    <h2>Receber agora - Comanda #${comanda.id}</h2>
 
     <p><strong>Cliente:</strong> ${comanda.clientes?.nome || "-"}</p>
-    <p><strong>Total:</strong> ${dinheiro(total)}</p>
-    <p><strong>Recebido:</strong> ${dinheiro(recebido)}</p>
     <p><strong>Saldo:</strong> ${dinheiro(saldo)}</p>
 
     <label>Forma de pagamento</label>
@@ -4116,10 +4160,78 @@ async function abrirReceberComanda(comandaId){
       Adicionar pagamento
     </button>
 
-    <button onclick="abrirComanda(${comanda.id})">
+    <button onclick="abrirReceberComanda(${comanda.id})">
       Voltar
     </button>
   `);
+}
+async function lancarComandaAReceber(comandaId){
+
+  const { data: comanda, error } = await supabaseClient
+    .from("comandas")
+    .select(`
+      *,
+      clientes(nome),
+      pagamentos(valor)
+    `)
+    .eq("id", comandaId)
+    .single();
+
+  if(error || !comanda){
+    alert("Comanda não encontrada.");
+    return;
+  }
+
+  const total = Number(comanda.total || 0);
+  const recebido = (comanda.pagamentos || [])
+    .reduce((soma, p) => soma + Number(p.valor || 0), 0);
+
+  const saldo = Math.max(total - recebido, 0);
+
+  if(saldo <= 0){
+    alert("Esta comanda não possui saldo em aberto.");
+    return;
+  }
+
+  const confirmar = confirm(
+    `Lançar ${dinheiro(saldo)} como pendência financeira para ${comanda.clientes?.nome || "cliente"}?`
+  );
+
+  if(!confirmar) return;
+
+  const { error: erroLancamento } = await supabaseClient
+    .from("financeiro_lancamentos")
+    .insert([{
+      unidade_id: comanda.unidade_id,
+      tipo: "PENDENCIA",
+      origem: "COMANDA",
+      origem_id: comanda.id,
+      cliente_id: comanda.cliente_id,
+      profissional_id: comanda.profissional_id,
+      valor: saldo,
+      data: new Date().toISOString(),
+      usuario_id: usuarioLogado?.id || null,
+      status: "ATIVO",
+      observacao: "Comanda lançada como A Receber"
+    }]);
+
+  if(erroLancamento){
+    alert("Erro ao lançar pendência: " + erroLancamento.message);
+    return;
+  }
+
+  await supabaseClient
+    .from("comandas")
+    .update({
+      status: "A Receber"
+    })
+    .eq("id", comanda.id);
+
+  fecharModal();
+  carregarComandas();
+  carregarPendenciasFinanceiras();
+
+  alert("Comanda lançada como A Receber.");
 }
 async function confirmarRecebimentoComanda(comandaId){
 
