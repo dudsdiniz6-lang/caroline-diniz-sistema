@@ -1192,9 +1192,10 @@ grade.innerHTML = `
                   ${(a.clientes?.vip === true || a.clientes?.vip === "true") ? `<div class="selo-vip-agenda">⭐ VIP</div>` : ""}
 
 ${pendenciasPorCliente[a.cliente_id] > 0 ? `
-  <div class="selo-pendencia-agenda">
-    Pendência: ${dinheiro(pendenciasPorCliente[a.cliente_id])}
-  </div>
+  <div
+    class="bolinha-pendencia-agenda"
+    title="Cliente possui pendência financeira: ${dinheiro(pendenciasPorCliente[a.cliente_id])}"
+  ></div>
 ` : ""}
                       <strong>
                         ${a.recorrencia_id ? "🔁 " : ""}
