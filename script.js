@@ -334,7 +334,7 @@ if(nome === "comissoes" && !pode("comissoes_visualizar")){
   if(nome === "prontuarios") carregarProntuarios();
   if(nome === "pacotes") carregarPacotes();
   if(nome === "comandas") carregarComandas();
-  if(nome === "caixa") carregarCaixas();
+  if(nome === "caixa") abrirAbaFinanceiro("caixa");
   if(nome === "comissoes") carregarComissoes();
   if(nome === "configuracoes") carregarConfiguracoes();
 if(nome === "gestores") carregarGestores();
@@ -4494,6 +4494,76 @@ async function carregarConfiguracoes(){
   `;
 
   abrirAbaConfiguracao("geral");
+}
+async function abrirAbaFinanceiro(aba){
+
+  const area = document.getElementById("conteudoFinanceiro");
+
+  if(!area) return;
+
+  if(aba === "caixa"){
+
+    area.innerHTML = `
+      <div class="topo">
+        <button class="principal" onclick="abrirCaixa()">
+          Abrir Caixa
+        </button>
+      </div>
+
+      <div id="listaCaixas" class="cards"></div>
+    `;
+
+    carregarCaixas();
+    return;
+  }
+
+  if(aba === "pendencias"){
+
+    area.innerHTML = `
+      <h2>Pendências Financeiras</h2>
+
+      <div id="listaPendencias" class="cards">
+        Carregando...
+      </div>
+    `;
+
+    carregarPendenciasFinanceiras();
+    return;
+  }
+
+  if(aba === "creditos"){
+
+    area.innerHTML = `
+      <h2>Créditos</h2>
+
+      <p>Em desenvolvimento.</p>
+    `;
+
+    return;
+  }
+
+  if(aba === "recebimentos"){
+
+    area.innerHTML = `
+      <h2>Recebimentos</h2>
+
+      <p>Em desenvolvimento.</p>
+    `;
+
+    return;
+  }
+
+  if(aba === "extrato"){
+
+    area.innerHTML = `
+      <h2>Extrato Financeiro</h2>
+
+      <p>Em desenvolvimento.</p>
+    `;
+
+    return;
+  }
+
 }
 async function carregarConfiguracoesFormasPagamento(){
 
