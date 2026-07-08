@@ -10065,6 +10065,7 @@ async function salvarNovoCredito(){
   const clienteId = Number(document.getElementById("creditoCliente").value);
   const tipo = document.getElementById("creditoTipo").value;
   const valor = Number(document.getElementById("creditoValor").value || 0);
+  const formaPagamentoId = Number(document.getElementById("creditoFormaPagamento").value);
   const observacao = document.getElementById("creditoObservacao").value.trim();
 
   if(!clienteId){
@@ -10077,30 +10078,43 @@ async function salvarNovoCredito(){
     return;
   }
 
+  if(!formaPagamentoId){
+    alert("Selecione a forma de pagamento.");
+    return;
+  }
+
   const carteiraResp = await supabaseClient
     .from("carteira_clientes")
     .select("*")
     .eq("cliente_id", clienteId)
     .eq("tipo", tipo)
-    .single();
+    .maybeSingle();
+
+  let carteiraId = null;
+  let novoSaldo = valor;
 
   if(carteiraResp.data){
 
-    const novoSaldo =
-      Number(carteiraResp.data.saldo || 0) + valor;
+    carteiraId = carteiraResp.data.id;
+    novoSaldo = Number(carteiraResp.data.saldo || 0) + valor;
 
-    await supabaseClient
+    const updateResp = await supabaseClient
       .from("carteira_clientes")
       .update({
         saldo: novoSaldo,
         atualizado_em: new Date().toISOString(),
-        observacao: observacao
+        observacao
       })
-      .eq("id", carteiraResp.data.id);
+      .eq("id", carteiraId);
+
+    if(updateResp.error){
+      alert("Erro ao atualizar carteira: " + updateResp.error.message);
+      return;
+    }
 
   }else{
 
-    await supabaseClient
+    const insertResp = await supabaseClient
       .from("carteira_clientes")
       .insert([{
         unidade_id: unidadeAtualId,
@@ -10109,16 +10123,74 @@ async function salvarNovoCredito(){
         saldo: valor,
         observacao,
         ativo: true
-      }]);
+      }])
+      .select()
+      .single();
 
+    if(insertResp.error){
+      alert("Erro ao criar carteira: " + insertResp.error.message);
+      return;
+    }
+
+    carteiraId = insertResp.data.id;
   }
 
-  alert("Crédito lançado com sucesso.");
+  await supabaseClient
+    .from("carteira_movimentacoes")
+    .insert([{
+      carteira_id: carteiraId,
+      cliente_id: clienteId,
+      tipo: "ENTRADA",
+      origem: "COMPRA",
+      origem_id: null,
+      valor,
+      data: new Date().toISOString(),
+      observacao: observacao || "Compra de crédito",
+      usuario_id: usuarioLogado?.id || null
+    }]);
+
+  await supabaseClient
+    .from("financeiro_lancamentos")
+    .insert([{
+      unidade_id: unidadeAtualId,
+      tipo: "CREDITO",
+      origem: "CARTEIRA",
+      origem_id: carteiraId,
+      cliente_id: clienteId,
+      forma_pagamento_id: formaPagamentoId,
+      valor,
+      data: new Date().toISOString(),
+      usuario_id: usuarioLogado?.id || null,
+      status: "ATIVO",
+      observacao: observacao || "Compra de crédito"
+    }]);
+
+  await registrarEntradaCaixa(
+    null,
+    formaPagamentoId,
+    valor
+  );
+
+  await registrarHistoricoOperacao(
+    "credito_cliente",
+    String(clienteId),
+    "Crédito lançado para cliente",
+    {
+      cliente_id: clienteId,
+      carteira_id: carteiraId,
+      tipo,
+      valor,
+      novo_saldo: novoSaldo,
+      forma_pagamento_id: formaPagamentoId,
+      observacao
+    }
+  );
 
   fecharModal();
-
   carregarCreditosClientes();
+  carregarCaixas();
 
+  alert("Crédito lançado com sucesso.");
 }
 async function abrirDetalhesPendenciasCliente(clienteId){
 
