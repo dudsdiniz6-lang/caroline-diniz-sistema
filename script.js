@@ -10120,3 +10120,92 @@ async function salvarNovoCredito(){
   carregarCreditosClientes();
 
 }
+async function abrirDetalhesPendenciasCliente(clienteId){
+
+  const { data: cliente } = await supabaseClient
+    .from("clientes")
+    .select("id,nome")
+    .eq("id", clienteId)
+    .single();
+
+  const { data: pendencias, error } = await supabaseClient
+    .from("financeiro_lancamentos")
+    .select("*")
+    .eq("cliente_id", clienteId)
+    .eq("tipo", "PENDENCIA")
+    .eq("status", "ATIVO")
+    .order("data", { ascending:true });
+
+  if(error || !pendencias || pendencias.length === 0){
+    alert("Nenhuma pendência encontrada.");
+    return;
+  }
+
+  const idsComandas = pendencias
+    .filter(p => p.origem === "COMANDA" && p.origem_id)
+    .map(p => p.origem_id);
+
+  let itensComandas = [];
+
+  if(idsComandas.length > 0){
+    const itensResp = await supabaseClient
+      .from("comanda_itens")
+      .select(`
+        comanda_id,
+        descricao,
+        valor,
+        profissionais(nome)
+      `)
+      .in("comanda_id", idsComandas);
+
+    itensComandas = itensResp.data || [];
+  }
+
+  const total = pendencias.reduce((soma, p)=> soma + Number(p.valor || 0), 0);
+
+  abrirModal(`
+    <h2>Detalhes das pendências</h2>
+
+    <p><strong>Cliente:</strong> ${cliente?.nome || "-"}</p>
+    <p><strong>Total em aberto:</strong> ${dinheiro(total)}</p>
+
+    <hr>
+
+    ${pendencias.map(p => {
+
+      const itens = itensComandas.filter(i => String(i.comanda_id) === String(p.origem_id));
+
+      return `
+        <div class="card">
+          <h3>${formatarDataComanda(p.data)}</h3>
+
+          <p>
+            Valor em aberto:
+            <strong>${dinheiro(p.valor)}</strong>
+          </p>
+
+          ${itens.length ? itens.map(i => `
+            <div class="caixa-linha">
+              <span>
+                ${i.descricao || "Serviço"}
+                <br>
+                <small>${i.profissionais?.nome || ""}</small>
+              </span>
+              <strong>${dinheiro(i.valor)}</strong>
+            </div>
+          `).join("") : `
+            <p>Sem detalhamento vinculado.</p>
+          `}
+        </div>
+      `;
+    }).join("")}
+
+    <button class="principal" onclick="abrirReceberPendenciasCliente(${clienteId})">
+      Receber
+    </button>
+
+    <button onclick="fecharModal()">
+      Fechar
+    </button>
+  `);
+}
