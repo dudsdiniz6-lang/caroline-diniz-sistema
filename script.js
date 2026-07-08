@@ -10060,3 +10060,63 @@ async function abrirNovoCreditoCliente(){
     </button>
   `);
 }
+async function salvarNovoCredito(){
+
+  const clienteId = Number(document.getElementById("creditoCliente").value);
+  const tipo = document.getElementById("creditoTipo").value;
+  const valor = Number(document.getElementById("creditoValor").value || 0);
+  const observacao = document.getElementById("creditoObservacao").value.trim();
+
+  if(!clienteId){
+    alert("Selecione uma cliente.");
+    return;
+  }
+
+  if(valor <= 0){
+    alert("Informe um valor válido.");
+    return;
+  }
+
+  const carteiraResp = await supabaseClient
+    .from("carteira_clientes")
+    .select("*")
+    .eq("cliente_id", clienteId)
+    .eq("tipo", tipo)
+    .single();
+
+  if(carteiraResp.data){
+
+    const novoSaldo =
+      Number(carteiraResp.data.saldo || 0) + valor;
+
+    await supabaseClient
+      .from("carteira_clientes")
+      .update({
+        saldo: novoSaldo,
+        atualizado_em: new Date().toISOString(),
+        observacao: observacao
+      })
+      .eq("id", carteiraResp.data.id);
+
+  }else{
+
+    await supabaseClient
+      .from("carteira_clientes")
+      .insert([{
+        unidade_id: unidadeAtualId,
+        cliente_id: clienteId,
+        tipo,
+        saldo: valor,
+        observacao,
+        ativo: true
+      }]);
+
+  }
+
+  alert("Crédito lançado com sucesso.");
+
+  fecharModal();
+
+  carregarCreditosClientes();
+
+}
