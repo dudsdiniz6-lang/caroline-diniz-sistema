@@ -9529,15 +9529,13 @@ async function carregarPendenciasFinanceiras(){
 
   const { data, error } = await supabaseClient
     .from("financeiro_lancamentos")
-    .select(`
-      *,
-      clientes(nome)
-    `)
+    .select("*")
     .eq("tipo","PENDENCIA")
     .eq("status","ATIVO")
     .order("data",{ascending:true});
 
   if(error){
+    console.error("Erro pendências:", error);
     lista.innerHTML = "Erro ao carregar pendências.";
     return;
   }
@@ -9556,10 +9554,9 @@ async function carregarPendenciasFinanceiras(){
   data.forEach(item=>{
 
     lista.innerHTML += `
-
       <div class="card">
 
-        <h3>${item.clientes?.nome || "Cliente"}</h3>
+        <h3>Cliente ID: ${item.cliente_id || "Não informado"}</h3>
 
         <p>
           Valor:
@@ -9576,9 +9573,7 @@ async function carregarPendenciasFinanceiras(){
         </button>
 
       </div>
-
     `;
 
   });
-
 }
