@@ -269,14 +269,45 @@
   <div id="areaConfiguracoes"></div>
 
 </section>
-      <section id="tela-caixa" class="tela">
-        <div class="topo">
-          <h1>Caixa</h1>
-          <button class="principal" onclick="abrirCaixa()">Abrir caixa</button>
-        </div>
+     <section id="tela-caixa" class="tela">
 
-        <div id="listaCaixas" class="cards"></div>
-      </section>
+  <div class="topo">
+    <h1>Financeiro</h1>
+  </div>
+
+  <div class="config-layout">
+
+    <div class="config-menu-interno">
+
+      <button class="principal" onclick="abrirAbaFinanceiro('caixa')">
+        Caixa
+      </button>
+
+      <button onclick="abrirAbaFinanceiro('pendencias')">
+        Pendências Financeiras
+      </button>
+
+      <button onclick="abrirAbaFinanceiro('creditos')">
+        Créditos
+      </button>
+
+      <button onclick="abrirAbaFinanceiro('recebimentos')">
+        Recebimentos
+      </button>
+
+      <button onclick="abrirAbaFinanceiro('extrato')">
+        Extrato
+      </button>
+
+    </div>
+
+    <div id="conteudoFinanceiro">
+
+    </div>
+
+  </div>
+
+</section>
 
       <section id="tela-comissoes" class="tela">
         <div class="topo">
