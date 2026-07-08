@@ -10007,3 +10007,70 @@ async function carregarCreditosClientes(){
     });
 
 }
+async function carregarCreditosClientes(){
+
+    const area = document.getElementById("listaCreditosClientes");
+
+    if(!area) return;
+
+    area.innerHTML = "Carregando...";
+
+    const { data, error } = await supabaseClient
+        .from("carteira_clientes")
+        .select("*")
+        .eq("ativo", true)
+        .order("id",{ascending:false});
+
+    if(error){
+        area.innerHTML = "Erro ao carregar créditos.";
+        return;
+    }
+
+    if(!data || data.length === 0){
+        area.innerHTML = `
+            <div class="card">
+                Nenhum crédito cadastrado.
+            </div>
+        `;
+        return;
+    }
+
+    const clientesResp = await supabaseClient
+        .from("clientes")
+        .select("id,nome");
+
+    const clientes = clientesResp.data || [];
+
+    area.innerHTML = "";
+
+    data.forEach(c=>{
+
+        const cliente = clientes.find(x => String(x.id) === String(c.cliente_id));
+
+        area.innerHTML += `
+
+            <div class="card">
+
+                <h3>${cliente?.nome || "Cliente"}</h3>
+
+                <p>
+                    Tipo:
+                    <strong>${c.tipo}</strong>
+                </p>
+
+                <p>
+                    Saldo disponível:
+                    <strong>${dinheiro(c.saldo)}</strong>
+                </p>
+
+                <button onclick="abrirCarteiraCliente(${c.cliente_id})">
+                    Movimentações
+                </button>
+
+            </div>
+
+        `;
+
+    });
+
+}
