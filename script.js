@@ -4371,97 +4371,33 @@ function adicionarLinhaPagamentoFaturamento(){
 }
 async function carregarAlertasClienteAgenda(clienteId){
 
-  if(!clienteId) return "";
-
-  let html = "";
-
-  const hoje = formatarDataISO(new Date());
-
-  const clienteResp = await supabaseClient
-    .from("clientes")
-    .select("*")
-    .eq("id", clienteId)
-    .single();
-
-  const cliente = clienteResp.data;
-
-  if(cliente?.aniversario){
-
-    const aniversario = String(cliente.aniversario).slice(5);
-    const hojeMesDia = hoje.slice(5);
-
-    if(aniversario === hojeMesDia){
-      html += `
-        <div class="card alerta-agenda">
-          🎂 Hoje é aniversário desta cliente.
-        </div>
-      `;
-    }
-
-  }
-
-  const pacotesResp = await supabaseClient
-    .from("pacotes_clientes")
-    .select(`
-      *,
-      pacotes(nome),
-      pacotes_saldos(
-        quantidade_total,
-        quantidade_usada,
-        servicos(nome)
-      )
-    `)
-    .eq("cliente_id", clienteId)
-    .eq("ativo", true)
-    .eq("status", "Ativo");
-
-  const pacotes = pacotesResp.data || [];
-
-  pacotes.forEach((pc)=>{
-
-    if(!pc.validade) return;
-
-    const validade = new Date(pc.validade + "T00:00:00");
-    const agora = new Date(hoje + "T00:00:00");
-
-    const diasRestantes = Math.ceil((validade - agora) / (1000 * 60 * 60 * 24));
-
-    if(diasRestantes >= 0 && diasRestantes <= 7){
-
-      html += `
-        <div class="card alerta-agenda">
-          ⚠ Pacote vencendo em ${diasRestantes} dia(s): 
-          <strong>${pc.pacotes?.nome || "Pacote"}</strong>
-        </div>
-      `;
-
-    }
-
-  });
-
-  const comandasResp = await supabaseClient
-    .from("comandas")
+  const { data, error } = await supabaseClient
+    .from("financeiro_lancamentos")
     .select("*")
     .eq("cliente_id", clienteId)
-    .in("status", ["Aberta", "Parcial"]);
+    .eq("tipo", "PENDENCIA")
+    .eq("status", "ATIVO");
 
-  const comandas = comandasResp.data || [];
-
-  const totalAberto = comandas.reduce(
-    (soma, c) => soma + Number(c.total || 0),
-    0
-  );
-
-  if(totalAberto > 0){
-    html += `
-      <div class="card alerta-agenda">
-        ⚠ Cliente possui comanda em aberto: 
-        <strong>${dinheiro(totalAberto)}</strong>
-      </div>
-    `;
+  if(error || !data || data.length === 0){
+    return "";
   }
 
-  return html;
+  const total = data.reduce((soma, item) => soma + Number(item.valor || 0), 0);
+
+  return `
+    <div class="alerta-financeiro-cliente">
+      <strong>Atenção financeira</strong>
+      <p>Cliente possui ${dinheiro(total)} em aberto.</p>
+
+      <button
+        type="button"
+        class="principal"
+        onclick="abrirReceberPendenciasCliente(${clienteId})"
+      >
+        Receber agora
+      </button>
+    </div>
+  `;
 }
 async function carregarResumoAlertasAgenda(){
 
