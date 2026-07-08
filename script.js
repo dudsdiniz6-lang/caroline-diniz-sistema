@@ -4629,13 +4629,28 @@ async function abrirAbaFinanceiro(aba){
   if(aba === "creditos"){
 
     area.innerHTML = `
-      <h2>Créditos</h2>
 
-      <p>Em desenvolvimento.</p>
+        <div class="topo">
+
+            <button
+                class="principal"
+                onclick="abrirNovoCreditoCliente()"
+            >
+                Novo crédito
+            </button>
+
+        </div>
+
+        <div id="listaCreditosClientes">
+            Carregando...
+        </div>
+
     `;
 
+    carregarCreditosClientes();
+
     return;
-  }
+}
 
   if(aba === "recebimentos"){
 
@@ -9923,4 +9938,72 @@ async function confirmarRecebimentoPendenciasCliente(clienteId){
 
 .alerta-financeiro-cliente p{
     margin:6px 0 10px;
+}
+async function carregarCreditosClientes(){
+
+    const area = document.getElementById("listaCreditosClientes");
+
+    if(!area) return;
+
+    area.innerHTML = "Carregando...";
+
+    const { data, error } = await supabaseClient
+        .from("carteira_clientes")
+        .select("*")
+        .eq("ativo", true)
+        .order("id",{ascending:false});
+
+    if(error){
+        area.innerHTML = "Erro ao carregar.";
+        return;
+    }
+
+    if(!data.length){
+        area.innerHTML = "Nenhum crédito cadastrado.";
+        return;
+    }
+
+    const clientesResp = await supabaseClient
+        .from("clientes")
+        .select("id,nome");
+
+    const clientes = clientesResp.data || [];
+
+    area.innerHTML = "";
+
+    data.forEach(c=>{
+
+        const cliente =
+            clientes.find(x=>x.id==c.cliente_id);
+
+        area.innerHTML += `
+
+            <div class="card">
+
+                <h3>${cliente?.nome || "Cliente"}</h3>
+
+                <p>
+
+                    Saldo disponível
+
+                    <strong>
+
+                        ${dinheiro(c.saldo)}
+
+                    </strong>
+
+                </p>
+
+                <button onclick="abrirCarteiraCliente(${c.cliente_id})">
+
+                    Movimentações
+
+                </button>
+
+            </div>
+
+        `;
+
+    });
+
 }
