@@ -4174,6 +4174,22 @@ async function confirmarRecebimentoComanda(comandaId){
       valor,
       data: formatarDataISO(new Date())
     }]);
+  await supabaseClient
+  .from("financeiro_lancamentos")
+  .insert([{
+    unidade_id: comanda.unidade_id,
+    tipo: "RECEBIMENTO",
+    origem: "COMANDA",
+    origem_id: comandaId,
+    cliente_id: comanda.cliente_id,
+    profissional_id: comanda.profissional_id,
+    forma_pagamento_id: formaPagamentoId,
+    valor: valor,
+    data: new Date().toISOString(),
+    usuario_id: usuarioLogado?.id || null,
+    status: "ATIVO",
+    observacao: "Recebimento de comanda"
+  }]);
 
   if(formaSelecionada !== "Crédito da Cliente"){
 
