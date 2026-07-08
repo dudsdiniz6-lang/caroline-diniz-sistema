@@ -1057,6 +1057,23 @@ async function carregarAgenda(){
     .select("*")
     .eq("ativo", true)
     .eq("data", formatarDataISO(dataAgenda));
+  const pendenciasResp = await supabaseClient
+  .from("financeiro_lancamentos")
+  .select("cliente_id, valor")
+  .eq("tipo", "PENDENCIA")
+  .eq("status", "ATIVO");
+
+const pendenciasPorCliente = {};
+
+(pendenciasResp.data || []).forEach(p => {
+  if(!p.cliente_id) return;
+
+  if(!pendenciasPorCliente[p.cliente_id]){
+    pendenciasPorCliente[p.cliente_id] = 0;
+  }
+
+  pendenciasPorCliente[p.cliente_id] += Number(p.valor || 0);
+});
 
 let profissionais = profissionaisResp.data || [];
   let agendamentos = agendamentosResp.data || [];
@@ -1172,8 +1189,13 @@ grade.innerHTML = `
                       style="top:${top + 4}px; height:${altura}px;"
                       onclick="event.stopPropagation(); abrirModalAgendamento(${a.id})"
                     >
-                      ${(a.clientes?.vip === true || a.clientes?.vip === "true") ? `<div class="selo-vip-agenda">⭐ VIP</div>` : ""}
+                  ${(a.clientes?.vip === true || a.clientes?.vip === "true") ? `<div class="selo-vip-agenda">⭐ VIP</div>` : ""}
 
+${pendenciasPorCliente[a.cliente_id] > 0 ? `
+  <div class="selo-pendencia-agenda">
+    Pendência: ${dinheiro(pendenciasPorCliente[a.cliente_id])}
+  </div>
+` : ""}
                       <strong>
                         ${a.recorrencia_id ? "🔁 " : ""}
                         ${a.clientes?.nome || "Cliente"}
