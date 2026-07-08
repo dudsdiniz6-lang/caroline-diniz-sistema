@@ -9519,3 +9519,66 @@ function aplicarPermissoesMenu(){
   }
 
 }
+async function carregarPendenciasFinanceiras(){
+
+  const lista = document.getElementById("listaPendencias");
+
+  if(!lista) return;
+
+  lista.innerHTML = "Carregando...";
+
+  const { data, error } = await supabaseClient
+    .from("financeiro_lancamentos")
+    .select(`
+      *,
+      clientes(nome)
+    `)
+    .eq("tipo","PENDENCIA")
+    .eq("status","ATIVO")
+    .order("data",{ascending:true});
+
+  if(error){
+    lista.innerHTML = "Erro ao carregar pendências.";
+    return;
+  }
+
+  if(!data || data.length === 0){
+    lista.innerHTML = `
+      <div class="card">
+        Nenhuma pendência financeira.
+      </div>
+    `;
+    return;
+  }
+
+  lista.innerHTML = "";
+
+  data.forEach(item=>{
+
+    lista.innerHTML += `
+
+      <div class="card">
+
+        <h3>${item.clientes?.nome || "Cliente"}</h3>
+
+        <p>
+          Valor:
+          <strong>${dinheiro(item.valor)}</strong>
+        </p>
+
+        <p>
+          Data:
+          ${formatarDataComanda(item.data)}
+        </p>
+
+        <button class="principal">
+          Receber
+        </button>
+
+      </div>
+
+    `;
+
+  });
+
+}
