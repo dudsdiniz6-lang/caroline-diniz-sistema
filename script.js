@@ -9994,101 +9994,69 @@ async function carregarCreditosClientes(){
 }
 async function abrirNovoCreditoCliente(){
 
-    const clientesResp = await supabaseClient
-        .from("clientes")
-        .select("*")
-        .eq("ativo", true)
-        .order("nome");
+  const clientesResp = await supabaseClient
+    .from("clientes")
+    .select("*")
+    .eq("ativo", true)
+    .order("nome");
 
-    const formasResp = await supabaseClient
-        .from("formas_pagamento")
-        .select("*")
-        .eq("ativo", true)
-        .order("nome");
+  if(clientesResp.error){
+    alert("Erro ao carregar clientes: " + clientesResp.error.message);
+    return;
+  }
 
-    const clientes = clientesResp.data || [];
-    const formas = formasResp.data || [];
+  const formasResp = await supabaseClient
+    .from("formas_pagamento")
+    .select("*")
+    .eq("ativo", true)
+    .order("nome");
 
-    abrirModal(`
+  if(formasResp.error){
+    alert("Erro ao carregar formas de pagamento: " + formasResp.error.message);
+    return;
+  }
 
-        <h2>Novo crédito</h2>
+  const clientes = clientesResp.data || [];
+  const formas = formasResp.data || [];
 
-        <label>Cliente</label>
+  abrirModal(`
+    <h2>Novo crédito</h2>
 
-        <select id="creditoCliente">
+    <label>Cliente</label>
+    <select id="creditoCliente">
+      <option value="">Selecione</option>
+      ${clientes.map(c=>`
+        <option value="${c.id}">${c.nome}</option>
+      `).join("")}
+    </select>
 
-            <option value="">Selecione</option>
+    <label>Tipo</label>
+    <select id="creditoTipo">
+      <option value="CREDITO">Crédito</option>
+      <option value="VALE_PRESENTE">Vale-presente</option>
+      <option value="BONUS">Bônus</option>
+    </select>
 
-            ${clientes.map(c=>`
+    <label>Valor</label>
+    <input id="creditoValor" type="number" min="0" step="0.01">
 
-                <option value="${c.id}">
+    <label>Forma de pagamento</label>
+    <select id="creditoFormaPagamento">
+      <option value="">Selecione</option>
+      ${formas.map(f=>`
+        <option value="${f.id}">${f.nome}</option>
+      `).join("")}
+    </select>
 
-                    ${c.nome}
+    <label>Observação</label>
+    <textarea id="creditoObservacao"></textarea>
 
-                </option>
+    <button class="principal" onclick="salvarNovoCredito()">
+      Salvar
+    </button>
 
-            `).join("")}
-
-        </select>
-
-        <label>Tipo</label>
-
-        <select id="creditoTipo">
-
-            <option value="CREDITO">Crédito</option>
-
-            <option value="VALE_PRESENTE">Vale-presente</option>
-
-            <option value="BONUS">Bônus</option>
-
-        </select>
-
-        <label>Valor</label>
-
-        <input
-            id="creditoValor"
-            type="number"
-            min="0"
-            step="0.01"
-        >
-
-        <label>Forma de pagamento</label>
-
-        <select id="creditoFormaPagamento">
-
-            <option value="">Selecione</option>
-
-            ${formas.map(f=>`
-
-                <option value="${f.id}">
-
-                    ${f.nome}
-
-                </option>
-
-            `).join("")}
-
-        </select>
-
-        <label>Observação</label>
-
-        <textarea id="creditoObservacao"></textarea>
-
-        <button
-            class="principal"
-            onclick="salvarNovoCredito()"
-        >
-
-            Salvar
-
-        </button>
-
-        <button onclick="fecharModal()">
-
-            Cancelar
-
-        </button>
-
-    `);
-
+    <button onclick="fecharModal()">
+      Cancelar
+    </button>
+  `);
 }
