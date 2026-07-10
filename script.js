@@ -2457,8 +2457,6 @@ function alterarTipoRecebimentoPacote(){
 }
 async function confirmarVendaPacote(pacoteId){
 
-async function verificarPacoteDisponivel(){
-
   const clienteId = Number(document.getElementById("agCliente")?.value || 0);
   const servicoId = Number(document.getElementById("agServico")?.value || 0);
 
