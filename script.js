@@ -6229,11 +6229,10 @@ async function abrirFaturamentoClienteDia(agendamentoId){
       servicos(nome, comissao_padrao),
       profissionais(nome)
     `)
-    .eq("cliente_id", agendamentoBase.cliente_id)
-    .eq("data", agendamentoBase.data)
-    .neq("status", "Finalizado")
-    .neq("status", "Cancelado")
-    .order("horario");
+ .eq("cliente_id", agendamentoBase.cliente_id)
+.eq("data", agendamentoBase.data)
+.neq("status", "Cancelado")
+.order("horario");
 
 let itens = agendamentosDia || [];
 
