@@ -2455,7 +2455,7 @@ function alterarTipoRecebimentoPacote(){
       ? "block"
       : "none";
 }
-async function confirmarVendaPacote(pacoteId){
+async function verificarPacoteDisponivel(){
 
   const clienteId = Number(document.getElementById("agCliente")?.value || 0);
   const servicoId = Number(document.getElementById("agServico")?.value || 0);
@@ -2543,7 +2543,231 @@ async function confirmarVendaPacote(pacoteId){
     </div>
   `;
 }
+async function confirmarVendaPacote(pacoteId){
 
+  const clienteId = Number(
+    document.getElementById("vendaPacoteCliente")?.value || 0
+  );
+
+  const tipoRecebimento =
+    document.getElementById("vendaPacoteTipoRecebimento")?.value;
+
+  const formaPagamentoId = Number(
+    document.getElementById("vendaPacoteForma")?.value || 0
+  );
+
+  if(!clienteId){
+    alert("Selecione a cliente.");
+    return;
+  }
+
+  if(!tipoRecebimento){
+    alert("Selecione o tipo de recebimento.");
+    return;
+  }
+
+  let caixa = null;
+
+  if(tipoRecebimento === "receber_agora"){
+
+    if(!formaPagamentoId){
+      alert("Selecione a forma de pagamento.");
+      return;
+    }
+
+    caixa = await buscarCaixaAberto();
+
+    if(!caixa){
+      alert("Não existe caixa aberto. Abra o caixa antes de receber o pagamento.");
+      return;
+    }
+  }
+
+  const pacoteResp = await supabaseClient
+    .from("pacotes")
+    .select("*")
+    .eq("id", pacoteId)
+    .single();
+
+  const itensResp = await supabaseClient
+    .from("pacote_itens")
+    .select("*")
+    .eq("pacote_id", pacoteId);
+
+  const pacote = pacoteResp.data;
+  const itens = itensResp.data || [];
+
+  if(!pacote){
+    alert("Pacote não encontrado.");
+    return;
+  }
+
+  if(itens.length === 0){
+    alert("Este pacote não possui serviços cadastrados.");
+    return;
+  }
+
+  const validade = new Date();
+
+  validade.setDate(
+    validade.getDate() + Number(pacote.validade_dias || 90)
+  );
+
+  const pacoteClienteResp = await supabaseClient
+    .from("pacotes_clientes")
+    .insert([{
+      cliente_id: clienteId,
+      pacote_id: pacoteId,
+      data_compra: formatarDataISO(new Date()),
+      validade: formatarDataISO(validade),
+      ativo: true,
+      status: "Ativo"
+    }])
+    .select()
+    .single();
+
+  if(pacoteClienteResp.error){
+    alert("Erro ao vender pacote: " + pacoteClienteResp.error.message);
+    return;
+  }
+
+  const pacoteCliente = pacoteClienteResp.data;
+
+  const saldosSalvar = itens.map(item => ({
+    pacote_cliente_id: pacoteCliente.id,
+    servico_id: item.servico_id,
+    quantidade_total: item.quantidade,
+    quantidade_usada: 0,
+    valor_sessao: item.valor_sessao || 0,
+    cancelado: false
+  }));
+
+  const saldoResp = await supabaseClient
+    .from("pacotes_saldos")
+    .insert(saldosSalvar);
+
+  if(saldoResp.error){
+    alert("Erro ao criar saldos do pacote: " + saldoResp.error.message);
+    return;
+  }
+
+  const comandaResp = await supabaseClient
+    .from("comandas")
+    .insert([{
+      unidade_id: unidadeAtualId,
+      cliente_id: clienteId,
+      data: formatarDataISO(new Date()),
+      subtotal: pacote.valor,
+      desconto: 0,
+      total: pacote.valor,
+      status: tipoRecebimento === "receber_agora"
+        ? "Fechada"
+        : "A Receber",
+      forma_origem: "pacote",
+      cancelada: false
+    }])
+    .select()
+    .single();
+
+  if(comandaResp.error){
+    alert("Erro ao criar comanda do pacote: " + comandaResp.error.message);
+    return;
+  }
+
+  const comanda = comandaResp.data;
+
+  if(tipoRecebimento === "receber_agora"){
+
+    const pagamentoResp = await supabaseClient
+      .from("pagamentos")
+      .insert([{
+        comanda_id: comanda.id,
+        forma_pagamento_id: formaPagamentoId,
+        valor: pacote.valor,
+        data: formatarDataISO(new Date())
+      }]);
+
+    if(pagamentoResp.error){
+      alert("Erro ao registrar pagamento: " + pagamentoResp.error.message);
+      return;
+    }
+
+    await supabaseClient
+      .from("financeiro_lancamentos")
+      .insert([{
+        unidade_id: unidadeAtualId,
+        tipo: "RECEBIMENTO",
+        origem: "PACOTE",
+        origem_id: comanda.id,
+        cliente_id: clienteId,
+        caixa_id: caixa.id,
+        forma_pagamento_id: formaPagamentoId,
+        valor: pacote.valor,
+        data: new Date().toISOString(),
+        usuario_id: usuarioLogado?.id || null,
+        status: "ATIVO",
+        observacao: `Venda do pacote: ${pacote.nome}`
+      }]);
+
+    await registrarEntradaCaixa(
+      comanda.id,
+      formaPagamentoId,
+      pacote.valor
+    );
+
+  }else{
+
+    const pendenciaResp = await supabaseClient
+      .from("financeiro_lancamentos")
+      .insert([{
+        unidade_id: unidadeAtualId,
+        tipo: "PENDENCIA",
+        origem: "PACOTE",
+        origem_id: comanda.id,
+        cliente_id: clienteId,
+        forma_pagamento_id: null,
+        valor: pacote.valor,
+        data: new Date().toISOString(),
+        usuario_id: usuarioLogado?.id || null,
+        status: "ATIVO",
+        observacao: `Pacote anotado para pagar depois: ${pacote.nome}`
+      }]);
+
+    if(pendenciaResp.error){
+      alert("Erro ao registrar pendência: " + pendenciaResp.error.message);
+      return;
+    }
+  }
+
+  await registrarHistoricoOperacao(
+    "venda_pacote",
+    String(pacoteCliente.id),
+    "Pacote vendido",
+    {
+      cliente_id: clienteId,
+      pacote_id: pacoteId,
+      pacote_cliente_id: pacoteCliente.id,
+      comanda_id: comanda.id,
+      valor: pacote.valor,
+      tipo_recebimento: tipoRecebimento,
+      forma_pagamento_id:
+        tipoRecebimento === "receber_agora"
+          ? formaPagamentoId
+          : null
+    }
+  );
+
+  fecharModal();
+  carregarPacotes();
+  carregarComandas();
+  carregarPendenciasFinanceiras();
+
+  alert(
+    tipoRecebimento === "receber_agora"
+      ? "Pacote vendido e pagamento registrado."
+      : "Pacote vendido e lançado como A Receber."
+  );
+}
 function alternarUsoPacoteAgenda(){
 
   const checkbox = document.getElementById("agUsarPacote");
