@@ -4626,30 +4626,30 @@ async function abrirAbaFinanceiro(aba){
   return;
 }
 
-  if(aba === "creditos"){
+if(aba === "creditos"){
 
-    area.innerHTML = `
+  area.innerHTML = `
+    <h2>Créditos da Cliente</h2>
 
-        <div class="topo">
+    <input
+      id="buscaCreditoCliente"
+      placeholder="Pesquisar cliente..."
+      oninput="carregarCreditosClientes()"
+    >
 
-            <button
-                class="principal"
-                onclick="abrirNovoCreditoCliente()"
-            >
-                Novo crédito
-            </button>
+    <br><br>
 
-        </div>
+    <button class="principal" onclick="abrirNovoCreditoCliente()">
+      Adicionar crédito
+    </button>
 
-        <div id="listaCreditosClientes">
-            Carregando...
-        </div>
+    <div id="listaCreditosClientes" class="cards">
+      Carregando...
+    </div>
+  `;
 
-    `;
-
-    carregarCreditosClientes();
-
-    return;
+  carregarCreditosClientes();
+  return;
 }
 
   if(aba === "recebimentos"){
