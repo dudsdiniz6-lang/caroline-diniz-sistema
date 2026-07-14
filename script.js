@@ -723,22 +723,51 @@ async function abrirModalProfissional(id = null){
 }
 
 async function salvarProfissional(){
-  if(!pode("profissionais_editar")){
-  alert("Você não tem permissão para alterar profissionais.");
-  return;
-}
 
-  const id = document.getElementById("profissionalId").value;
+  const id =
+    document.getElementById("profissionalId").value;
 
- const dados = {
-  unidade_id: unidadeAtualId,
-  nome: document.getElementById("profissionalNome").value.trim(),
-  telefone: document.getElementById("profissionalTelefone").value.trim(),
-  especialidade: document.getElementById("profissionalEspecialidade").value.trim(),
-  ordem: Number(document.getElementById("profissionalOrdem").value || 0),
-  usa_comissao_padrao: document.getElementById("profissionalUsaComissaoPadrao")?.checked ?? true,
-  ativo: true
-};
+  if(!id && !pode("profissionais_criar")){
+    alert("Você não tem permissão para criar profissionais.");
+    return;
+  }
+
+  if(id && !pode("profissionais_editar")){
+    alert("Você não tem permissão para alterar profissionais.");
+    return;
+  }
+
+  const usaComissaoPadrao =
+    document.getElementById(
+      "profissionalUsaComissaoPadrao"
+    )?.checked === true;
+
+  const dados = {
+    unidade_id: unidadeAtualId,
+    nome:
+      document.getElementById(
+        "profissionalNome"
+      ).value.trim(),
+
+    telefone:
+      document.getElementById(
+        "profissionalTelefone"
+      ).value.trim(),
+
+    especialidade:
+      document.getElementById(
+        "profissionalEspecialidade"
+      ).value.trim(),
+
+    ordem: Number(
+      document.getElementById(
+        "profissionalOrdem"
+      ).value || 0
+    ),
+
+    usa_comissao_padrao: usaComissaoPadrao,
+    ativo: true
+  };
 
   if(!dados.nome){
     alert("Digite o nome do profissional.");
@@ -752,19 +781,39 @@ async function salvarProfissional(){
     resposta = await supabaseClient
       .from("profissionais")
       .update(dados)
-      .eq("id", id);
+      .eq("id", id)
+      .select()
+      .single();
 
   }else{
 
-   resposta = await supabaseClient
-  .from("profissionais")
-  .insert([dados])
-  .select();
-
+    resposta = await supabaseClient
+      .from("profissionais")
+      .insert([dados])
+      .select()
+      .single();
   }
 
   if(resposta.error){
-    alert("Erro ao salvar profissional: " + resposta.error.message);
+    alert(
+      "Erro ao salvar profissional: " +
+      resposta.error.message
+    );
+    return;
+  }
+
+  const profissionalIdFinal =
+    Number(id || resposta.data?.id);
+
+  try{
+
+    await salvarComissoesPersonalizadas(
+      profissionalIdFinal
+    );
+
+  }catch(erro){
+
+    alert(erro.message);
     return;
   }
 
@@ -772,11 +821,6 @@ async function salvarProfissional(){
 
   carregarProfissionais();
   carregarAgenda();
-  const profissionalIdFinal = id || resposta.data?.[0]?.id;
-
-if(profissionalIdFinal){
-  await salvarComissoesPersonalizadas(profissionalIdFinal);
-}
 
   alert("Profissional salvo com sucesso.");
 }
