@@ -1832,27 +1832,27 @@ async function carregarCaixas(){
 
   lista.innerHTML = "Carregando caixas...";
 
-  const { data, error } = await supabaseClient
+  const { data: caixas, error: erroCaixas } = await supabaseClient
     .from("caixas")
     .select("*")
     .neq("status", "Excluído")
     .order("id", { ascending:false });
 
-  if(error){
+  if(erroCaixas){
+    console.error("Erro ao carregar caixas:", erroCaixas);
     lista.innerHTML = "<div class='card'>Erro ao carregar caixas.</div>";
     return;
   }
 
-  if(!data || data.length === 0){
+  if(!caixas || caixas.length === 0){
     lista.innerHTML = "<div class='card'>Nenhum caixa encontrado.</div>";
     return;
   }
 
-  lista.innerHTML = "";
+  const caixasIds = caixas.map(caixa => caixa.id);
 
-  for(const caixa of data){
-
-    const { data: movs } = await supabaseClient
+  const { data: todasMovimentacoes, error: erroMovimentacoes } =
+    await supabaseClient
       .from("caixa_movimentacoes")
       .select(`
         *,
@@ -1865,10 +1865,37 @@ async function carregarCaixas(){
           clientes(nome)
         )
       `)
-      .eq("caixa_id", caixa.id)
+      .in("caixa_id", caixasIds)
       .neq("cancelada", true);
 
-    const movimentacoes = (movs || []).filter(m =>
+  if(erroMovimentacoes){
+    console.error(
+      "Erro ao carregar movimentações dos caixas:",
+      erroMovimentacoes
+    );
+
+    lista.innerHTML =
+      "<div class='card'>Erro ao carregar movimentações dos caixas.</div>";
+
+    return;
+  }
+
+  const movimentacoesPorCaixa = {};
+
+  (todasMovimentacoes || []).forEach(movimentacao => {
+
+    if(!movimentacoesPorCaixa[movimentacao.caixa_id]){
+      movimentacoesPorCaixa[movimentacao.caixa_id] = [];
+    }
+
+    movimentacoesPorCaixa[movimentacao.caixa_id].push(movimentacao);
+  });
+
+  const htmlCaixas = caixas.map(caixa => {
+
+    const movimentacoes = (
+      movimentacoesPorCaixa[caixa.id] || []
+    ).filter(m =>
       m.cancelada !== true &&
       m.comandas?.status !== "Cancelada" &&
       m.comandas?.cancelada !== true
@@ -1888,18 +1915,35 @@ async function carregarCaixas(){
       m.tipo === "Saída"
     );
 
-    const totalEntradasPagamento = entradasPagamento
-      .reduce((soma, m)=> soma + Number(m.valor || 0), 0);
+    const totalEntradasPagamento = entradasPagamento.reduce(
+      (soma, movimentacao) =>
+        soma + Number(movimentacao.valor || 0),
+      0
+    );
 
-    const totalReforcos = reforcos
-      .reduce((soma, m)=> soma + Number(m.valor || 0), 0);
+    const totalReforcos = reforcos.reduce(
+      (soma, movimentacao) =>
+        soma + Number(movimentacao.valor || 0),
+      0
+    );
 
-    const totalSangrias = sangrias
-      .reduce((soma, m)=> soma + Number(m.valor || 0), 0);
+    const totalSangrias = sangrias.reduce(
+      (soma, movimentacao) =>
+        soma + Number(movimentacao.valor || 0),
+      0
+    );
 
     const totalDinheiroEntradas = entradasPagamento
-      .filter(m => (m.formas_pagamento?.nome || "").toLowerCase().includes("dinheiro"))
-      .reduce((soma, m)=> soma + Number(m.valor || 0), 0);
+      .filter(movimentacao =>
+        (
+          movimentacao.formas_pagamento?.nome || ""
+        ).toLowerCase().includes("dinheiro")
+      )
+      .reduce(
+        (soma, movimentacao) =>
+          soma + Number(movimentacao.valor || 0),
+        0
+      );
 
     const totalDinheiro =
       Number(caixa.abertura || 0) +
@@ -1908,13 +1952,17 @@ async function carregarCaixas(){
       totalSangrias;
 
     const totalTodasFormas =
-      totalEntradasPagamento + totalReforcos - totalSangrias;
+      totalEntradasPagamento +
+      totalReforcos -
+      totalSangrias;
 
     const porForma = {};
 
-    entradasPagamento.forEach(m=>{
+    entradasPagamento.forEach(movimentacao => {
 
-      const forma = m.formas_pagamento?.nome || "Forma não informada";
+      const forma =
+        movimentacao.formas_pagamento?.nome ||
+        "Forma não informada";
 
       if(!porForma[forma]){
         porForma[forma] = {
@@ -1923,16 +1971,20 @@ async function carregarCaixas(){
         };
       }
 
-      porForma[forma].total += Number(m.valor || 0);
+      porForma[forma].total += Number(
+        movimentacao.valor || 0
+      );
 
       porForma[forma].itens.push({
-        cliente: m.comandas?.clientes?.nome || "Cliente não informado",
-        valor: Number(m.valor || 0)
-      });
+        cliente:
+          movimentacao.comandas?.clientes?.nome ||
+          "Cliente não informado",
 
+        valor: Number(movimentacao.valor || 0)
+      });
     });
 
-    lista.innerHTML += `
+    return `
       <div class="caixa-card">
 
         <div
@@ -1940,9 +1992,14 @@ async function carregarCaixas(){
           onclick="alternarDetalheCaixa(${caixa.id})"
         >
           <div>
-            <h3>Caixa ${formatarDataComanda(caixa.data)}</h3>
+            <h3>
+              Caixa ${formatarDataComanda(caixa.data)}
+            </h3>
+
             <small>
-              ${caixa.status} • ${caixa.aberto_por || "Usuário não informado"}
+              ${caixa.status}
+              •
+              ${caixa.aberto_por || "Usuário não informado"}
             </small>
           </div>
         </div>
@@ -1952,19 +2009,26 @@ async function carregarCaixas(){
           ${caixa.status === "Aberto" ? `
 
             ${pode("caixa_reforco") ? `
-              <button class="principal" onclick="abrirReforcoCaixa(${caixa.id})">
+              <button
+                class="principal"
+                onclick="abrirReforcoCaixa(${caixa.id})"
+              >
                 Reforço
               </button>
             ` : ""}
 
             ${pode("caixa_sangria") ? `
-              <button onclick="abrirSangriaCaixa(${caixa.id})">
+              <button
+                onclick="abrirSangriaCaixa(${caixa.id})"
+              >
                 Sangria
               </button>
             ` : ""}
 
             ${pode("caixa_fechar") ? `
-              <button onclick="abrirFechamentoCaixa(${caixa.id})">
+              <button
+                onclick="abrirFechamentoCaixa(${caixa.id})"
+              >
                 Fechar caixa
               </button>
             ` : ""}
@@ -1972,7 +2036,9 @@ async function carregarCaixas(){
           ` : ""}
 
           ${pode("caixa_excluir") ? `
-            <button onclick="excluirCaixa(${caixa.id})">
+            <button
+              onclick="excluirCaixa(${caixa.id})"
+            >
               Excluir caixa
             </button>
           ` : ""}
@@ -1988,44 +2054,80 @@ async function carregarCaixas(){
 
           <div class="caixa-linha">
             <span>Valor de abertura</span>
-            <strong>${dinheiro(caixa.abertura || 0)}</strong>
+            <strong>
+              ${dinheiro(caixa.abertura || 0)}
+            </strong>
           </div>
 
           <h3>Entradas por forma de pagamento</h3>
 
-          ${Object.keys(porForma).length ? Object.keys(porForma).map(forma=>`
-            <div style="margin-bottom:18px;">
-              <div class="caixa-linha">
-                <strong>${forma}</strong>
-                <strong>${dinheiro(porForma[forma].total)}</strong>
-              </div>
+          ${
+            Object.keys(porForma).length
+              ? Object.keys(porForma).map(forma => `
+                  <div style="margin-bottom:18px;">
 
-              ${porForma[forma].itens.map(item=>`
-                <div class="caixa-linha">
-                  <small>${item.cliente}</small>
-                  <span>${dinheiro(item.valor)}</span>
-                </div>
-              `).join("")}
-            </div>
-          `).join("") : "<p>Nenhuma entrada de pagamento registrada.</p>"}
+                    <div class="caixa-linha">
+                      <strong>${forma}</strong>
+                      <strong>
+                        ${dinheiro(porForma[forma].total)}
+                      </strong>
+                    </div>
+
+                    ${
+                      porForma[forma].itens.map(item => `
+                        <div class="caixa-linha">
+                          <small>${item.cliente}</small>
+                          <span>${dinheiro(item.valor)}</span>
+                        </div>
+                      `).join("")
+                    }
+
+                  </div>
+                `).join("")
+              : "<p>Nenhuma entrada de pagamento registrada.</p>"
+          }
 
           <h3>Reforço</h3>
 
-          ${reforcos.length ? reforcos.map(m=>`
-            <div class="caixa-linha">
-              <span>${m.descricao || "Reforço de caixa"}</span>
-              <strong>${dinheiro(m.valor)}</strong>
-            </div>
-          `).join("") : "<p>Nenhum reforço registrado.</p>"}
+          ${
+            reforcos.length
+              ? reforcos.map(movimentacao => `
+                  <div class="caixa-linha">
+                    <span>
+                      ${
+                        movimentacao.descricao ||
+                        "Reforço de caixa"
+                      }
+                    </span>
+
+                    <strong>
+                      ${dinheiro(movimentacao.valor)}
+                    </strong>
+                  </div>
+                `).join("")
+              : "<p>Nenhum reforço registrado.</p>"
+          }
 
           <h3>Sangria</h3>
 
-          ${sangrias.length ? sangrias.map(m=>`
-            <div class="caixa-linha">
-              <span>${m.descricao || "Sangria de caixa"}</span>
-              <strong>${dinheiro(m.valor)}</strong>
-            </div>
-          `).join("") : "<p>Nenhuma sangria registrada.</p>"}
+          ${
+            sangrias.length
+              ? sangrias.map(movimentacao => `
+                  <div class="caixa-linha">
+                    <span>
+                      ${
+                        movimentacao.descricao ||
+                        "Sangria de caixa"
+                      }
+                    </span>
+
+                    <strong>
+                      ${dinheiro(movimentacao.valor)}
+                    </strong>
+                  </div>
+                `).join("")
+              : "<p>Nenhuma sangria registrada.</p>"
+          }
 
           <h3>Resumo final</h3>
 
@@ -2036,35 +2138,50 @@ async function carregarCaixas(){
 
           <div class="caixa-linha">
             <span>Total todas as formas de pagamento</span>
-            <strong>${dinheiro(totalTodasFormas)}</strong>
+            <strong>
+              ${dinheiro(totalTodasFormas)}
+            </strong>
           </div>
 
           ${caixa.status === "Fechado" ? `
+
             <div class="caixa-linha">
               <span>Fechamento informado</span>
-              <strong>${dinheiro(caixa.fechamento || 0)}</strong>
+              <strong>
+                ${dinheiro(caixa.fechamento || 0)}
+              </strong>
             </div>
 
             <div class="caixa-linha">
               <span>Diferença</span>
-              <strong>${dinheiro(caixa.diferenca || 0)}</strong>
+              <strong>
+                ${dinheiro(caixa.diferenca || 0)}
+              </strong>
             </div>
 
-            ${usuarioLogado?.perfil === "dono" || pode("caixa_reabrir") ? `
-              <button onclick="reabrirCaixa(${caixa.id})">
-                Reabrir caixa
-              </button>
-            ` : ""}
+            ${
+              usuarioLogado?.perfil === "dono" ||
+              pode("caixa_reabrir")
+                ? `
+                  <button
+                    onclick="reabrirCaixa(${caixa.id})"
+                  >
+                    Reabrir caixa
+                  </button>
+                `
+                : ""
+            }
+
           ` : ""}
 
         </div>
 
       </div>
     `;
-  }
+  }).join("");
+
+  lista.innerHTML = htmlCaixas;
 }
-
-
 async function abrirCaixa(){
   if(!pode("caixa_abrir")){
   alert("Você não tem permissão para abrir caixa.");
