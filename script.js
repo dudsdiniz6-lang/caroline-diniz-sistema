@@ -670,8 +670,8 @@ async function abrirModalProfissional(id = null){
   }
 
   let profissional = null;
-  if(id){
 
+  if(id){
     const resposta = await supabaseClient
       .from("profissionais")
       .select("*")
@@ -679,39 +679,84 @@ async function abrirModalProfissional(id = null){
       .single();
 
     profissional = resposta.data;
-
   }
+
+  const usaPadrao = profissional?.usa_comissao_padrao !== false;
 
   abrirModal(`
     <h2>${id ? "Editar profissional" : "Novo profissional"}</h2>
 
-    <input id="profissionalId" type="hidden" value="${profissional?.id || ""}">
+    <input
+      id="profissionalId"
+      type="hidden"
+      value="${profissional?.id || ""}"
+    >
 
     <label>Nome</label>
-    <input id="profissionalNome" value="${profissional?.nome || ""}" placeholder="Nome">
+    <input
+      id="profissionalNome"
+      value="${profissional?.nome || ""}"
+      placeholder="Nome"
+    >
 
     <label>Telefone</label>
-    <input id="profissionalTelefone" value="${profissional?.telefone || ""}" placeholder="Telefone">
+    <input
+      id="profissionalTelefone"
+      value="${profissional?.telefone || ""}"
+      placeholder="Telefone"
+    >
 
     <label>Especialidade</label>
-    <input id="profissionalEspecialidade" value="${profissional?.especialidade || ""}" placeholder="Especialidade">
+    <input
+      id="profissionalEspecialidade"
+      value="${profissional?.especialidade || ""}"
+      placeholder="Especialidade"
+    >
 
     <label>Ordem na agenda</label>
-    <input id="profissionalOrdem" type="number" value="${profissional?.ordem || 0}" placeholder="Ordem">
-    <label>
-  <input
-    id="profissionalUsaComissaoPadrao"
-    type="checkbox"
-    ${profissional?.usa_comissao_padrao !== false ? "checked" : ""}
-    onchange="toggleComissaoPersonalizada()"
-    style="width:auto;height:auto;"
-  >
-  Utilizar comissão padrão dos serviços
-</label>
+    <input
+      id="profissionalOrdem"
+      type="number"
+      value="${profissional?.ordem || 0}"
+      placeholder="Ordem"
+    >
 
-<div id="areaComissaoPersonalizada"></div>
+    <div class="card" style="margin-top:18px;">
 
-    <button class="principal" onclick="salvarProfissional()">
+      <h3>Configuração de comissão</h3>
+
+      <label style="display:flex;gap:10px;align-items:center;">
+        <input
+          id="profissionalUsaComissaoPadrao"
+          type="checkbox"
+          ${usaPadrao ? "checked" : ""}
+          onchange="selecionarTipoComissaoProfissional('padrao')"
+          style="width:auto;height:auto;"
+        >
+
+        Utilizar comissão padrão dos serviços
+      </label>
+
+      <label style="display:flex;gap:10px;align-items:center;">
+        <input
+          id="profissionalUsaComissaoPersonalizada"
+          type="checkbox"
+          ${!usaPadrao ? "checked" : ""}
+          onchange="selecionarTipoComissaoProfissional('personalizada')"
+          style="width:auto;height:auto;"
+        >
+
+        Comissão personalizada
+      </label>
+
+    </div>
+
+    <div id="areaComissaoPersonalizada"></div>
+
+    <button
+      class="principal"
+      onclick="salvarProfissional()"
+    >
       Salvar
     </button>
 
@@ -720,8 +765,12 @@ async function abrirModalProfissional(id = null){
     </button>
   `);
 
+  if(!usaPadrao){
+    await carregarComissoesPersonalizadasProfissional(
+      profissional?.id || null
+    );
+  }
 }
-
 async function salvarProfissional(){
 
   const id =
