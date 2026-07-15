@@ -771,6 +771,7 @@ async function abrirModalProfissional(id = null){
     );
   }
 }
+
 async function selecionarTipoComissaoProfissional(tipo){
 
   const checkboxPadrao =
@@ -802,67 +803,133 @@ async function selecionarTipoComissaoProfissional(tipo){
     profissionalId || null
   );
 }
-async function selecionarTipoComissaoProfissional(tipo){
-
-  const checkboxPadrao =
-    document.getElementById("profissionalUsaComissaoPadrao");
-
-  const checkboxPersonalizada =
-    document.getElementById("profissionalUsaComissaoPersonalizada");
+async function carregarComissoesPersonalizadasProfissional(profissionalId = null){
 
   const area =
     document.getElementById("areaComissaoPersonalizada");
 
-  if(!checkboxPadrao || !checkboxPersonalizada || !area) return;
+  if(!area) return;
 
-  if(tipo === "padrao"){
-    checkboxPadrao.checked = true;
-    checkboxPersonalizada.checked = false;
-    area.innerHTML = "";
+  area.innerHTML = "Carregando serviços...";
+
+  const [servicosResp, categoriasResp, regrasResp] = await Promise.all([
+    supabaseClient
+      .from("servicos")
+      .select("id, nome, categoria_id, comissao_padrao")
+      .eq("ativo", true)
+      .order("nome"),
+
+    supabaseClient
+      .from("categorias_servicos")
+      .select("id, nome")
+      .order("nome"),
+
+    profissionalId
+      ? supabaseClient
+          .from("comissoes_regras")
+          .select("servico_id, percentual")
+          .eq("profissional_id", profissionalId)
+      : Promise.resolve({ data: [], error: null })
+  ]);
+
+  if(servicosResp.error){
+    console.error(servicosResp.error);
+    area.innerHTML = "Erro ao carregar serviços.";
     return;
   }
 
-  checkboxPadrao.checked = false;
-  checkboxPersonalizada.checked = true;
-
-  const profissionalId = Number(
-    document.getElementById("profissionalId")?.value || 0
-  );
-
-  await carregarComissoesPersonalizadasProfissional(
-    profissionalId || null
-  );
-}
-async function selecionarTipoComissaoProfissional(tipo){
-
-  const checkboxPadrao =
-    document.getElementById("profissionalUsaComissaoPadrao");
-
-  const checkboxPersonalizada =
-    document.getElementById("profissionalUsaComissaoPersonalizada");
-
-  const area =
-    document.getElementById("areaComissaoPersonalizada");
-
-  if(!checkboxPadrao || !checkboxPersonalizada || !area) return;
-
-  if(tipo === "padrao"){
-    checkboxPadrao.checked = true;
-    checkboxPersonalizada.checked = false;
-    area.innerHTML = "";
+  if(categoriasResp.error){
+    console.error(categoriasResp.error);
+    area.innerHTML = "Erro ao carregar categorias.";
     return;
   }
 
-  checkboxPadrao.checked = false;
-  checkboxPersonalizada.checked = true;
+  const servicos = servicosResp.data || [];
+  const categorias = categoriasResp.data || [];
+  const regras = regrasResp.data || [];
 
-  const profissionalId = Number(
-    document.getElementById("profissionalId")?.value || 0
-  );
+  const nomeCategoria = {};
 
-  await carregarComissoesPersonalizadasProfissional(
-    profissionalId || null
-  );
+  categorias.forEach(categoria => {
+    nomeCategoria[categoria.id] = categoria.nome;
+  });
+
+  const grupos = {};
+
+  servicos.forEach(servico => {
+
+    const categoria =
+      nomeCategoria[servico.categoria_id] || "Sem categoria";
+
+    if(!grupos[categoria]){
+      grupos[categoria] = [];
+    }
+
+    grupos[categoria].push(servico);
+  });
+
+  area.innerHTML = `
+    <div class="card" style="margin-top:15px;">
+
+      <h3>Comissões personalizadas</h3>
+
+      <small>
+        Preencha somente os serviços com comissão diferente.
+        Campos vazios continuarão usando a comissão padrão.
+      </small>
+
+      ${Object.keys(grupos).map(categoria => `
+
+        <div style="margin-top:22px;">
+
+          <h3 style="border-bottom:1px solid #ddd;padding-bottom:8px;">
+            ${categoria}
+          </h3>
+
+          ${grupos[categoria].map(servico => {
+
+            const regra = regras.find(item =>
+              Number(item.servico_id) === Number(servico.id)
+            );
+
+            return `
+              <div
+                style="
+                  display:grid;
+                  grid-template-columns:1fr 140px;
+                  gap:12px;
+                  align-items:center;
+                  margin-bottom:10px;
+                "
+              >
+
+                <div>
+                  <strong>${servico.nome}</strong><br>
+                  <small>
+                    Padrão: ${Number(servico.comissao_padrao || 0)}%
+                  </small>
+                </div>
+
+                <input
+                  id="comissaoServico_${servico.id}"
+                  class="campo-comissao-personalizada"
+                  type="number"
+                  min="0"
+                  max="100"
+                  step="0.1"
+                  placeholder="Usar padrão"
+                  value="${regra ? Number(regra.percentual) : ""}"
+                >
+
+              </div>
+            `;
+          }).join("")}
+
+        </div>
+      `).join("")}
+
+    </div>
+  `;
 }
 async function salvarProfissional(){
 
