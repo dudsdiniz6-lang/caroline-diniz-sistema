@@ -771,6 +771,99 @@ async function abrirModalProfissional(id = null){
     );
   }
 }
+async function selecionarTipoComissaoProfissional(tipo){
+
+  const checkboxPadrao =
+    document.getElementById("profissionalUsaComissaoPadrao");
+
+  const checkboxPersonalizada =
+    document.getElementById("profissionalUsaComissaoPersonalizada");
+
+  const area =
+    document.getElementById("areaComissaoPersonalizada");
+
+  if(!checkboxPadrao || !checkboxPersonalizada || !area) return;
+
+  if(tipo === "padrao"){
+    checkboxPadrao.checked = true;
+    checkboxPersonalizada.checked = false;
+    area.innerHTML = "";
+    return;
+  }
+
+  checkboxPadrao.checked = false;
+  checkboxPersonalizada.checked = true;
+
+  const profissionalId = Number(
+    document.getElementById("profissionalId")?.value || 0
+  );
+
+  await carregarComissoesPersonalizadasProfissional(
+    profissionalId || null
+  );
+}
+async function selecionarTipoComissaoProfissional(tipo){
+
+  const checkboxPadrao =
+    document.getElementById("profissionalUsaComissaoPadrao");
+
+  const checkboxPersonalizada =
+    document.getElementById("profissionalUsaComissaoPersonalizada");
+
+  const area =
+    document.getElementById("areaComissaoPersonalizada");
+
+  if(!checkboxPadrao || !checkboxPersonalizada || !area) return;
+
+  if(tipo === "padrao"){
+    checkboxPadrao.checked = true;
+    checkboxPersonalizada.checked = false;
+    area.innerHTML = "";
+    return;
+  }
+
+  checkboxPadrao.checked = false;
+  checkboxPersonalizada.checked = true;
+
+  const profissionalId = Number(
+    document.getElementById("profissionalId")?.value || 0
+  );
+
+  await carregarComissoesPersonalizadasProfissional(
+    profissionalId || null
+  );
+}
+async function selecionarTipoComissaoProfissional(tipo){
+
+  const checkboxPadrao =
+    document.getElementById("profissionalUsaComissaoPadrao");
+
+  const checkboxPersonalizada =
+    document.getElementById("profissionalUsaComissaoPersonalizada");
+
+  const area =
+    document.getElementById("areaComissaoPersonalizada");
+
+  if(!checkboxPadrao || !checkboxPersonalizada || !area) return;
+
+  if(tipo === "padrao"){
+    checkboxPadrao.checked = true;
+    checkboxPersonalizada.checked = false;
+    area.innerHTML = "";
+    return;
+  }
+
+  checkboxPadrao.checked = false;
+  checkboxPersonalizada.checked = true;
+
+  const profissionalId = Number(
+    document.getElementById("profissionalId")?.value || 0
+  );
+
+  await carregarComissoesPersonalizadasProfissional(
+    profissionalId || null
+  );
+}
 async function salvarProfissional(){
 
   const id =
