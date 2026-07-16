@@ -2014,15 +2014,25 @@ if(
 
 async function buscarPercentualComissao(profissionalId, servicoId, padrao){
 
-  const { data } = await supabaseClient
+  const { data: profissional } = await supabaseClient
+    .from("profissionais")
+    .select("usa_comissao_padrao")
+    .eq("id", profissionalId)
+    .single();
+
+  if(profissional?.usa_comissao_padrao !== false){
+    return Number(padrao || 0);
+  }
+
+  const { data: regra } = await supabaseClient
     .from("comissoes_regras")
-    .select("*")
+    .select("percentual")
     .eq("profissional_id", profissionalId)
     .eq("servico_id", servicoId)
     .maybeSingle();
 
-  if(data){
-    return Number(data.percentual || 0);
+  if(regra){
+    return Number(regra.percentual || 0);
   }
 
   return Number(padrao || 0);
