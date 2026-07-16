@@ -1019,6 +1019,9 @@ async function salvarProfissional(){
     await salvarComissoesPersonalizadas(
       profissionalIdFinal
     );
+    limparCacheComissoesProfissional(
+  profissionalIdFinal
+);
 
   }catch(erro){
 
@@ -2011,28 +2014,80 @@ if(
 
   alert("Atendimento faturado com sucesso.");
 }
+const cacheComissoesProfissionais = {};
 
-async function buscarPercentualComissao(profissionalId, servicoId, padrao){
+async function carregarCacheComissoesProfissional(profissionalId){
 
-  const { data: profissional } = await supabaseClient
-    .from("profissionais")
-    .select("usa_comissao_padrao")
-    .eq("id", profissionalId)
-    .single();
+  if(cacheComissoesProfissionais[profissionalId]){
+    return cacheComissoesProfissionais[profissionalId];
+  }
 
-  if(profissional?.usa_comissao_padrao !== false){
+  const [profissionalResp, regrasResp] = await Promise.all([
+    supabaseClient
+      .from("profissionais")
+      .select("usa_comissao_padrao")
+      .eq("id", profissionalId)
+      .single(),
+
+    supabaseClient
+      .from("comissoes_regras")
+      .select("servico_id, percentual")
+      .eq("profissional_id", profissionalId)
+  ]);
+
+  const usaPadrao =
+    profissionalResp.data?.usa_comissao_padrao !== false;
+
+  const regras = {};
+
+  (regrasResp.data || []).forEach(regra => {
+    regras[regra.servico_id] = Number(regra.percentual || 0);
+  });
+
+  cacheComissoesProfissionais[profissionalId] = {
+    usaPadrao,
+    regras
+  };
+
+  return cacheComissoesProfissionais[profissionalId];
+}
+
+function limparCacheComissoesProfissional(profissionalId){
+
+  if(profissionalId){
+    delete cacheComissoesProfissionais[profissionalId];
+    return;
+  }
+
+  Object.keys(cacheComissoesProfissionais).forEach(id => {
+    delete cacheComissoesProfissionais[id];
+  });
+}
+async function buscarPercentualComissao(
+  profissionalId,
+  servicoId,
+  padrao
+){
+
+  if(!profissionalId){
     return Number(padrao || 0);
   }
 
-  const { data: regra } = await supabaseClient
-    .from("comissoes_regras")
-    .select("percentual")
-    .eq("profissional_id", profissionalId)
-    .eq("servico_id", servicoId)
-    .maybeSingle();
+  const cache = await carregarCacheComissoesProfissional(
+    profissionalId
+  );
 
-  if(regra){
-    return Number(regra.percentual || 0);
+  if(cache.usaPadrao){
+    return Number(padrao || 0);
+  }
+
+  if(
+    Object.prototype.hasOwnProperty.call(
+      cache.regras,
+      servicoId
+    )
+  ){
+    return Number(cache.regras[servicoId] || 0);
   }
 
   return Number(padrao || 0);
