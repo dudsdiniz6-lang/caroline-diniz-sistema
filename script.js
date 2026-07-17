@@ -8270,15 +8270,16 @@ async function salvarCategoriaServico(){
       nome,
       ativo:true
     }]);
+if(error){
+  alert("Erro: " + error.message);
+  return;
+}
 
-  if(error){
-    alert("Erro: " + error.message);
-    return;
-  }
+limparCache("categorias");
 
-  fecharModal();
+fecharModal();
 
-  alert("Categoria criada.");
+alert("Categoria criada.");
 }
 async function carregarCategoriasServico(){
 
