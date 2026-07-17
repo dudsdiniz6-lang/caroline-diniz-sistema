@@ -1391,21 +1391,21 @@ async function salvarServico(){
 
   }
 
-  if(resposta.error){
-    alert("Erro ao salvar serviço: " + resposta.error.message);
-    return;
-  }
+if(resposta.error){
+  alert("Erro ao salvar serviço: " + resposta.error.message);
+  return;
+}
 
-  await registrarHistoricoOperacao(
-    id ? "edicao_servico" : "criacao_servico",
-    String(id || resposta.data?.id || ""),
-    id ? "Serviço alterado" : "Novo serviço criado",
-    {
-      servico_id: id || resposta.data?.id || null,
-      antes: servicoAntes,
-      depois: dados
-    }
-  );
+limparCache("servicos");
+
+await registrarHistoricoOperacao(
+  id ? "edicao_servico" : "criacao_servico",
+  String(id || resposta.data?.id || ""),
+  id ? "Serviço alterado" : "Novo serviço criado",
+  {
+    servico_id: id || resposta.data?.id || null,
+    antes: servicoAntes,
+   
 
   fecharModal();
 
