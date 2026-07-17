@@ -660,21 +660,23 @@ async function salvarCliente(){
 
   }
 
-  if(resposta.error){
-    alert("Erro ao salvar cliente: " + resposta.error.message);
-    return;
-  }
+if(resposta.error){
+  alert("Erro ao salvar cliente: " + resposta.error.message);
+  return;
+}
 
-  await registrarHistoricoOperacao(
-    id ? "edicao_cliente" : "criacao_cliente",
-    String(id || resposta.data?.id || ""),
-    id ? "Cliente alterada" : "Nova cliente criada",
-    {
-      cliente_id: id || resposta.data?.id || null,
-      antes: clienteAntes,
-      depois: dados
-    }
-  );
+limparCache("clientes");
+
+await registrarHistoricoOperacao(
+  id ? "edicao_cliente" : "criacao_cliente",
+  String(id || resposta.data?.id || ""),
+  id ? "Cliente alterada" : "Nova cliente criada",
+  {
+    cliente_id: id || resposta.data?.id || null,
+    antes: clienteAntes,
+    depois: dados
+  }
+);
 
   fecharModal();
   carregarClientes();
