@@ -1668,19 +1668,9 @@ function normalizarClasse(texto){
 }
 async function abrirModalAgendamento(id = null, profissionalPre = "", horarioPre = ""){
 
-  const clientesResp = await supabaseClient
-    .from("clientes")
-    .select("*")
-    .eq("ativo", true)
-    .order("nome");
-
-  const profissionaisResp = await supabaseClient
-    .from("profissionais")
-    .select("*")
-    .eq("ativo", true)
-    .order("ordem");
-
-const servicos = await obterServicos();
+  const clientes = await obterClientes();
+  const profissionais = await obterProfissionais();
+  const servicos = await obterServicos();
 
   let agendamento = null;
 
@@ -1694,15 +1684,13 @@ const servicos = await obterServicos();
     agendamento = resposta.data;
   }
 
- const clientes = clientesResp.data || [];
-const profissionais = profissionaisResp.data || [];
-const clienteAlertaId =
-  agendamento?.cliente_id || null;
+  const clienteAlertaId =
+    agendamento?.cliente_id || null;
 
-const alertasClienteHtml =
-  clienteAlertaId
-    ? await carregarAlertasClienteAgenda(clienteAlertaId)
-    : "";
+  const alertasClienteHtml =
+    clienteAlertaId
+      ? await carregarAlertasClienteAgenda(clienteAlertaId)
+      : "";
 
   abrirModal(`
     <h2>${id ? "Editar agendamento" : "Novo agendamento"}</h2>
