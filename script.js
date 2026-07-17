@@ -2895,17 +2895,8 @@ async function salvarPacote(){
 }
 async function venderPacote(pacoteId){
 
-  const clientesResp = await supabaseClient
-    .from("clientes")
-    .select("*")
-    .eq("ativo", true)
-    .order("nome");
-
-  const formasResp = await supabaseClient
-    .from("formas_pagamento")
-    .select("*")
-    .eq("ativo", true)
-    .order("nome");
+  const clientes = await obterClientes();
+  const formas = await obterFormasPagamento();
 
   const pacoteResp = await supabaseClient
     .from("pacotes")
@@ -2919,10 +2910,7 @@ async function venderPacote(pacoteId){
     .eq("pacote_id", pacoteId)
     .single();
 
-  const clientes = clientesResp.data || [];
-  const formas = formasResp.data || [];
   const pacote = pacoteResp.data;
-  const item = itemResp.data;
 
   abrirModal(`
     <h2>Vender pacote</h2>
