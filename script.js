@@ -8,6 +8,52 @@ let permissoesUsuario = [];
 let unidadeAtualId = 1;
 let dataAgenda = new Date();
 let modeloAnamneseAtual = null;
+// ======================
+// CACHE DO SISTEMA
+// ======================
+
+const cacheSistema = {
+  clientes: null,
+  profissionais: null,
+  servicos: null,
+  categorias: null,
+  formasPagamento: null
+};
+
+function limparCache(nome){
+
+  if(nome){
+    cacheSistema[nome] = null;
+    return;
+  }
+
+  Object.keys(cacheSistema).forEach(chave=>{
+    cacheSistema[chave] = null;
+  });
+
+}
+async function obterServicos(){
+
+  if(cacheSistema.servicos){
+    return cacheSistema.servicos;
+  }
+
+  const { data, error } = await supabaseClient
+    .from("servicos")
+    .select("*")
+    .eq("ativo", true)
+    .order("nome");
+
+  if(error){
+    console.error(error);
+    return [];
+  }
+
+  cacheSistema.servicos = data || [];
+
+  return cacheSistema.servicos;
+}
+
 
 const PERMISSOES_SISTEMA = [
 
@@ -1548,11 +1594,7 @@ async function abrirModalAgendamento(id = null, profissionalPre = "", horarioPre
     .eq("ativo", true)
     .order("ordem");
 
-  const servicosResp = await supabaseClient
-    .from("servicos")
-    .select("*")
-    .eq("ativo", true)
-    .order("nome");
+const servicos = await obterServicos();
 
   let agendamento = null;
 
@@ -1566,10 +1608,9 @@ async function abrirModalAgendamento(id = null, profissionalPre = "", horarioPre
     agendamento = resposta.data;
   }
 
-  const clientes = clientesResp.data || [];
-  const profissionais = profissionaisResp.data || [];
-  const servicos = servicosResp.data || [];
-  const clienteAlertaId =
+ const clientes = clientesResp.data || [];
+const profissionais = profissionaisResp.data || [];
+const clienteAlertaId =
   agendamento?.cliente_id || null;
 
 const alertasClienteHtml =
@@ -2589,16 +2630,10 @@ async function abrirModalPacote(id = null){
     return;
   }
 
-  const servicosResp = await supabaseClient
-    .from("servicos")
-    .select("*")
-    .eq("ativo", true)
-    .order("nome");
+const servicos = await obterServicos();
 
-  const servicos = servicosResp.data || [];
-
-  let pacote = null;
-  let itensPacote = [];
+let pacote = null;
+let itensPacote = [];
 
   if(id){
 
@@ -3611,16 +3646,10 @@ async function toggleComissaoPersonalizada(){
     return;
   }
 
-  const servicosResp = await supabaseClient
-    .from("servicos")
-    .select("*")
-    .eq("ativo", true)
-    .order("nome");
+const servicos = await obterServicos();
 
-  const servicos = servicosResp.data || [];
-
-  area.innerHTML = `
-    <h3>Comissões personalizadas</h3>
+area.innerHTML = `
+  <h3>Comissões personalizadas</h3>
 
     ${servicos.map(servico=>`
       <div style="display:flex;gap:10px;margin-bottom:10px;">
