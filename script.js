@@ -1137,15 +1137,17 @@ async function salvarProfissional(){
       .single();
   }
 
-  if(resposta.error){
-    alert(
-      "Erro ao salvar profissional: " +
-      resposta.error.message
-    );
-    return;
-  }
+if(resposta.error){
+  alert(
+    "Erro ao salvar profissional: " +
+    resposta.error.message
+  );
+  return;
+}
 
-  const profissionalIdFinal =
+limparCache("profissionais");
+
+const profissionalIdFinal =
     Number(id || resposta.data?.id);
 
   try{
