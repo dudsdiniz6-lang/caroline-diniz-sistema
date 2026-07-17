@@ -53,6 +53,92 @@ async function obterServicos(){
 
   return cacheSistema.servicos;
 }
+async function obterClientes(){
+
+  if(cacheSistema.clientes){
+    return cacheSistema.clientes;
+  }
+
+  const { data, error } = await supabaseClient
+    .from("clientes")
+    .select("*")
+    .eq("ativo", true)
+    .order("nome");
+
+  if(error){
+    console.error(error);
+    return [];
+  }
+
+  cacheSistema.clientes = data || [];
+
+  return cacheSistema.clientes;
+}
+
+async function obterProfissionais(){
+
+  if(cacheSistema.profissionais){
+    return cacheSistema.profissionais;
+  }
+
+  const { data, error } = await supabaseClient
+    .from("profissionais")
+    .select("*")
+    .eq("ativo", true)
+    .order("ordem");
+
+  if(error){
+    console.error(error);
+    return [];
+  }
+
+  cacheSistema.profissionais = data || [];
+
+  return cacheSistema.profissionais;
+}
+
+async function obterCategorias(){
+
+  if(cacheSistema.categorias){
+    return cacheSistema.categorias;
+  }
+
+  const { data, error } = await supabaseClient
+    .from("categorias_servicos")
+    .select("*")
+    .order("nome");
+
+  if(error){
+    console.error(error);
+    return [];
+  }
+
+  cacheSistema.categorias = data || [];
+
+  return cacheSistema.categorias;
+}
+
+async function obterFormasPagamento(){
+
+  if(cacheSistema.formasPagamento){
+    return cacheSistema.formasPagamento;
+  }
+
+  const { data, error } = await supabaseClient
+    .from("formas_pagamento")
+    .select("*")
+    .eq("ativo", true)
+    .order("ordem");
+
+  if(error){
+    console.error(error);
+    return [];
+  }
+
+  cacheSistema.formasPagamento = data || [];
+
+  return cacheSistema.formasPagamento;
+}
 
 
 const PERMISSOES_SISTEMA = [
