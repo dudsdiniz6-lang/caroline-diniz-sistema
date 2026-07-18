@@ -11283,6 +11283,8 @@ async function carregarPagamentosProfissionais(){
     </div>
   `;
 }
+let assinaturaValePreenchida = false;
+let desenhandoAssinaturaVale = false;
 
 
 async function carregarValesProfissionais(){
@@ -11296,25 +11298,920 @@ async function carregarValesProfissionais(){
 
   area.innerHTML = `
     <div class="card">
-      <h2>Vales</h2>
 
-      <button
-        class="principal"
-        onclick="abrirModalNovoValeProfissional()"
-      >
-        Registrar novo vale
-      </button>
+      <div style="
+        display:flex;
+        justify-content:space-between;
+        align-items:center;
+        gap:15px;
+        flex-wrap:wrap;
+      ">
+
+        <div>
+          <h2 style="margin-bottom:5px;">Vales</h2>
+
+          <p style="margin:0;">
+            Registre adiantamentos entregues aos profissionais.
+          </p>
+        </div>
+
+        <button
+          class="principal"
+          onclick="abrirModalNovoValeProfissional()"
+        >
+          Registrar novo vale
+        </button>
+
+      </div>
 
       <div
         id="listaValesProfissionais"
-        style="margin-top:20px;"
+        style="margin-top:25px;"
       >
-        Nenhum vale carregado.
+        Carregando...
       </div>
+
+    </div>
+  `;
+
+  await listarValesProfissionais();
+}
+
+
+async function listarValesProfissionais(){
+
+  const area =
+    document.getElementById(
+      "listaValesProfissionais"
+    );
+
+  if(!area) return;
+
+  const { data: vales, error } =
+    await supabaseClient
+      .from("profissionais_vales")
+      .select("*")
+      .order("data_vale", {
+        ascending: false
+      })
+      .order("created_at", {
+        ascending: false
+      });
+
+  if(error){
+
+    console.error(error);
+
+    area.innerHTML = `
+      <p>
+        Não foi possível carregar os vales.
+      </p>
+    `;
+
+    return;
+  }
+
+  if(!vales || vales.length === 0){
+
+    area.innerHTML = `
+      <div style="
+        padding:25px;
+        text-align:center;
+        border:1px solid #ddd;
+        border-radius:8px;
+      ">
+        Nenhum vale registrado.
+      </div>
+    `;
+
+    return;
+  }
+
+  const profissionais =
+    await obterProfissionais();
+
+  const mapaProfissionais = {};
+
+  (profissionais || []).forEach(profissional=>{
+
+    mapaProfissionais[profissional.id] =
+      profissional.nome;
+
+  });
+
+  area.innerHTML = `
+    <div style="overflow-x:auto;">
+
+      <table style="
+        width:100%;
+        border-collapse:collapse;
+      ">
+
+        <thead>
+          <tr>
+            <th style="text-align:left;padding:12px;">
+              Data
+            </th>
+
+            <th style="text-align:left;padding:12px;">
+              Profissional
+            </th>
+
+            <th style="text-align:left;padding:12px;">
+              Descrição
+            </th>
+
+            <th style="text-align:right;padding:12px;">
+              Valor
+            </th>
+
+            <th style="text-align:center;padding:12px;">
+              Status
+            </th>
+
+            <th style="text-align:center;padding:12px;">
+              Assinatura
+            </th>
+          </tr>
+        </thead>
+
+        <tbody>
+
+          ${vales.map(vale=>{
+
+            const nomeProfissional =
+              mapaProfissionais[vale.profissional_id]
+              || "Profissional não encontrado";
+
+            const dataFormatada =
+              formatarDataValeProfissional(
+                vale.data_vale
+              );
+
+            const valorFormatado =
+              Number(
+                vale.valor || 0
+              ).toLocaleString(
+                "pt-BR",
+                {
+                  style: "currency",
+                  currency: "BRL"
+                }
+              );
+
+            const status =
+              vale.status || "pendente";
+
+            return `
+              <tr style="
+                border-top:1px solid #ddd;
+              ">
+
+                <td style="padding:12px;">
+                  ${dataFormatada}
+                </td>
+
+                <td style="padding:12px;">
+                  ${nomeProfissional}
+                </td>
+
+                <td style="padding:12px;">
+                  ${vale.descricao || "-"}
+                </td>
+
+                <td style="
+                  padding:12px;
+                  text-align:right;
+                  font-weight:600;
+                ">
+                  ${valorFormatado}
+                </td>
+
+                <td style="
+                  padding:12px;
+                  text-align:center;
+                ">
+                  ${status === "pendente"
+                    ? "Pendente"
+                    : "Quitado"}
+                </td>
+
+                <td style="
+                  padding:12px;
+                  text-align:center;
+                ">
+
+                  ${vale.assinatura
+                    ? `
+                      <button
+                        type="button"
+                        onclick="visualizarAssinaturaVale('${vale.id}')"
+                      >
+                        Visualizar
+                      </button>
+                    `
+                    : "Sem assinatura"
+                  }
+
+                </td>
+
+              </tr>
+            `;
+
+          }).join("")}
+
+        </tbody>
+
+      </table>
+
     </div>
   `;
 }
 
+
+function formatarDataValeProfissional(data){
+
+  if(!data) return "-";
+
+  const partes =
+    String(data).split("-");
+
+  if(partes.length !== 3){
+    return data;
+  }
+
+  return `${partes[2]}/${partes[1]}/${partes[0]}`;
+}
+
+
+async function abrirModalNovoValeProfissional(){
+
+  let modal =
+    document.getElementById(
+      "modalNovoValeProfissional"
+    );
+
+  if(modal){
+    modal.remove();
+  }
+
+  const profissionais =
+    await obterProfissionais();
+
+  const profissionaisAtivos =
+    (profissionais || []).filter(
+      profissional =>
+        profissional.ativo !== false
+    );
+
+  modal =
+    document.createElement("div");
+
+  modal.id =
+    "modalNovoValeProfissional";
+
+  modal.style.cssText = `
+    position:fixed;
+    inset:0;
+    background:rgba(0,0,0,0.55);
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    z-index:99999;
+    padding:20px;
+  `;
+
+  modal.innerHTML = `
+    <div style="
+      background:#fff;
+      width:100%;
+      max-width:650px;
+      max-height:95vh;
+      overflow-y:auto;
+      border-radius:10px;
+      padding:25px;
+    ">
+
+      <div style="
+        display:flex;
+        justify-content:space-between;
+        align-items:center;
+        margin-bottom:20px;
+      ">
+
+        <h2 style="margin:0;">
+          Registrar novo vale
+        </h2>
+
+        <button
+          type="button"
+          onclick="fecharModalNovoValeProfissional()"
+          style="
+            border:none;
+            background:transparent;
+            font-size:26px;
+            cursor:pointer;
+          "
+        >
+          ×
+        </button>
+
+      </div>
+
+      <div style="
+        display:grid;
+        grid-template-columns:1fr 1fr;
+        gap:15px;
+      ">
+
+        <div style="grid-column:1 / -1;">
+
+          <label>
+            Profissional
+          </label>
+
+          <select
+            id="valeProfissionalId"
+            style="width:100%;"
+          >
+            <option value="">
+              Selecione
+            </option>
+
+            ${profissionaisAtivos.map(
+              profissional => `
+                <option value="${profissional.id}">
+                  ${profissional.nome}
+                </option>
+              `
+            ).join("")}
+
+          </select>
+
+        </div>
+
+        <div>
+
+          <label>
+            Data do vale
+          </label>
+
+          <input
+            type="date"
+            id="valeData"
+            value="${obterDataAtualVale()}"
+            style="width:100%;"
+          >
+
+        </div>
+
+        <div>
+
+          <label>
+            Valor
+          </label>
+
+          <input
+            type="number"
+            id="valeValor"
+            min="0.01"
+            step="0.01"
+            placeholder="0,00"
+            style="width:100%;"
+          >
+
+        </div>
+
+        <div style="grid-column:1 / -1;">
+
+          <label>
+            Descrição
+          </label>
+
+          <textarea
+            id="valeDescricao"
+            rows="3"
+            placeholder="Exemplo: adiantamento solicitado pelo profissional"
+            style="width:100%;resize:vertical;"
+          ></textarea>
+
+        </div>
+
+      </div>
+
+      <div style="margin-top:20px;">
+
+        <label>
+          Assinatura do profissional
+        </label>
+
+        <p style="
+          margin:5px 0 10px;
+          font-size:13px;
+        ">
+          O profissional deve assinar no espaço abaixo.
+        </p>
+
+        <canvas
+          id="canvasAssinaturaVale"
+          width="580"
+          height="180"
+          style="
+            width:100%;
+            height:180px;
+            border:1px solid #999;
+            border-radius:6px;
+            background:#fff;
+            touch-action:none;
+            cursor:crosshair;
+          "
+        ></canvas>
+
+        <button
+          type="button"
+          onclick="limparAssinaturaVale()"
+          style="margin-top:8px;"
+        >
+          Limpar assinatura
+        </button>
+
+      </div>
+
+      <div style="
+        display:flex;
+        justify-content:flex-end;
+        gap:10px;
+        margin-top:25px;
+      ">
+
+        <button
+          type="button"
+          onclick="fecharModalNovoValeProfissional()"
+        >
+          Cancelar
+        </button>
+
+        <button
+          type="button"
+          class="principal"
+          id="botaoSalvarValeProfissional"
+          onclick="salvarValeProfissional()"
+        >
+          Salvar vale
+        </button>
+
+      </div>
+
+    </div>
+  `;
+
+  document.body.appendChild(modal);
+
+  iniciarCanvasAssinaturaVale();
+}
+
+
+function obterDataAtualVale(){
+
+  const agora = new Date();
+
+  const ano =
+    agora.getFullYear();
+
+  const mes =
+    String(
+      agora.getMonth() + 1
+    ).padStart(2, "0");
+
+  const dia =
+    String(
+      agora.getDate()
+    ).padStart(2, "0");
+
+  return `${ano}-${mes}-${dia}`;
+}
+
+
+function fecharModalNovoValeProfissional(){
+
+  const modal =
+    document.getElementById(
+      "modalNovoValeProfissional"
+    );
+
+  if(modal){
+    modal.remove();
+  }
+
+  assinaturaValePreenchida = false;
+  desenhandoAssinaturaVale = false;
+}
+
+
+function iniciarCanvasAssinaturaVale(){
+
+  const canvas =
+    document.getElementById(
+      "canvasAssinaturaVale"
+    );
+
+  if(!canvas) return;
+
+  const contexto =
+    canvas.getContext("2d");
+
+  contexto.lineWidth = 2;
+  contexto.lineCap = "round";
+  contexto.lineJoin = "round";
+  contexto.strokeStyle = "#000";
+
+  assinaturaValePreenchida = false;
+  desenhandoAssinaturaVale = false;
+
+  function obterPosicao(evento){
+
+    const retangulo =
+      canvas.getBoundingClientRect();
+
+    const ponto =
+      evento.touches
+        ? evento.touches[0]
+        : evento;
+
+    return {
+      x:
+        (
+          ponto.clientX -
+          retangulo.left
+        ) *
+        (
+          canvas.width /
+          retangulo.width
+        ),
+
+      y:
+        (
+          ponto.clientY -
+          retangulo.top
+        ) *
+        (
+          canvas.height /
+          retangulo.height
+        )
+    };
+  }
+
+  function iniciarDesenho(evento){
+
+    evento.preventDefault();
+
+    desenhandoAssinaturaVale = true;
+
+    const posicao =
+      obterPosicao(evento);
+
+    contexto.beginPath();
+
+    contexto.moveTo(
+      posicao.x,
+      posicao.y
+    );
+  }
+
+  function desenhar(evento){
+
+    if(!desenhandoAssinaturaVale){
+      return;
+    }
+
+    evento.preventDefault();
+
+    const posicao =
+      obterPosicao(evento);
+
+    contexto.lineTo(
+      posicao.x,
+      posicao.y
+    );
+
+    contexto.stroke();
+
+    assinaturaValePreenchida = true;
+  }
+
+  function finalizarDesenho(evento){
+
+    if(evento){
+      evento.preventDefault();
+    }
+
+    desenhandoAssinaturaVale = false;
+
+    contexto.closePath();
+  }
+
+  canvas.addEventListener(
+    "mousedown",
+    iniciarDesenho
+  );
+
+  canvas.addEventListener(
+    "mousemove",
+    desenhar
+  );
+
+  canvas.addEventListener(
+    "mouseup",
+    finalizarDesenho
+  );
+
+  canvas.addEventListener(
+    "mouseleave",
+    finalizarDesenho
+  );
+
+  canvas.addEventListener(
+    "touchstart",
+    iniciarDesenho,
+    {
+      passive: false
+    }
+  );
+
+  canvas.addEventListener(
+    "touchmove",
+    desenhar,
+    {
+      passive: false
+    }
+  );
+
+  canvas.addEventListener(
+    "touchend",
+    finalizarDesenho,
+    {
+      passive: false
+    }
+  );
+}
+
+
+function limparAssinaturaVale(){
+
+  const canvas =
+    document.getElementById(
+      "canvasAssinaturaVale"
+    );
+
+  if(!canvas) return;
+
+  const contexto =
+    canvas.getContext("2d");
+
+  contexto.clearRect(
+    0,
+    0,
+    canvas.width,
+    canvas.height
+  );
+
+  assinaturaValePreenchida = false;
+}
+
+
+async function salvarValeProfissional(){
+
+  const profissionalId =
+    document.getElementById(
+      "valeProfissionalId"
+    )?.value;
+
+  const dataVale =
+    document.getElementById(
+      "valeData"
+    )?.value;
+
+  const valor =
+    Number(
+      document.getElementById(
+        "valeValor"
+      )?.value || 0
+    );
+
+  const descricao =
+    document.getElementById(
+      "valeDescricao"
+    )?.value?.trim() || "";
+
+  if(!profissionalId){
+
+    alert("Selecione o profissional.");
+
+    return;
+  }
+
+  if(!dataVale){
+
+    alert("Informe a data do vale.");
+
+    return;
+  }
+
+  if(!valor || valor <= 0){
+
+    alert("Informe um valor válido.");
+
+    return;
+  }
+
+  if(!assinaturaValePreenchida){
+
+    alert(
+      "A assinatura do profissional é obrigatória."
+    );
+
+    return;
+  }
+
+  const canvas =
+    document.getElementById(
+      "canvasAssinaturaVale"
+    );
+
+  if(!canvas) return;
+
+  const profissionais =
+    await obterProfissionais();
+
+  const profissional =
+    (profissionais || []).find(
+      item =>
+        String(item.id) ===
+        String(profissionalId)
+    );
+
+  const botao =
+    document.getElementById(
+      "botaoSalvarValeProfissional"
+    );
+
+  if(botao){
+    botao.disabled = true;
+    botao.textContent = "Salvando...";
+  }
+
+  const assinatura =
+    canvas.toDataURL("image/png");
+
+  const dados = {
+    profissional_id: profissionalId,
+    data_vale: dataVale,
+    valor: valor,
+    descricao: descricao || null,
+    status: "pendente",
+    assinatura: assinatura,
+    assinatura_data:
+      new Date().toISOString(),
+    assinatura_nome:
+      profissional?.nome || null,
+    registrado_por:
+      usuarioLogado?.id || null
+  };
+
+  const { error } =
+    await supabaseClient
+      .from("profissionais_vales")
+      .insert(dados);
+
+  if(error){
+
+    console.error(error);
+
+    alert(
+      "Não foi possível salvar o vale."
+    );
+
+    if(botao){
+      botao.disabled = false;
+      botao.textContent = "Salvar vale";
+    }
+
+    return;
+  }
+
+  alert("Vale registrado com sucesso.");
+
+  fecharModalNovoValeProfissional();
+
+  await carregarValesProfissionais();
+}
+
+
+async function visualizarAssinaturaVale(valeId){
+
+  const { data: vale, error } =
+    await supabaseClient
+      .from("profissionais_vales")
+      .select(
+        "assinatura, assinatura_nome, assinatura_data"
+      )
+      .eq("id", valeId)
+      .single();
+
+  if(error || !vale?.assinatura){
+
+    console.error(error);
+
+    alert(
+      "Não foi possível carregar a assinatura."
+    );
+
+    return;
+  }
+
+  const dataAssinatura =
+    vale.assinatura_data
+      ? new Date(
+          vale.assinatura_data
+        ).toLocaleString("pt-BR")
+      : "-";
+
+  const modal =
+    document.createElement("div");
+
+  modal.style.cssText = `
+    position:fixed;
+    inset:0;
+    background:rgba(0,0,0,0.55);
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    z-index:100000;
+    padding:20px;
+  `;
+
+  modal.innerHTML = `
+    <div style="
+      background:#fff;
+      width:100%;
+      max-width:600px;
+      border-radius:10px;
+      padding:25px;
+    ">
+
+      <h2 style="margin-top:0;">
+        Assinatura do vale
+      </h2>
+
+      <p>
+        <strong>Profissional:</strong>
+        ${vale.assinatura_nome || "-"}
+      </p>
+
+      <p>
+        <strong>Data da assinatura:</strong>
+        ${dataAssinatura}
+      </p>
+
+      <div style="
+        border:1px solid #ccc;
+        border-radius:6px;
+        padding:10px;
+        margin-top:15px;
+      ">
+
+        <img
+          src="${vale.assinatura}"
+          alt="Assinatura do profissional"
+          style="
+            width:100%;
+            max-height:250px;
+            object-fit:contain;
+          "
+        >
+
+      </div>
+
+      <div style="
+        display:flex;
+        justify-content:flex-end;
+        margin-top:20px;
+      ">
+
+        <button
+          type="button"
+          onclick="this.closest('div[style*=fixed]').remove()"
+        >
+          Fechar
+        </button>
+
+      </div>
+
+    </div>
+  `;
+
+  document.body.appendChild(modal);
+}
 
 async function carregarHistoricoFinanceiroProfissionais(){
 
@@ -11338,23 +12235,3 @@ async function carregarHistoricoFinanceiroProfissionais(){
 }
 
 
-function abrirModalNovoValeProfissional(){
-
-  alert(
-    "O formulário de vale será criado na próxima etapa."
-  );
-}
-
-
-if(document.readyState === "loading"){
-
-  document.addEventListener(
-    "DOMContentLoaded",
-    instalarModuloFinanceiroProfissionais
-  );
-
-}else{
-
-  instalarModuloFinanceiroProfissionais();
-
-}
