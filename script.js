@@ -11135,7 +11135,6 @@ function instalarModuloFinanceiroProfissionais(){
   );
 }
 
-
 async function carregarFinanceiroProfissionais(){
 
   const area =
@@ -11157,10 +11156,10 @@ async function carregarFinanceiroProfissionais(){
       </button>
 
       <button
-        id="abaFinanceiroProfissionaisPagamentos"
-        onclick="abrirAbaFinanceiroProfissionais('pagamentos')"
+        id="abaFinanceiroProfissionaisFechamentos"
+        onclick="abrirAbaFinanceiroProfissionais('fechamentos')"
       >
-        Pagamentos
+        Fechamentos
       </button>
 
       <button
@@ -11171,10 +11170,10 @@ async function carregarFinanceiroProfissionais(){
       </button>
 
       <button
-        id="abaFinanceiroProfissionaisHistorico"
-        onclick="abrirAbaFinanceiroProfissionais('historico')"
+        id="abaFinanceiroProfissionaisExtrato"
+        onclick="abrirAbaFinanceiroProfissionais('extrato')"
       >
-        Histórico
+        Extrato
       </button>
 
     </div>
@@ -11195,14 +11194,14 @@ function abrirAbaFinanceiroProfissionais(aba){
     resumo:
       "abaFinanceiroProfissionaisResumo",
 
-    pagamentos:
-      "abaFinanceiroProfissionaisPagamentos",
+    fechamentos:
+      "abaFinanceiroProfissionaisFechamentos",
 
     vales:
       "abaFinanceiroProfissionaisVales",
 
-    historico:
-      "abaFinanceiroProfissionaisHistorico"
+    extrato:
+      "abaFinanceiroProfissionaisExtrato"
   };
 
   Object.values(botoes).forEach(id=>{
@@ -11227,19 +11226,18 @@ function abrirAbaFinanceiroProfissionais(aba){
     carregarResumoFinanceiroProfissionais();
   }
 
-  if(aba === "pagamentos"){
-    carregarPagamentosProfissionais();
+  if(aba === "fechamentos"){
+    carregarFechamentosProfissionais();
   }
 
   if(aba === "vales"){
     carregarValesProfissionais();
   }
 
-  if(aba === "historico"){
-    carregarHistoricoFinanceiroProfissionais();
+  if(aba === "extrato"){
+    carregarExtratoFinanceiroProfissionais();
   }
 }
-
 
 async function carregarResumoFinanceiroProfissionais(){
 
@@ -11263,7 +11261,7 @@ async function carregarResumoFinanceiroProfissionais(){
 }
 
 
-async function carregarPagamentosProfissionais(){
+async function carregarFechamentosProfissionais(){
 
   const area =
     document.getElementById(
@@ -11274,19 +11272,14 @@ async function carregarPagamentosProfissionais(){
 
   area.innerHTML = `
     <div class="card">
-      <h2>Pagamentos</h2>
+      <h2>Fechamentos</h2>
 
       <p>
-        Selecione um período para calcular,
-        fechar e registrar o pagamento das comissões.
+        Calcule, confira e registre os pagamentos das comissões por período.
       </p>
     </div>
   `;
 }
-let assinaturaValePreenchida = false;
-let desenhandoAssinaturaVale = false;
-
-
 async function carregarValesProfissionais(){
 
   const area =
@@ -12213,7 +12206,7 @@ async function visualizarAssinaturaVale(valeId){
   document.body.appendChild(modal);
 }
 
-async function carregarHistoricoFinanceiroProfissionais(){
+async function carregarExtratoFinanceiroProfissionais(){
 
   const area =
     document.getElementById(
@@ -12224,25 +12217,11 @@ async function carregarHistoricoFinanceiroProfissionais(){
 
   area.innerHTML = `
     <div class="card">
-      <h2>Histórico financeiro</h2>
+      <h2>Extrato financeiro</h2>
 
       <p>
-        Aqui serão exibidos pagamentos,
-        vales, cancelamentos e saldos anteriores.
+        Consulte comissões, pagamentos, vales e saldos de cada profissional.
       </p>
     </div>
   `;
 }
-if(document.readyState === "loading"){
-
-  document.addEventListener(
-    "DOMContentLoaded",
-    instalarModuloFinanceiroProfissionais
-  );
-
-}else{
-
-  instalarModuloFinanceiroProfissionais();
-
-}
-
