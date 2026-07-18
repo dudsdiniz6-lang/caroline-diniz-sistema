@@ -417,6 +417,10 @@ if(nome === "comissoes" && !pode("comissoes_visualizar")){
   alert("Você não tem permissão para acessar comissões.");
   return;
 }
+  if(nome === "financeiroProfissionais" && !pode("comissoes_visualizar")){
+  alert("Você não tem permissão para acessar o financeiro dos profissionais.");
+  return;
+}
 
   if(nome === "caixa" && !pode("caixa_visualizar")){
     alert("Você não tem permissão para acessar caixa.");
@@ -467,9 +471,13 @@ if(nome === "comissoes" && !pode("comissoes_visualizar")){
   if(nome === "pacotes") carregarPacotes();
   if(nome === "comandas") carregarComandas();
   if(nome === "caixa") abrirAbaFinanceiro("caixa");
-  if(nome === "comissoes") carregarComissoes();
-  if(nome === "configuracoes") carregarConfiguracoes();
-if(nome === "gestores") carregarGestores();
+if(nome === "comissoes") carregarComissoes();
+
+if(nome === "financeiroProfissionais"){
+  carregarFinanceiroProfissionais();
+}
+
+if(nome === "configuracoes") carregarConfiguracoes();
 if(nome === "auditoria") carregarAuditoria();
 
 if(nome === "relatorios"){
