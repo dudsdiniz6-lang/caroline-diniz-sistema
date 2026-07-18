@@ -2925,6 +2925,7 @@ async function venderPacote(pacoteId){
     .single();
 
   const pacote = pacoteResp.data;
+  const item = itemResp.data;
 
   abrirModal(`
     <h2>Vender pacote</h2>
