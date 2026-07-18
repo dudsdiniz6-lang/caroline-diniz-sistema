@@ -12233,5 +12233,16 @@ async function carregarHistoricoFinanceiroProfissionais(){
     </div>
   `;
 }
+if(document.readyState === "loading"){
 
+  document.addEventListener(
+    "DOMContentLoaded",
+    instalarModuloFinanceiroProfissionais
+  );
+
+}else{
+
+  instalarModuloFinanceiroProfissionais();
+
+}
 
