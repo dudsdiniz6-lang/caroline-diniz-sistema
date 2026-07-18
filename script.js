@@ -11052,3 +11052,309 @@ async function abrirDetalhesPendenciasCliente(clienteId){
     </button>
   `);
 }
+function instalarModuloFinanceiroProfissionais(){
+
+  if(document.getElementById("tela-financeiroProfissionais")){
+    return;
+  }
+
+  const telaComissoes =
+    document.getElementById("tela-comissoes");
+
+  if(!telaComissoes){
+    console.error(
+      "Não foi possível localizar a tela de comissões."
+    );
+    return;
+  }
+
+  const novaTela = document.createElement("div");
+
+  novaTela.id = "tela-financeiroProfissionais";
+  novaTela.className = "tela";
+
+  novaTela.innerHTML = `
+    <div class="cabecalho-pagina">
+      <div>
+        <h1>Financeiro dos Profissionais</h1>
+        <p>
+          Pagamentos, vales, saldos e histórico financeiro.
+        </p>
+      </div>
+    </div>
+
+    <div id="listaFinanceiroProfissionais"></div>
+  `;
+
+  telaComissoes.insertAdjacentElement(
+    "afterend",
+    novaTela
+  );
+
+  const botaoComissoes =
+    document.querySelector(
+      `[onclick="mostrarTela('comissoes')"]`
+    ) ||
+    document.querySelector(
+      `[onclick='mostrarTela("comissoes")']`
+    );
+
+  if(!botaoComissoes){
+    console.error(
+      "Não foi possível localizar o botão de comissões."
+    );
+    return;
+  }
+
+  const novoBotao =
+    botaoComissoes.cloneNode(true);
+
+  novoBotao.setAttribute(
+    "onclick",
+    "mostrarTela('financeiroProfissionais')"
+  );
+
+  novoBotao.removeAttribute("id");
+
+  const textoBotao =
+    novoBotao.querySelector(
+      ".menu-texto, span"
+    );
+
+  if(textoBotao){
+    textoBotao.textContent =
+      "Financeiro dos Profissionais";
+  }else{
+    novoBotao.textContent =
+      "Financeiro dos Profissionais";
+  }
+
+  botaoComissoes.insertAdjacentElement(
+    "afterend",
+    novoBotao
+  );
+}
+
+
+async function carregarFinanceiroProfissionais(){
+
+  const area =
+    document.getElementById(
+      "listaFinanceiroProfissionais"
+    );
+
+  if(!area) return;
+
+  area.innerHTML = `
+    <div class="abas-financeiro-profissionais">
+
+      <button
+        id="abaFinanceiroProfissionaisResumo"
+        class="principal"
+        onclick="abrirAbaFinanceiroProfissionais('resumo')"
+      >
+        Resumo
+      </button>
+
+      <button
+        id="abaFinanceiroProfissionaisPagamentos"
+        onclick="abrirAbaFinanceiroProfissionais('pagamentos')"
+      >
+        Pagamentos
+      </button>
+
+      <button
+        id="abaFinanceiroProfissionaisVales"
+        onclick="abrirAbaFinanceiroProfissionais('vales')"
+      >
+        Vales
+      </button>
+
+      <button
+        id="abaFinanceiroProfissionaisHistorico"
+        onclick="abrirAbaFinanceiroProfissionais('historico')"
+      >
+        Histórico
+      </button>
+
+    </div>
+
+    <div
+      id="conteudoFinanceiroProfissionais"
+      style="margin-top:20px;"
+    ></div>
+  `;
+
+  abrirAbaFinanceiroProfissionais("resumo");
+}
+
+
+function abrirAbaFinanceiroProfissionais(aba){
+
+  const botoes = {
+    resumo:
+      "abaFinanceiroProfissionaisResumo",
+
+    pagamentos:
+      "abaFinanceiroProfissionaisPagamentos",
+
+    vales:
+      "abaFinanceiroProfissionaisVales",
+
+    historico:
+      "abaFinanceiroProfissionaisHistorico"
+  };
+
+  Object.values(botoes).forEach(id=>{
+
+    const botao =
+      document.getElementById(id);
+
+    if(botao){
+      botao.classList.remove("principal");
+    }
+
+  });
+
+  const botaoAtivo =
+    document.getElementById(botoes[aba]);
+
+  if(botaoAtivo){
+    botaoAtivo.classList.add("principal");
+  }
+
+  if(aba === "resumo"){
+    carregarResumoFinanceiroProfissionais();
+  }
+
+  if(aba === "pagamentos"){
+    carregarPagamentosProfissionais();
+  }
+
+  if(aba === "vales"){
+    carregarValesProfissionais();
+  }
+
+  if(aba === "historico"){
+    carregarHistoricoFinanceiroProfissionais();
+  }
+}
+
+
+async function carregarResumoFinanceiroProfissionais(){
+
+  const area =
+    document.getElementById(
+      "conteudoFinanceiroProfissionais"
+    );
+
+  if(!area) return;
+
+  area.innerHTML = `
+    <div class="card">
+      <h2>Resumo financeiro</h2>
+
+      <p>
+        Aqui serão exibidos os saldos atuais,
+        pagamentos pendentes e vales de cada profissional.
+      </p>
+    </div>
+  `;
+}
+
+
+async function carregarPagamentosProfissionais(){
+
+  const area =
+    document.getElementById(
+      "conteudoFinanceiroProfissionais"
+    );
+
+  if(!area) return;
+
+  area.innerHTML = `
+    <div class="card">
+      <h2>Pagamentos</h2>
+
+      <p>
+        Selecione um período para calcular,
+        fechar e registrar o pagamento das comissões.
+      </p>
+    </div>
+  `;
+}
+
+
+async function carregarValesProfissionais(){
+
+  const area =
+    document.getElementById(
+      "conteudoFinanceiroProfissionais"
+    );
+
+  if(!area) return;
+
+  area.innerHTML = `
+    <div class="card">
+      <h2>Vales</h2>
+
+      <button
+        class="principal"
+        onclick="abrirModalNovoValeProfissional()"
+      >
+        Registrar novo vale
+      </button>
+
+      <div
+        id="listaValesProfissionais"
+        style="margin-top:20px;"
+      >
+        Nenhum vale carregado.
+      </div>
+    </div>
+  `;
+}
+
+
+async function carregarHistoricoFinanceiroProfissionais(){
+
+  const area =
+    document.getElementById(
+      "conteudoFinanceiroProfissionais"
+    );
+
+  if(!area) return;
+
+  area.innerHTML = `
+    <div class="card">
+      <h2>Histórico financeiro</h2>
+
+      <p>
+        Aqui serão exibidos pagamentos,
+        vales, cancelamentos e saldos anteriores.
+      </p>
+    </div>
+  `;
+}
+
+
+function abrirModalNovoValeProfissional(){
+
+  alert(
+    "O formulário de vale será criado na próxima etapa."
+  );
+}
+
+
+if(document.readyState === "loading"){
+
+  document.addEventListener(
+    "DOMContentLoaded",
+    instalarModuloFinanceiroProfissionais
+  );
+
+}else{
+
+  instalarModuloFinanceiroProfissionais();
+
+}
