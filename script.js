@@ -3269,31 +3269,21 @@ async function confirmarVendaPacote(pacoteId){
         observacao: `Pacote anotado para pagar depois: ${pacote.nome}`
       }]);
 
-    if(pendenciaResp.error){
-      alert("Erro ao registrar pendência: " + pendenciaResp.error.message);
-      return;
-    }
-  }
+ if(pendenciaResp.error){
+  alert("Erro ao registrar pendência: " + pendenciaResp.error.message);
+  return;
+}
 
-  await registrarHistoricoOperacao(
-    "venda_pacote",
-    String(pacoteCliente.id),
-    "Pacote vendido",
-    {
-      cliente_id: clienteId,
-      pacote_id: pacoteId,
-      pacote_cliente_id: pacoteCliente.id,
-      comanda_id: comanda.id,
-      valor: pacote.valor,
-      tipo_recebimento: tipoRecebimento,
-      forma_pagamento_id:
-        tipoRecebimento === "receber_agora"
-          ? formaPagamentoId
-          : null
-    }
-  );
+carregarPacotes();
+carregarComandas();
+carregarPendenciasFinanceiras();
 
-  fecharModal();
+alert(
+  tipoRecebimento === "receber_agora"
+    ? "Pacote vendido e pagamento registrado."
+    : "Pacote vendido e lançado como A Receber."
+);
+}
   carregarPacotes();
   carregarComandas();
   carregarPendenciasFinanceiras();
