@@ -127,11 +127,10 @@ async function obterFormasPagamento(){
   const { data, error } = await supabaseClient
     .from("formas_pagamento")
     .select("*")
-    .eq("ativo", true)
     .order("ordem");
 
   if(error){
-    console.error(error);
+    console.error("Erro ao buscar formas de pagamento:", error);
     return [];
   }
 
@@ -139,66 +138,6 @@ async function obterFormasPagamento(){
 
   return cacheSistema.formasPagamento;
 }
-
-
-const PERMISSOES_SISTEMA = [
-
-  "dashboard_visualizar",
-  "dashboard_financeiro",
-
-  "agenda_ver_propria",
-  "agenda_ver_todos",
-  "agenda_criar",
-  "agenda_editar",
-  "agenda_cancelar",
-  "agenda_recorrencia",
-  "agenda_faturar",
-
-  "clientes_ver_proprios",
-  "clientes_ver_todos",
-  "clientes_criar",
-  "clientes_editar",
-  "clientes_excluir",
-
-  "prontuarios_ver_proprios",
-  "prontuarios_ver_todos",
-  "prontuarios_criar",
-  "prontuarios_responder",
-  "prontuarios_editar",
-  "prontuarios_excluir",
-  "prontuarios_assinar",
-
-  "servicos_visualizar",
-  "servicos_criar",
-  "servicos_editar",
-
-  "pacotes_ver_proprios",
-  "pacotes_ver_todos",
-  "pacotes_criar",
-  "pacotes_editar",
-  "pacotes_vender",
-
-  "comandas_ver_proprias",
-  "comandas_ver_todas",
-  "comandas_criar",
-  "comandas_editar",
-  "comandas_cancelar",
-
-  "caixa_visualizar",
-  "caixa_abrir",
-  "caixa_fechar",
-
-  "comissoes_ver_propria",
-  "comissoes_ver_todas",
-
-  "relatorios_ver_proprios",
-  "relatorios_ver_todos",
-
-  "gestores_visualizar",
-  "gestores_editar",
-
-  "auditoria_ver"
-];
 
 function formatarDataBR(data){
   return data.toLocaleDateString("pt-BR");
