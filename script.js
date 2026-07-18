@@ -1359,7 +1359,7 @@ async function salvarServico(){
   const categoriaId =
     document.getElementById("servicoCategoria").value;
 
-  const dados = {
+const dados = {
     unidade_id: unidadeAtualId,
     categoria_id: categoriaId ? Number(categoriaId) : null,
     nome: document.getElementById("servicoNome").value.trim(),
@@ -1407,14 +1407,16 @@ await registrarHistoricoOperacao(
   {
     servico_id: id || resposta.data?.id || null,
     antes: servicoAntes,
-   
+    depois: dados
+  }
+);
 
-  fecharModal();
+fecharModal();
 
-  carregarServicos();
-  carregarAgenda();
+carregarServicos();
+carregarAgenda();
 
-  alert("Serviço salvo com sucesso.");
+alert("Serviço salvo com sucesso.");
 }
 async function carregarAgenda(){
 
