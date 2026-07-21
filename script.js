@@ -6704,9 +6704,9 @@ async function abrirFaturamentoClienteDia(agendamentoId){
         profissionais(nome)
       `)
       .eq("cliente_id", agendamentoBase.cliente_id)
-      .gte("data", dataHoje)
-      .neq("status", "Cancelado")
-      .order("data", { ascending:true })
+.gte("data", dataHoje)
+.or("status.is.null,status.neq.Cancelado")
+.order("data", { ascending:true })
       .order("horario", { ascending:true });
 
   if(erroAgendamentos){
@@ -6721,10 +6721,10 @@ async function abrirFaturamentoClienteDia(agendamentoId){
   if(idsAgendamentos.length > 0){
 
     const comandasExistentesResp = await supabaseClient
-      .from("comandas")
-      .select("agendamento_id")
-      .in("agendamento_id", idsAgendamentos)
-      .neq("cancelada", true);
+  .from("comandas")
+  .select("agendamento_id")
+  .in("agendamento_id", idsAgendamentos)
+  .or("cancelada.is.null,cancelada.eq.false");
 
     const idsJaFaturados = (comandasExistentesResp.data || [])
       .map(c => Number(c.agendamento_id));
