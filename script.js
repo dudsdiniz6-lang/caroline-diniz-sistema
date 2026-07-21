@@ -120,23 +120,21 @@ async function obterCategorias(){
 
 async function obterFormasPagamento(){
 
-  if(cacheSistema.formasPagamento){
-    return cacheSistema.formasPagamento;
-  }
-
   const { data, error } = await supabaseClient
     .from("formas_pagamento")
     .select("*")
-    .order("ordem");
+    .order("nome", { ascending:true });
 
   if(error){
     console.error("Erro ao buscar formas de pagamento:", error);
     return [];
   }
 
+  console.log("FORMAS DE PAGAMENTO:", data);
+
   cacheSistema.formasPagamento = data || [];
 
-  return cacheSistema.formasPagamento;
+  return data || [];
 }
 
 function formatarDataBR(data){
@@ -2848,9 +2846,10 @@ async function salvarPacote(){
 }
 async function venderPacote(pacoteId){
 
-  const clientes = await obterClientes();
-  const formas = await obterFormasPagamento();
-  console.log("FORMAS:", formas);
+ const clientes = await obterClientes();
+const formas = await obterFormasPagamento();
+
+console.log("FORMAS NO MODAL:", formas);
 
   const pacoteResp = await supabaseClient
     .from("pacotes")
