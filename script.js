@@ -6689,6 +6689,7 @@ async function abrirFaturamentoClienteDia(agendamentoId){
     .single();
 
   if(error || !agendamentoBase){
+    console.error("Erro ao buscar agendamento:", error);
     alert("Agendamento não encontrado.");
     return;
   }
@@ -6703,37 +6704,66 @@ async function abrirFaturamentoClienteDia(agendamentoId){
         servicos(nome, comissao_padrao),
         profissionais(nome)
       `)
-      .eq("cliente_id", agendamentoBase.cliente_id)
-.gte("data", dataHoje)
-.or("status.is.null,status.neq.Cancelado")
-.order("data", { ascending:true })
-      .order("horario", { ascending:true });
+      .eq("cliente_id", agendamentoBase.cliente_id);
 
   if(erroAgendamentos){
+    console.error(
+      "Erro ao carregar os agendamentos da cliente:",
+      erroAgendamentos
+    );
+
     alert("Erro ao carregar os agendamentos da cliente.");
     return;
   }
-console.log("AGENDAMENTO BASE:", agendamentoBase);
-console.log("CLIENTE ID:", agendamentoBase.cliente_id);
-console.log("DATA HOJE:", dataHoje);
-console.log("AGENDAMENTOS ENCONTRADOS:", agendamentosCliente);
-  
+
   let itens = agendamentosCliente || [];
 
-  const idsAgendamentos = itens.map(item => item.id);
+  itens = itens.filter(item => {
+
+    const status =
+      String(item.status || "")
+        .trim()
+        .toLowerCase();
+
+    const cancelado =
+      status === "cancelado" ||
+      status === "cancelada";
+
+    const dataValida =
+      item.data >= dataHoje;
+
+    return !cancelado && dataValida;
+  });
+
+  const idsAgendamentos =
+    itens.map(item => item.id);
 
   if(idsAgendamentos.length > 0){
 
-    const comandasExistentesResp = await supabaseClient
-  .from("comandas")
-  .select("agendamento_id")
-  .in("agendamento_id", idsAgendamentos)
-  .or("cancelada.is.null,cancelada.eq.false");
+    const { data: comandasExistentes, error: erroComandas } =
+      await supabaseClient
+        .from("comandas")
+        .select("agendamento_id, cancelada")
+        .in("agendamento_id", idsAgendamentos);
 
-    const idsJaFaturados = (comandasExistentesResp.data || [])
-      .map(c => Number(c.agendamento_id));
-    console.log("COMANDAS ENCONTRADAS:", comandasExistentesResp.data);
-console.log("IDS JÁ FATURADOS:", idsJaFaturados);
+    if(erroComandas){
+      console.error(
+        "Erro ao verificar comandas existentes:",
+        erroComandas
+      );
+
+      alert("Erro ao verificar os serviços já faturados.");
+      return;
+    }
+
+    const idsJaFaturados =
+      (comandasExistentes || [])
+        .filter(comanda =>
+          comanda.cancelada !== true
+        )
+        .map(comanda =>
+          Number(comanda.agendamento_id)
+        );
 
     itens = itens.filter(item =>
       !idsJaFaturados.includes(Number(item.id))
@@ -6748,11 +6778,14 @@ console.log("IDS JÁ FATURADOS:", idsJaFaturados);
     item.data > dataHoje
   );
 
-  console.log("ITENS APÓS FILTRO:", itens);
-console.log("ITENS HOJE:", itensHoje);
-console.log("ITENS FUTUROS:", itensFuturos);
-  if(itensHoje.length === 0 && itensFuturos.length === 0){
-    alert("Não há serviços pendentes para faturar desta cliente.");
+  if(
+    itensHoje.length === 0 &&
+    itensFuturos.length === 0
+  ){
+    alert(
+      "Não há serviços pendentes para faturar desta cliente."
+    );
+
     return;
   }
 
@@ -6771,25 +6804,47 @@ console.log("ITENS FUTUROS:", itensFuturos);
         type="checkbox"
         class="itemFaturamentoCliente"
         value="${item.id}"
-        data-total="${item.usar_pacote ? 0 : Number(item.total || 0)}"
+        data-total="${
+          item.usar_pacote
+            ? 0
+            : Number(item.total || 0)
+        }"
         ${futuro ? "" : "checked"}
         onchange="calcularTotalFaturamentoCliente()"
-        style="width:auto;height:auto;"
+        style="
+          width:auto;
+          height:auto;
+        "
       >
 
       <span>
-        <strong>${item.servicos?.nome || "Serviço"}</strong><br>
+        <strong>
+          ${item.servicos?.nome || "Serviço"}
+        </strong>
+
+        <br>
 
         <small>
-          ${futuro ? `${formatarDataComanda(item.data)} • ` : ""}
+          ${
+            futuro
+              ? `${formatarDataComanda(item.data)} • `
+              : ""
+          }
+
           ${item.profissionais?.nome || "Profissional"}
+
           • ${formatarHorarioBonito(item.horario)}
+
           ${item.usar_pacote ? " • Pacote" : ""}
         </small>
       </span>
 
       <strong>
-        ${item.usar_pacote ? dinheiro(0) : dinheiro(item.total || 0)}
+        ${
+          item.usar_pacote
+            ? dinheiro(0)
+            : dinheiro(item.total || 0)
+        }
       </strong>
     </label>
   `;
@@ -6814,44 +6869,75 @@ console.log("ITENS FUTUROS:", itensFuturos);
     <div id="listaItensFaturamentoCliente">
       ${
         itensHoje.length
-          ? itensHoje.map(item => montarItem(item, false)).join("")
+          ? itensHoje
+              .map(item =>
+                montarItem(item, false)
+              )
+              .join("")
           : "<p>Nenhum serviço pendente para hoje.</p>"
       }
     </div>
 
     ${
-      itensFuturos.length ? `
-        <div class="card" style="margin-top:18px;">
-
-          <label style="display:flex;gap:10px;align-items:center;margin:0;">
-            <input
-              type="checkbox"
-              id="mostrarAgendamentosFuturosFaturamento"
-              onchange="alternarAgendamentosFuturosFaturamento()"
-              style="width:auto;height:auto;margin:0;"
-            >
-
-            Ver ou dar baixa em agendamentos futuros
-          </label>
-
+      itensFuturos.length
+        ? `
           <div
-            id="areaAgendamentosFuturosFaturamento"
-            style="display:none;margin-top:15px;"
+            class="card"
+            style="margin-top:18px;"
           >
-            <h3>Agendamentos futuros</h3>
 
-            ${itensFuturos.map(item => montarItem(item, true)).join("")}
+            <label
+              style="
+                display:flex;
+                gap:10px;
+                align-items:center;
+                margin:0;
+              "
+            >
+              <input
+                type="checkbox"
+                id="mostrarAgendamentosFuturosFaturamento"
+                onchange="alternarAgendamentosFuturosFaturamento()"
+                style="
+                  width:auto;
+                  height:auto;
+                  margin:0;
+                "
+              >
+
+              Ver ou dar baixa em agendamentos futuros
+            </label>
+
+            <div
+              id="areaAgendamentosFuturosFaturamento"
+              style="
+                display:none;
+                margin-top:15px;
+              "
+            >
+              <h3>Agendamentos futuros</h3>
+
+              ${
+                itensFuturos
+                  .map(item =>
+                    montarItem(item, true)
+                  )
+                  .join("")
+              }
+            </div>
+
           </div>
-
-        </div>
-      ` : ""
+        `
+        : ""
     }
 
     <br>
 
     <h3>
       Total:
-      <span id="totalFaturamentoCliente">R$ 0,00</span>
+      <span id="totalFaturamentoCliente">
+        R$ 0,00
+      </span>
     </h3>
 
     <br>
