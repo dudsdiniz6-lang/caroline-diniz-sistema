@@ -6713,7 +6713,11 @@ async function abrirFaturamentoClienteDia(agendamentoId){
     alert("Erro ao carregar os agendamentos da cliente.");
     return;
   }
-
+console.log("AGENDAMENTO BASE:", agendamentoBase);
+console.log("CLIENTE ID:", agendamentoBase.cliente_id);
+console.log("DATA HOJE:", dataHoje);
+console.log("AGENDAMENTOS ENCONTRADOS:", agendamentosCliente);
+  
   let itens = agendamentosCliente || [];
 
   const idsAgendamentos = itens.map(item => item.id);
@@ -6728,6 +6732,8 @@ async function abrirFaturamentoClienteDia(agendamentoId){
 
     const idsJaFaturados = (comandasExistentesResp.data || [])
       .map(c => Number(c.agendamento_id));
+    console.log("COMANDAS ENCONTRADAS:", comandasExistentesResp.data);
+console.log("IDS JÁ FATURADOS:", idsJaFaturados);
 
     itens = itens.filter(item =>
       !idsJaFaturados.includes(Number(item.id))
@@ -6742,6 +6748,9 @@ async function abrirFaturamentoClienteDia(agendamentoId){
     item.data > dataHoje
   );
 
+  console.log("ITENS APÓS FILTRO:", itens);
+console.log("ITENS HOJE:", itensHoje);
+console.log("ITENS FUTUROS:", itensFuturos);
   if(itensHoje.length === 0 && itensFuturos.length === 0){
     alert("Não há serviços pendentes para faturar desta cliente.");
     return;
