@@ -2850,6 +2850,7 @@ async function venderPacote(pacoteId){
 
   const clientes = await obterClientes();
   const formas = await obterFormasPagamento();
+  console.log("FORMAS:", formas);
 
   const pacoteResp = await supabaseClient
     .from("pacotes")
