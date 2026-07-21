@@ -6694,7 +6694,7 @@ async function abrirFaturamentoClienteDia(agendamentoId){
     return;
   }
 
-  const dataHoje = formatarDataISO(new Date());
+ const dataHoje = agendamentoBase.data;
 
   const { data: agendamentosCliente, error: erroAgendamentos } =
     await supabaseClient
