@@ -117,12 +117,12 @@ async function obterCategorias(){
 
   return cacheSistema.categorias;
 }
-
 async function obterFormasPagamento(){
 
   const { data, error } = await supabaseClient
     .from("formas_pagamento")
     .select("*")
+    .eq("ativo", true)
     .order("nome", { ascending:true });
 
   if(error){
@@ -130,13 +130,10 @@ async function obterFormasPagamento(){
     return [];
   }
 
-  console.log("FORMAS DE PAGAMENTO:", data);
-
   cacheSistema.formasPagamento = data || [];
 
   return data || [];
 }
-
 function formatarDataBR(data){
   return data.toLocaleDateString("pt-BR");
 }
