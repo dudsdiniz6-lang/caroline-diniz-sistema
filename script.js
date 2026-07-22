@@ -11330,145 +11330,40 @@ async function carregarFinanceiroProfissionais(){
 function abrirAbaFinanceiroProfissionais(aba){
 
   const botoes = {
-    resumo:
-      "abaFinanceiroProfissionaisResumo",
 
-    fechamentos:
-      "abaFinanceiroProfissionaisFechamentos",
+    resumo: "abaFinanceiroProfissionaisResumo",
 
-    vales:
-      "abaFinanceiroProfissionaisVales",
+    pagamentos: "abaFinanceiroProfissionaisFechamentos",
 
-    extrato:
-      "abaFinanceiroProfissionaisExtrato"
+    vales: "abaFinanceiroProfissionaisVales",
+
+    extrato: "abaFinanceiroProfissionaisExtrato"
+
   };
 
   Object.values(botoes).forEach(id=>{
 
-    const botao =
-      document.getElementById(id);
+    const botao = document.getElementById(id);
 
     if(botao){
+
       botao.classList.remove("principal");
+
     }
 
   });
 
-  const botaoAtivo =
-    document.getElementById(botoes[aba]);
+  const ativo = document.getElementById(botoes[aba]);
 
-  if(botaoAtivo){
-    botaoAtivo.classList.add("principal");
+  if(ativo){
+
+    ativo.classList.add("principal");
+
   }
 
-  if(aba === "resumo"){
-    carregarResumoFinanceiroProfissionais();
-  }
+  FinanceiroProfissionais.abrirAba(aba);
 
-  if(aba === "fechamentos"){
-    carregarFechamentosProfissionais();
-  }
-
-  if(aba === "vales"){
-    carregarValesProfissionais();
-  }
-
-  if(aba === "extrato"){
-    carregarExtratoFinanceiroProfissionais();
-  }
 }
-
-async function carregarResumoFinanceiroProfissionais(){
-
-  const area =
-    document.getElementById(
-      "conteudoFinanceiroProfissionais"
-    );
-
-  if(!area) return;
-
-  area.innerHTML = `
-    <div class="card">
-      <h2>Resumo financeiro</h2>
-
-      <p>
-        Aqui serão exibidos os saldos atuais,
-        pagamentos pendentes e vales de cada profissional.
-      </p>
-    </div>
-  `;
-}
-
-
-async function carregarFechamentosProfissionais(){
-
-  const area =
-    document.getElementById(
-      "conteudoFinanceiroProfissionais"
-    );
-
-  if(!area) return;
-
-  area.innerHTML = `
-    <div class="card">
-      <h2>Fechamentos</h2>
-
-      <p>
-        Calcule, confira e registre os pagamentos das comissões por período.
-      </p>
-    </div>
-  `;
-}
-async function carregarValesProfissionais(){
-
-  const area =
-    document.getElementById(
-      "conteudoFinanceiroProfissionais"
-    );
-
-  if(!area) return;
-
-  area.innerHTML = `
-    <div class="card">
-
-      <div style="
-        display:flex;
-        justify-content:space-between;
-        align-items:center;
-        gap:15px;
-        flex-wrap:wrap;
-      ">
-
-        <div>
-          <h2 style="margin-bottom:5px;">Vales</h2>
-
-          <p style="margin:0;">
-            Registre adiantamentos entregues aos profissionais.
-          </p>
-        </div>
-
-        <button
-          class="principal"
-          onclick="abrirModalNovoValeProfissional()"
-        >
-          Registrar novo vale
-        </button>
-
-      </div>
-
-      <div
-        id="listaValesProfissionais"
-        style="margin-top:25px;"
-      >
-        Carregando...
-      </div>
-
-    </div>
-  `;
-
-  await listarValesProfissionais();
-}
-
 
 async function listarValesProfissionais(){
 
@@ -12343,36 +12238,4 @@ async function visualizarAssinaturaVale(valeId){
   `;
 
   document.body.appendChild(modal);
-}
-
-async function carregarExtratoFinanceiroProfissionais(){
-
-  const area =
-    document.getElementById(
-      "conteudoFinanceiroProfissionais"
-    );
-
-  if(!area) return;
-
-  area.innerHTML = `
-    <div class="card">
-      <h2>Extrato financeiro</h2>
-
-      <p>
-        Consulte comissões, pagamentos, vales e saldos de cada profissional.
-      </p>
-    </div>
-  `;
-}
-if(document.readyState === "loading"){
-
-  document.addEventListener(
-    "DOMContentLoaded",
-    instalarModuloFinanceiroProfissionais
-  );
-
-}else{
-
-  instalarModuloFinanceiroProfissionais();
-
 }
