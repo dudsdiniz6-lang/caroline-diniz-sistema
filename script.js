@@ -827,9 +827,81 @@ async function abrirModalProfissional(id = null){
 
     </div>
 
-    <div id="areaComissaoPersonalizada"></div>
+   <div id="areaComissaoPersonalizada"></div>
 
-    <button
+<div class="card" style="margin-top:18px;">
+
+  <h3>Configuração de pagamento</h3>
+
+  <label>Tipo de pagamento</label>
+
+  <select id="profissionalTipoPagamento">
+    <option value="semanal"
+      ${profissional?.tipo_pagamento=="semanal"?"selected":""}>
+      Semanal
+    </option>
+
+    <option value="quinzenal"
+      ${profissional?.tipo_pagamento=="quinzenal"?"selected":""}>
+      Quinzenal
+    </option>
+
+    <option value="mensal"
+      ${profissional?.tipo_pagamento=="mensal"?"selected":""}>
+      Mensal
+    </option>
+  </select>
+
+  <label>Dia do fechamento</label>
+
+  <input
+    id="profissionalDiaFechamento"
+    type="number"
+    min="1"
+    max="31"
+    value="${profissional?.dia_fechamento ?? 5}"
+  >
+
+  <label>Dias para pagamento</label>
+
+  <input
+    id="profissionalDiasPagamento"
+    type="number"
+    min="0"
+    value="${profissional?.dias_para_pagamento ?? 0}"
+  >
+
+  <label style="display:flex;gap:10px;align-items:center;margin-top:12px;">
+
+    <input
+      id="profissionalPermiteVale"
+      type="checkbox"
+      style="width:auto;height:auto;"
+      ${profissional?.permite_vale!==false?"checked":""}
+    >
+
+    Permitir vales
+  </label>
+
+  <label>Limite de vale</label>
+
+  <input
+    id="profissionalLimiteVale"
+    type="number"
+    step="0.01"
+    value="${profissional?.limite_vale ?? 0}"
+  >
+
+  <label>Observações</label>
+
+  <textarea
+    id="profissionalObsPagamento"
+    rows="3"
+  >${profissional?.observacoes_pagamento || ""}</textarea>
+
+</div>
+
+<button
       class="principal"
       onclick="salvarProfissional()"
     >
@@ -1051,6 +1123,41 @@ async function salvarProfissional(){
     ),
 
     usa_comissao_padrao: usaComissaoPadrao,
+   tipo_pagamento:
+  document.getElementById(
+    "profissionalTipoPagamento"
+  ).value,
+
+dia_fechamento:
+  Number(
+    document.getElementById(
+      "profissionalDiaFechamento"
+    ).value || 5
+  ),
+
+dias_para_pagamento:
+  Number(
+    document.getElementById(
+      "profissionalDiasPagamento"
+    ).value || 0
+  ),
+
+permite_vale:
+  document.getElementById(
+    "profissionalPermiteVale"
+  ).checked,
+
+limite_vale:
+  Number(
+    document.getElementById(
+      "profissionalLimiteVale"
+    ).value || 0
+  ),
+
+observacoes_pagamento:
+  document.getElementById(
+    "profissionalObsPagamento"
+  ).value.trim(),
     ativo: true
   };
 
