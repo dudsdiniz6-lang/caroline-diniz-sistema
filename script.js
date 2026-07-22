@@ -12257,3 +12257,15 @@ async function carregarExtratoFinanceiroProfissionais(){
     </div>
   `;
 }
+if(document.readyState === "loading"){
+
+  document.addEventListener(
+    "DOMContentLoaded",
+    instalarModuloFinanceiroProfissionais
+  );
+
+}else{
+
+  instalarModuloFinanceiroProfissionais();
+
+}
