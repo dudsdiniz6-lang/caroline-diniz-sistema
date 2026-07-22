@@ -1060,9 +1060,8 @@ const idsComandas =
    DETALHES DO PERÍODO
 ========================================================= */
 
-window.FinanceiroProfissionais
-  .abrirDetalhesPeriodo =
-    carregarDetalhesFinanceiroProfissional;
+window.FinanceiroProfissionais.abrirDetalhesPeriodo =
+  carregarDetalhesFinanceiroProfissional;
 
 
 async function carregarDetalhesFinanceiroProfissional(
@@ -1142,6 +1141,11 @@ async function carregarDetalhesFinanceiroProfissional(
           String(profissionalId)
       );
 
+
+    /* =========================
+       BUSCAR COMANDAS
+    ========================= */
+
     const {
       data: comandas,
       error: erroComandas
@@ -1153,7 +1157,8 @@ async function carregarDetalhesFinanceiroProfissional(
           data,
           status,
           cancelada,
-          profissional_id
+          profissional_id,
+          cliente_id
         `)
         .gte("data", dataInicio)
         .lte("data", dataFim)
@@ -1164,6 +1169,11 @@ async function carregarDetalhesFinanceiroProfissional(
     if(erroComandas){
       throw erroComandas;
     }
+
+
+    /* =========================
+       FILTRAR COMANDAS VÁLIDAS
+    ========================= */
 
     const comandasValidas =
       (comandas || []).filter(comanda => {
@@ -1186,6 +1196,7 @@ async function carregarDetalhesFinanceiroProfissional(
 
       });
 
+
     const mapaComandas = {};
 
     comandasValidas.forEach(comanda => {
@@ -1195,12 +1206,70 @@ async function carregarDetalhesFinanceiroProfissional(
 
     });
 
+
     const idsComandas =
       comandasValidas.map(
         comanda => comanda.id
       );
 
+
+    /* =========================
+       BUSCAR CLIENTES
+    ========================= */
+
+    const idsClientes =
+      [
+        ...new Set(
+          comandasValidas
+            .map(
+              comanda =>
+                comanda.cliente_id
+            )
+            .filter(Boolean)
+        )
+      ];
+
+
+    const mapaClientes = {};
+
+
+    if(idsClientes.length > 0){
+
+      const {
+        data: clientes,
+        error: erroClientes
+      } =
+        await supabaseClient
+          .from("clientes")
+          .select(`
+            id,
+            nome
+          `)
+          .in(
+            "id",
+            idsClientes
+          );
+
+      if(erroClientes){
+        throw erroClientes;
+      }
+
+      (clientes || []).forEach(cliente => {
+
+        mapaClientes[cliente.id] =
+          cliente.nome;
+
+      });
+
+    }
+
+
+    /* =========================
+       BUSCAR ITENS DAS COMANDAS
+    ========================= */
+
     let itens = [];
+
 
     if(idsComandas.length > 0){
 
@@ -1217,7 +1286,6 @@ async function carregarDetalhesFinanceiroProfissional(
             descricao,
             valor,
             comissao_percentual
-          
           `)
           .in(
             "comanda_id",
@@ -1227,6 +1295,7 @@ async function carregarDetalhesFinanceiroProfissional(
       if(erroItens){
         throw erroItens;
       }
+
 
       itens =
         (itensRecebidos || []).filter(
@@ -1251,14 +1320,25 @@ async function carregarDetalhesFinanceiroProfissional(
 
     }
 
+
+    /* =========================
+       CALCULAR TOTAIS
+    ========================= */
+
     let totalServicos = 0;
     let totalComissao = 0;
+
 
     const linhas =
       itens.map(item => {
 
         const comanda =
           mapaComandas[item.comanda_id];
+
+        const nomeCliente =
+          mapaClientes[
+            comanda?.cliente_id
+          ] || "Cliente não informado";
 
         const valor =
           Number(item.valor || 0);
@@ -1274,6 +1354,7 @@ async function carregarDetalhesFinanceiroProfissional(
         totalServicos += valor;
         totalComissao += valorComissao;
 
+
         return `
           <tr
             style="
@@ -1285,6 +1366,14 @@ async function carregarDetalhesFinanceiroProfissional(
               ${
                 financeiroFormatarData(
                   comanda?.data
+                )
+              }
+            </td>
+
+            <td style="padding:12px;">
+              ${
+                financeiroEscaparHTML(
+                  nomeCliente
                 )
               }
             </td>
@@ -1343,44 +1432,41 @@ async function carregarDetalhesFinanceiroProfissional(
 
       }).join("");
 
+
+    /* =========================
+       MONTAR TELA
+    ========================= */
+
     resultado.innerHTML = `
-      <div
-        style="
-          display:flex;
-          justify-content:space-between;
-          align-items:flex-start;
-          gap:15px;
-          flex-wrap:wrap;
-        "
-      >
 
-        <div>
-          <h2 style="margin:0;">
-            ${
-              financeiroEscaparHTML(
-                profissional?.nome ||
-                "Profissional"
-              )
-            }
-          </h2>
+      <div>
 
-          <p style="margin:5px 0 0;">
-            Período de
-            ${
-              financeiroFormatarData(
-                dataInicio
-              )
-            }
-            até
-            ${
-              financeiroFormatarData(
-                dataFim
-              )
-            }
-          </p>
-        </div>
+        <h2 style="margin:0;">
+          ${
+            financeiroEscaparHTML(
+              profissional?.nome ||
+              "Profissional"
+            )
+          }
+        </h2>
+
+        <p style="margin:5px 0 0;">
+          Período de
+          ${
+            financeiroFormatarData(
+              dataInicio
+            )
+          }
+          até
+          ${
+            financeiroFormatarData(
+              dataFim
+            )
+          }
+        </p>
 
       </div>
+
 
       <div
         style="
@@ -1413,6 +1499,7 @@ async function carregarDetalhesFinanceiroProfissional(
           </div>
         </div>
 
+
         <div
           class="card"
           style="padding:16px;"
@@ -1435,6 +1522,7 @@ async function carregarDetalhesFinanceiroProfissional(
             }
           </div>
         </div>
+
 
         <div
           class="card"
@@ -1461,6 +1549,7 @@ async function carregarDetalhesFinanceiroProfissional(
 
       </div>
 
+
       <div
         style="
           overflow-x:auto;
@@ -1470,6 +1559,7 @@ async function carregarDetalhesFinanceiroProfissional(
 
         ${
           itens.length === 0
+
             ? `
               <div
                 style="
@@ -1482,6 +1572,7 @@ async function carregarDetalhesFinanceiroProfissional(
                 Nenhum serviço faturado encontrado neste período.
               </div>
             `
+
             : `
               <table
                 style="
@@ -1491,6 +1582,7 @@ async function carregarDetalhesFinanceiroProfissional(
               >
 
                 <thead>
+
                   <tr>
 
                     <th
@@ -1500,6 +1592,15 @@ async function carregarDetalhesFinanceiroProfissional(
                       "
                     >
                       Data
+                    </th>
+
+                    <th
+                      style="
+                        padding:12px;
+                        text-align:left;
+                      "
+                    >
+                      Cliente
                     </th>
 
                     <th
@@ -1539,13 +1640,19 @@ async function carregarDetalhesFinanceiroProfissional(
                     </th>
 
                   </tr>
+
                 </thead>
 
+
                 <tbody>
+
                   ${linhas}
+
                 </tbody>
 
+
                 <tfoot>
+
                   <tr
                     style="
                       border-top:2px solid #222;
@@ -1553,7 +1660,7 @@ async function carregarDetalhesFinanceiroProfissional(
                   >
 
                     <td
-                      colspan="2"
+                      colspan="3"
                       style="
                         padding:14px 12px;
                         font-weight:700;
@@ -1593,6 +1700,7 @@ async function carregarDetalhesFinanceiroProfissional(
                     </td>
 
                   </tr>
+
                 </tfoot>
 
               </table>
@@ -1618,11 +1726,9 @@ async function carregarDetalhesFinanceiroProfissional(
   }
 
 }
-
 /* =========================================================
    PAGAMENTOS
 ========================================================= */
-
 async function carregarPagamentosProfissionaisNovo(){
 
   const area =
