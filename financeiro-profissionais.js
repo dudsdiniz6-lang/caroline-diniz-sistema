@@ -1439,34 +1439,60 @@ async function carregarDetalhesFinanceiroProfissional(
 
     resultado.innerHTML = `
 
-      <div>
+      <div
+  style="
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    gap:15px;
+    flex-wrap:wrap;
+  "
+>
 
-        <h2 style="margin:0;">
-          ${
-            financeiroEscaparHTML(
-              profissional?.nome ||
-              "Profissional"
-            )
-          }
-        </h2>
+  <div>
 
-        <p style="margin:5px 0 0;">
-          Período de
-          ${
-            financeiroFormatarData(
-              dataInicio
-            )
-          }
-          até
-          ${
-            financeiroFormatarData(
-              dataFim
-            )
-          }
-        </p>
+    <h2 style="margin:0;">
+      ${
+        financeiroEscaparHTML(
+          profissional?.nome ||
+          "Profissional"
+        )
+      }
+    </h2>
 
-      </div>
+    <p style="margin:5px 0 0;">
+      Período de
+      ${
+        financeiroFormatarData(
+          dataInicio
+        )
+      }
+      até
+      ${
+        financeiroFormatarData(
+          dataFim
+        )
+      }
+    </p>
 
+  </div>
+
+  <button
+    type="button"
+    class="principal"
+    onclick="
+      FinanceiroProfissionais
+        .abrirPagamentoPeriodo(
+          '${profissionalId}',
+          '${dataInicio}',
+          '${dataFim}'
+        )
+    "
+  >
+    Pagar comissão
+  </button>
+
+</div>
 
       <div
         style="
@@ -1722,6 +1748,1102 @@ async function carregarDetalhesFinanceiroProfissional(
       erro?.message ||
       "Erro desconhecido."
     );
+
+  }
+
+}
+/* =========================================================
+   PAGAMENTO DE COMISSÃO
+========================================================= */
+
+let pagamentoComissaoAtual = null;
+
+
+window.FinanceiroProfissionais
+  .abrirPagamentoPeriodo =
+    abrirPagamentoComissaoPeriodo;
+
+
+window.FinanceiroProfissionais
+  .confirmarPagamentoPeriodo =
+    confirmarPagamentoComissaoPeriodo;
+
+
+window.FinanceiroProfissionais
+  .fecharModalPagamento =
+    fecharModalPagamentoComissao;
+
+
+function financeiroValorInput(valor){
+
+  return Number(valor || 0)
+    .toFixed(2);
+}
+
+
+function garantirModalPagamentoComissao(){
+
+  let modal =
+    document.getElementById(
+      "modalPagamentoComissaoProfissional"
+    );
+
+  if(modal){
+    return modal;
+  }
+
+  modal = document.createElement("div");
+
+  modal.id =
+    "modalPagamentoComissaoProfissional";
+
+  modal.style.cssText = `
+    display:none;
+    position:fixed;
+    inset:0;
+    z-index:99999;
+    background:rgba(0,0,0,0.48);
+    align-items:center;
+    justify-content:center;
+    padding:20px;
+  `;
+
+  modal.innerHTML = `
+    <div
+      style="
+        width:min(680px, 100%);
+        max-height:92vh;
+        overflow-y:auto;
+        background:#fff;
+        border-radius:14px;
+        padding:24px;
+        box-shadow:0 20px 50px rgba(0,0,0,0.25);
+      "
+    >
+
+      <div
+        style="
+          display:flex;
+          justify-content:space-between;
+          align-items:flex-start;
+          gap:15px;
+        "
+      >
+
+        <div>
+          <h2 style="margin:0;">
+            Pagamento de comissão
+          </h2>
+
+          <p
+            id="pagamentoComissaoSubtitulo"
+            style="margin:5px 0 0;"
+          >
+          </p>
+        </div>
+
+        <button
+          type="button"
+          onclick="
+            FinanceiroProfissionais
+              .fecharModalPagamento()
+          "
+        >
+          Fechar
+        </button>
+
+      </div>
+
+      <div
+        id="conteudoPagamentoComissao"
+        style="margin-top:22px;"
+      >
+        Carregando...
+      </div>
+
+    </div>
+  `;
+
+  document.body.appendChild(modal);
+
+  return modal;
+}
+
+
+function fecharModalPagamentoComissao(){
+
+  const modal =
+    document.getElementById(
+      "modalPagamentoComissaoProfissional"
+    );
+
+  if(modal){
+    modal.style.display = "none";
+  }
+
+  pagamentoComissaoAtual = null;
+}
+
+
+async function abrirPagamentoComissaoPeriodo(
+  profissionalId,
+  dataInicio,
+  dataFim
+){
+
+  const modal =
+    garantirModalPagamentoComissao();
+
+  const conteudo =
+    document.getElementById(
+      "conteudoPagamentoComissao"
+    );
+
+  const subtitulo =
+    document.getElementById(
+      "pagamentoComissaoSubtitulo"
+    );
+
+  modal.style.display = "flex";
+
+  conteudo.innerHTML =
+    "Calculando fechamento...";
+
+  try{
+
+    const profissionais =
+      await obterProfissionais();
+
+    const profissional =
+      (profissionais || []).find(
+        item =>
+          String(item.id) ===
+          String(profissionalId)
+      );
+
+    if(!profissional){
+      throw new Error(
+        "Profissional não encontrado."
+      );
+    }
+
+
+    /* VERIFICAR FECHAMENTO JÁ EXISTENTE */
+
+    const {
+      data: pagamentosExistentes,
+      error: erroPagamentoExistente
+    } =
+      await supabaseClient
+        .from("comissoes_pagamentos")
+        .select(`
+          id,
+          status,
+          valor_pago
+        `)
+        .eq(
+          "profissional_id",
+          profissionalId
+        )
+        .eq(
+          "data_inicio",
+          dataInicio
+        )
+        .eq(
+          "data_fim",
+          dataFim
+        );
+
+    if(erroPagamentoExistente){
+      throw erroPagamentoExistente;
+    }
+
+    const pagamentoAtivo =
+      (pagamentosExistentes || []).find(
+        pagamento => {
+
+          const status =
+            financeiroNormalizarStatus(
+              pagamento.status
+            );
+
+          return ![
+            "cancelado",
+            "cancelada"
+          ].includes(status);
+
+        }
+      );
+
+    if(pagamentoAtivo){
+
+      throw new Error(
+        "Esse período já possui um pagamento registrado para esta profissional."
+      );
+
+    }
+
+
+    /* BUSCAR COMANDAS */
+
+    const {
+      data: comandas,
+      error: erroComandas
+    } =
+      await supabaseClient
+        .from("comandas")
+        .select(`
+          id,
+          profissional_id,
+          data,
+          status,
+          cancelada
+        `)
+        .gte("data", dataInicio)
+        .lte("data", dataFim)
+        .or(
+          "cancelada.eq.false,cancelada.is.null"
+        );
+
+    if(erroComandas){
+      throw erroComandas;
+    }
+
+    const comandasValidas =
+      (comandas || []).filter(comanda => {
+
+        if(comanda.cancelada === true){
+          return false;
+        }
+
+        const status =
+          financeiroNormalizarStatus(
+            comanda.status
+          );
+
+        return ![
+          "aberta",
+          "aberto",
+          "cancelada",
+          "cancelado"
+        ].includes(status);
+
+      });
+
+    const mapaComandas = {};
+
+    comandasValidas.forEach(comanda => {
+
+      mapaComandas[comanda.id] =
+        comanda;
+
+    });
+
+    const idsComandas =
+      comandasValidas.map(
+        comanda => comanda.id
+      );
+
+
+    /* BUSCAR ITENS */
+
+    let itensProfissional = [];
+
+    if(idsComandas.length > 0){
+
+      const {
+        data: itens,
+        error: erroItens
+      } =
+        await supabaseClient
+          .from("comanda_itens")
+          .select(`
+            id,
+            comanda_id,
+            profissional_id,
+            valor,
+            comissao_percentual
+          `)
+          .in(
+            "comanda_id",
+            idsComandas
+          );
+
+      if(erroItens){
+        throw erroItens;
+      }
+
+      itensProfissional =
+        (itens || []).filter(item => {
+
+          const comanda =
+            mapaComandas[
+              item.comanda_id
+            ];
+
+          const profissionalItem =
+            item.profissional_id ||
+            comanda?.profissional_id;
+
+          return (
+            String(profissionalItem) ===
+            String(profissionalId)
+          );
+
+        });
+
+    }
+
+
+    const comissaoPeriodo =
+      itensProfissional.reduce(
+        (total, item) => {
+
+          const valor =
+            Number(item.valor || 0);
+
+          const percentual =
+            Number(
+              item.comissao_percentual || 0
+            );
+
+          return (
+            total +
+            valor * percentual / 100
+          );
+
+        },
+        0
+      );
+
+
+    /* BUSCAR SALDO ANTERIOR */
+
+    const {
+      data: ultimoPagamento,
+      error: erroUltimoPagamento
+    } =
+      await supabaseClient
+        .from("comissoes_pagamentos")
+        .select(`
+          id,
+          saldo_resultante,
+          data_fim,
+          status
+        `)
+        .eq(
+          "profissional_id",
+          profissionalId
+        )
+        .lt(
+          "data_fim",
+          dataInicio
+        )
+        .order(
+          "data_fim",
+          {
+            ascending: false
+          }
+        )
+        .limit(1);
+
+    if(erroUltimoPagamento){
+      throw erroUltimoPagamento;
+    }
+
+    const pagamentoAnterior =
+      (ultimoPagamento || []).find(
+        pagamento => {
+
+          const status =
+            financeiroNormalizarStatus(
+              pagamento.status
+            );
+
+          return ![
+            "cancelado",
+            "cancelada"
+          ].includes(status);
+
+        }
+      );
+
+    const saldoAnterior =
+      Number(
+        pagamentoAnterior
+          ?.saldo_resultante || 0
+      );
+
+
+    /* BUSCAR VALES */
+
+    const {
+      data: vales,
+      error: erroVales
+    } =
+      await supabaseClient
+        .from("profissionais_vales")
+        .select(`
+          id,
+          profissional_id,
+          data_vale,
+          valor,
+          descricao,
+          status,
+          pagamento_comissao_id
+        `)
+        .eq(
+          "profissional_id",
+          profissionalId
+        )
+        .lte(
+          "data_vale",
+          dataFim
+        )
+        .is(
+          "pagamento_comissao_id",
+          null
+        );
+
+    if(erroVales){
+      throw erroVales;
+    }
+
+    const valesPendentes =
+      (vales || []).filter(vale => {
+
+        const status =
+          financeiroNormalizarStatus(
+            vale.status
+          );
+
+        return (
+          status === "aberto" ||
+          status === "pendente" ||
+          !status
+        );
+
+      });
+
+    const totalVales =
+      valesPendentes.reduce(
+        (total, vale) =>
+          total +
+          Number(vale.valor || 0),
+        0
+      );
+
+
+    const totalDevido =
+      comissaoPeriodo +
+      saldoAnterior -
+      totalVales;
+
+
+    pagamentoComissaoAtual = {
+      profissionalId,
+      profissionalNome:
+        profissional.nome,
+      unidadeId:
+        profissional.unidade_id || null,
+      dataInicio,
+      dataFim,
+      comissaoPeriodo,
+      saldoAnterior,
+      totalVales,
+      totalDevido,
+      valesIds:
+        valesPendentes.map(
+          vale => vale.id
+        )
+    };
+
+
+    subtitulo.textContent =
+      `${profissional.nome} — ${
+        financeiroFormatarData(
+          dataInicio
+        )
+      } até ${
+        financeiroFormatarData(
+          dataFim
+        )
+      }`;
+
+
+    conteudo.innerHTML = `
+
+      <div
+        style="
+          display:grid;
+          gap:12px;
+          padding:18px;
+          border:1px solid #e5e5e5;
+          border-radius:10px;
+        "
+      >
+
+        <div
+          style="
+            display:flex;
+            justify-content:space-between;
+            gap:15px;
+          "
+        >
+          <span>Comissão do período</span>
+
+          <strong>
+            ${
+              financeiroFormatarMoeda(
+                comissaoPeriodo
+              )
+            }
+          </strong>
+        </div>
+
+        <div
+          style="
+            display:flex;
+            justify-content:space-between;
+            gap:15px;
+          "
+        >
+          <span>Saldo anterior</span>
+
+          <strong>
+            ${
+              financeiroFormatarMoeda(
+                saldoAnterior
+              )
+            }
+          </strong>
+        </div>
+
+        <div
+          style="
+            display:flex;
+            justify-content:space-between;
+            gap:15px;
+          "
+        >
+          <span>
+            Vales descontados
+            ${
+              valesPendentes.length > 0
+                ? `(${valesPendentes.length})`
+                : ""
+            }
+          </span>
+
+          <strong>
+            -${
+              financeiroFormatarMoeda(
+                totalVales
+              )
+            }
+          </strong>
+        </div>
+
+        <div
+          style="
+            border-top:2px solid #222;
+            padding-top:13px;
+            display:flex;
+            justify-content:space-between;
+            align-items:center;
+            gap:15px;
+          "
+        >
+          <strong>Total líquido</strong>
+
+          <strong
+            style="
+              font-size:23px;
+              ${
+                totalDevido < 0
+                  ? "color:#b42318;"
+                  : ""
+              }
+            "
+          >
+            ${
+              financeiroFormatarMoeda(
+                totalDevido
+              )
+            }
+          </strong>
+        </div>
+
+      </div>
+
+
+      <div
+        style="
+          display:grid;
+          grid-template-columns:
+            repeat(
+              auto-fit,
+              minmax(220px, 1fr)
+            );
+          gap:15px;
+          margin-top:20px;
+        "
+      >
+
+        <div>
+
+          <label
+            for="pagamentoComissaoValorPago"
+            style="
+              display:block;
+              margin-bottom:6px;
+              font-weight:600;
+            "
+          >
+            Valor pago
+          </label>
+
+          <input
+            id="pagamentoComissaoValorPago"
+            type="number"
+            min="0"
+            step="0.01"
+            value="${
+              financeiroValorInput(
+                Math.max(
+                  totalDevido,
+                  0
+                )
+              )
+            }"
+            style="width:100%;"
+          >
+
+        </div>
+
+        <div>
+
+          <label
+            for="pagamentoComissaoData"
+            style="
+              display:block;
+              margin-bottom:6px;
+              font-weight:600;
+            "
+          >
+            Data do pagamento
+          </label>
+
+          <input
+            id="pagamentoComissaoData"
+            type="date"
+            value="${
+              financeiroDataLocalISO(
+                new Date()
+              )
+            }"
+            style="width:100%;"
+          >
+
+        </div>
+
+      </div>
+
+
+      <div style="margin-top:15px;">
+
+        <label
+          for="pagamentoComissaoObservacoes"
+          style="
+            display:block;
+            margin-bottom:6px;
+            font-weight:600;
+          "
+        >
+          Observações
+        </label>
+
+        <textarea
+          id="pagamentoComissaoObservacoes"
+          rows="3"
+          style="
+            width:100%;
+            resize:vertical;
+          "
+          placeholder="Observação opcional"
+        ></textarea>
+
+      </div>
+
+
+      <div style="margin-top:15px;">
+
+        <label
+          for="pagamentoComissaoAssinaturaNome"
+          style="
+            display:block;
+            margin-bottom:6px;
+            font-weight:600;
+          "
+        >
+          Nome para assinatura
+        </label>
+
+        <input
+          id="pagamentoComissaoAssinaturaNome"
+          type="text"
+          value="${
+            financeiroEscaparHTML(
+              profissional.nome
+            )
+          }"
+          style="width:100%;"
+        >
+
+        <label
+          style="
+            display:flex;
+            align-items:flex-start;
+            gap:9px;
+            margin-top:12px;
+            cursor:pointer;
+          "
+        >
+
+          <input
+            id="pagamentoComissaoConfirmarAssinatura"
+            type="checkbox"
+            style="margin-top:3px;"
+          >
+
+          <span>
+            Confirmo que os valores acima foram conferidos e que o pagamento foi realizado.
+          </span>
+
+        </label>
+
+      </div>
+
+
+      <div
+        style="
+          display:flex;
+          justify-content:flex-end;
+          gap:10px;
+          margin-top:22px;
+        "
+      >
+
+        <button
+          type="button"
+          onclick="
+            FinanceiroProfissionais
+              .fecharModalPagamento()
+          "
+        >
+          Cancelar
+        </button>
+
+        <button
+          id="botaoConfirmarPagamentoComissao"
+          type="button"
+          class="principal"
+          onclick="
+            FinanceiroProfissionais
+              .confirmarPagamentoPeriodo()
+          "
+        >
+          Finalizar pagamento
+        </button>
+
+      </div>
+    `;
+
+  }catch(erro){
+
+    console.error(
+      "Erro ao abrir pagamento:",
+      erro
+    );
+
+    financeiroMostrarErro(
+      conteudo,
+      erro?.message ||
+      "Erro desconhecido."
+    );
+
+  }
+
+}
+
+
+async function confirmarPagamentoComissaoPeriodo(){
+
+  if(!pagamentoComissaoAtual){
+
+    alert(
+      "Os dados do pagamento não foram carregados."
+    );
+
+    return;
+  }
+
+  const valorPago =
+    Number(
+      document.getElementById(
+        "pagamentoComissaoValorPago"
+      )?.value || 0
+    );
+
+  const dataPagamento =
+    document.getElementById(
+      "pagamentoComissaoData"
+    )?.value;
+
+  const observacoes =
+    document.getElementById(
+      "pagamentoComissaoObservacoes"
+    )?.value?.trim() || null;
+
+  const assinaturaNome =
+    document.getElementById(
+      "pagamentoComissaoAssinaturaNome"
+    )?.value?.trim();
+
+  const assinaturaConfirmada =
+    document.getElementById(
+      "pagamentoComissaoConfirmarAssinatura"
+    )?.checked;
+
+  const botao =
+    document.getElementById(
+      "botaoConfirmarPagamentoComissao"
+    );
+
+
+  if(
+    !Number.isFinite(valorPago) ||
+    valorPago < 0
+  ){
+
+    alert(
+      "Informe um valor pago válido."
+    );
+
+    return;
+  }
+
+
+  if(!dataPagamento){
+
+    alert(
+      "Informe a data do pagamento."
+    );
+
+    return;
+  }
+
+
+  if(!assinaturaNome){
+
+    alert(
+      "Informe o nome da profissional para assinatura."
+    );
+
+    return;
+  }
+
+
+  if(!assinaturaConfirmada){
+
+    alert(
+      "Confirme a conferência e a realização do pagamento."
+    );
+
+    return;
+  }
+
+
+  const saldoResultante =
+    Number(
+      pagamentoComissaoAtual
+        .totalDevido
+    ) - valorPago;
+
+
+  if(botao){
+
+    botao.disabled = true;
+    botao.textContent =
+      "Finalizando...";
+
+  }
+
+
+  let pagamentoCriadoId = null;
+
+
+  try{
+
+    const assinaturaTexto =
+      `Assinado digitalmente por ${assinaturaNome}`;
+
+
+    const {
+      data: pagamentoCriado,
+      error: erroPagamento
+    } =
+      await supabaseClient
+        .from("comissoes_pagamentos")
+        .insert({
+          unidade_id:
+            pagamentoComissaoAtual
+              .unidadeId,
+
+          profissional_id:
+            pagamentoComissaoAtual
+              .profissionalId,
+
+          data_inicio:
+            pagamentoComissaoAtual
+              .dataInicio,
+
+          data_fim:
+            pagamentoComissaoAtual
+              .dataFim,
+
+          data_pagamento:
+            dataPagamento,
+
+          comissao_periodo:
+            pagamentoComissaoAtual
+              .comissaoPeriodo,
+
+          saldo_anterior:
+            pagamentoComissaoAtual
+              .saldoAnterior,
+
+          total_vales:
+            pagamentoComissaoAtual
+              .totalVales,
+
+          total_devido:
+            pagamentoComissaoAtual
+              .totalDevido,
+
+          valor_pago:
+            valorPago,
+
+          saldo_resultante:
+            saldoResultante,
+
+          observacoes,
+
+          registrado_por:
+            typeof usuarioLogado !==
+              "undefined"
+              ? usuarioLogado?.id || null
+              : null,
+
+          status:
+            "ATIVO",
+
+          assinatura:
+            assinaturaTexto,
+
+          assinatura_data:
+            new Date().toISOString(),
+
+          assinatura_nome:
+            assinaturaNome
+        })
+        .select("id")
+        .single();
+
+
+    if(erroPagamento){
+      throw erroPagamento;
+    }
+
+
+    pagamentoCriadoId =
+      pagamentoCriado.id;
+
+
+    if(
+      pagamentoComissaoAtual
+        .valesIds.length > 0
+    ){
+
+      const {
+        error: erroAtualizarVales
+      } =
+        await supabaseClient
+          .from("profissionais_vales")
+          .update({
+            pagamento_comissao_id:
+              pagamentoCriadoId,
+
+            status:
+              "DESCONTADO"
+          })
+          .in(
+            "id",
+            pagamentoComissaoAtual
+              .valesIds
+          );
+
+
+      if(erroAtualizarVales){
+
+        await supabaseClient
+          .from("comissoes_pagamentos")
+          .delete()
+          .eq(
+            "id",
+            pagamentoCriadoId
+          );
+
+        throw erroAtualizarVales;
+
+      }
+
+    }
+
+
+    alert(
+      "Pagamento de comissão finalizado com sucesso."
+    );
+
+
+    fecharModalPagamentoComissao();
+
+
+    FinanceiroProfissionais
+      .abrirAba("resumo");
+
+
+  }catch(erro){
+
+    console.error(
+      "Erro ao finalizar pagamento:",
+      erro
+    );
+
+    alert(
+      erro?.message ||
+      "Não foi possível finalizar o pagamento."
+    );
+
+  }finally{
+
+    if(botao){
+
+      botao.disabled = false;
+      botao.textContent =
+        "Finalizar pagamento";
+
+    }
 
   }
 
