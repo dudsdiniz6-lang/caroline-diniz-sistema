@@ -426,7 +426,7 @@ const idsComandas =
               profissional_id,
               descricao,
               valor,
-              comissao_perc
+              comissao_porc
             `
           )
           .in(
@@ -534,7 +534,7 @@ const idsComandas =
         Number(item.valor || 0);
 
       const percentual =
-        Number(item.comissao_perc || 0);
+        Number(item.comissao_porc || 0);
 
       const comissao =
         valor * percentual / 100;
@@ -1216,7 +1216,8 @@ async function carregarDetalhesFinanceiroProfissional(
             profissional_id,
             descricao,
             valor,
-            comissao_perc
+            comissao_porc
+          
           `)
           .in(
             "comanda_id",
@@ -1264,7 +1265,7 @@ async function carregarDetalhesFinanceiroProfissional(
 
         const percentual =
           Number(
-            item.comissao_perc || 0
+            item.comissao_porc || 0
           );
 
         const valorComissao =
