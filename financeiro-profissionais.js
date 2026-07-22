@@ -383,18 +383,31 @@ async function atualizarResumoFinanceiroProfissionais(){
       throw erroComandas;
     }
 
-    const comandasFaturadas =
-      (comandas || []).filter(
-        comanda =>
-          financeiroNormalizarStatus(
-            comanda.status
-          ) === "faturada"
+const comandasValidas =
+  (comandas || []).filter(comanda => {
+
+    if(comanda.cancelada === true){
+      return false;
+    }
+
+    const status =
+      financeiroNormalizarStatus(
+        comanda.status
       );
 
-    const idsComandas =
-      comandasFaturadas.map(
-        comanda => comanda.id
-      );
+    return ![
+      "aberta",
+      "aberto",
+      "cancelada",
+      "cancelado"
+    ].includes(status);
+
+  });
+
+const idsComandas =
+  comandasValidas.map(
+    comanda => comanda.id
+  );
 
     let itens = [];
 
@@ -489,7 +502,7 @@ async function atualizarResumoFinanceiroProfissionais(){
 
     const mapaComandas = {};
 
-    comandasFaturadas.forEach(
+  comandasValidas.forEach(
       comanda => {
 
         mapaComandas[comanda.id] =
@@ -705,13 +718,31 @@ async function atualizarResumoFinanceiroProfissionais(){
             totalDevido < 0;
 
           return `
-            <div
-              class="card"
-              style="
-                padding:18px;
-                border:1px solid #e5e5e5;
-              "
-            >
+           <div
+  class="card"
+  onclick="
+    FinanceiroProfissionais
+      .abrirDetalhesPeriodo(
+        '${profissional.id}',
+        '${dataInicio}',
+        '${dataFim}'
+      )
+  "
+  style="
+    padding:18px;
+    border:1px solid #e5e5e5;
+    cursor:pointer;
+    transition:0.2s;
+  "
+  onmouseenter="
+    this.style.transform='translateY(-2px)';
+    this.style.boxShadow='0 6px 18px rgba(0,0,0,0.10)';
+  "
+  onmouseleave="
+    this.style.transform='none';
+    this.style.boxShadow='none';
+  "
+>
 
               <div
                 style="
@@ -874,17 +905,21 @@ async function atualizarResumoFinanceiroProfissionais(){
                   </div>
                 </div>
 
-                <button
-                  type="button"
-                  onclick="
-                    FinanceiroProfissionais
-                      .abrirExtratoProfissional(
-                        '${profissional.id}'
-                      )
-                  "
-                >
-                  Ver extrato
-                </button>
+              <button
+  type="button"
+  onclick="
+    event.stopPropagation();
+
+    FinanceiroProfissionais
+      .abrirDetalhesPeriodo(
+        '${profissional.id}',
+        '${dataInicio}',
+        '${dataFim}'
+      );
+  "
+>
+  Ver detalhes
+</button>
 
               </div>
 
@@ -1021,7 +1056,567 @@ async function atualizarResumoFinanceiroProfissionais(){
   }
 
 }
+/* =========================================================
+   DETALHES DO PERÍODO
+========================================================= */
 
+window.FinanceiroProfissionais
+  .abrirDetalhesPeriodo =
+    carregarDetalhesFinanceiroProfissional;
+
+
+async function carregarDetalhesFinanceiroProfissional(
+  profissionalId,
+  dataInicio,
+  dataFim
+){
+
+  const area =
+    document.getElementById(
+      "conteudoFinanceiroProfissionais"
+    );
+
+  if(!area){
+    return;
+  }
+
+  area.innerHTML = `
+    <div class="card">
+
+      <div
+        style="
+          display:flex;
+          justify-content:space-between;
+          align-items:center;
+          gap:15px;
+          flex-wrap:wrap;
+        "
+      >
+
+        <div>
+          <h2 style="margin:0;">
+            Detalhes do profissional
+          </h2>
+
+          <p style="margin:5px 0 0;">
+            Carregando serviços realizados...
+          </p>
+        </div>
+
+        <button
+          type="button"
+          onclick="
+            FinanceiroProfissionais
+              .abrirAba('resumo')
+          "
+        >
+          Voltar
+        </button>
+
+      </div>
+
+      <div
+        id="detalhesFinanceiroProfissional"
+        style="margin-top:20px;"
+      >
+        Carregando...
+      </div>
+
+    </div>
+  `;
+
+  const resultado =
+    document.getElementById(
+      "detalhesFinanceiroProfissional"
+    );
+
+  try{
+
+    const profissionais =
+      await obterProfissionais();
+
+    const profissional =
+      (profissionais || []).find(
+        item =>
+          String(item.id) ===
+          String(profissionalId)
+      );
+
+    const {
+      data: comandas,
+      error: erroComandas
+    } =
+      await supabaseClient
+        .from("comandas")
+        .select(`
+          id,
+          data,
+          status,
+          cancelada,
+          profissional_id
+        `)
+        .gte("data", dataInicio)
+        .lte("data", dataFim)
+        .or(
+          "cancelada.eq.false,cancelada.is.null"
+        );
+
+    if(erroComandas){
+      throw erroComandas;
+    }
+
+    const comandasValidas =
+      (comandas || []).filter(comanda => {
+
+        if(comanda.cancelada === true){
+          return false;
+        }
+
+        const status =
+          financeiroNormalizarStatus(
+            comanda.status
+          );
+
+        return ![
+          "aberta",
+          "aberto",
+          "cancelada",
+          "cancelado"
+        ].includes(status);
+
+      });
+
+    const mapaComandas = {};
+
+    comandasValidas.forEach(comanda => {
+
+      mapaComandas[comanda.id] =
+        comanda;
+
+    });
+
+    const idsComandas =
+      comandasValidas.map(
+        comanda => comanda.id
+      );
+
+    let itens = [];
+
+    if(idsComandas.length > 0){
+
+      const {
+        data: itensRecebidos,
+        error: erroItens
+      } =
+        await supabaseClient
+          .from("comanda_itens")
+          .select(`
+            id,
+            comanda_id,
+            profissional_id,
+            descricao,
+            valor,
+            comissao_perc
+          `)
+          .in(
+            "comanda_id",
+            idsComandas
+          );
+
+      if(erroItens){
+        throw erroItens;
+      }
+
+      itens =
+        (itensRecebidos || []).filter(
+          item => {
+
+            const comanda =
+              mapaComandas[
+                item.comanda_id
+              ];
+
+            const profissionalItem =
+              item.profissional_id ||
+              comanda?.profissional_id;
+
+            return (
+              String(profissionalItem) ===
+              String(profissionalId)
+            );
+
+          }
+        );
+
+    }
+
+    let totalServicos = 0;
+    let totalComissao = 0;
+
+    const linhas =
+      itens.map(item => {
+
+        const comanda =
+          mapaComandas[item.comanda_id];
+
+        const valor =
+          Number(item.valor || 0);
+
+        const percentual =
+          Number(
+            item.comissao_perc || 0
+          );
+
+        const valorComissao =
+          valor * percentual / 100;
+
+        totalServicos += valor;
+        totalComissao += valorComissao;
+
+        return `
+          <tr
+            style="
+              border-top:1px solid #e5e5e5;
+            "
+          >
+
+            <td style="padding:12px;">
+              ${
+                financeiroFormatarData(
+                  comanda?.data
+                )
+              }
+            </td>
+
+            <td style="padding:12px;">
+              ${
+                financeiroEscaparHTML(
+                  item.descricao ||
+                  "Serviço"
+                )
+              }
+            </td>
+
+            <td
+              style="
+                padding:12px;
+                text-align:right;
+              "
+            >
+              ${
+                financeiroFormatarMoeda(
+                  valor
+                )
+              }
+            </td>
+
+            <td
+              style="
+                padding:12px;
+                text-align:center;
+              "
+            >
+              ${
+                percentual.toLocaleString(
+                  "pt-BR"
+                )
+              }%
+            </td>
+
+            <td
+              style="
+                padding:12px;
+                text-align:right;
+                font-weight:700;
+              "
+            >
+              ${
+                financeiroFormatarMoeda(
+                  valorComissao
+                )
+              }
+            </td>
+
+          </tr>
+        `;
+
+      }).join("");
+
+    resultado.innerHTML = `
+      <div
+        style="
+          display:flex;
+          justify-content:space-between;
+          align-items:flex-start;
+          gap:15px;
+          flex-wrap:wrap;
+        "
+      >
+
+        <div>
+          <h2 style="margin:0;">
+            ${
+              financeiroEscaparHTML(
+                profissional?.nome ||
+                "Profissional"
+              )
+            }
+          </h2>
+
+          <p style="margin:5px 0 0;">
+            Período de
+            ${
+              financeiroFormatarData(
+                dataInicio
+              )
+            }
+            até
+            ${
+              financeiroFormatarData(
+                dataFim
+              )
+            }
+          </p>
+        </div>
+
+      </div>
+
+      <div
+        style="
+          display:grid;
+          grid-template-columns:repeat(
+            auto-fit,
+            minmax(190px, 1fr)
+          );
+          gap:12px;
+          margin-top:20px;
+        "
+      >
+
+        <div
+          class="card"
+          style="padding:16px;"
+        >
+          <small>
+            Serviços realizados
+          </small>
+
+          <div
+            style="
+              font-size:22px;
+              font-weight:700;
+              margin-top:5px;
+            "
+          >
+            ${itens.length}
+          </div>
+        </div>
+
+        <div
+          class="card"
+          style="padding:16px;"
+        >
+          <small>
+            Valor faturado
+          </small>
+
+          <div
+            style="
+              font-size:22px;
+              font-weight:700;
+              margin-top:5px;
+            "
+          >
+            ${
+              financeiroFormatarMoeda(
+                totalServicos
+              )
+            }
+          </div>
+        </div>
+
+        <div
+          class="card"
+          style="padding:16px;"
+        >
+          <small>
+            Comissão do período
+          </small>
+
+          <div
+            style="
+              font-size:22px;
+              font-weight:700;
+              margin-top:5px;
+            "
+          >
+            ${
+              financeiroFormatarMoeda(
+                totalComissao
+              )
+            }
+          </div>
+        </div>
+
+      </div>
+
+      <div
+        style="
+          overflow-x:auto;
+          margin-top:20px;
+        "
+      >
+
+        ${
+          itens.length === 0
+            ? `
+              <div
+                style="
+                  padding:30px;
+                  text-align:center;
+                  border:1px solid #ddd;
+                  border-radius:8px;
+                "
+              >
+                Nenhum serviço faturado encontrado neste período.
+              </div>
+            `
+            : `
+              <table
+                style="
+                  width:100%;
+                  border-collapse:collapse;
+                "
+              >
+
+                <thead>
+                  <tr>
+
+                    <th
+                      style="
+                        padding:12px;
+                        text-align:left;
+                      "
+                    >
+                      Data
+                    </th>
+
+                    <th
+                      style="
+                        padding:12px;
+                        text-align:left;
+                      "
+                    >
+                      Serviço
+                    </th>
+
+                    <th
+                      style="
+                        padding:12px;
+                        text-align:right;
+                      "
+                    >
+                      Valor faturado
+                    </th>
+
+                    <th
+                      style="
+                        padding:12px;
+                        text-align:center;
+                      "
+                    >
+                      Comissão
+                    </th>
+
+                    <th
+                      style="
+                        padding:12px;
+                        text-align:right;
+                      "
+                    >
+                      Valor da comissão
+                    </th>
+
+                  </tr>
+                </thead>
+
+                <tbody>
+                  ${linhas}
+                </tbody>
+
+                <tfoot>
+                  <tr
+                    style="
+                      border-top:2px solid #222;
+                    "
+                  >
+
+                    <td
+                      colspan="2"
+                      style="
+                        padding:14px 12px;
+                        font-weight:700;
+                      "
+                    >
+                      Total
+                    </td>
+
+                    <td
+                      style="
+                        padding:14px 12px;
+                        text-align:right;
+                        font-weight:700;
+                      "
+                    >
+                      ${
+                        financeiroFormatarMoeda(
+                          totalServicos
+                        )
+                      }
+                    </td>
+
+                    <td></td>
+
+                    <td
+                      style="
+                        padding:14px 12px;
+                        text-align:right;
+                        font-weight:700;
+                      "
+                    >
+                      ${
+                        financeiroFormatarMoeda(
+                          totalComissao
+                        )
+                      }
+                    </td>
+
+                  </tr>
+                </tfoot>
+
+              </table>
+            `
+        }
+
+      </div>
+    `;
+
+  }catch(erro){
+
+    console.error(
+      "Erro ao carregar detalhes:",
+      erro
+    );
+
+    financeiroMostrarErro(
+      resultado,
+      erro?.message ||
+      "Erro desconhecido."
+    );
+
+  }
+
+}
 
 /* =========================================================
    PAGAMENTOS
