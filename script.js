@@ -11331,40 +11331,55 @@ function abrirAbaFinanceiroProfissionais(aba){
 
   const botoes = {
 
-    resumo: "abaFinanceiroProfissionaisResumo",
+    resumo:
+      "abaFinanceiroProfissionaisResumo",
 
-    pagamentos: "abaFinanceiroProfissionaisFechamentos",
+    fechamentos:
+      "abaFinanceiroProfissionaisFechamentos",
 
-    vales: "abaFinanceiroProfissionaisVales",
+    vales:
+      "abaFinanceiroProfissionaisVales",
 
-    extrato: "abaFinanceiroProfissionaisExtrato"
+    extrato:
+      "abaFinanceiroProfissionaisExtrato"
 
   };
 
   Object.values(botoes).forEach(id=>{
 
-    const botao = document.getElementById(id);
+    const botao =
+      document.getElementById(id);
 
     if(botao){
-
       botao.classList.remove("principal");
-
     }
 
   });
 
-  const ativo = document.getElementById(botoes[aba]);
+  const botaoAtivo =
+    document.getElementById(botoes[aba]);
 
-  if(ativo){
-
-    ativo.classList.add("principal");
-
+  if(botaoAtivo){
+    botaoAtivo.classList.add("principal");
   }
 
-  FinanceiroProfissionais.abrirAba(aba);
+  if(aba === "resumo"){
+    FinanceiroProfissionais.abrirAba("resumo");
+  }
+
+  if(aba === "fechamentos"){
+    FinanceiroProfissionais.abrirAba("pagamentos");
+  }
+
+  if(aba === "vales"){
+    FinanceiroProfissionais.abrirAba("vales");
+  }
+
+  if(aba === "extrato"){
+    FinanceiroProfissionais.abrirAba("extrato");
+  }
 
 }
-
 async function listarValesProfissionais(){
 
   const area =
