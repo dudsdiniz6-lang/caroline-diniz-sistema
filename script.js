@@ -11200,26 +11200,16 @@ function instalarModuloFinanceiroProfissionais(){
   const telaComissoes =
     document.getElementById("tela-comissoes");
 
-  if(!telaComissoes){
-    console.error(
-      "Não foi possível localizar a tela de comissões."
-    );
-    return;
-  }
+  if(!telaComissoes) return;
 
-  const novaTela = document.createElement("div");
+  const novaTela = document.createElement("section");
 
   novaTela.id = "tela-financeiroProfissionais";
   novaTela.className = "tela";
 
   novaTela.innerHTML = `
-    <div class="cabecalho-pagina">
-      <div>
-        <h1>Financeiro dos Profissionais</h1>
-        <p>
-          Pagamentos, vales, saldos e histórico financeiro.
-        </p>
-      </div>
+    <div class="topo">
+      <h1>Financeiro dos Profissionais</h1>
     </div>
 
     <div id="listaFinanceiroProfissionais"></div>
@@ -11230,50 +11220,24 @@ function instalarModuloFinanceiroProfissionais(){
     novaTela
   );
 
-  const botaoComissoes =
-    document.querySelector(
-      `[onclick="mostrarTela('comissoes')"]`
-    ) ||
-    document.querySelector(
-      `[onclick='mostrarTela("comissoes")']`
+  const botao = document.createElement("button");
+
+  botao.id = "menu-financeiro-profissionais";
+  botao.textContent = "Financeiro dos Profissionais";
+  botao.className =
+    document.getElementById("menu-comissoes").className;
+
+  botao.onclick = () =>
+    mostrarTela("financeiroProfissionais");
+
+  document
+    .getElementById("menu-comissoes")
+    .insertAdjacentElement(
+      "afterend",
+      botao
     );
 
-  if(!botaoComissoes){
-    console.error(
-      "Não foi possível localizar o botão de comissões."
-    );
-    return;
-  }
-
-  const novoBotao =
-    botaoComissoes.cloneNode(true);
-
-  novoBotao.setAttribute(
-    "onclick",
-    "mostrarTela('financeiroProfissionais')"
-  );
-
-  novoBotao.removeAttribute("id");
-
-  const textoBotao =
-    novoBotao.querySelector(
-      ".menu-texto, span"
-    );
-
-  if(textoBotao){
-    textoBotao.textContent =
-      "Financeiro dos Profissionais";
-  }else{
-    novoBotao.textContent =
-      "Financeiro dos Profissionais";
-  }
-
-  botaoComissoes.insertAdjacentElement(
-    "afterend",
-    novoBotao
-  );
 }
-
 async function carregarFinanceiroProfissionais(){
 
   const area =
@@ -12253,4 +12217,16 @@ async function visualizarAssinaturaVale(valeId){
   `;
 
   document.body.appendChild(modal);
+}
+if(document.readyState === "loading"){
+
+  document.addEventListener(
+    "DOMContentLoaded",
+    instalarModuloFinanceiroProfissionais
+  );
+
+}else{
+
+  instalarModuloFinanceiroProfissionais();
+
 }
