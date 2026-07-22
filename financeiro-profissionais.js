@@ -2,94 +2,149 @@
 
 window.FinanceiroProfissionais = {
 
-    iniciar,
-
-    abrirAba,
-
-    resumo: {
-        carregar: carregarResumo
-    },
-
-    pagamentos: {
-        carregar: carregarPagamentos
-    },
-
-    vales: {
-        carregar: carregarVales
-    },
-
-    extrato: {
-        carregar: carregarExtrato
-    },
-
-    historico: {
-        carregar: carregarHistorico
-    }
+    abrirAba
 
 };
-
-function iniciar(){
-
-    console.log("Financeiro dos profissionais carregado.");
-
-}
 
 function abrirAba(nome){
 
     switch(nome){
 
         case "resumo":
-            FinanceiroProfissionais.resumo.carregar();
+            carregarResumoFinanceiroProfissionaisNovo();
             break;
 
         case "pagamentos":
-            FinanceiroProfissionais.pagamentos.carregar();
+            carregarPagamentosProfissionaisNovo();
             break;
 
         case "vales":
-            FinanceiroProfissionais.vales.carregar();
+            carregarValesProfissionais();
             break;
 
         case "extrato":
-            FinanceiroProfissionais.extrato.carregar();
-            break;
-
-        case "historico":
-            FinanceiroProfissionais.historico.carregar();
+            carregarExtratoFinanceiroProfissionaisNovo();
             break;
 
     }
 
 }
 
-async function carregarResumo(){
+async function carregarResumoFinanceiroProfissionaisNovo(){
 
-    console.log("Resumo");
+    const area =
+        document.getElementById(
+            "conteudoFinanceiroProfissionais"
+        );
+
+    if(!area) return;
+
+    area.innerHTML = `
+        <div class="card">
+
+            <h2>Resumo Financeiro</h2>
+
+            <div id="cardsResumoFinanceiro"
+                 style="
+                    display:grid;
+                    grid-template-columns:repeat(auto-fill,minmax(320px,1fr));
+                    gap:20px;
+                    margin-top:20px;
+                 ">
+            </div>
+
+        </div>
+    `;
+
+    await montarResumoFinanceiro();
 
 }
 
-async function carregarPagamentos(){
+async function montarResumoFinanceiro(){
 
-    console.log("Pagamentos");
+    const container =
+        document.getElementById(
+            "cardsResumoFinanceiro"
+        );
+
+    if(!container) return;
+
+    const profissionais =
+        await obterProfissionais();
+
+    container.innerHTML = "";
+
+    (profissionais || [])
+    .filter(p => p.ativo !== false)
+    .forEach(p=>{
+
+        container.innerHTML += `
+
+        <div
+            class="card"
+            style="padding:20px;">
+
+            <h3>${p.nome}</h3>
+
+            <hr>
+
+            <div
+            id="resumoFinanceiro_${p.id}">
+
+                Carregando...
+
+            </div>
+
+        </div>
+
+        `;
+
+    });
 
 }
 
-async function carregarVales(){
+async function carregarPagamentosProfissionaisNovo(){
 
-    console.log("Vales");
+    const area =
+        document.getElementById(
+            "conteudoFinanceiroProfissionais"
+        );
+
+    if(!area) return;
+
+    area.innerHTML=`
+
+        <div class="card">
+
+            <h2>Pagamentos</h2>
+
+            Em desenvolvimento.
+
+        </div>
+
+    `;
 
 }
 
-async function carregarExtrato(){
+async function carregarExtratoFinanceiroProfissionaisNovo(){
 
-    console.log("Extrato");
+    const area =
+        document.getElementById(
+            "conteudoFinanceiroProfissionais"
+        );
+
+    if(!area) return;
+
+    area.innerHTML=`
+
+        <div class="card">
+
+            <h2>Extrato</h2>
+
+            Em desenvolvimento.
+
+        </div>
+
+    `;
 
 }
-
-async function carregarHistorico(){
-
-    console.log("Histórico");
-
-}
-
-document.addEventListener("DOMContentLoaded", iniciar);
