@@ -438,7 +438,16 @@ const idsComandas =
         throw erroItens;
       }
 
-      itens = itensRecebidos || [];
+      const idsBloqueados =
+        await obterIdsItensComissaoBloqueados();
+
+      itens =
+        (itensRecebidos || []).filter(
+          item =>
+            !idsBloqueados.has(
+              String(item.id)
+            )
+        );
 
     }
 
@@ -1019,8 +1028,7 @@ const idsComandas =
             style="padding:15px;"
           >
             <small>Total previsto</small>
-
-            <div
+             <div
               style="
                 font-size:20px;
                 font-weight:700;
@@ -1297,6 +1305,9 @@ async function carregarDetalhesFinanceiroProfissional(
       }
 
 
+      const idsBloqueados =
+        await obterIdsItensComissaoBloqueados();
+
       itens =
         (itensRecebidos || []).filter(
           item => {
@@ -1312,7 +1323,10 @@ async function carregarDetalhesFinanceiroProfissional(
 
             return (
               String(profissionalItem) ===
-              String(profissionalId)
+                String(profissionalId) &&
+              !idsBloqueados.has(
+                String(item.id)
+              )
             );
 
           }
@@ -1757,27 +1771,57 @@ async function carregarDetalhesFinanceiroProfissional(
 ========================================================= */
 
 let pagamentoComissaoAtual = null;
+let assinaturaCanvas = null;
+let assinaturaContexto = null;
+let assinaturaDesenhando = false;
+let assinaturaPossuiTraco = false;
 
+window.FinanceiroProfissionais.abrirPagamentoPeriodo =
+  abrirPagamentoComissaoPeriodo;
 
-window.FinanceiroProfissionais
-  .abrirPagamentoPeriodo =
-    abrirPagamentoComissaoPeriodo;
+window.FinanceiroProfissionais.confirmarPagamentoPeriodo =
+  confirmarPagamentoComissaoPeriodo;
 
+window.FinanceiroProfissionais.fecharModalPagamento =
+  fecharModalPagamentoComissao;
 
-window.FinanceiroProfissionais
-  .confirmarPagamentoPeriodo =
-    confirmarPagamentoComissaoPeriodo;
+window.FinanceiroProfissionais.limparAssinatura =
+  limparAssinaturaPagamento;
 
+window.FinanceiroProfissionais.visualizarRecibo =
+  visualizarReciboComissao;
 
-window.FinanceiroProfissionais
-  .fecharModalPagamento =
-    fecharModalPagamentoComissao;
+window.FinanceiroProfissionais.cancelarPagamento =
+  cancelarPagamentoComissao;
 
 
 function financeiroValorInput(valor){
 
-  return Number(valor || 0)
-    .toFixed(2);
+  return Number(valor || 0).toFixed(2);
+
+}
+
+
+async function obterIdsItensComissaoBloqueados(){
+
+  const {
+    data,
+    error
+  } =
+    await supabaseClient
+      .from("comissoes_pagamentos_itens")
+      .select("comanda_item_id");
+
+  if(error){
+    throw error;
+  }
+
+  return new Set(
+    (data || []).map(
+      item => String(item.comanda_item_id)
+    )
+  );
+
 }
 
 
@@ -1811,7 +1855,7 @@ function garantirModalPagamentoComissao(){
   modal.innerHTML = `
     <div
       style="
-        width:min(680px, 100%);
+        width:min(760px, 100%);
         max-height:92vh;
         overflow-y:auto;
         background:#fff;
@@ -1820,7 +1864,6 @@ function garantirModalPagamentoComissao(){
         box-shadow:0 20px 50px rgba(0,0,0,0.25);
       "
     >
-
       <div
         style="
           display:flex;
@@ -1829,7 +1872,6 @@ function garantirModalPagamentoComissao(){
           gap:15px;
         "
       >
-
         <div>
           <h2 style="margin:0;">
             Pagamento de comissão
@@ -1838,8 +1880,7 @@ function garantirModalPagamentoComissao(){
           <p
             id="pagamentoComissaoSubtitulo"
             style="margin:5px 0 0;"
-          >
-          </p>
+          ></p>
         </div>
 
         <button
@@ -1851,7 +1892,6 @@ function garantirModalPagamentoComissao(){
         >
           Fechar
         </button>
-
       </div>
 
       <div
@@ -1860,13 +1900,13 @@ function garantirModalPagamentoComissao(){
       >
         Carregando...
       </div>
-
     </div>
   `;
 
   document.body.appendChild(modal);
 
   return modal;
+
 }
 
 
@@ -1882,6 +1922,160 @@ function fecharModalPagamentoComissao(){
   }
 
   pagamentoComissaoAtual = null;
+  assinaturaCanvas = null;
+  assinaturaContexto = null;
+  assinaturaDesenhando = false;
+  assinaturaPossuiTraco = false;
+
+}
+
+
+function prepararCanvasAssinatura(){
+
+  assinaturaCanvas =
+    document.getElementById(
+      "pagamentoComissaoAssinaturaCanvas"
+    );
+
+  if(!assinaturaCanvas){
+    return;
+  }
+
+  const proporcao =
+    window.devicePixelRatio || 1;
+
+  const largura =
+    assinaturaCanvas.clientWidth || 600;
+
+  const altura = 180;
+
+  assinaturaCanvas.width =
+    Math.floor(largura * proporcao);
+
+  assinaturaCanvas.height =
+    Math.floor(altura * proporcao);
+
+  assinaturaCanvas.style.height =
+    `${altura}px`;
+
+  assinaturaContexto =
+    assinaturaCanvas.getContext("2d");
+
+  assinaturaContexto.scale(
+    proporcao,
+    proporcao
+  );
+
+  assinaturaContexto.lineWidth = 2;
+  assinaturaContexto.lineCap = "round";
+  assinaturaContexto.lineJoin = "round";
+  assinaturaContexto.strokeStyle = "#111";
+
+  assinaturaPossuiTraco = false;
+
+  const obterPosicao = evento => {
+
+    const retangulo =
+      assinaturaCanvas
+        .getBoundingClientRect();
+
+    const toque =
+      evento.touches?.[0] ||
+      evento.changedTouches?.[0];
+
+    const clienteX =
+      toque?.clientX ??
+      evento.clientX;
+
+    const clienteY =
+      toque?.clientY ??
+      evento.clientY;
+
+    return {
+      x: clienteX - retangulo.left,
+      y: clienteY - retangulo.top
+    };
+
+  };
+
+  const iniciar = evento => {
+
+    evento.preventDefault();
+
+    assinaturaDesenhando = true;
+
+    const ponto = obterPosicao(evento);
+
+    assinaturaContexto.beginPath();
+
+    assinaturaContexto.moveTo(
+      ponto.x,
+      ponto.y
+    );
+
+  };
+
+  const desenhar = evento => {
+
+    if(!assinaturaDesenhando){
+      return;
+    }
+
+    evento.preventDefault();
+
+    const ponto = obterPosicao(evento);
+
+    assinaturaContexto.lineTo(
+      ponto.x,
+      ponto.y
+    );
+
+    assinaturaContexto.stroke();
+
+    assinaturaPossuiTraco = true;
+
+  };
+
+  const finalizar = evento => {
+
+    if(evento){
+      evento.preventDefault();
+    }
+
+    assinaturaDesenhando = false;
+
+  };
+
+  assinaturaCanvas.onmousedown = iniciar;
+  assinaturaCanvas.onmousemove = desenhar;
+  assinaturaCanvas.onmouseup = finalizar;
+  assinaturaCanvas.onmouseleave = finalizar;
+
+  assinaturaCanvas.ontouchstart = iniciar;
+  assinaturaCanvas.ontouchmove = desenhar;
+  assinaturaCanvas.ontouchend = finalizar;
+
+}
+
+
+function limparAssinaturaPagamento(){
+
+  if(
+    !assinaturaCanvas ||
+    !assinaturaContexto
+  ){
+    return;
+  }
+
+  assinaturaContexto.clearRect(
+    0,
+    0,
+    assinaturaCanvas.width,
+    assinaturaCanvas.height
+  );
+
+  assinaturaPossuiTraco = false;
+
 }
 
 
@@ -1897,7 +2091,7 @@ async function abrirPagamentoComissaoPeriodo(
   const conteudo =
     document.getElementById(
       "conteudoPagamentoComissao"
-    );
+       );
 
   const subtitulo =
     document.getElementById(
@@ -1927,8 +2121,6 @@ async function abrirPagamentoComissaoPeriodo(
       );
     }
 
-
-    /* VERIFICAR FECHAMENTO JÁ EXISTENTE */
 
     const {
       data: pagamentosExistentes,
@@ -1983,8 +2175,6 @@ async function abrirPagamentoComissaoPeriodo(
 
     }
 
-
-    /* BUSCAR COMANDAS */
 
     const {
       data: comandas,
@@ -2044,8 +2234,8 @@ async function abrirPagamentoComissaoPeriodo(
         comanda => comanda.id
       );
 
-
-    /* BUSCAR ITENS */
+    const idsBloqueados =
+      await obterIdsItensComissaoBloqueados();
 
     let itensProfissional = [];
 
@@ -2061,6 +2251,7 @@ async function abrirPagamentoComissaoPeriodo(
             id,
             comanda_id,
             profissional_id,
+            descricao,
             valor,
             comissao_percentual
           `)
@@ -2087,10 +2278,21 @@ async function abrirPagamentoComissaoPeriodo(
 
           return (
             String(profissionalItem) ===
-            String(profissionalId)
+              String(profissionalId) &&
+            !idsBloqueados.has(
+              String(item.id)
+            )
           );
 
         });
+
+    }
+
+    if(itensProfissional.length === 0){
+
+      throw new Error(
+        "Não existem serviços pendentes de comissão neste período."
+      );
 
     }
 
@@ -2116,8 +2318,6 @@ async function abrirPagamentoComissaoPeriodo(
         0
       );
 
-
-    /* BUSCAR SALDO ANTERIOR */
 
     const {
       data: ultimoPagamento,
@@ -2145,7 +2345,7 @@ async function abrirPagamentoComissaoPeriodo(
             ascending: false
           }
         )
-        .limit(1);
+        .limit(10);
 
     if(erroUltimoPagamento){
       throw erroUltimoPagamento;
@@ -2174,8 +2374,6 @@ async function abrirPagamentoComissaoPeriodo(
           ?.saldo_resultante || 0
       );
 
-
-    /* BUSCAR VALES */
 
     const {
       data: vales,
@@ -2233,7 +2431,6 @@ async function abrirPagamentoComissaoPeriodo(
         0
       );
 
-
     const totalDevido =
       comissaoPeriodo +
       saldoAnterior -
@@ -2255,6 +2452,10 @@ async function abrirPagamentoComissaoPeriodo(
       valesIds:
         valesPendentes.map(
           vale => vale.id
+        ),
+      itensIds:
+        itensProfissional.map(
+          item => item.id
         )
     };
 
@@ -2282,7 +2483,6 @@ async function abrirPagamentoComissaoPeriodo(
           border-radius:10px;
         "
       >
-
         <div
           style="
             display:flex;
@@ -2290,7 +2490,10 @@ async function abrirPagamentoComissaoPeriodo(
             gap:15px;
           "
         >
-          <span>Comissão do período</span>
+          <span>
+            Comissão do período
+            (${itensProfissional.length} serviço(s))
+          </span>
 
           <strong>
             ${
@@ -2373,7 +2576,6 @@ async function abrirPagamentoComissaoPeriodo(
             }
           </strong>
         </div>
-
       </div>
 
 
@@ -2389,9 +2591,7 @@ async function abrirPagamentoComissaoPeriodo(
           margin-top:20px;
         "
       >
-
         <div>
-
           <label
             for="pagamentoComissaoValorPago"
             style="
@@ -2418,11 +2618,9 @@ async function abrirPagamentoComissaoPeriodo(
             }"
             style="width:100%;"
           >
-
         </div>
 
         <div>
-
           <label
             for="pagamentoComissaoData"
             style="
@@ -2444,14 +2642,11 @@ async function abrirPagamentoComissaoPeriodo(
             }"
             style="width:100%;"
           >
-
         </div>
-
       </div>
 
 
       <div style="margin-top:15px;">
-
         <label
           for="pagamentoComissaoObservacoes"
           style="
@@ -2472,12 +2667,60 @@ async function abrirPagamentoComissaoPeriodo(
           "
           placeholder="Observação opcional"
         ></textarea>
+      </div>
 
+
+      <div style="margin-top:18px;">
+        <div
+          style="
+            display:flex;
+            justify-content:space-between;
+            align-items:center;
+            gap:10px;
+            margin-bottom:7px;
+          "
+        >
+          <label style="font-weight:600;">
+            Assinatura da profissional
+          </label>
+
+          <button
+            type="button"
+            onclick="
+              FinanceiroProfissionais
+                .limparAssinatura()
+            "
+          >
+            Limpar assinatura
+          </button>
+        </div>
+
+        <canvas
+          id="pagamentoComissaoAssinaturaCanvas"
+          style="
+            display:block;
+            width:100%;
+            height:180px;
+            border:1px solid #bbb;
+            border-radius:8px;
+            background:#fff;
+            touch-action:none;
+            cursor:crosshair;
+          "
+        ></canvas>
+
+        <small
+          style="
+            display:block;
+            margin-top:6px;
+          "
+        >
+          Assine usando o mouse ou o dedo.
+        </small>
       </div>
 
 
       <div style="margin-top:15px;">
-
         <label
           for="pagamentoComissaoAssinaturaNome"
           style="
@@ -2486,7 +2729,7 @@ async function abrirPagamentoComissaoPeriodo(
             font-weight:600;
           "
         >
-          Nome para assinatura
+          Nome da profissional
         </label>
 
         <input
@@ -2509,7 +2752,6 @@ async function abrirPagamentoComissaoPeriodo(
             cursor:pointer;
           "
         >
-
           <input
             id="pagamentoComissaoConfirmarAssinatura"
             type="checkbox"
@@ -2517,11 +2759,9 @@ async function abrirPagamentoComissaoPeriodo(
           >
 
           <span>
-            Confirmo que os valores acima foram conferidos e que o pagamento foi realizado.
+            Confirmo que os valores foram conferidos e que o pagamento foi realizado.
           </span>
-
         </label>
-
       </div>
 
 
@@ -2533,7 +2773,6 @@ async function abrirPagamentoComissaoPeriodo(
           margin-top:22px;
         "
       >
-
         <button
           type="button"
           onclick="
@@ -2555,9 +2794,12 @@ async function abrirPagamentoComissaoPeriodo(
         >
           Finalizar pagamento
         </button>
-
       </div>
     `;
+
+    requestAnimationFrame(
+      prepararCanvasAssinatura
+    );
 
   }catch(erro){
 
@@ -2620,7 +2862,6 @@ async function confirmarPagamentoComissaoPeriodo(){
       "botaoConfirmarPagamentoComissao"
     );
 
-
   if(
     !Number.isFinite(valorPago) ||
     valorPago < 0
@@ -2633,7 +2874,6 @@ async function confirmarPagamentoComissaoPeriodo(){
     return;
   }
 
-
   if(!dataPagamento){
 
     alert(
@@ -2643,16 +2883,23 @@ async function confirmarPagamentoComissaoPeriodo(){
     return;
   }
 
-
   if(!assinaturaNome){
 
     alert(
-      "Informe o nome da profissional para assinatura."
+      "Informe o nome da profissional."
     );
 
     return;
   }
 
+  if(!assinaturaPossuiTraco){
+
+    alert(
+      "A profissional precisa assinar no campo indicado."
+    );
+
+    return;
+  }
 
   if(!assinaturaConfirmada){
 
@@ -2663,13 +2910,15 @@ async function confirmarPagamentoComissaoPeriodo(){
     return;
   }
 
-
   const saldoResultante =
     Number(
       pagamentoComissaoAtual
         .totalDevido
     ) - valorPago;
 
+  const assinaturaImagem =
+    assinaturaCanvas
+      .toDataURL("image/png");
 
   if(botao){
 
@@ -2679,15 +2928,33 @@ async function confirmarPagamentoComissaoPeriodo(){
 
   }
 
-
   let pagamentoCriadoId = null;
-
 
   try{
 
-    const assinaturaTexto =
-      `Assinado digitalmente por ${assinaturaNome}`;
+    const {
+      data: duplicados,
+      error: erroDuplicados
+    } =
+      await supabaseClient
+        .from("comissoes_pagamentos_itens")
+        .select("comanda_item_id")
+        .in(
+          "comanda_item_id",
+          pagamentoComissaoAtual.itensIds
+        );
 
+    if(erroDuplicados){
+      throw erroDuplicados;
+    }
+
+    if((duplicados || []).length > 0){
+
+      throw new Error(
+        "Um ou mais serviços deste período já foram incluídos em outro pagamento. Atualize a tela e tente novamente."
+      );
+
+    }
 
     const {
       data: pagamentoCriado,
@@ -2749,25 +3016,56 @@ async function confirmarPagamentoComissaoPeriodo(){
             "ATIVO",
 
           assinatura:
-            assinaturaTexto,
+            `Assinado por ${assinaturaNome}`,
 
           assinatura_data:
             new Date().toISOString(),
 
           assinatura_nome:
-            assinaturaNome
+            assinaturaNome,
+
+          assinatura_imagem:
+            assinaturaImagem
         })
         .select("id")
         .single();
-
 
     if(erroPagamento){
       throw erroPagamento;
     }
 
-
     pagamentoCriadoId =
       pagamentoCriado.id;
+
+
+    const vinculosItens =
+      pagamentoComissaoAtual
+        .itensIds.map(
+          itemId => ({
+            pagamento_id:
+              pagamentoCriadoId,
+            comanda_item_id:
+              itemId
+          })
+        );
+
+    const {
+      error: erroVinculos
+    } =
+      await supabaseClient
+        .from("comissoes_pagamentos_itens")
+        .insert(vinculosItens);
+
+    if(erroVinculos){
+
+      await supabaseClient
+        .from("comissoes_pagamentos")
+        .delete()
+        .eq("id", pagamentoCriadoId);
+
+      throw erroVinculos;
+
+    }
 
 
     if(
@@ -2793,8 +3091,15 @@ async function confirmarPagamentoComissaoPeriodo(){
               .valesIds
           );
 
-
       if(erroAtualizarVales){
+
+        await supabaseClient
+          .from("comissoes_pagamentos_itens")
+          .delete()
+          .eq(
+            "pagamento_id",
+            pagamentoCriadoId
+          );
 
         await supabaseClient
           .from("comissoes_pagamentos")
@@ -2810,18 +3115,14 @@ async function confirmarPagamentoComissaoPeriodo(){
 
     }
 
-
     alert(
       "Pagamento de comissão finalizado com sucesso."
     );
 
-
     fecharModalPagamentoComissao();
 
-
     FinanceiroProfissionais
-      .abrirAba("resumo");
-
+      .abrirAba("pagamentos");
 
   }catch(erro){
 
@@ -2840,7 +3141,7 @@ async function confirmarPagamentoComissaoPeriodo(){
     if(botao){
 
       botao.disabled = false;
-      botao.textContent =
+       botao.textContent =
         "Finalizar pagamento";
 
     }
@@ -2848,9 +3149,730 @@ async function confirmarPagamentoComissaoPeriodo(){
   }
 
 }
+
+
+async function obterDadosReciboComissao(
+  pagamentoId
+){
+
+  const {
+    data: pagamento,
+    error: erroPagamento
+  } =
+    await supabaseClient
+      .from("comissoes_pagamentos")
+      .select("*")
+      .eq("id", pagamentoId)
+      .single();
+
+  if(erroPagamento){
+    throw erroPagamento;
+  }
+
+  const profissionais =
+    await obterProfissionais();
+
+  const profissional =
+    (profissionais || []).find(
+      item =>
+        String(item.id) ===
+        String(pagamento.profissional_id)
+    );
+
+  const {
+    data: vinculos,
+    error: erroVinculos
+  } =
+    await supabaseClient
+      .from("comissoes_pagamentos_itens")
+      .select(`
+        comanda_item_id
+      `)
+      .eq(
+        "pagamento_id",
+        pagamentoId
+      );
+
+  if(erroVinculos){
+    throw erroVinculos;
+  }
+
+  const idsItens =
+    (vinculos || []).map(
+      item => item.comanda_item_id
+    );
+
+  let itens = [];
+
+  if(idsItens.length > 0){
+
+    const {
+      data: itensRecebidos,
+      error: erroItens
+    } =
+      await supabaseClient
+        .from("comanda_itens")
+        .select(`
+          id,
+          comanda_id,
+          descricao,
+          valor,
+          comissao_percentual
+        `)
+        .in("id", idsItens);
+
+    if(erroItens){
+      throw erroItens;
+    }
+
+    itens = itensRecebidos || [];
+
+  }
+
+  const idsComandas =
+    [
+      ...new Set(
+        itens
+          .map(item => item.comanda_id)
+          .filter(Boolean)
+      )
+    ];
+
+  const mapaComandas = {};
+  const mapaClientes = {};
+
+  if(idsComandas.length > 0){
+
+    const {
+      data: comandas,
+      error: erroComandas
+    } =
+      await supabaseClient
+        .from("comandas")
+        .select(`
+          id,
+          data,
+          cliente_id
+        `)
+        .in("id", idsComandas);
+
+    if(erroComandas){
+      throw erroComandas;
+    }
+
+    (comandas || []).forEach(
+      comanda => {
+        mapaComandas[comanda.id] =
+          comanda;
+      }
+    );
+
+    const idsClientes =
+      [
+        ...new Set(
+          (comandas || [])
+            .map(
+              comanda =>
+                comanda.cliente_id
+            )
+            .filter(Boolean)
+        )
+      ];
+
+    if(idsClientes.length > 0){
+
+      const {
+        data: clientes,
+        error: erroClientes
+      } =
+        await supabaseClient
+          .from("clientes")
+          .select("id,nome")
+          .in("id", idsClientes);
+
+      if(erroClientes){
+        throw erroClientes;
+      }
+
+      (clientes || []).forEach(
+        cliente => {
+          mapaClientes[cliente.id] =
+            cliente.nome;
+        }
+      );
+
+    }
+
+  }
+
+  return {
+    pagamento,
+    profissional,
+    itens,
+    mapaComandas,
+    mapaClientes
+  };
+
+}
+
+
+async function visualizarReciboComissao(
+  pagamentoId
+){
+
+  try{
+
+    const dados =
+      await obterDadosReciboComissao(
+        pagamentoId
+      );
+
+    const {
+      pagamento,
+      profissional,
+      itens,
+      mapaComandas,
+      mapaClientes
+    } = dados;
+
+    const linhas =
+      itens.map(item => {
+
+        const comanda =
+          mapaComandas[item.comanda_id];
+
+        const cliente =
+          mapaClientes[
+            comanda?.cliente_id
+          ] || "Cliente não informado";
+
+        const valor =
+          Number(item.valor || 0);
+
+        const percentual =
+          Number(
+            item.comissao_percentual || 0
+          );
+
+        const comissao =
+          valor * percentual / 100;
+
+        return `
+          <tr>
+            <td>
+              ${
+                financeiroFormatarData(
+                  comanda?.data
+                )
+              }
+            </td>
+
+            <td>
+              ${
+                financeiroEscaparHTML(
+                  cliente
+                )
+              }
+            </td>
+
+            <td>
+              ${
+                financeiroEscaparHTML(
+                  item.descricao ||
+                  "Serviço"
+                )
+              }
+            </td>
+
+            <td class="direita">
+              ${
+                financeiroFormatarMoeda(
+                  valor
+                )
+              }
+            </td>
+
+            <td class="direita">
+              ${percentual.toLocaleString(
+                "pt-BR"
+              )}%
+            </td>
+
+            <td class="direita">
+              ${
+                financeiroFormatarMoeda(
+                  comissao
+                )
+              }
+            </td>
+          </tr>
+        `;
+
+      }).join("");
+
+    const janela =
+      window.open(
+        "",
+        "_blank",
+        "width=1000,height=800"
+      );
+
+    if(!janela){
+
+      alert(
+        "O navegador bloqueou a abertura do recibo."
+      );
+
+      return;
+    }
+
+    janela.document.write(`
+      <!DOCTYPE html>
+      <html lang="pt-BR">
+      <head>
+        <meta charset="UTF-8">
+        <title>
+          Recibo de comissão
+        </title>
+
+        <style>
+          body{
+            font-family:Arial,sans-serif;
+            color:#111;
+            margin:35px;
+          }
+
+          h1{
+            text-align:center;
+            font-size:24px;
+            margin:0 0 25px;
+          }
+
+          .cabecalho{
+            display:grid;
+            grid-template-columns:1fr 1fr;
+            gap:10px 25px;
+            margin-bottom:25px;
+          }
+
+          .resumo{
+            width:100%;
+            max-width:500px;
+            margin-left:auto;
+            margin-top:20px;
+          }
+
+          .linha{
+            display:flex;
+            justify-content:space-between;
+            gap:20px;
+            padding:7px 0;
+          }
+
+          .total{
+            border-top:2px solid #111;
+            font-size:18px;
+            font-weight:700;
+          }
+
+          table{
+            width:100%;
+            border-collapse:collapse;
+            font-size:12px;
+          }
+
+          th,
+          td{
+            padding:8px;
+            border-bottom:1px solid #ddd;
+            text-align:left;
+          }
+
+          .direita{
+            text-align:right;
+          }
+
+          .assinatura{
+            margin-top:45px;
+            text-align:center;
+          }
+
+          .assinatura img{
+            max-width:420px;
+            max-height:140px;
+            display:block;
+            margin:0 auto 5px;
+          }
+
+          .acoes{
+            display:flex;
+            justify-content:center;
+            gap:10px;
+            margin-bottom:25px;
+          }
+
+          button{
+            padding:10px 16px;
+            cursor:pointer;
+          }
+
+          @media print{
+            .acoes{
+              display:none;
+            }
+
+            body{
+              margin:15mm;
+            }
+          }
+        </style>
+      </head>
+
+      <body>
+        <div class="acoes">
+          <button onclick="window.print()">
+            Imprimir ou salvar em PDF
+          </button>
+
+          <button onclick="window.close()">
+            Fechar
+          </button>
+        </div>
+
+        <h1>
+          RECIBO DE PAGAMENTO DE COMISSÃO
+        </h1>
+
+        <div class="cabecalho">
+          <div>
+            <strong>Profissional:</strong>
+            ${
+              financeiroEscaparHTML(
+                profissional?.nome ||
+                pagamento.assinatura_nome ||
+                "Profissional"
+              )
+            }
+          </div>
+
+          <div>
+            <strong>Data do pagamento:</strong>
+            ${
+              financeiroFormatarData(
+                pagamento.data_pagamento
+              )
+            }
+          </div>
+
+          <div>
+            <strong>Período:</strong>
+            ${
+              financeiroFormatarData(
+                pagamento.data_inicio
+              )
+            }
+            até
+            ${
+              financeiroFormatarData(
+                pagamento.data_fim
+              )
+            }
+          </div>
+
+          <div>
+            <strong>Status:</strong>
+            ${
+              financeiroEscaparHTML(
+                pagamento.status ||
+                "ATIVO"
+              )
+            }
+          </div>
+        </div>
+
+        <table>
+          <thead>
+            <tr>
+              <th>Data</th>
+              <th>Cliente</th>
+              <th>Serviço</th>
+              <th class="direita">Valor</th>
+              <th class="direita">Comissão</th>
+              <th class="direita">Valor comissão</th>
+            </tr>
+          </thead>
+
+          <tbody>
+            ${
+              linhas ||
+              `
+                <tr>
+                  <td colspan="6">
+                    Nenhum item vinculado.
+                  </td>
+                </tr>
+              `
+            }
+          </tbody>
+        </table>
+
+        <div class="resumo">
+          <div class="linha">
+            <span>Comissão do período</span>
+            <strong>
+              ${
+                financeiroFormatarMoeda(
+                  pagamento.comissao_periodo
+                )
+              }
+            </strong>
+          </div>
+
+          <div class="linha">
+            <span>Saldo anterior</span>
+            <strong>
+              ${
+                financeiroFormatarMoeda(
+                  pagamento.saldo_anterior
+                )
+              }
+            </strong>
+          </div>
+
+          <div class="linha">
+            <span>Vales descontados</span>
+            <strong>
+              -${
+                financeiroFormatarMoeda(
+                  pagamento.total_vales
+                )
+              }
+            </strong>
+          </div>
+
+          <div class="linha">
+            <span>Total devido</span>
+            <strong>
+              ${
+                financeiroFormatarMoeda(
+                  pagamento.total_devido
+                )
+              }
+            </strong>
+          </div>
+
+          <div class="linha">
+            <span>Valor pago</span>
+            <strong>
+              ${
+                financeiroFormatarMoeda(
+                  pagamento.valor_pago
+                )
+              }
+            </strong>
+          </div>
+
+          <div class="linha total">
+            <span>Saldo resultante</span>
+            <strong>
+              ${
+                financeiroFormatarMoeda(
+                  pagamento.saldo_resultante
+                )
+              }
+            </strong>
+          </div>
+        </div>
+
+        ${
+          pagamento.observacoes
+            ? `
+              <p style="margin-top:30px;">
+                <strong>Observações:</strong>
+                ${
+                  financeiroEscaparHTML(
+                    pagamento.observacoes
+                  )
+                }
+              </p>
+            `
+            : ""
+        }
+
+        <div class="assinatura">
+          ${
+            pagamento.assinatura_imagem
+              ? `
+                <img
+                  src="${
+                    pagamento.assinatura_imagem
+                  }"
+                  alt="Assinatura"
+                >
+              `
+              : ""
+          }
+
+          <div>
+            _______________________________________
+          </div>
+
+          <strong>
+            ${
+              financeiroEscaparHTML(
+                pagamento.assinatura_nome ||
+                profissional?.nome ||
+                "Profissional"
+              )
+            }
+          </strong>
+
+          <div>
+            Assinatura da profissional
+          </div>
+        </div>
+      </body>
+      </html>
+    `);
+
+    janela.document.close();
+
+  }catch(erro){
+
+    console.error(
+      "Erro ao abrir recibo:",
+      erro
+    );
+
+    alert(
+      erro?.message ||
+      "Não foi possível abrir o recibo."
+    );
+
+  }
+
+}
+
+
+async function cancelarPagamentoComissao(
+  pagamentoId
+){
+
+  const confirmar =
+    window.confirm(
+      "Deseja cancelar este pagamento? Os serviços e os vales voltarão a ficar disponíveis."
+    );
+
+  if(!confirmar){
+    return;
+  }
+
+  const motivo =
+    window.prompt(
+      "Informe o motivo do cancelamento:"
+    );
+
+  if(!motivo?.trim()){
+
+    alert(
+      "O motivo do cancelamento é obrigatório."
+    );
+
+    return;
+  }
+
+  try{
+
+    const {
+      error: erroPagamento
+    } =
+      await supabaseClient
+        .from("comissoes_pagamentos")
+        .update({
+          status:
+            "CANCELADO",
+
+          cancelado_em:
+            new Date().toISOString(),
+
+          cancelado_por:
+            typeof usuarioLogado !==
+              "undefined"
+              ? usuarioLogado?.id || null
+              : null,
+
+          motivo_cancelamento:
+            motivo.trim()
+        })
+        .eq("id", pagamentoId);
+
+    if(erroPagamento){
+      throw erroPagamento;
+    }
+
+    const {
+      error: erroVales
+    } =
+      await supabaseClient
+        .from("profissionais_vales")
+        .update({
+          pagamento_comissao_id:
+            null,
+
+          status:
+            "PENDENTE"
+        })
+        .eq(
+          "pagamento_comissao_id",
+          pagamentoId
+        );
+
+    if(erroVales){
+      throw erroVales;
+    }
+
+    const {
+      error: erroItens
+    } =
+      await supabaseClient
+        .from("comissoes_pagamentos_itens")
+        .delete()
+        .eq(
+          "pagamento_id",
+          pagamentoId
+        );
+
+    if(erroItens){
+      throw erroItens;
+    }
+
+    alert(
+      "Pagamento cancelado com sucesso."
+    );
+
+    await listarPagamentosFinanceiroProfissionais();
+
+  }catch(erro){
+
+    console.error(
+      "Erro ao cancelar pagamento:",
+      erro
+    );
+
+    alert(
+      erro?.message ||
+      "Não foi possível cancelar o pagamento."
+    );
+
+  }
+
+}
+
+
 /* =========================================================
    PAGAMENTOS
 ========================================================= */
+
 async function carregarPagamentosProfissionaisNovo(){
 
   const area =
@@ -2865,13 +3887,88 @@ async function carregarPagamentosProfissionaisNovo(){
   area.innerHTML = `
     <div class="card">
 
-      <h2 style="margin-top:0;">
-        Fechamentos
-      </h2>
+      <div
+        style="
+          display:flex;
+          justify-content:space-between;
+          align-items:flex-end;
+          gap:15px;
+          flex-wrap:wrap;
+        "
+      >
+        <div>
+          <h2 style="margin:0 0 5px;">
+            Fechamentos
+          </h2>
 
-      <p>
-        Os fechamentos serão carregados nesta aba.
-      </p>
+          <p style="margin:0;">
+            Pagamentos realizados, recibos e cancelamentos.
+          </p>
+        </div>
+
+        <div
+          style="
+            display:flex;
+            align-items:flex-end;
+            gap:10px;
+            flex-wrap:wrap;
+          "
+        >
+          <div>
+            <label
+              for="filtroPagamentoDataInicio"
+              style="
+                display:block;
+                margin-bottom:5px;
+                font-size:13px;
+              "
+            >
+              Data inicial
+            </label>
+
+            <input
+              id="filtroPagamentoDataInicio"
+              type="date"
+              value="${financeiroPrimeiroDiaMes()}"
+            >
+          </div>
+
+          <div>
+            <label
+              for="filtroPagamentoDataFim"
+              style="
+                display:block;
+                margin-bottom:5px;
+                font-size:13px;
+              "
+            >
+              Data final
+            </label>
+
+            <input
+              id="filtroPagamentoDataFim"
+              type="date"
+              value="${financeiroUltimoDiaMes()}"
+            >
+          </div>
+
+          <button
+            type="button"
+            class="principal"
+            onclick="
+              FinanceiroProfissionais
+                .atualizarPagamentos()
+            "
+          >
+            Atualizar
+          </button>
+        </div>
+      </div>
+
+      <div
+        id="totaisPagamentosFinanceiro"
+        style="margin-top:22px;"
+      ></div>
 
       <div
         id="listaPagamentosFinanceiroProfissionais"
@@ -2888,6 +3985,10 @@ async function carregarPagamentosProfissionaisNovo(){
 }
 
 
+window.FinanceiroProfissionais.atualizarPagamentos =
+  listarPagamentosFinanceiroProfissionais;
+
+
 async function listarPagamentosFinanceiroProfissionais(){
 
   const area =
@@ -2895,11 +3996,29 @@ async function listarPagamentosFinanceiroProfissionais(){
       "listaPagamentosFinanceiroProfissionais"
     );
 
+  const areaTotais =
+    document.getElementById(
+      "totaisPagamentosFinanceiro"
+    );
+
   if(!area){
     return;
   }
 
+  area.innerHTML =
+    "Carregando fechamentos...";
+
   try{
+
+    const dataInicio =
+      document.getElementById(
+        "filtroPagamentoDataInicio"
+      )?.value;
+
+    const dataFim =
+      document.getElementById(
+        "filtroPagamentoDataFim"
+      )?.value;
 
     const profissionais =
       await obterProfissionais();
@@ -2916,11 +4035,8 @@ async function listarPagamentosFinanceiroProfissionais(){
       }
     );
 
-    const {
-      data: pagamentos,
-      error
-    } =
-      await supabaseClient
+    let consulta =
+      supabaseClient
         .from("comissoes_pagamentos")
         .select("*")
         .order(
@@ -2936,14 +4052,206 @@ async function listarPagamentosFinanceiroProfissionais(){
           }
         );
 
+    if(dataInicio){
+      consulta =
+        consulta.gte(
+          "data_pagamento",
+          dataInicio
+        );
+    }
+
+    if(dataFim){
+      consulta =
+        consulta.lte(
+          "data_pagamento",
+          dataFim
+        );
+    }
+
+    const {
+      data: pagamentos,
+      error
+    } = await consulta;
+
     if(error){
       throw error;
     }
 
-    if(
-      !pagamentos ||
-      pagamentos.length === 0
-    ){
+    const lista =
+      pagamentos || [];
+
+    const ativos =
+      lista.filter(
+        pagamento =>
+          ![
+            "cancelado",
+            "cancelada"
+          ].includes(
+            financeiroNormalizarStatus(
+              pagamento.status
+            )
+          )
+      );
+
+    const totalPago =
+      ativos.reduce(
+        (total, pagamento) =>
+          total +
+          Number(
+            pagamento.valor_pago || 0
+          ),
+        0
+      );
+
+    const totalComissoes =
+      ativos.reduce(
+        (total, pagamento) =>
+          total +
+          Number(
+            pagamento.comissao_periodo || 0
+          ),
+        0
+      );
+
+    const totalVales =
+      ativos.reduce(
+        (total, pagamento) =>
+          total +
+          Number(
+            pagamento.total_vales || 0
+          ),
+        0
+      );
+
+    const totalSaldos =
+      ativos.reduce(
+        (total, pagamento) =>
+          total +
+          Number(
+            pagamento.saldo_resultante || 0
+          ),
+        0
+      );
+
+    if(areaTotais){
+
+      areaTotais.innerHTML = `
+        <div
+          style="
+            display:grid;
+            grid-template-columns:repeat(
+              auto-fit,
+              minmax(170px, 1fr)
+            );
+            gap:12px;
+          "
+        >
+          <div
+            class="card"
+            style="padding:15px;"
+          >
+            <small>Pagamentos ativos</small>
+
+            <div
+              style="
+                font-size:21px;
+                font-weight:700;
+                margin-top:5px;
+              "
+            >
+              ${ativos.length}
+            </div>
+          </div>
+
+          <div
+            class="card"
+            style="padding:15px;"
+          >
+            <small>Comissões fechadas</small>
+
+            <div
+              style="
+                font-size:21px;
+                font-weight:700;
+                margin-top:5px;
+              "
+            >
+              ${
+                financeiroFormatarMoeda(
+                  totalComissoes
+                )
+              }
+            </div>
+          </div>
+
+          <div
+            class="card"
+            style="padding:15px;"
+             >
+            <small>Vales descontados</small>
+
+            <div
+              style="
+                font-size:21px;
+                font-weight:700;
+                margin-top:5px;
+              "
+            >
+              ${
+                financeiroFormatarMoeda(
+                  totalVales
+                )
+              }
+            </div>
+          </div>
+
+          <div
+            class="card"
+            style="padding:15px;"
+          >
+            <small>Total pago</small>
+
+            <div
+              style="
+                font-size:21px;
+                font-weight:700;
+                margin-top:5px;
+              "
+            >
+              ${
+                financeiroFormatarMoeda(
+                  totalPago
+                )
+              }
+            </div>
+          </div>
+
+          <div
+            class="card"
+            style="padding:15px;"
+          >
+            <small>Saldo resultante</small>
+
+            <div
+              style="
+                font-size:21px;
+                font-weight:700;
+                margin-top:5px;
+              "
+            >
+              ${
+                financeiroFormatarMoeda(
+                  totalSaldos
+                )
+              }
+            </div>
+          </div>
+        </div>
+      `;
+
+    }
+
+    if(lista.length === 0){
 
       area.innerHTML = `
         <div
@@ -2954,7 +4262,7 @@ async function listarPagamentosFinanceiroProfissionais(){
             border-radius:8px;
           "
         >
-          Nenhum fechamento registrado.
+          Nenhum fechamento registrado no período.
         </div>
       `;
 
@@ -2968,9 +4276,9 @@ async function listarPagamentosFinanceiroProfissionais(){
           style="
             width:100%;
             border-collapse:collapse;
+            min-width:1050px;
           "
         >
-
           <thead>
             <tr>
               <th style="padding:12px;text-align:left;">
@@ -2993,110 +4301,220 @@ async function listarPagamentosFinanceiroProfissionais(){
                 Pago
               </th>
 
+              <th style="padding:12px;text-align:right;">
+                Saldo
+              </th>
+
+              <th style="padding:12px;text-align:center;">
+                Assinatura
+              </th>
+
               <th style="padding:12px;text-align:center;">
                 Status
+              </th>
+
+              <th style="padding:12px;text-align:right;">
+                Ações
               </th>
             </tr>
           </thead>
 
           <tbody>
-
             ${
-              pagamentos.map(
-                pagamento => `
-                  <tr
-                    style="
-                      border-top:1px solid #ddd;
-                    "
-                  >
-                    <td style="padding:12px;">
-                      ${
-                        financeiroEscaparHTML(
-                          mapaProfissionais[
-                            pagamento.profissional_id
-                          ] ||
-                          "Profissional não encontrado"
-                        )
-                      }
-                    </td>
+              lista.map(
+                pagamento => {
 
-                    <td style="padding:12px;">
-                      ${
-                        financeiroFormatarData(
-                          pagamento.data_inicio
-                        )
-                      }
-                      até
-                      ${
-                        financeiroFormatarData(
-                          pagamento.data_fim
-                        )
-                      }
-                    </td>
+                  const status =
+                    financeiroNormalizarStatus(
+                      pagamento.status
+                    );
 
-                    <td
+                  const cancelado =
+                    status === "cancelado" ||
+                    status === "cancelada";
+
+                  return `
+                    <tr
                       style="
-                        padding:12px;
-                        text-align:right;
+                        border-top:1px solid #ddd;
+                        ${
+                          cancelado
+                            ? "opacity:0.58;"
+                            : ""
+                        }
                       "
                     >
-                      ${
-                        financeiroFormatarMoeda(
-                          pagamento
-                            .comissao_periodo
-                        )
-                      }
-                    </td>
+                      <td style="padding:12px;">
+                        ${
+                          financeiroEscaparHTML(
+                            mapaProfissionais[
+                              pagamento.profissional_id
+                            ] ||
+                            pagamento.assinatura_nome ||
+                            "Profissional não encontrado"
+                          )
+                        }
+                      </td>
 
-                    <td
-                      style="
-                        padding:12px;
-                        text-align:right;
-                      "
-                    >
-                      ${
-                        financeiroFormatarMoeda(
-                          pagamento.total_vales
-                        )
-                      }
-                    </td>
+                      <td style="padding:12px;">
+                        ${
+                          financeiroFormatarData(
+                            pagamento.data_inicio
+                          )
+                        }
+                        até
+                        ${
+                          financeiroFormatarData(
+                            pagamento.data_fim
+                          )
+                        }
+                      </td>
 
-                    <td
-                      style="
-                        padding:12px;
-                        text-align:right;
-                        font-weight:700;
-                      "
-                    >
-                      ${
-                        financeiroFormatarMoeda(
-                          pagamento.valor_pago
-                        )
-                      }
-                    </td>
+                      <td
+                        style="
+                          padding:12px;
+                          text-align:right;
+                        "
+                      >
+                        ${
+                          financeiroFormatarMoeda(
+                            pagamento
+                              .comissao_periodo
+                          )
+                        }
+                      </td>
 
-                    <td
-                      style="
-                        padding:12px;
-                        text-align:center;
-                      "
-                    >
-                      ${
-                        financeiroEscaparHTML(
-                          pagamento.status ||
-                          "ATIVO"
-                        )
-                      }
-                    </td>
-                  </tr>
-                `
+                      <td
+                        style="
+                          padding:12px;
+                          text-align:right;
+                        "
+                      >
+                        ${
+                          financeiroFormatarMoeda(
+                            pagamento.total_vales
+                          )
+                        }
+                      </td>
+
+                      <td
+                        style="
+                          padding:12px;
+                          text-align:right;
+                          font-weight:700;
+                        "
+                      >
+                        ${
+                          financeiroFormatarMoeda(
+                            pagamento.valor_pago
+                          )
+                        }
+                      </td>
+
+                      <td
+                        style="
+                          padding:12px;
+                          text-align:right;
+                          font-weight:700;
+                        "
+                      >
+                        ${
+                          financeiroFormatarMoeda(
+                            pagamento.saldo_resultante
+                          )
+                        }
+                      </td>
+
+                      <td
+                        style="
+                          padding:12px;
+                          text-align:center;
+                        "
+                      >
+                        ${
+                          pagamento.assinatura_imagem
+                            ? "Assinada"
+                            : "Sem imagem"
+                        }
+                      </td>
+
+                      <td
+                        style="
+                          padding:12px;
+                          text-align:center;
+                        "
+                      >
+                        <span
+                          style="
+                            display:inline-block;
+                            padding:5px 9px;
+                            border-radius:20px;
+                            font-size:12px;
+                            background:${
+                              cancelado
+                                ? "#fde8e8"
+                                : "#e8f5e9"
+                            };
+                          "
+                        >
+                          ${
+                            financeiroEscaparHTML(
+                              pagamento.status ||
+                              "ATIVO"
+                            )
+                          }
+                        </span>
+                      </td>
+
+                      <td
+                        style="
+                          padding:12px;
+                          text-align:right;
+                          white-space:nowrap;
+                        "
+                      >
+                        <button
+                          type="button"
+                          onclick="
+                            FinanceiroProfissionais
+                              .visualizarRecibo(
+                                '${pagamento.id}'
+                              )
+                          "
+                        >
+                          Recibo
+                        </button>
+
+                        ${
+                          cancelado
+                            ? ""
+                            : `
+                              <button
+                                type="button"
+                                style="
+                                  margin-left:6px;
+                                  color:#b42318;
+                                "
+                                onclick="
+                                  FinanceiroProfissionais
+                                    .cancelarPagamento(
+                                      '${pagamento.id}'
+                                    )
+                                "
+                              >
+                                Cancelar
+                              </button>
+                            `
+                        }
+                      </td>
+                    </tr>
+                  `;
+
+                }
               ).join("")
             }
-
           </tbody>
-
         </table>
-
       </div>
     `;
 
@@ -3636,3 +5054,4 @@ async function carregarExtratoProfissional(
   }
 
 }
+            
