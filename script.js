@@ -16,13 +16,6 @@ const cacheSistema = {
   unidades: null
 };
 
-const cacheSistema = {
-  clientes: null,
-  profissionais: null,
-  servicos: null,
-  categorias: null,
-  formasPagamento: null
-};
 const telasCarregadas = {
   agenda: false,
   confirmacoes: false,
