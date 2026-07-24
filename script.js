@@ -7175,13 +7175,39 @@ async function abrirFaturamentoClienteDia(agendamentoId){
     );
   }
 
-  const itensHoje = itens.filter(item =>
-    item.data === dataHoje
-  );
+function removerDuplicadosFaturamento(lista){
 
-  const itensFuturos = itens.filter(item =>
+  const itensUnicos = new Map();
+
+  lista.forEach(item => {
+
+    const chave = [
+      item.data || "",
+      String(item.horario || "").slice(0, 5),
+      item.profissional_id || item.profissionais?.id || "",
+      item.servico_id || item.servicos?.id || item.servico_nome || item.servicos?.nome || "",
+      item.pacote_cliente_id || item.pacote_id || ""
+    ].join("|");
+
+    if(!itensUnicos.has(chave)){
+      itensUnicos.set(chave, item);
+    }
+  });
+
+  return Array.from(itensUnicos.values());
+}
+
+const itensHoje = removerDuplicadosFaturamento(
+  itens.filter(item =>
+    item.data === dataHoje
+  )
+);
+
+const itensFuturos = removerDuplicadosFaturamento(
+  itens.filter(item =>
     item.data > dataHoje
-  );
+  )
+);
 
   if(
     itensHoje.length === 0 &&
