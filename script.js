@@ -1538,8 +1538,14 @@ await registrarHistoricoOperacao(
 
 fecharModal();
 
-carregarServicos();
-carregarAgenda();
+invalidarTela("servicos");
+invalidarTela("agenda");
+
+await carregarServicos();
+
+if(document.getElementById("tela-agenda")?.classList.contains("ativa")){
+  await carregarAgenda();
+}
 
 alert("Serviço salvo com sucesso.");
 }
@@ -1554,13 +1560,21 @@ async function carregarAgenda(){
 
   const busca = document.getElementById("buscaAgenda")?.value?.toLowerCase().trim() || "";
 
-  const profissionaisResp = await supabaseClient
-    .from("profissionais")
-    .select("*")
-    .eq("ativo", true)
-    .order("ordem", { ascending:true });
+const dataAgendaISO = formatarDataISO(dataAgenda);
 
-  const agendamentosResp = await supabaseClient
+/*
+  Executa as consultas principais ao mesmo tempo.
+  Antes, cada consulta aguardava a anterior terminar.
+*/
+const [
+  profissionaisResultado,
+  agendamentosResp,
+  bloqueiosResp
+] = await Promise.all([
+
+  obterProfissionais(),
+
+  supabaseClient
     .from("agendamentos")
     .select(`
       *,
@@ -1568,35 +1582,80 @@ async function carregarAgenda(){
       profissionais(nome),
       servicos(nome, duracao, valor)
     `)
-    .eq("data", formatarDataISO(dataAgenda))
-    .order("horario");
+    .eq("data", dataAgendaISO)
+    .order("horario"),
 
-  const bloqueiosResp = await supabaseClient
+  supabaseClient
     .from("bloqueios_agenda")
     .select("*")
     .eq("ativo", true)
-    .eq("data", formatarDataISO(dataAgenda));
-  const pendenciasResp = await supabaseClient
-  .from("financeiro_lancamentos")
-  .select("cliente_id, valor")
-  .eq("tipo", "PENDENCIA")
-  .eq("status", "ATIVO");
+    .eq("data", dataAgendaISO)
+
+]);
+
+if(agendamentosResp.error){
+  console.error("Erro ao carregar agendamentos:", agendamentosResp.error);
+}
+
+if(bloqueiosResp.error){
+  console.error("Erro ao carregar bloqueios:", bloqueiosResp.error);
+}
+
+let profissionais = profissionaisResultado || [];
+let agendamentos = agendamentosResp.data || [];
+const bloqueios = bloqueiosResp.data || [];
+
+/*
+  Busca pendências somente das clientes que possuem
+  agendamento na data aberta.
+*/
+const clientesIdsAgenda = [
+  ...new Set(
+    agendamentos
+      .map(a => a.cliente_id)
+      .filter(Boolean)
+  )
+];
 
 const pendenciasPorCliente = {};
 
-(pendenciasResp.data || []).forEach(p => {
-  if(!p.cliente_id) return;
+if(clientesIdsAgenda.length > 0){
 
-  if(!pendenciasPorCliente[p.cliente_id]){
-    pendenciasPorCliente[p.cliente_id] = 0;
+  const { data: pendencias, error: erroPendencias } =
+    await supabaseClient
+      .from("financeiro_lancamentos")
+      .select("cliente_id, valor")
+      .eq("tipo", "PENDENCIA")
+      .eq("status", "ATIVO")
+      .in("cliente_id", clientesIdsAgenda);
+
+  if(erroPendencias){
+    console.error("Erro ao carregar pendências:", erroPendencias);
   }
 
-  pendenciasPorCliente[p.cliente_id] += Number(p.valor || 0);
-});
+  (pendencias || []).forEach(p => {
 
-let profissionais = profissionaisResp.data || [];
-  let agendamentos = agendamentosResp.data || [];
-  const bloqueios = bloqueiosResp.data || [];
+    if(!p.cliente_id) return;
+
+    if(!pendenciasPorCliente[p.cliente_id]){
+      pendenciasPorCliente[p.cliente_id] = 0;
+    }
+
+    pendenciasPorCliente[p.cliente_id] += Number(p.valor || 0);
+  });
+}
+  if(pode("agenda_ver_propria") && !pode("agenda_ver_todos")){
+
+  const profissionalIdUsuario = usuarioLogado?.profissional_id;
+
+  profissionais = profissionais.filter(p =>
+    String(p.id) === String(profissionalIdUsuario)
+  );
+
+  agendamentos = agendamentos.filter(a =>
+    String(a.profissional_id) === String(profissionalIdUsuario)
+  );
+}
   if(pode("agenda_ver_propria") && !pode("agenda_ver_todos")){
 
   const profissionalIdUsuario = usuarioLogado?.profissional_id;
