@@ -8,6 +8,7 @@ let permissoesUsuario = [];
 let unidadeAtualId = 1;
 let dataAgenda = new Date();
 let modeloAnamneseAtual = null;
+
 const cacheSistema = {
   clientes: null,
   profissionais: null,
@@ -15,6 +16,8 @@ const cacheSistema = {
   formasPagamento: null,
   unidades: null
 };
+
+let assinaturaEstruturaAgenda = "";
 
 const telasCarregadas = {
   agenda: false,
@@ -1636,18 +1639,6 @@ if(clientesIdsAgenda.length > 0){
 
     pendenciasPorCliente[p.cliente_id] += Number(p.valor || 0);
   });
-}
-  if(pode("agenda_ver_propria") && !pode("agenda_ver_todos")){
-
-  const profissionalIdUsuario = usuarioLogado?.profissional_id;
-
-  profissionais = profissionais.filter(p =>
-    String(p.id) === String(profissionalIdUsuario)
-  );
-
-  agendamentos = agendamentos.filter(a =>
-    String(a.profissional_id) === String(profissionalIdUsuario)
-  );
 }
   if(pode("agenda_ver_propria") && !pode("agenda_ver_todos")){
 
