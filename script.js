@@ -12258,3 +12258,100 @@ if(document.readyState === "loading"){
   instalarModuloFinanceiroProfissionais();
 
 }
+async function carregarConfirmacoes(){
+
+  const lista = document.getElementById("listaConfirmacoes");
+  if(!lista) return;
+
+  lista.innerHTML = "Carregando confirmações...";
+
+  const data = formatarDataISO(dataAgenda);
+
+  const { data: agendamentos, error } = await supabaseClient
+    .from("agendamentos")
+    .select(`
+      *,
+      clientes(nome, telefone),
+      profissionais(nome),
+      servicos(nome)
+    `)
+    .eq("data", data)
+    .neq("status", "Cancelado")
+    .order("horario");
+
+  if(error){
+    console.error(error);
+    lista.innerHTML = "Erro ao carregar confirmações.";
+    return;
+  }
+
+  if(!agendamentos || agendamentos.length === 0){
+    lista.innerHTML = `
+      <div class="card">
+        Nenhum agendamento encontrado para este dia.
+      </div>
+    `;
+    return;
+  }
+
+  lista.innerHTML = agendamentos.map(a => {
+
+    const status = a.confirmacao_status || "pendente";
+
+    const textosStatus = {
+      pendente: "Pendente",
+      enviado: "Confirmação enviada",
+      confirmado: "Confirmado",
+      cancelado: "Cancelado"
+    };
+
+    return `
+      <div class="card confirmacao-card confirmacao-${status}">
+
+        <div>
+          <h3>${a.clientes?.nome || "Cliente"}</h3>
+
+          <p>
+            ${formatarHorarioBonito(a.horario)}
+            - ${a.servicos?.nome || "Serviço"}
+          </p>
+
+          <p>
+            Profissional: ${a.profissionais?.nome || "Não informado"}
+          </p>
+
+          <p>
+            Telefone: ${a.clientes?.telefone || "Não informado"}
+          </p>
+
+          <strong>
+            ${textosStatus[status] || "Pendente"}
+          </strong>
+        </div>
+
+        <div style="display:flex; gap:8px; flex-wrap:wrap;">
+
+          <button
+            onclick="enviarConfirmacaoWhatsApp(${a.id})"
+          >
+            Enviar WhatsApp
+          </button>
+
+          <button
+            onclick="marcarConfirmacaoAgendamento(${a.id}, 'confirmado')"
+          >
+            Confirmar
+          </button>
+
+          <button
+            onclick="marcarConfirmacaoAgendamento(${a.id}, 'cancelado')"
+          >
+            Cancelar
+          </button>
+
+        </div>
+
+      </div>
+    `;
+  }).join("");
+}
