@@ -1196,18 +1196,3 @@ textarea{
 .alerta-financeiro-cliente p{
     margin:6px 0 10px;
 }
-.agendamento-card.confirmacao-pendente{
-    background:#ffffff !important;
-}
-
-.agendamento-card.confirmacao-enviado{
-    background:#eef8e8 !important;
-}
-
-.agendamento-card.confirmacao-confirmado{
-    background:#b9e7b8 !important;
-}
-
-.agendamento-card.confirmacao-cancelado{
-    background:#ffdada !important;
-}
