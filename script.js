@@ -321,6 +321,10 @@ function mostrarTela(nome){
   alert("Você não tem permissão para acessar agenda.");
   return;
 }
+  if(nome === "confirmacoes" && !pode("agenda_visualizar")){
+  alert("Você não tem permissão para acessar confirmações.");
+  return;
+}
 
 if(nome === "clientes" && !pode("clientes_visualizar")){
   alert("Você não tem permissão para acessar clientes.");
@@ -398,6 +402,7 @@ if(nome === "comissoes" && !pode("comissoes_visualizar")){
 
   if(nome === "dashboard") carregarDashboard();
   if(nome === "agenda") carregarAgenda();
+  if(nome === "confirmacoes") carregarConfirmacoes();
   if(nome === "clientes") carregarClientes();
   if(nome === "profissionais") carregarProfissionais();
   if(nome === "servicos") carregarServicos();
