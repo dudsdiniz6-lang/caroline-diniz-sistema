@@ -7122,6 +7122,7 @@ async function abrirFaturamentoClienteDia(agendamentoId){
   }
 
   let itens = agendamentosCliente || [];
+  console.table(itens);
 
   itens = itens.filter(item => {
 
