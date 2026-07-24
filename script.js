@@ -1629,17 +1629,10 @@ grade.innerHTML = `
 
                   const top = calcularTopAgenda(a.horario);
                   const altura = Math.max((Number(a.duracao || 30) / 30) * alturaBlocoAgenda - 6, 58);
-                  const fim = somarMinutosHorario(a.horario, a.duracao || 30);
-                  const classeConfirmacao = {
-  pendente: "confirmacao-pendente",
-  enviado: "confirmacao-enviado",
-  confirmado: "confirmacao-confirmado",
-  cancelado: "confirmacao-cancelado"
-}[a.confirmacao_status || "pendente"];
-
+                
                   return `
                     <div
-                     class="agendamento-card status-${normalizarClasse(a.status)} ${classeConfirmacao}"
+                    class="agendamento-card status-${normalizarClasse(a.status)}"
                       style="top:${top + 4}px; height:${altura}px;"
                       onclick="event.stopPropagation(); abrirModalAgendamento(${a.id})"
                     >
