@@ -500,10 +500,6 @@ async function iniciarSistema(){
 
   mostrarTela("dashboard");
 
-  carregarClientes();
-  carregarProfissionais();
-  carregarServicos();
-
   carregarResumoAlertasAgenda();
 }
 
