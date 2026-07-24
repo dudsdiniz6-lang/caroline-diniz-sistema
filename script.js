@@ -1554,145 +1554,221 @@ async function carregarAgenda(){
 
   grade.innerHTML = "Carregando agenda...";
 
-  const busca = document.getElementById("buscaAgenda")?.value?.toLowerCase().trim() || "";
+  const busca =
+    document.getElementById("buscaAgenda")
+      ?.value
+      ?.toLowerCase()
+      .trim() || "";
 
-const dataAgendaISO = formatarDataISO(dataAgenda);
+  const dataAgendaISO = formatarDataISO(dataAgenda);
 
-/*
-  Executa as consultas principais ao mesmo tempo.
-  Antes, cada consulta aguardava a anterior terminar.
-*/
-const [
-  profissionaisResultado,
-  agendamentosResp,
-  bloqueiosResp
-] = await Promise.all([
+  const [
+    profissionaisResultado,
+    agendamentosResp,
+    bloqueiosResp
+  ] = await Promise.all([
 
-  obterProfissionais(),
+    obterProfissionais(),
 
-  supabaseClient
-    .from("agendamentos")
-    .select(`
-      *,
-      clientes(nome, telefone, vip),
-      profissionais(nome),
-      servicos(nome, duracao, valor)
-    `)
-    .eq("data", dataAgendaISO)
-    .order("horario"),
+    supabaseClient
+      .from("agendamentos")
+      .select(`
+        *,
+        clientes(nome, telefone, vip),
+        profissionais(nome),
+        servicos(nome, duracao, valor)
+      `)
+      .eq("data", dataAgendaISO)
+      .order("horario"),
 
-  supabaseClient
-    .from("bloqueios_agenda")
-    .select("*")
-    .eq("ativo", true)
-    .eq("data", dataAgendaISO)
+    supabaseClient
+      .from("bloqueios_agenda")
+      .select("*")
+      .eq("ativo", true)
+      .eq("data", dataAgendaISO)
 
-]);
+  ]);
 
-if(agendamentosResp.error){
-  console.error("Erro ao carregar agendamentos:", agendamentosResp.error);
-}
+  if(agendamentosResp.error){
+    console.error(
+      "Erro ao carregar agendamentos:",
+      agendamentosResp.error
+    );
+  }
 
-if(bloqueiosResp.error){
-  console.error("Erro ao carregar bloqueios:", bloqueiosResp.error);
-}
+  if(bloqueiosResp.error){
+    console.error(
+      "Erro ao carregar bloqueios:",
+      bloqueiosResp.error
+    );
+  }
 
-let profissionais = profissionaisResultado || [];
-let agendamentos = agendamentosResp.data || [];
-const bloqueios = bloqueiosResp.data || [];
+  let profissionais = profissionaisResultado || [];
+  let agendamentos = agendamentosResp.data || [];
+  const bloqueios = bloqueiosResp.data || [];
 
-/*
-  Busca pendências somente das clientes que possuem
-  agendamento na data aberta.
-*/
-const clientesIdsAgenda = [
-  ...new Set(
-    agendamentos
-      .map(a => a.cliente_id)
-      .filter(Boolean)
-  )
-];
+  /*
+    Busca pendências somente das clientes
+    que estão agendadas na data selecionada.
+  */
+  const clientesIdsAgenda = [
+    ...new Set(
+      agendamentos
+        .map(a => a.cliente_id)
+        .filter(Boolean)
+    )
+  ];
 
-const pendenciasPorCliente = {};
+  const pendenciasPorCliente = {};
 
-if(clientesIdsAgenda.length > 0){
+  if(clientesIdsAgenda.length > 0){
 
-  const { data: pendencias, error: erroPendencias } =
-    await supabaseClient
+    const {
+      data: pendencias,
+      error: erroPendencias
+    } = await supabaseClient
       .from("financeiro_lancamentos")
       .select("cliente_id, valor")
       .eq("tipo", "PENDENCIA")
       .eq("status", "ATIVO")
       .in("cliente_id", clientesIdsAgenda);
 
-  if(erroPendencias){
-    console.error("Erro ao carregar pendências:", erroPendencias);
-  }
-
-  (pendencias || []).forEach(p => {
-
-    if(!p.cliente_id) return;
-
-    if(!pendenciasPorCliente[p.cliente_id]){
-      pendenciasPorCliente[p.cliente_id] = 0;
+    if(erroPendencias){
+      console.error(
+        "Erro ao carregar pendências:",
+        erroPendencias
+      );
     }
 
-    pendenciasPorCliente[p.cliente_id] += Number(p.valor || 0);
-  });
-}
-  if(pode("agenda_ver_propria") && !pode("agenda_ver_todos")){
+    (pendencias || []).forEach(p => {
 
-  const profissionalIdUsuario = usuarioLogado?.profissional_id;
+      if(!p.cliente_id) return;
 
-  profissionais = profissionais.filter(p =>
-    String(p.id) === String(profissionalIdUsuario)
-  );
+      if(!pendenciasPorCliente[p.cliente_id]){
+        pendenciasPorCliente[p.cliente_id] = 0;
+      }
 
-  agendamentos = agendamentos.filter(a =>
-    String(a.profissional_id) === String(profissionalIdUsuario)
-  );
-}
+      pendenciasPorCliente[p.cliente_id] +=
+        Number(p.valor || 0);
+    });
+  }
 
+  /*
+    Usuário que pode visualizar somente
+    a própria agenda.
+  */
+  if(
+    pode("agenda_ver_propria") &&
+    !pode("agenda_ver_todos")
+  ){
+
+    const profissionalIdUsuario =
+      usuarioLogado?.profissional_id;
+
+    profissionais = profissionais.filter(p =>
+      String(p.id) === String(profissionalIdUsuario)
+    );
+
+    agendamentos = agendamentos.filter(a =>
+      String(a.profissional_id) ===
+      String(profissionalIdUsuario)
+    );
+  }
+
+  /*
+    Remove cancelados.
+  */
   agendamentos = agendamentos.filter(a =>
     a.status !== "Cancelado"
   );
 
+  /*
+    Busca pelo nome da cliente.
+  */
   if(busca){
+
     agendamentos = agendamentos.filter(item =>
-      item.clientes?.nome?.toLowerCase().includes(busca)
+      item.clientes?.nome
+        ?.toLowerCase()
+        .includes(busca)
     );
   }
 
   if(profissionais.length === 0){
-    grade.innerHTML = "<div class='card'>Cadastre profissionais para montar a agenda.</div>";
+
+    grade.innerHTML = `
+      <div class="card">
+        Cadastre profissionais para montar a agenda.
+      </div>
+    `;
+
     return;
   }
 
- const horarios = gerarHorariosAgenda();
-const alturaBlocoAgenda = 48;
-const alturaAgenda = horarios.length * alturaBlocoAgenda;
-grade.innerHTML = `
-  <div class="agenda-scroll">
-    <div class="agenda-profissional-wrapper">
+  const horarios = gerarHorariosAgenda();
+  const alturaBlocoAgenda = 48;
+  const alturaAgenda =
+    horarios.length * alturaBlocoAgenda;
 
-      <div class="agenda-coluna-horarios">
-        <div class="agenda-cabecalho">Horário</div>
+  /*
+    Organiza agendamentos e bloqueios por profissional
+    antes de montar o HTML.
+  */
+  const agendaPorProfissional = {};
+  const bloqueiosPorProfissional = {};
 
-        ${horarios.map(h=>`
-          <div class="agenda-horario">${h}</div>
-        `).join("")}
+  agendamentos.forEach(a => {
 
-      </div>
+    const profissionalId =
+      String(a.profissional_id);
 
-        ${profissionais.map(profissional=>{
+    if(!agendaPorProfissional[profissionalId]){
+      agendaPorProfissional[profissionalId] = [];
+    }
 
-          const agendaProf = agendamentos.filter(a =>
-            String(a.profissional_id) === String(profissional.id)
-          );
+    agendaPorProfissional[profissionalId].push(a);
+  });
 
-          const bloqueiosProf = bloqueios.filter(b =>
-            String(b.profissional_id) === String(profissional.id)
-          );
+  bloqueios.forEach(b => {
+
+    const profissionalId =
+      String(b.profissional_id);
+
+    if(!bloqueiosPorProfissional[profissionalId]){
+      bloqueiosPorProfissional[profissionalId] = [];
+    }
+
+    bloqueiosPorProfissional[profissionalId].push(b);
+  });
+
+  grade.innerHTML = `
+    <div class="agenda-scroll">
+      <div class="agenda-profissional-wrapper">
+
+        <div class="agenda-coluna-horarios">
+
+          <div class="agenda-cabecalho">
+            Horário
+          </div>
+
+          ${horarios.map(h => `
+            <div class="agenda-horario">
+              ${h}
+            </div>
+          `).join("")}
+
+        </div>
+
+        ${profissionais.map(profissional => {
+
+          const profissionalId =
+            String(profissional.id);
+
+          const agendaProf =
+            agendaPorProfissional[profissionalId] || [];
+
+          const bloqueiosProf =
+            bloqueiosPorProfissional[profissionalId] || [];
 
           return `
             <div class="agenda-coluna-profissional">
@@ -1701,72 +1777,162 @@ grade.innerHTML = `
                 ${profissional.nome}
               </div>
 
-              <div class="agenda-coluna-corpo" style="height:${alturaAgenda}px;">
+              <div
+                class="agenda-coluna-corpo"
+                style="height:${alturaAgenda}px;"
+              >
 
-            ${horarios.map(h=>`
-  <div
-    class="agenda-slot"
-    onclick="abrirOpcoesHorarioAgenda('${profissional.id}', '${h}')"
-  >
-    <span class="hora-slot">${h}</span>
-  </div>
-`).join("")}
+                ${horarios.map(h => `
+                  <div
+                    class="agenda-slot"
+                    onclick="
+                      abrirOpcoesHorarioAgenda(
+                        '${profissional.id}',
+                        '${h}'
+                      )
+                    "
+                  >
+                    <span class="hora-slot">
+                      ${h}
+                    </span>
+                  </div>
+                `).join("")}
 
-                ${bloqueiosProf.map(b=>{
+                ${bloqueiosProf.map(b => {
 
-                  const top = calcularTopAgenda(String(b.horario_inicio).slice(0,5));
+                  const horarioInicio =
+                    String(b.horario_inicio).slice(0, 5);
 
-                  const inicioMin = horarioParaMinutos(String(b.horario_inicio).slice(0,5));
-                  const fimMin = horarioParaMinutos(String(b.horario_fim).slice(0,5));
-                  const duracao = fimMin - inicioMin;
+                  const horarioFim =
+                    String(b.horario_fim).slice(0, 5);
 
-                  const altura = Math.max((duracao / 30) * alturaBlocoAgenda - 6, 42);
+                  const top =
+                    calcularTopAgenda(horarioInicio);
+
+                  const inicioMin =
+                    horarioParaMinutos(horarioInicio);
+
+                  const fimMin =
+                    horarioParaMinutos(horarioFim);
+
+                  const duracao =
+                    fimMin - inicioMin;
+
+                  const altura = Math.max(
+                    (duracao / 30) *
+                      alturaBlocoAgenda - 6,
+                    42
+                  );
 
                   return `
                     <div
                       class="agenda-bloqueio-card"
-                      style="top:${top + 4}px; height:${altura}px;"
-                      onclick="event.stopPropagation(); abrirModalBloqueioAgenda(${b.id})"
+                      style="
+                        top:${top + 4}px;
+                        height:${altura}px;
+                      "
+                      onclick="
+                        event.stopPropagation();
+                        abrirModalBloqueioAgenda(${b.id})
+                      "
                     >
                       <strong>Bloqueado</strong>
-                      <span>${b.motivo || "Indisponível"}</span>
+
+                      <span>
+                        ${b.motivo || "Indisponível"}
+                      </span>
+
                       <small>
-                        ${formatarHorarioBonito(String(b.horario_inicio).slice(0,5))}
+                        ${formatarHorarioBonito(horarioInicio)}
                         -
-                        ${formatarHorarioBonito(String(b.horario_fim).slice(0,5))}
+                        ${formatarHorarioBonito(horarioFim)}
                       </small>
                     </div>
                   `;
                 }).join("")}
 
-              ${agendaProf.map(a=>{
+                ${agendaProf.map(a => {
 
-  const top = calcularTopAgenda(a.horario);
-  const altura = Math.max((Number(a.duracao || 30) / 30) * alturaBlocoAgenda - 6, 58);
-const fim = somarMinutosHorario(a.horario, a.duracao || 30);
+                  const horario =
+                    String(a.horario).slice(0, 5);
 
-return `
-<div
-                    class="agendamento-card status-${normalizarClasse(a.status)}"
-                      style="top:${top + 4}px; height:${altura}px;"
-                      onclick="event.stopPropagation(); abrirModalAgendamento(${a.id})"
+                  const duracao = Number(
+                    a.duracao ||
+                    a.servicos?.duracao ||
+                    30
+                  );
+
+                  const top =
+                    calcularTopAgenda(horario);
+
+                  const altura = Math.max(
+                    (duracao / 30) *
+                      alturaBlocoAgenda - 6,
+                    58
+                  );
+
+                  const fim =
+                    somarMinutosHorario(
+                      horario,
+                      duracao
+                    );
+
+                  const clienteVip =
+                    a.clientes?.vip === true ||
+                    a.clientes?.vip === "true";
+
+                  const valorPendencia = Number(
+                    pendenciasPorCliente[a.cliente_id] || 0
+                  );
+
+                  return `
+                    <div
+                      class="
+                        agendamento-card
+                        status-${normalizarClasse(a.status)}
+                      "
+                      style="
+                        top:${top + 4}px;
+                        height:${altura}px;
+                      "
+                      onclick="
+                        event.stopPropagation();
+                        abrirModalAgendamento(${a.id})
+                      "
                     >
-                  ${(a.clientes?.vip === true || a.clientes?.vip === "true") ? `<div class="selo-vip-agenda">⭐ VIP</div>` : ""}
 
-${pendenciasPorCliente[a.cliente_id] > 0 ? `
-  <div
-    class="bolinha-pendencia-agenda"
-    title="Cliente possui pendência financeira: ${dinheiro(pendenciasPorCliente[a.cliente_id])}"
-  ></div>
-` : ""}
+                      ${clienteVip ? `
+                        <div class="selo-vip-agenda">
+                          ⭐ VIP
+                        </div>
+                      ` : ""}
+
+                      ${valorPendencia > 0 ? `
+                        <div
+                          class="bolinha-pendencia-agenda"
+                          title="Cliente possui pendência financeira: ${dinheiro(valorPendencia)}"
+                        ></div>
+                      ` : ""}
+
                       <strong>
                         ${a.recorrencia_id ? "🔁 " : ""}
                         ${a.clientes?.nome || "Cliente"}
                       </strong>
 
-                      <span>${a.servicos?.nome || "Serviço"}</span>
-                      <small>${formatarHorarioBonito(a.horario)} - ${formatarHorarioBonito(fim)}</small>
-                      <em>${a.status || "Agendado"}</em>
+                      <span>
+                        ${a.servicos?.nome || "Serviço"}
+                      </span>
+
+                      <small>
+                        ${formatarHorarioBonito(horario)}
+                        -
+                        ${formatarHorarioBonito(fim)}
+                      </small>
+
+                      <em>
+                        ${a.status || "Agendado"}
+                      </em>
+
                     </div>
                   `;
                 }).join("")}
