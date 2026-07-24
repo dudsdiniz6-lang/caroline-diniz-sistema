@@ -23,6 +23,25 @@ const cacheSistema = {
   categorias: null,
   formasPagamento: null
 };
+const telasCarregadas = {
+  agenda: false,
+  confirmacoes: false,
+  clientes: false,
+  profissionais: false,
+  servicos: false,
+  prontuarios: false,
+  pacotes: false,
+  comandas: false,
+  comissoes: false,
+  financeiroProfissionais: false,
+  configuracoes: false,
+  auditoria: false
+};
+function invalidarTela(nome){
+  if(Object.prototype.hasOwnProperty.call(telasCarregadas, nome)){
+    telasCarregadas[nome] = false;
+  }
+}
 
 function limparCache(nome){
 
@@ -315,7 +334,7 @@ function esconderBotaoMenu(texto){
 
 }
 
-function mostrarTela(nome){
+async function mostrarTela(nome){
 
   if(nome === "dashboard" && !pode("dashboard_visualizar")){
     alert("Você não tem permissão para visualizar o dashboard.");
@@ -404,24 +423,76 @@ if(nome === "comissoes" && !pode("comissoes_visualizar")){
     tela.classList.add("ativa");
   }
 
-  if(nome === "dashboard") carregarDashboard();
-  if(nome === "agenda") carregarAgenda();
-  if(nome === "confirmacoes") carregarConfirmacoes();
-  if(nome === "clientes") carregarClientes();
-  if(nome === "profissionais") carregarProfissionais();
-  if(nome === "servicos") carregarServicos();
-  if(nome === "prontuarios") carregarProntuarios();
-  if(nome === "pacotes") carregarPacotes();
-  if(nome === "comandas") carregarComandas();
-  if(nome === "caixa") abrirAbaFinanceiro("caixa");
-if(nome === "comissoes") carregarComissoes();
-
-if(nome === "financeiroProfissionais"){
-  carregarFinanceiroProfissionais();
+if(nome === "dashboard"){
+  await carregarDashboard();
 }
 
-if(nome === "configuracoes") carregarConfiguracoes();
-if(nome === "auditoria") carregarAuditoria();
+if(nome === "agenda" && !telasCarregadas.agenda){
+  await carregarAgenda();
+  telasCarregadas.agenda = true;
+}
+
+if(nome === "confirmacoes" && !telasCarregadas.confirmacoes){
+  await carregarConfirmacoes();
+  telasCarregadas.confirmacoes = true;
+}
+
+if(nome === "clientes" && !telasCarregadas.clientes){
+  await carregarClientes();
+  telasCarregadas.clientes = true;
+}
+
+if(nome === "profissionais" && !telasCarregadas.profissionais){
+  await carregarProfissionais();
+  telasCarregadas.profissionais = true;
+}
+
+if(nome === "servicos" && !telasCarregadas.servicos){
+  await carregarServicos();
+  telasCarregadas.servicos = true;
+}
+
+if(nome === "prontuarios" && !telasCarregadas.prontuarios){
+  await carregarProntuarios();
+  telasCarregadas.prontuarios = true;
+}
+
+if(nome === "pacotes" && !telasCarregadas.pacotes){
+  await carregarPacotes();
+  telasCarregadas.pacotes = true;
+}
+
+if(nome === "comandas" && !telasCarregadas.comandas){
+  await carregarComandas();
+  telasCarregadas.comandas = true;
+}
+
+if(nome === "caixa"){
+  await abrirAbaFinanceiro("caixa");
+}
+
+if(nome === "comissoes" && !telasCarregadas.comissoes){
+  await carregarComissoes();
+  telasCarregadas.comissoes = true;
+}
+
+if(
+  nome === "financeiroProfissionais" &&
+  !telasCarregadas.financeiroProfissionais
+){
+  await carregarFinanceiroProfissionais();
+  telasCarregadas.financeiroProfissionais = true;
+}
+
+if(nome === "configuracoes" && !telasCarregadas.configuracoes){
+  await carregarConfiguracoes();
+  telasCarregadas.configuracoes = true;
+}
+
+if(nome === "auditoria" && !telasCarregadas.auditoria){
+  await carregarAuditoria();
+  telasCarregadas.auditoria = true;
+}
 
 if(nome === "relatorios"){
   document.getElementById("areaRelatorios").innerHTML = "";
@@ -498,7 +569,7 @@ async function iniciarSistema(){
 
   atualizarTextoDataAgenda();
 
-  mostrarTela("dashboard");
+  await mostrarTela("dashboard");
 
   carregarResumoAlertasAgenda();
 }
