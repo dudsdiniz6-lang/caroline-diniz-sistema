@@ -6123,6 +6123,21 @@ if(servicosCancelados.length > 0){
       motivo_cancelamento: motivo
     })
     .in("comanda_id", idsComandas);
+  const { error: erroCancelarPendencias } = await supabaseClient
+  .from("financeiro_lancamentos")
+  .update({
+    status: "CANCELADO"
+  })
+  .eq("origem", "COMANDA")
+  .in("origem_id", idsComandas)
+  .eq("status", "ATIVO");
+
+if(erroCancelarPendencias){
+  alert(
+    "A comanda foi cancelada, mas ocorreu um erro ao cancelar a pendência: " +
+    erroCancelarPendencias.message
+  );
+}
 if(idsAgendamentos.length > 0){
 
   await supabaseClient
@@ -6143,8 +6158,10 @@ await registrarHistoricoOperacao(
     motivo: motivo
   }
 );
-  fecharModal();
-  carregarAgenda();
+ fecharModal();
+carregarAgenda();
+carregarComandas();
+carregarPendenciasFinanceiras();
 
   alert("Faturamento cancelado com histórico. Comissões, caixa e relatórios financeiros serão desconsiderados.");
 }
