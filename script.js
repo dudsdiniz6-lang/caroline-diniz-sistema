@@ -1625,12 +1625,13 @@ grade.innerHTML = `
                   `;
                 }).join("")}
 
-                ${agendaProf.map(a=>{
+              ${agendaProf.map(a=>{
 
-                  const top = calcularTopAgenda(a.horario);
-                  const altura = Math.max((Number(a.duracao || 30) / 30) * alturaBlocoAgenda - 6, 58);
-                
-                  return `
+  const top = calcularTopAgenda(a.horario);
+  const altura = Math.max((Number(a.duracao || 30) / 30) * alturaBlocoAgenda - 6, 58);
+  const fim = somarMinutosHorario(a.horario, a.duracao || 30);
+
+  return ` `
                     <div
                     class="agendamento-card status-${normalizarClasse(a.status)}"
                       style="top:${top + 4}px; height:${altura}px;"
