@@ -33,6 +33,11 @@
 <button id="menu-dashboard" onclick="mostrarTela('dashboard')">Dashboard</button>
 
 <button id="menu-agenda" onclick="mostrarTela('agenda')">Agenda</button>
+       <button
+    id="menu-confirmacoes"
+    onclick="mostrarTela('confirmacoes')">
+    Confirmações
+</button>
 
 <button id="menu-clientes" onclick="mostrarTela('clientes')">Clientes</button>
 
@@ -113,6 +118,22 @@
   </div>
 
   <div id="agendaGrade" class="agenda-grade"></div>
+
+</section>
+     <section id="tela-confirmacoes" class="tela">
+
+  <div class="topo">
+    <h1>Confirmações de Agendamento</h1>
+
+    <button
+      class="principal"
+      onclick="enviarConfirmacoesDia()"
+    >
+      Enviar confirmações do dia
+    </button>
+  </div>
+
+  <div id="listaConfirmacoes" class="cards"></div>
 
 </section>
       <section id="tela-clientes" class="tela">
