@@ -8,9 +8,13 @@ let permissoesUsuario = [];
 let unidadeAtualId = 1;
 let dataAgenda = new Date();
 let modeloAnamneseAtual = null;
-// ======================
-// CACHE DO SISTEMA
-// ======================
+const cacheSistema = {
+  clientes: null,
+  profissionais: null,
+  servicos: null,
+  formasPagamento: null,
+  unidades: null
+};
 
 const cacheSistema = {
   clientes: null,
