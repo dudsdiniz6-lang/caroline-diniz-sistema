@@ -12348,3 +12348,6 @@ async function carregarConfirmacoes(){
     `;
   }).join("");
 }
+function enviarConfirmacoesDia(){
+  alert("O envio de todas as confirmações será configurado depois.");
+}
