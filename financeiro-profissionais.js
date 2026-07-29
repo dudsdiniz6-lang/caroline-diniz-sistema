@@ -1316,17 +1316,18 @@ async function carregarDetalhesFinanceiroProfissional(
                 item.comanda_id
               ];
 
-            const profissionalItem =
-              item.profissional_id ||
-              comanda?.profissional_id;
+           const profissionalItem =
+  item.profissional_id ??
+  comanda?.profissional_id;
 
-            return (
-              String(profissionalItem) ===
-                String(profissionalId) &&
-              !idsBloqueados.has(
-                String(item.id)
-              )
-            );
+return (
+  profissionalItem != null &&
+  String(profissionalItem).trim() ===
+    String(profissionalId).trim() &&
+  !idsBloqueados.has(
+    String(item.id)
+  )
+);
 
           }
         );
@@ -2265,17 +2266,17 @@ return ![
             ];
 
           const profissionalItem =
-            item.profissional_id ||
-            comanda?.profissional_id;
+  item.profissional_id ??
+  comanda?.profissional_id;
 
-          return (
-            String(profissionalItem) ===
-              String(profissionalId) &&
-            !idsBloqueados.has(
-              String(item.id)
-            )
-          );
-
+return (
+  profissionalItem != null &&
+  String(profissionalItem).trim() ===
+    String(profissionalId).trim() &&
+  !idsBloqueados.has(
+    String(item.id)
+  )
+);
         });
 
     }
