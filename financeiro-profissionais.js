@@ -1807,37 +1807,20 @@ function financeiroValorInput(valor){
 
 async function obterIdsItensComissaoBloqueados(){
 
-  const {
-    data,
-    error
-  } = await supabaseClient
-    .from("comissoes_pagamentos_itens")
-    .select(`
-      comanda_item_id,
-      comissoes_pagamentos!inner(status)
-    `);
+  const { data, error } =
+    await supabaseClient
+      .from("comissoes_pagamentos_itens")
+      .select("comanda_item_id");
 
   if(error){
     throw error;
   }
 
   return new Set(
-    (data || [])
-      .filter(item => {
-        const status = financeiroNormalizarStatus(
-          item.comissoes_pagamentos?.status
-        );
-
-        return ![
-          "cancelado",
-          "cancelada"
-        ].includes(status);
-      })
-      .map(item => String(item.comanda_item_id))
+    (data || []).map(item => String(item.comanda_item_id))
   );
 
 }
-
 function garantirModalPagamentoComissao(){
 
   let modal =
