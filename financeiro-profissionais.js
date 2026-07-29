@@ -1,9 +1,11 @@
 "use strict";
 
+let financeiroResumoDataInicio;
+let financeiroResumoDataFim;
+
 window.FinanceiroProfissionais = {
   abrirAba
 };
-
 function abrirAba(nome){
 
   if(nome === "resumo"){
@@ -168,7 +170,15 @@ async function carregarResumoFinanceiroProfissionaisNovo(){
   if(!area){
     return;
   }
+if(!financeiroResumoDataInicio){
+  financeiroResumoDataInicio =
+    financeiroPrimeiroDiaMes();
+}
 
+if(!financeiroResumoDataFim){
+  financeiroResumoDataFim =
+    financeiroUltimoDiaMes();
+}
   area.innerHTML = `
     <div class="card">
 
@@ -216,7 +226,7 @@ async function carregarResumoFinanceiroProfissionaisNovo(){
             <input
               id="financeiroResumoDataInicio"
               type="date"
-              value="${financeiroPrimeiroDiaMes()}"
+             value="${financeiroResumoDataInicio}"
             >
           </div>
 
@@ -235,7 +245,7 @@ async function carregarResumoFinanceiroProfissionaisNovo(){
             <input
               id="financeiroResumoDataFim"
               type="date"
-              value="${financeiroUltimoDiaMes()}"
+             value="${financeiroResumoDataFim}"
             >
           </div>
 
@@ -309,6 +319,8 @@ async function atualizarResumoFinanceiroProfissionais(){
     document.getElementById(
       "financeiroResumoDataFim"
     )?.value;
+  financeiroResumoDataInicio = dataInicio;
+financeiroResumoDataFim = dataFim;
 
   if(!dataInicio || !dataFim){
 
