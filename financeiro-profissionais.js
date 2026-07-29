@@ -694,11 +694,7 @@ const idsComandas =
               profissional.id
             ];
 
-          const saldoAnterior =
-            Number(
-              ultimoPagamento
-                ?.saldo_resultante || 0
-            );
+         const saldoAnterior = 0;
 
           const comissao =
             Number(
@@ -2364,11 +2360,7 @@ return ![
         }
       );
 
-    const saldoAnterior =
-      Number(
-        pagamentoAnterior
-          ?.saldo_resultante || 0
-      );
+ const saldoAnterior = 0;
 
 
     const {
@@ -2386,14 +2378,18 @@ return ![
           status,
           pagamento_comissao_id
         `)
-        .eq(
-          "profissional_id",
-          profissionalId
-        )
-        .lte(
-          "data_vale",
-          dataFim
-        )
+       .eq(
+  "profissional_id",
+  profissionalId
+)
+.gte(
+  "data_vale",
+  dataInicio
+)
+.lte(
+  "data_vale",
+  dataFim
+)
         .is(
           "pagamento_comissao_id",
           null
@@ -2427,10 +2423,10 @@ return ![
         0
       );
 
-    const totalDevido =
-      comissaoPeriodo +
-      saldoAnterior -
-      totalVales;
+ const totalDevido =
+  comissaoPeriodo +
+  saldoAnterior -
+  totalVales;
 
 
     pagamentoComissaoAtual = {
