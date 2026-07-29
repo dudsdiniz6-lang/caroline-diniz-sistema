@@ -439,18 +439,14 @@ const idsComandas =
         throw erroItens;
       }
 
-      await obterIdsItensComissaoBloqueados();
+const idsBloqueados =
+  await obterIdsItensComissaoBloqueados();
 
-      itens =
-        (itensRecebidos || []).filter(
-          item =>
-            !idsBloqueados.has(
-              String(item.id)
-            )
-        );
-
-    }
-
+itens =
+  (itensRecebidos || []).filter(
+    item =>
+      !idsBloqueados.has(String(item.id))
+  )
     const {
       data: vales,
       error: erroVales
@@ -707,7 +703,7 @@ const idsComandas =
 
          const totalDevido =
   comissao -
-  totalValesProfissional;;
+  totalValesProfissional;
 
           totalComissoes += comissao;
 
@@ -1302,7 +1298,8 @@ async function carregarDetalhesFinanceiroProfissional(
       }
 
 
-       await obterIdsItensComissaoBloqueados();
+      const idsBloqueados =
+  await obterIdsItensComissaoBloqueados();
 
       itens =
         (itensRecebidos || []).filter(
@@ -2224,7 +2221,8 @@ return ![
         comanda => comanda.id
       );
 
-      await obterIdsItensComissaoBloqueados();
+ const idsBloqueados =
+  await obterIdsItensComissaoBloqueados();
     let itensProfissional = [];
 
     if(idsComandas.length > 0){
