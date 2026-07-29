@@ -1456,94 +1456,451 @@ async function abrirModalServico(id = null){
   `);
 
 }
+let resolverReajusteServico = null;
 
-async function salvarServico(){
-  if(!pode("servicos_editar")){
-  alert("Você não tem permissão para alterar serviços.");
-  return;
+function perguntarAplicacaoReajusteServico(
+  nomeServico,
+  valorAntigo,
+  valorNovo
+){
+
+  return new Promise(resolve => {
+
+    resolverReajusteServico = resolve;
+
+    abrirModal(`
+      <h2>Alteração de valor</h2>
+
+      <p>
+        O valor do serviço
+        <strong>${nomeServico}</strong>
+        foi alterado.
+      </p>
+
+      <div
+        style="
+          background:#f7f7f7;
+          padding:14px;
+          border-radius:8px;
+          margin:15px 0;
+        "
+      >
+        <div>
+          Valor anterior:
+          <strong>${dinheiro(valorAntigo)}</strong>
+        </div>
+
+        <div style="margin-top:6px;">
+          Novo valor:
+          <strong>${dinheiro(valorNovo)}</strong>
+        </div>
+      </div>
+
+      <p>
+        Como deseja aplicar esta alteração?
+      </p>
+
+      <button
+        class="principal"
+        style="width:100%; margin-top:10px;"
+        onclick="responderReajusteServico('existentes')"
+      >
+        Aplicar aos agendamentos já existentes
+      </button>
+
+      <button
+        style="width:100%; margin-top:10px;"
+        onclick="responderReajusteServico('novos')"
+      >
+        Aplicar somente aos novos agendamentos
+      </button>
+
+      <button
+        style="width:100%; margin-top:10px;"
+        onclick="responderReajusteServico(null)"
+      >
+        Cancelar
+      </button>
+    `);
+
+  });
+
 }
 
-  const id = document.getElementById("servicoId").value;
+function responderReajusteServico(escolha){
+
+  fecharModal();
+
+  if(resolverReajusteServico){
+
+    resolverReajusteServico(escolha);
+
+    resolverReajusteServico = null;
+
+  }
+
+}
+
+async function atualizarValorAgendamentosServico(
+  servicoId,
+  novoValor
+){
+
+  const hoje = formatarDataISO(new Date());
+
+  const {
+    data: agendamentos,
+    error: erroBusca
+  } =
+    await supabaseClient
+      .from("agendamentos")
+      .select(`
+        id,
+        valor,
+        desconto,
+        tipo_desconto,
+        total,
+        usar_pacote,
+        status,
+        data
+      `)
+      .eq("servico_id", Number(servicoId))
+      .gte("data", hoje)
+      .neq("status", "Finalizado")
+      .neq("status", "Cancelado")
+      .neq("status", "Faltou");
+
+  if(erroBusca){
+    throw new Error(
+      "Erro ao buscar agendamentos: " +
+      erroBusca.message
+    );
+  }
+
+  const agendamentosAtualizar =
+    (agendamentos || []).filter(
+      agendamento =>
+        agendamento.usar_pacote !== true
+    );
+
+  for(const agendamento of agendamentosAtualizar){
+
+    const desconto =
+      Number(agendamento.desconto || 0);
+
+    const tipoDesconto =
+      agendamento.tipo_desconto || "valor";
+
+    const descontoFinal =
+      tipoDesconto === "porcentagem"
+        ? Number(novoValor) * (desconto / 100)
+        : desconto;
+
+    const novoTotal =
+      Math.max(
+        Number(novoValor) - descontoFinal,
+        0
+      );
+
+    const { error: erroAtualizacao } =
+      await supabaseClient
+        .from("agendamentos")
+        .update({
+          valor: Number(novoValor),
+          total: Number(novoTotal.toFixed(2))
+        })
+        .eq("id", agendamento.id);
+
+    if(erroAtualizacao){
+      throw new Error(
+        "Erro ao atualizar agendamento: " +
+        erroAtualizacao.message
+      );
+    }
+
+  }
+
+  return agendamentosAtualizar.length;
+
+}
+async function salvarServico(){
+
+  const id =
+    document.getElementById(
+      "servicoId"
+    ).value;
+
+  if(id && !pode("servicos_editar")){
+
+    alert(
+      "Você não tem permissão para alterar serviços."
+    );
+
+    return;
+
+  }
+
+  if(!id && !pode("servicos_criar")){
+
+    alert(
+      "Você não tem permissão para criar serviços."
+    );
+
+    return;
+
+  }
 
   let servicoAntes = null;
 
   if(id){
-    const antesResp = await supabaseClient
-      .from("servicos")
-      .select("*")
-      .eq("id", id)
-      .single();
 
-    servicoAntes = antesResp.data || null;
+    const antesResp =
+      await supabaseClient
+        .from("servicos")
+        .select("*")
+        .eq("id", id)
+        .single();
+
+    if(antesResp.error){
+
+      alert(
+        "Erro ao buscar o serviço: " +
+        antesResp.error.message
+      );
+
+      return;
+
+    }
+
+    servicoAntes =
+      antesResp.data || null;
+
   }
 
   const categoriaId =
-    document.getElementById("servicoCategoria").value;
+    document.getElementById(
+      "servicoCategoria"
+    ).value;
 
-const dados = {
+  const dados = {
+
     unidade_id: unidadeAtualId,
-    categoria_id: categoriaId ? Number(categoriaId) : null,
-    nome: document.getElementById("servicoNome").value.trim(),
-    duracao: Number(document.getElementById("servicoDuracao").value || 30),
-    valor: Number(document.getElementById("servicoValor").value || 0),
-    comissao_padrao: Number(document.getElementById("servicoComissao").value || 0),
+
+    categoria_id:
+      categoriaId
+        ? Number(categoriaId)
+        : null,
+
+    nome:
+      document.getElementById(
+        "servicoNome"
+      ).value.trim(),
+
+    duracao:
+      Number(
+        document.getElementById(
+          "servicoDuracao"
+        ).value || 30
+      ),
+
+    valor:
+      Number(
+        document.getElementById(
+          "servicoValor"
+        ).value || 0
+      ),
+
+    comissao_padrao:
+      Number(
+        document.getElementById(
+          "servicoComissao"
+        ).value || 0
+      ),
+
     ativo: true
+
   };
 
   if(!dados.nome){
-    alert("Digite o nome do serviço.");
+
+    alert(
+      "Digite o nome do serviço."
+    );
+
     return;
+
+  }
+
+  let aplicacaoReajuste = null;
+
+  const valorFoiAlterado =
+    id &&
+    servicoAntes &&
+    Number(servicoAntes.valor || 0) !==
+    Number(dados.valor || 0);
+
+  if(valorFoiAlterado){
+
+    aplicacaoReajuste =
+      await perguntarAplicacaoReajusteServico(
+        dados.nome,
+        Number(servicoAntes.valor || 0),
+        Number(dados.valor || 0)
+      );
+
+    if(!aplicacaoReajuste){
+
+      abrirModalServico(
+        Number(id)
+      );
+
+      return;
+
+    }
+
   }
 
   let resposta;
 
   if(id){
 
-    resposta = await supabaseClient
-      .from("servicos")
-      .update(dados)
-      .eq("id", id);
+    resposta =
+      await supabaseClient
+        .from("servicos")
+        .update(dados)
+        .eq("id", id);
 
   }else{
 
-    resposta = await supabaseClient
-      .from("servicos")
-      .insert([dados])
-      .select()
-      .single();
+    resposta =
+      await supabaseClient
+        .from("servicos")
+        .insert([dados])
+        .select()
+        .single();
 
   }
 
-if(resposta.error){
-  alert("Erro ao salvar serviço: " + resposta.error.message);
-  return;
-}
+  if(resposta.error){
 
-limparCache("servicos");
+    alert(
+      "Erro ao salvar serviço: " +
+      resposta.error.message
+    );
 
-await registrarHistoricoOperacao(
-  id ? "edicao_servico" : "criacao_servico",
-  String(id || resposta.data?.id || ""),
-  id ? "Serviço alterado" : "Novo serviço criado",
-  {
-    servico_id: id || resposta.data?.id || null,
-    antes: servicoAntes,
-    depois: dados
+    return;
+
   }
-);
 
-fecharModal();
+  let quantidadeAtualizada = 0;
 
-invalidarTela("servicos");
-invalidarTela("agenda");
+  if(
+    id &&
+    valorFoiAlterado &&
+    aplicacaoReajuste === "existentes"
+  ){
 
-await carregarServicos();
+    try{
 
-if(document.getElementById("tela-agenda")?.classList.contains("ativa")){
-  await carregarAgenda();
-}
+      quantidadeAtualizada =
+        await atualizarValorAgendamentosServico(
+          Number(id),
+          dados.valor
+        );
 
-alert("Serviço salvo com sucesso.");
+    }catch(erro){
+
+      alert(
+        "O serviço foi atualizado, mas ocorreu um erro " +
+        "ao atualizar os agendamentos.\n\n" +
+        erro.message
+      );
+
+      limparCache("servicos");
+
+      carregarServicos();
+      carregarAgenda();
+
+      return;
+
+    }
+
+  }
+
+  limparCache("servicos");
+
+  await registrarHistoricoOperacao(
+    id
+      ? "edicao_servico"
+      : "criacao_servico",
+
+    String(
+      id ||
+      resposta.data?.id ||
+      ""
+    ),
+
+    id
+      ? "Serviço alterado"
+      : "Novo serviço criado",
+
+    {
+      servico_id:
+        id ||
+        resposta.data?.id ||
+        null,
+
+      antes: servicoAntes,
+
+      depois: dados,
+
+      aplicacao_reajuste:
+        aplicacaoReajuste,
+
+      agendamentos_atualizados:
+        quantidadeAtualizada
+    }
+  );
+
+  fecharModal();
+
+  carregarServicos();
+  carregarAgenda();
+
+  if(
+    valorFoiAlterado &&
+    aplicacaoReajuste === "existentes"
+  ){
+
+    alert(
+      "Serviço salvo com sucesso.\n\n" +
+      quantidadeAtualizada +
+      " agendamento(s) futuro(s) atualizado(s)."
+    );
+
+    return;
+
+  }
+
+  if(
+    valorFoiAlterado &&
+    aplicacaoReajuste === "novos"
+  ){
+
+    alert(
+      "Serviço salvo com sucesso.\n\n" +
+      "Os agendamentos existentes permaneceram " +
+      "com o valor anterior."
+    );
+
+    return;
+
+  }
+
+  alert(
+    "Serviço salvo com sucesso."
+  );
+
 }
 async function carregarAgenda(){
 
