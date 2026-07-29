@@ -1412,6 +1412,7 @@ async function abrirModalServico(id = null){
   }
 
   const categorias = await carregarCategoriasServico();
+  const salas = await carregarSalas();
 
   abrirModal(`
     <h2>${id ? "Editar serviço" : "Novo serviço"}</h2>
@@ -1443,10 +1444,33 @@ async function abrirModalServico(id = null){
     <label>Valor</label>
     <input id="servicoValor" type="number" value="${servico?.valor || 0}">
 
-    <label>Comissão padrão (%)</label>
-    <input id="servicoComissao" type="number" value="${servico?.comissao_padrao || 40}">
+  <label>Comissão padrão (%)</label>
+<input
+  id="servicoComissao"
+  type="number"
+  value="${servico?.comissao_padrao || 40}"
+>
 
-    <button class="principal" onclick="salvarServico()">
+<label>Sala utilizada</label>
+
+<select id="servicoSala">
+
+  <option value="">
+    Nenhuma
+  </option>
+
+  ${salas.map(sala => `
+    <option
+      value="${sala.id}"
+      ${String(servico?.sala_id || "") === String(sala.id) ? "selected" : ""}
+    >
+      ${sala.nome}
+    </option>
+  `).join("")}
+
+</select>
+
+<button class="principal" onclick="salvarServico()">
       Salvar
     </button>
 
@@ -1686,11 +1710,12 @@ async function salvarServico(){
 
     unidade_id: unidadeAtualId,
 
-    categoria_id:
-      categoriaId
+    categoria_id: categoriaId
         ? Number(categoriaId)
         : null,
 
+    sala_id:
+        document.getElementById("servicoSala").value || null,
     nome:
       document.getElementById(
         "servicoNome"
@@ -9115,6 +9140,23 @@ async function carregarCategoriasServico(){
     .order("nome");
 
   return data || [];
+}
+async function carregarSalas(){
+
+  const { data, error } = await supabaseClient
+    .from("salas")
+    .select("*")
+    .eq("unidade_id", unidadeAtualId)
+    .eq("ativo", true)
+    .order("nome");
+
+  if(error){
+    console.error(error);
+    return [];
+  }
+
+  return data || [];
+
 }
 async function criarRecorrenciasAgendamentoSeguro(dadosBase){
 
