@@ -439,7 +439,7 @@ const idsComandas =
         throw erroItens;
       }
 
-     const idsBloqueados = new Set();
+      await obterIdsItensComissaoBloqueados();
 
       itens =
         (itensRecebidos || []).filter(
@@ -1302,7 +1302,7 @@ async function carregarDetalhesFinanceiroProfissional(
       }
 
 
-     const idsBloqueados = new Set();
+       await obterIdsItensComissaoBloqueados();
 
       itens =
         (itensRecebidos || []).filter(
@@ -2224,8 +2224,7 @@ return ![
         comanda => comanda.id
       );
 
-    const idsBloqueados = new Set();
-
+      await obterIdsItensComissaoBloqueados();
     let itensProfissional = [];
 
     if(idsComandas.length > 0){
