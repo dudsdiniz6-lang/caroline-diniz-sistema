@@ -446,9 +446,12 @@ itens =
   (itensRecebidos || []).filter(
     item =>
       !idsBloqueados.has(String(item.id))
-  )
-    const {
-      data: vales,
+  );
+
+}
+
+const {
+  data: vales,
       error: erroVales
     } =
       await supabaseClient
