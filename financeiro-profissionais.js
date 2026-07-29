@@ -395,10 +395,10 @@ const comandasValidas =
         comanda.status
       );
 
-   return [
-  "faturada",
-  "faturado"
-].includes(status);
+    return [
+      "faturada",
+      "faturado"
+    ].includes(status);
 
   });
 
@@ -1009,7 +1009,7 @@ const idsComandas =
             <div
               style="
                 font-size:20px;
-                font-weight:700;
+                  font-weight:700;
                 margin-top:5px;
               "
             >
@@ -1193,12 +1193,10 @@ async function carregarDetalhesFinanceiroProfissional(
             comanda.status
           );
 
-        return ![
-          "aberta",
-          "aberto",
-          "cancelada",
-          "cancelado"
-        ].includes(status);
+        return [
+      "faturada",
+      "faturado"
+    ].includes(status);
 
       });
 
@@ -1516,7 +1514,7 @@ async function carregarDetalhesFinanceiroProfissional(
           gap:12px;
           margin-top:20px;
         "
-      >
+         >
 
         <div
           class="card"
@@ -2020,8 +2018,7 @@ function prepararCanvasAssinatura(){
     }
 
     evento.preventDefault();
-
-    const ponto = obterPosicao(evento);
+const ponto = obterPosicao(evento);
 
     assinaturaContexto.lineTo(
       ponto.x,
@@ -2209,12 +2206,10 @@ async function abrirPagamentoComissaoPeriodo(
             comanda.status
           );
 
-        return ![
-          "aberta",
-          "aberto",
-          "cancelada",
-          "cancelado"
-        ].includes(status);
+        return [
+      "faturada",
+      "faturado"
+    ].includes(status);
 
       });
 
@@ -2528,7 +2523,7 @@ async function abrirPagamentoComissaoPeriodo(
           "
         >
           <span>
-            Vales descontados
+             Vales descontados
             ${
               valesPendentes.length > 0
                 ? `(${valesPendentes.length})`
@@ -3033,7 +3028,7 @@ async function confirmarPagamentoComissaoPeriodo(){
     }
 
     pagamentoCriadoId =
-      pagamentoCriado.id;
+       pagamentoCriado.id;
 
 
     const vinculosItens =
@@ -3538,7 +3533,7 @@ async function visualizarReciboComissao(
         </div>
 
         <h1>
-          RECIBO DE PAGAMENTO DE COMISSÃO
+        RECIBO DE PAGAMENTO DE COMISSÃO
         </h1>
 
         <div class="cabecalho">
@@ -4043,7 +4038,7 @@ async function listarPagamentosFinanceiroProfissionais(){
             ascending: false
           }
         )
-        .order(
+     .order(
           "created_at",
           {
             ascending: false
@@ -4548,8 +4543,7 @@ async function carregarValesProfissionaisNovo(){
   if(!area){
     return;
   }
-
-  area.innerHTML = `
+   area.innerHTML = `
     <div class="card">
 
       <div
