@@ -705,10 +705,9 @@ const idsComandas =
               dadosVales.valor || 0
             );
 
-          const totalDevido =
-            comissao +
-            saldoAnterior -
-            totalValesProfissional;
+         const totalDevido =
+  comissao -
+  totalValesProfissional;;
 
           totalComissoes += comissao;
 
@@ -2421,9 +2420,8 @@ return (
         0
       );
 
- const totalDevido =
-  comissaoPeriodo +
-  saldoAnterior -
+const totalDevido =
+  comissaoPeriodo -
   totalVales;
 
 
