@@ -10107,6 +10107,186 @@ async function desativarPerguntaAnamnese(id){
 
   carregarPerguntasAnamnese();
 }
+async function abrirModalAnamneseCliente(){
+
+  if(!pode("prontuarios_criar")){
+    alert("Você não tem permissão para criar prontuários.");
+    return;
+  }
+
+  const [
+    clientesResp,
+    modelosResp
+  ] = await Promise.all([
+
+    supabaseClient
+      .from("clientes")
+      .select("id, nome, telefone")
+      .eq("ativo", true)
+      .order("nome"),
+
+    supabaseClient
+      .from("anamnese_modelos")
+      .select("id, nome")
+      .eq("ativo", true)
+      .order("nome")
+
+  ]);
+
+  if(clientesResp.error){
+
+    alert(
+      "Erro ao carregar clientes: " +
+      clientesResp.error.message
+    );
+
+    return;
+  }
+
+  if(modelosResp.error){
+
+    alert(
+      "Erro ao carregar modelos: " +
+      modelosResp.error.message
+    );
+
+    return;
+  }
+
+  const clientes =
+    clientesResp.data || [];
+
+  const modelos =
+    modelosResp.data || [];
+
+  if(clientes.length === 0){
+
+    alert(
+      "Nenhuma cliente cadastrada."
+    );
+
+    return;
+  }
+
+  if(modelos.length === 0){
+
+    alert(
+      "Nenhum modelo de prontuário cadastrado."
+    );
+
+    return;
+  }
+
+  abrirModal(`
+    <h2>Nova ficha</h2>
+
+    <p>
+      Selecione a cliente e o modelo de prontuário.
+    </p>
+
+    <label>Pesquisar cliente</label>
+
+    <input
+      id="buscaClienteAnamnese"
+      type="text"
+      placeholder="Digite o nome da cliente"
+      oninput="filtrarClientesAnamnese()"
+    >
+
+    <label>Cliente</label>
+
+    <select id="anamneseCliente">
+
+      <option value="">
+        Selecione a cliente
+      </option>
+
+      ${clientes.map(cliente => `
+        <option
+          value="${cliente.id}"
+          data-nome="${String(
+            cliente.nome || ""
+          ).toLowerCase()}"
+        >
+          ${cliente.nome}
+          ${
+            cliente.telefone
+              ? ` - ${cliente.telefone}`
+              : ""
+          }
+        </option>
+      `).join("")}
+
+    </select>
+
+    <label>Modelo de prontuário</label>
+
+    <select id="anamneseModelo">
+
+      <option value="">
+        Selecione o modelo
+      </option>
+
+      ${modelos.map(modelo => `
+        <option value="${modelo.id}">
+          ${modelo.nome}
+        </option>
+      `).join("")}
+
+    </select>
+
+    <button
+      class="principal"
+      onclick="salvarAnamneseCliente()"
+    >
+      Criar ficha
+    </button>
+
+    <button onclick="fecharModal()">
+      Cancelar
+    </button>
+  `);
+
+}
+function filtrarClientesAnamnese(){
+
+  const busca =
+    document
+      .getElementById(
+        "buscaClienteAnamnese"
+      )
+      ?.value
+      ?.toLowerCase()
+      ?.trim() || "";
+
+  const select =
+    document.getElementById(
+      "anamneseCliente"
+    );
+
+  if(!select) return;
+
+  Array
+    .from(select.options)
+    .forEach((option, indice) => {
+
+      if(indice === 0){
+        option.hidden = false;
+        return;
+      }
+
+      const nome =
+        option.dataset.nome || "";
+
+      option.hidden =
+        busca &&
+        !nome.includes(busca);
+
+    });
+
+  select.value = "";
+
+}
 async function salvarAnamneseCliente(){
 
   const clienteId =
