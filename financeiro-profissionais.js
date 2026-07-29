@@ -395,12 +395,10 @@ const comandasValidas =
         comanda.status
       );
 
-    return ![
-      "aberta",
-      "aberto",
-      "cancelada",
-      "cancelado"
-    ].includes(status);
+   return [
+  "faturada",
+  "faturado"
+].includes(status);
 
   });
 
