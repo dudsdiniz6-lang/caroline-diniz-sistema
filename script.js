@@ -11922,19 +11922,21 @@ async function carregarPendenciasFinanceiras(){
           ${grupo.itens.length}
         </p>
 
-        <button class="principal" onclick="abrirReceberPendenciasCliente(${clienteId})">
-          Receber
-        </button>
+       <button class="principal" onclick="abrirReceberPendenciasCliente(${clienteId})">
+  Receber
+</button>
 
-      </div>
+<button onclick="abrirCancelarPendenciasCliente(${clienteId})">
+  Cancelar pendência
+</button>
     `;
   });
 }
-async function abrirReceberPendenciasCliente(clienteId){
+async function abrirCancelarPendenciasCliente(clienteId){
 
   const { data: cliente } = await supabaseClient
     .from("clientes")
-    .select("*")
+    .select("id, nome")
     .eq("id", clienteId)
     .single();
 
@@ -11944,72 +11946,128 @@ async function abrirReceberPendenciasCliente(clienteId){
     .eq("cliente_id", clienteId)
     .eq("tipo", "PENDENCIA")
     .eq("status", "ATIVO")
-    .order("data", { ascending:true });
+    .order("data", { ascending: true });
 
-  if(error || !pendencias || pendencias.length === 0){
-    alert("Nenhuma pendência encontrada.");
+  if(error){
+    alert("Erro ao carregar pendências.");
     return;
   }
 
-  const formasResp = await supabaseClient
-    .from("formas_pagamento")
-    .select("*")
-    .eq("ativo", true)
-    .order("nome");
-
-  const formas = formasResp.data || [];
-
-  const totalAberto = pendencias.reduce((soma, p)=> soma + Number(p.valor || 0), 0);
+  if(!pendencias || pendencias.length === 0){
+    alert("Esta cliente não possui pendências ativas.");
+    carregarPendenciasFinanceiras();
+    return;
+  }
 
   abrirModal(`
-    <h2>Receber pendências</h2>
+    <h2>Cancelar pendência</h2>
 
-    <p><strong>Cliente:</strong> ${cliente?.nome || "-"}</p>
-    <p><strong>Total em aberto:</strong> ${dinheiro(totalAberto)}</p>
+    <p>
+      <strong>Cliente:</strong>
+      ${cliente?.nome || "Cliente"}
+    </p>
+
+    <p>
+      Escolha exatamente qual pendência deseja cancelar.
+    </p>
 
     <hr>
 
-    <h3>Resumo do que deve</h3>
-
     ${pendencias.map(p => `
       <div class="caixa-linha">
+
         <span>
           ${formatarDataComanda(p.data)}
           <br>
-          <small>${p.observacao || "Pendência financeira"}</small>
+          <small>
+            ${p.observacao || "Pendência financeira"}
+          </small>
         </span>
-        <strong>${dinheiro(p.valor)}</strong>
+
+        <div>
+          <strong>
+            ${dinheiro(p.valor)}
+          </strong>
+
+          <button
+            onclick="confirmarCancelamentoPendencia(${p.id}, ${clienteId})"
+          >
+            Cancelar esta
+          </button>
+        </div>
+
       </div>
     `).join("")}
 
     <hr>
 
-    <label>Forma de pagamento</label>
-    <select id="pendenciaFormaPagamento">
-      <option value="">Selecione</option>
-      ${formas.map(f => `
-        <option value="${f.id}" data-nome="${f.nome}">
-          ${f.nome}
-        </option>
-      `).join("")}
-    </select>
-
-    <label>Valor pago agora</label>
-    <input
-      id="pendenciaValorPago"
-      type="number"
-      step="0.01"
-      value="${totalAberto}"
-    >
-
-    <button class="principal" onclick="confirmarRecebimentoPendenciasCliente(${clienteId})">
-      Confirmar recebimento
-    </button>
-
     <button onclick="fecharModal()">
-      Cancelar
+      Voltar
     </button>
   `);
+}
+async function confirmarCancelamentoPendencia(
+  lancamentoId,
+  clienteId
+){
+
+  const confirmar = confirm(
+    "Tem certeza que deseja cancelar esta pendência financeira?"
+  );
+
+  if(!confirmar) return;
+
+  const senha = prompt(
+    "Digite a senha de autorização para cancelar a pendência:"
+  );
+
+  if(senha === null) return;
+
+  if(!senha.trim()){
+    alert("Digite a senha.");
+    return;
+  }
+
+  const { data, error } = await supabaseClient.rpc(
+    "cancelar_pendencia_financeira",
+    {
+      p_lancamento_id: lancamentoId,
+      p_senha: senha
+    }
+  );
+
+  if(error){
+    console.error(error);
+    alert(
+      "Erro ao cancelar pendência: " +
+      error.message
+    );
+    return;
+  }
+
+  if(!data?.sucesso){
+    alert(
+      data?.mensagem ||
+      "Não foi possível cancelar a pendência."
+    );
+    return;
+  }
+
+  await registrarHistoricoOperacao(
+    "cancelamento_pendencia_financeira",
+    String(lancamentoId),
+    "Pendência financeira cancelada",
+    {
+      lancamento_id: lancamentoId,
+      cliente_id: clienteId
+    }
+  );
+
+  fecharModal();
+
+  await carregarPendenciasFinanceiras();
+
+  alert("Pendência financeira cancelada.");
 }
 async function confirmarRecebimentoPendenciasCliente(clienteId){
 
