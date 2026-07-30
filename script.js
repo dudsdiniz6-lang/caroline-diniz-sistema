@@ -12385,6 +12385,107 @@ async function confirmarCancelamentoPendencia(
 
   alert("Pendência financeira cancelada.");
 }
+window.abrirReceberPendenciasCliente = async function(clienteId){
+
+  const { data: cliente, error: erroCliente } = await supabaseClient
+    .from("clientes")
+    .select("id, nome")
+    .eq("id", clienteId)
+    .single();
+
+  if(erroCliente){
+    console.error(erroCliente);
+    alert("Erro ao localizar a cliente.");
+    return;
+  }
+
+  const { data: pendencias, error } = await supabaseClient
+    .from("financeiro_lancamentos")
+    .select("*")
+    .eq("cliente_id", clienteId)
+    .eq("tipo", "PENDENCIA")
+    .eq("status", "ATIVO")
+    .order("data", { ascending: true });
+
+  if(error){
+    console.error(error);
+    alert("Erro ao carregar as pendências.");
+    return;
+  }
+
+  if(!pendencias || pendencias.length === 0){
+    alert("Esta cliente não possui pendências ativas.");
+    return;
+  }
+
+  const { data: formasPagamento, error: erroFormas } = await supabaseClient
+    .from("formas_pagamento")
+    .select("id, nome")
+    .eq("ativo", true)
+    .order("nome");
+
+  if(erroFormas){
+    console.error(erroFormas);
+    alert("Erro ao carregar as formas de pagamento.");
+    return;
+  }
+
+  const total = pendencias.reduce(
+    (soma, item) => soma + Number(item.valor || 0),
+    0
+  );
+
+  abrirModal(`
+    <h2>Receber pendência</h2>
+
+    <p>
+      <strong>Cliente:</strong>
+      ${cliente?.nome || "Cliente"}
+    </p>
+
+    <p>
+      <strong>Total em aberto:</strong>
+      ${dinheiro(total)}
+    </p>
+
+    <label>Forma de pagamento</label>
+
+    <select id="pendenciaFormaPagamento">
+      <option value="">Selecione</option>
+
+      ${(formasPagamento || []).map(forma => `
+        <option value="${forma.id}">
+          ${forma.nome}
+        </option>
+      `).join("")}
+    </select>
+
+    <label>Valor recebido</label>
+
+    <input
+      type="number"
+      id="pendenciaValorPago"
+      step="0.01"
+      min="0.01"
+      value="${total.toFixed(2)}"
+    >
+
+    <button
+      type="button"
+      class="principal"
+      onclick="confirmarRecebimentoPendenciasCliente(${clienteId})"
+    >
+      Confirmar recebimento
+    </button>
+
+    <button
+      type="button"
+      onclick="fecharModal()"
+    >
+      Voltar
+    </button>
+  `);
+};
 async function confirmarRecebimentoPendenciasCliente(clienteId){
 
   const formaPagamentoId = Number(document.getElementById("pendenciaFormaPagamento").value);
@@ -13893,7 +13994,6 @@ async function carregarConfirmacoes(){
   const lista = document.getElementById("listaConfirmacoes");
   if(!lista) return;
 
-  lista.innerHTML = "Carregando confirmações...";
 
   const data = formatarDataISO(dataAgenda);
 
