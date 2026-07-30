@@ -3623,10 +3623,8 @@ async function salvarPacote(){
 }
 async function venderPacote(pacoteId){
 
- const clientes = await obterClientes();
-const formas = await obterFormasPagamento();
-
-console.log("FORMAS NO MODAL:", formas);
+  const clientes = await obterClientes();
+  const formas = await obterFormasPagamento();
 
   const pacoteResp = await supabaseClient
     .from("pacotes")
@@ -3634,27 +3632,67 @@ console.log("FORMAS NO MODAL:", formas);
     .eq("id", pacoteId)
     .single();
 
+  if(pacoteResp.error || !pacoteResp.data){
+    console.error("Erro ao carregar pacote:", pacoteResp.error);
+    alert("Não foi possível carregar este pacote.");
+    return;
+  }
+
   const itemResp = await supabaseClient
     .from("pacote_itens")
-    .select("*, servicos(nome)")
-    .eq("pacote_id", pacoteId)
-    .single();
+    .select(`
+      id,
+      pacote_id,
+      servico_id,
+      quantidade,
+      servicos(nome)
+    `)
+    .eq("pacote_id", pacoteId);
+
+  if(itemResp.error){
+    console.error("Erro ao carregar itens:", itemResp.error);
+    alert("Não foi possível carregar os serviços do pacote.");
+    return;
+  }
 
   const pacote = pacoteResp.data;
-  const item = itemResp.data;
+  const itens = itemResp.data || [];
+
+  const descricaoItens = itens.length
+    ? itens.map(item => `
+        <div>
+          ${item.servicos?.nome || "Serviço"}
+          • ${item.quantidade || 0} sessões
+        </div>
+      `).join("")
+    : `
+        <div>
+          Nenhum serviço cadastrado neste pacote.
+        </div>
+      `;
 
   abrirModal(`
     <h2>Vender pacote</h2>
 
-    <p><strong>${pacote.nome}</strong></p>
-    <p>${item.servicos?.nome || ""} • ${item.quantidade} sessões</p>
-    <p>Valor: ${dinheiro(pacote.valor)}</p>
+    <p>
+      <strong>${pacote.nome}</strong>
+    </p>
+
+    <div>
+      ${descricaoItens}
+    </div>
+
+    <p>
+      Valor:
+      <strong>${dinheiro(pacote.valor)}</strong>
+    </p>
 
     <label>Cliente</label>
+
     <select id="vendaPacoteCliente">
       <option value="">Selecione</option>
 
-      ${clientes.map(c=>`
+      ${(clientes || []).map(c => `
         <option value="${c.id}">
           ${c.nome}
         </option>
@@ -3662,6 +3700,7 @@ console.log("FORMAS NO MODAL:", formas);
     </select>
 
     <label>Tipo de recebimento</label>
+
     <select
       id="vendaPacoteTipoRecebimento"
       onchange="alterarTipoRecebimentoPacote()"
@@ -3682,8 +3721,11 @@ console.log("FORMAS NO MODAL:", formas);
       <select id="vendaPacoteForma">
         <option value="">Selecione</option>
 
-        ${formas.map(f=>`
-          <option value="${f.id}" data-nome="${f.nome}">
+        ${(formas || []).map(f => `
+          <option
+            value="${f.id}"
+            data-nome="${f.nome}"
+          >
             ${f.nome}
           </option>
         `).join("")}
@@ -3692,13 +3734,17 @@ console.log("FORMAS NO MODAL:", formas);
     </div>
 
     <button
+      type="button"
       class="principal"
       onclick="confirmarVendaPacote(${pacote.id})"
     >
       Confirmar venda
     </button>
 
-    <button onclick="fecharModal()">
+    <button
+      type="button"
+      onclick="fecharModal()"
+    >
       Cancelar
     </button>
   `);
