@@ -9778,7 +9778,7 @@ async function excluirAgendamento(id){
     return;
   }
 
-  fecharModal();
+fecharModal();
 
 await carregarAgenda();
 
