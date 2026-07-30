@@ -6230,6 +6230,185 @@ async function abrirAbaConfiguracao(aba){
     await carregarPoliticasSistemaTela();
   }
 }
+async function carregarConfiguracoesGerais(){
+
+  const conteudo =
+    document.getElementById("conteudoConfiguracoes");
+
+  if(!conteudo) return;
+
+  const { data, error } = await supabaseClient
+    .from("configuracoes_sistema")
+    .select("chave, valor")
+    .in("chave", [
+      "clientes_em_risco_dias",
+      "agenda_hora_inicio",
+      "agenda_hora_fim",
+      "agenda_altura_bloco"
+    ]);
+
+  if(error){
+    console.error(error);
+    conteudo.innerHTML = "Erro ao carregar configurações.";
+    return;
+  }
+
+  const configuracoes = {};
+
+  (data || []).forEach(item => {
+    configuracoes[item.chave] = item.valor;
+  });
+
+  conteudo.innerHTML = `
+    <div class="card">
+
+      <h2>Configurações gerais</h2>
+
+      <label>Clientes em risco após quantos dias</label>
+      <input
+        id="cfgClientesRiscoDias"
+        type="number"
+        value="${configuracoes.clientes_em_risco_dias || 30}"
+      >
+
+      <label>Horário inicial da agenda</label>
+      <input
+        id="cfgAgendaHoraInicio"
+        type="time"
+        value="${configuracoes.agenda_hora_inicio || "07:00"}"
+      >
+
+      <label>Horário final da agenda</label>
+      <input
+        id="cfgAgendaHoraFim"
+        type="time"
+        value="${configuracoes.agenda_hora_fim || "20:00"}"
+      >
+
+      <label>Altura dos horários da agenda</label>
+      <input
+        id="cfgAgendaAlturaBloco"
+        type="number"
+        value="${configuracoes.agenda_altura_bloco || 48}"
+      >
+
+      <button
+        class="principal"
+        onclick="salvarConfiguracoes()"
+      >
+        Salvar configurações
+      </button>
+
+    </div>
+
+    <div class="card">
+
+      <h2>Segurança financeira</h2>
+
+      <p>
+        Defina a senha necessária para cancelar uma
+        pendência financeira.
+      </p>
+
+      <label>Nova senha</label>
+      <input
+        id="cfgNovaSenhaCancelarPendencia"
+        type="password"
+        autocomplete="new-password"
+      >
+
+      <label>Confirmar nova senha</label>
+      <input
+        id="cfgConfirmarSenhaCancelarPendencia"
+        type="password"
+        autocomplete="new-password"
+      >
+
+      <button
+        class="principal"
+        onclick="salvarSenhaCancelarPendencia()"
+      >
+        Salvar senha
+      </button>
+
+    </div>
+  `;
+}
+async function salvarSenhaCancelarPendencia(){
+
+  if(!pode("configuracoes_editar")){
+    alert("Você não tem permissão para alterar configurações.");
+    return;
+  }
+
+  const novaSenha =
+    document
+      .getElementById("cfgNovaSenhaCancelarPendencia")
+      ?.value
+      ?.trim();
+
+  const confirmarSenha =
+    document
+      .getElementById("cfgConfirmarSenhaCancelarPendencia")
+      ?.value
+      ?.trim();
+
+  if(!novaSenha){
+    alert("Digite a nova senha.");
+    return;
+  }
+
+  if(novaSenha.length < 6){
+    alert("A senha precisa ter pelo menos 6 caracteres.");
+    return;
+  }
+
+  if(novaSenha !== confirmarSenha){
+    alert("As senhas não são iguais.");
+    return;
+  }
+
+  const confirmar = confirm(
+    "Deseja alterar a senha de cancelamento de pendências?"
+  );
+
+  if(!confirmar) return;
+
+  const { data, error } = await supabaseClient.rpc(
+    "alterar_senha_cancelamento_pendencia",
+    {
+      p_nova_senha: novaSenha
+    }
+  );
+
+  if(error){
+    console.error(error);
+    alert("Erro ao salvar senha: " + error.message);
+    return;
+  }
+
+  if(data?.sucesso === false){
+    alert(data.mensagem || "Não foi possível salvar a senha.");
+    return;
+  }
+
+  document.getElementById(
+    "cfgNovaSenhaCancelarPendencia"
+  ).value = "";
+
+  document.getElementById(
+    "cfgConfirmarSenhaCancelarPendencia"
+  ).value = "";
+
+  await registrarHistoricoOperacao(
+    "alteracao_senha_cancelamento_pendencia",
+    null,
+    "Senha de cancelamento de pendências alterada",
+    {}
+  );
+
+  alert("Senha salva com sucesso.");
+}
 async function salvarConfiguracoes(){
   if(!pode("configuracoes_editar")){
   alert("Você não tem permissão para alterar configurações.");
