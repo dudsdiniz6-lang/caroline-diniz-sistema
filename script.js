@@ -2060,9 +2060,15 @@ async function carregarAgenda(){
   /*
     Remove cancelados.
   */
-  agendamentos = agendamentos.filter(a =>
-    a.status !== "Cancelado"
-  );
+agendamentos = agendamentos.filter(a => {
+
+  const status = String(a.status || "")
+    .trim()
+    .toLowerCase();
+
+  return status !== "cancelado" &&
+         status !== "cancelada";
+});
 
   /*
     Busca pelo nome da cliente.
@@ -7463,6 +7469,374 @@ async function excluirBloqueioAgenda(id){
 
   alert("Bloqueio excluído.");
 }
+function abrirConfiguracoes(){
+
+  let container =
+    document.getElementById("configuracoes-container");
+
+  if(!container){
+
+    container = document.createElement("div");
+    container.id = "configuracoes-container";
+    container.className = "clientes-container";
+
+    document.body.appendChild(container);
+  }
+
+  mostrarSecao("configuracoes-container");
+
+  container.innerHTML = `
+    <h2>Configurações</h2>
+
+    <div
+      onclick="abrirFormasPagamento()"
+      class="cliente-card"
+      style="cursor:pointer;"
+    >
+      <strong>Formas de pagamento</strong>
+
+      <p>
+        Cadastre Pix, dinheiro, cartão de crédito,
+        débito e outras formas.
+      </p>
+    </div>
+
+    <div
+      onclick="abrirConfiguracoesSalas()"
+      class="cliente-card"
+      style="cursor:pointer;"
+    >
+      <strong>Salas</strong>
+
+      <p>
+        Cadastre, edite, ative ou desative as salas.
+      </p>
+    </div>
+  `;
+}
+function abrirConfiguracoesSalas(){
+
+  const container =
+    document.getElementById("configuracoes-container");
+
+  container.innerHTML = `
+    <button onclick="abrirConfiguracoes()">
+      ← Voltar
+    </button>
+
+    <h2 style="margin:22px 0;">
+      Salas
+    </h2>
+
+    <div class="cliente-card">
+
+      <label>Nome da sala</label>
+
+      <input
+        id="novaSalaNome"
+        placeholder="Ex: Sala Facial"
+      >
+
+      <button
+        class="principal"
+        onclick="salvarNovaSala()"
+      >
+        Adicionar sala
+      </button>
+
+    </div>
+
+    <div id="lista-configuracoes-salas"></div>
+  `;
+
+  carregarConfiguracoesSalas();
+}
+async function salvarNovaSala(){
+
+  const campo =
+    document.getElementById("novaSalaNome");
+
+  const nome = campo.value.trim();
+
+  if(!nome){
+    alert("Digite o nome da sala.");
+    return;
+  }
+
+  const { data: salaExistente, error: erroBusca } =
+    await supabaseClient
+      .from("salas")
+      .select("id")
+      .eq("unidade_id", unidadeAtualId)
+      .ilike("nome", nome)
+      .maybeSingle();
+
+  if(erroBusca){
+    console.error(erroBusca);
+    alert("Erro ao verificar a sala.");
+    return;
+  }
+
+  if(salaExistente){
+    alert("Já existe uma sala com esse nome.");
+    return;
+  }
+
+  const { error } = await supabaseClient
+    .from("salas")
+    .insert([{
+      unidade_id: unidadeAtualId,
+      nome,
+      ativo: true
+    }]);
+
+  if(error){
+    console.error(error);
+    alert("Erro ao cadastrar sala: " + error.message);
+    return;
+  }
+
+  campo.value = "";
+
+  carregarConfiguracoesSalas();
+
+}
+async function carregarConfiguracoesSalas(){
+
+  const lista =
+    document.getElementById("lista-configuracoes-salas");
+
+  if(!lista) return;
+
+  lista.innerHTML = `
+    <p>Carregando salas...</p>
+  `;
+
+  const { data, error } = await supabaseClient
+    .from("salas")
+    .select("*")
+    .eq("unidade_id", unidadeAtualId)
+    .order("nome");
+
+  if(error){
+    console.error(error);
+
+    lista.innerHTML = `
+      <p>Erro ao carregar salas.</p>
+    `;
+
+    return;
+  }
+
+  const salas = data || [];
+
+  if(salas.length === 0){
+
+    lista.innerHTML = `
+      <div class="cliente-card">
+        Nenhuma sala cadastrada.
+      </div>
+    `;
+
+    return;
+  }
+
+  lista.innerHTML = salas.map(sala => `
+
+    <div class="cliente-card">
+
+      <div style="
+        display:flex;
+        justify-content:space-between;
+        align-items:center;
+        gap:15px;
+      ">
+
+        <div>
+          <strong>${sala.nome}</strong>
+
+          <p style="margin:5px 0 0;">
+            ${sala.ativo ? "Ativa" : "Inativa"}
+          </p>
+        </div>
+
+        <div style="
+          display:flex;
+          gap:8px;
+          flex-wrap:wrap;
+        ">
+
+          <button
+            onclick="editarSala(${sala.id})"
+          >
+            Editar
+          </button>
+
+          <button
+            onclick="alterarStatusSala(
+              ${sala.id},
+              ${sala.ativo}
+            )"
+          >
+            ${sala.ativo ? "Desativar" : "Ativar"}
+          </button>
+
+          <button
+            onclick="excluirSala(${sala.id})"
+          >
+            Excluir
+          </button>
+
+        </div>
+
+      </div>
+
+    </div>
+
+  `).join("");
+
+}
+async function editarSala(id){
+
+  const { data: sala, error } = await supabaseClient
+    .from("salas")
+    .select("*")
+    .eq("id", id)
+    .single();
+
+  if(error || !sala){
+    alert("Não foi possível localizar a sala.");
+    return;
+  }
+
+  const novoNome = prompt(
+    "Digite o novo nome da sala:",
+    sala.nome
+  );
+
+  if(novoNome === null) return;
+
+  const nome = novoNome.trim();
+
+  if(!nome){
+    alert("O nome da sala não pode ficar vazio.");
+    return;
+  }
+
+  const { data: salaExistente, error: erroBusca } =
+    await supabaseClient
+      .from("salas")
+      .select("id")
+      .eq("unidade_id", unidadeAtualId)
+      .ilike("nome", nome)
+      .neq("id", id)
+      .maybeSingle();
+
+  if(erroBusca){
+    console.error(erroBusca);
+    alert("Erro ao verificar o nome da sala.");
+    return;
+  }
+
+  if(salaExistente){
+    alert("Já existe outra sala com esse nome.");
+    return;
+  }
+
+  const { error: erroAtualizacao } =
+    await supabaseClient
+      .from("salas")
+      .update({
+        nome
+      })
+      .eq("id", id);
+
+  if(erroAtualizacao){
+    console.error(erroAtualizacao);
+    alert(
+      "Erro ao alterar sala: " +
+      erroAtualizacao.message
+    );
+    return;
+  }
+
+  carregarConfiguracoesSalas();
+
+}
+async function alterarStatusSala(id, statusAtual){
+
+  const novoStatus = !statusAtual;
+
+  const { error } = await supabaseClient
+    .from("salas")
+    .update({
+      ativo: novoStatus
+    })
+    .eq("id", id);
+
+  if(error){
+    console.error(error);
+    alert(
+      "Erro ao alterar situação da sala: " +
+      error.message
+    );
+    return;
+  }
+
+  carregarConfiguracoesSalas();
+
+}
+async function excluirSala(id){
+
+  const { data: servicos, error: erroServicos } =
+    await supabaseClient
+      .from("servicos")
+      .select("id, nome")
+      .eq("sala_id", id)
+      .limit(10);
+
+  if(erroServicos){
+    console.error(erroServicos);
+    alert("Erro ao verificar os serviços da sala.");
+    return;
+  }
+
+  if(servicos && servicos.length > 0){
+
+    const nomes =
+      servicos
+        .map(servico => "• " + servico.nome)
+        .join("\n");
+
+    alert(
+      "Esta sala está vinculada aos seguintes serviços:\n\n" +
+      nomes +
+      "\n\nRemova a sala dos serviços antes de excluí-la."
+    );
+
+    return;
+  }
+
+  const confirmar = confirm(
+    "Deseja realmente excluir esta sala?"
+  );
+
+  if(!confirmar) return;
+
+  const { error } = await supabaseClient
+    .from("salas")
+    .delete()
+    .eq("id", id);
+
+  if(error){
+    console.error(error);
+    alert("Erro ao excluir sala: " + error.message);
+    return;
+  }
+
+  carregarConfiguracoesSalas();
+
+}
 async function abrirFaturamentoClienteDia(agendamentoId){
 
   const { data: agendamentoBase, error } = await supabaseClient
@@ -9405,8 +9779,10 @@ async function excluirAgendamento(id){
   }
 
   fecharModal();
-  carregarAgenda();
-  await registrarHistoricoOperacao(
+
+await carregarAgenda();
+
+await registrarHistoricoOperacao(
   "cancelamento_agendamento",
   String(id),
   "Agendamento cancelado",
