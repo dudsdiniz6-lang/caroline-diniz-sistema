@@ -12024,16 +12024,21 @@ async function carregarPendenciasFinanceiras(){
   const lista = document.getElementById("listaPendencias");
   if(!lista) return;
 
-  const busca = document.getElementById("buscaPendenciaCliente")?.value?.toLowerCase().trim() || "";
+  const busca =
+    document
+      .getElementById("buscaPendenciaCliente")
+      ?.value
+      ?.toLowerCase()
+      .trim() || "";
 
   lista.innerHTML = "Carregando...";
 
   const { data, error } = await supabaseClient
     .from("financeiro_lancamentos")
     .select("*")
-    .eq("tipo","PENDENCIA")
-    .eq("status","ATIVO")
-    .order("data",{ascending:true});
+    .eq("tipo", "PENDENCIA")
+    .eq("status", "ATIVO")
+    .order("data", { ascending: true });
 
   if(error){
     lista.innerHTML = "Erro ao carregar pendências.";
@@ -12041,11 +12046,21 @@ async function carregarPendenciasFinanceiras(){
   }
 
   if(!data || data.length === 0){
-    lista.innerHTML = `<div class="card">Nenhuma pendência financeira.</div>`;
+    lista.innerHTML = `
+      <div class="card">
+        Nenhuma pendência financeira.
+      </div>
+    `;
     return;
   }
 
-  const clientesIds = [...new Set(data.map(p => p.cliente_id).filter(Boolean))];
+  const clientesIds = [
+    ...new Set(
+      data
+        .map(p => p.cliente_id)
+        .filter(Boolean)
+    )
+  ];
 
   const clientesResp = await supabaseClient
     .from("clientes")
@@ -12054,21 +12069,34 @@ async function carregarPendenciasFinanceiras(){
 
   const clientes = clientesResp.data || [];
 
-  const pendencias = data.map(p => ({
-    ...p,
-    clienteNome: clientes.find(c => c.id === p.cliente_id)?.nome || "Cliente não informado"
-  })).filter(p =>
-    !busca || p.clienteNome.toLowerCase().includes(busca)
-  );
+  const pendencias = data
+    .map(p => ({
+      ...p,
+      clienteNome:
+        clientes.find(c =>
+          String(c.id) === String(p.cliente_id)
+        )?.nome || "Cliente não informado"
+    }))
+    .filter(p =>
+      !busca ||
+      p.clienteNome
+        .toLowerCase()
+        .includes(busca)
+    );
 
   if(pendencias.length === 0){
-    lista.innerHTML = `<div class="card">Nenhuma pendência encontrada.</div>`;
+    lista.innerHTML = `
+      <div class="card">
+        Nenhuma pendência encontrada.
+      </div>
+    `;
     return;
   }
 
   const porCliente = {};
 
   pendencias.forEach(p => {
+
     if(!porCliente[p.cliente_id]){
       porCliente[p.cliente_id] = {
         nome: p.clienteNome,
@@ -12077,13 +12105,16 @@ async function carregarPendenciasFinanceiras(){
       };
     }
 
-    porCliente[p.cliente_id].total += Number(p.valor || 0);
+    porCliente[p.cliente_id].total +=
+      Number(p.valor || 0);
+
     porCliente[p.cliente_id].itens.push(p);
   });
 
   lista.innerHTML = "";
 
   Object.keys(porCliente).forEach(clienteId => {
+
     const grupo = porCliente[clienteId];
 
     lista.innerHTML += `
@@ -12101,13 +12132,20 @@ async function carregarPendenciasFinanceiras(){
           ${grupo.itens.length}
         </p>
 
-       <button class="principal" onclick="abrirReceberPendenciasCliente(${clienteId})">
-  Receber
-</button>
+        <button
+          class="principal"
+          onclick="abrirReceberPendenciasCliente(${clienteId})"
+        >
+          Receber
+        </button>
 
-<button onclick="abrirCancelarPendenciasCliente(${clienteId})">
-  Cancelar pendência
-</button>
+        <button
+          onclick="abrirCancelarPendenciasCliente(${clienteId})"
+        >
+          Cancelar pendência
+        </button>
+
+      </div>
     `;
   });
 }
