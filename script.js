@@ -165,6 +165,47 @@ function formatarDataISO(data){
   return `${ano}-${mes}-${dia}`;
 }
 
+async function registrarAuditoria(
+  modulo,
+  acao,
+  tabela,
+  registroId = null,
+  valorAnterior = null,
+  valorNovo = null,
+  observacoes = null
+){
+
+  try{
+
+    await supabaseClient.rpc(
+      "registrar_auditoria_sistema",
+      {
+        p_usuario_id: usuarioLogado?.id || null,
+        p_usuario_nome: usuarioLogado?.nome || usuarioLogado?.usuario || null,
+        p_modulo: modulo,
+        p_acao: acao,
+        p_tabela: tabela,
+        p_registro_id:
+  registroId !== null && registroId !== undefined
+    ? String(registroId)
+    : null,
+        p_valor_anterior: valorAnterior,
+        p_valor_novo: valorNovo,
+        p_observacoes: observacoes,
+        p_dispositivo: navigator.userAgent
+      }
+    );
+
+  }catch(erro){
+
+    console.error(
+      "Erro ao registrar auditoria:",
+      erro
+    );
+
+  }
+
+}
 function dinheiro(valor){
   return `R$ ${Number(valor || 0).toFixed(2)}`;
 }
@@ -681,22 +722,37 @@ if(resposta.error){
 
 limparCache("clientes");
 
+const clienteIdSalvo =
+  id || resposta.data?.id || null;
+
 await registrarHistoricoOperacao(
   id ? "edicao_cliente" : "criacao_cliente",
-  String(id || resposta.data?.id || ""),
+  String(clienteIdSalvo || ""),
   id ? "Cliente alterada" : "Nova cliente criada",
   {
-    cliente_id: id || resposta.data?.id || null,
+    cliente_id: clienteIdSalvo,
     antes: clienteAntes,
     depois: dados
   }
 );
 
-  fecharModal();
-  carregarClientes();
-  carregarAgenda();
+await registrarAuditoria(
+  "CLIENTES",
+  id ? "EDIÇÃO" : "CRIAÇÃO",
+  "clientes",
+  clienteIdSalvo,
+  clienteAntes,
+  dados,
+  id
+    ? "Cadastro da cliente alterado"
+    : "Nova cliente cadastrada"
+);
 
-  alert("Cliente salvo com sucesso.");
+fecharModal();
+carregarClientes();
+carregarAgenda();
+
+alert("Cliente salvo com sucesso.");
 }
 async function carregarClientes(){
 
