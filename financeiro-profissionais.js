@@ -1458,7 +1458,103 @@ return (
         `;
 
       }).join("");
+// =====================================
+// SALDO ANTERIOR DO PROFISSIONAL
+// =====================================
 
+const { data: pagamentosAnteriores, error: erroSaldoAnterior } =
+  await supabaseClient
+    .from("comissoes_pagamentos")
+    .select(`
+      id,
+      saldo_resultante,
+      data_fim,
+      status
+    `)
+    .eq("profissional_id", profissionalId)
+    .lt("data_fim", dataInicio)
+    .order("data_fim", { ascending: false })
+    .limit(20);
+
+if(erroSaldoAnterior){
+  throw erroSaldoAnterior;
+}
+
+const pagamentoAnteriorDetalhes =
+  (pagamentosAnteriores || []).find(pagamento => {
+
+    const status =
+      financeiroNormalizarStatus(
+        pagamento.status
+      );
+
+    return ![
+      "cancelado",
+      "cancelada"
+    ].includes(status);
+
+  });
+
+const saldoAnteriorDetalhes =
+  Number(
+    pagamentoAnteriorDetalhes?.saldo_resultante || 0
+  );
+
+
+// =====================================
+// VALES PENDENTES
+// =====================================
+
+const { data: valesDetalhes, error: erroValesDetalhes } =
+  await supabaseClient
+    .from("profissionais_vales")
+    .select(`
+      id,
+      valor,
+      status,
+      pagamento_comissao_id,
+      data_vale
+    `)
+    .eq("profissional_id", profissionalId)
+    .lte("data_vale", dataFim)
+    .is("pagamento_comissao_id", null);
+
+if(erroValesDetalhes){
+  throw erroValesDetalhes;
+}
+
+const valesPendentesDetalhes =
+  (valesDetalhes || []).filter(vale => {
+
+    const status =
+      financeiroNormalizarStatus(
+        vale.status
+      );
+
+    return (
+      status === "aberto" ||
+      status === "pendente" ||
+      !status
+    );
+
+  });
+
+const totalValesDetalhes =
+  valesPendentesDetalhes.reduce(
+    (total, vale) =>
+      total + Number(vale.valor || 0),
+    0
+  );
+
+
+// =====================================
+// TOTAL A PAGAR
+// =====================================
+
+const totalPagarDetalhes =
+  totalComissao +
+  saldoAnteriorDetalhes -
+  totalValesDetalhes;
 
     /* =========================
        MONTAR TELA
@@ -1575,6 +1671,47 @@ return (
             }
           </div>
         </div>
+        <div
+  class="card"
+  style="padding:16px;"
+>
+  <small>
+    Total a pagar
+  </small>
+
+  <div
+    style="
+      font-size:22px;
+      font-weight:700;
+      margin-top:5px;
+      ${
+        totalPagarDetalhes < 0
+          ? "color:#b42318;"
+          : ""
+      }
+    "
+  >
+    ${
+      financeiroFormatarMoeda(
+        totalPagarDetalhes
+      )
+    }
+  </div>
+
+  <small
+    style="
+      display:block;
+      margin-top:5px;
+      opacity:0.7;
+    "
+  >
+    Saldo anterior:
+    ${financeiroFormatarMoeda(saldoAnteriorDetalhes)}
+    •
+    Vales:
+    ${financeiroFormatarMoeda(totalValesDetalhes)}
+  </small>
+</div>
 
 
         <div
