@@ -700,11 +700,14 @@ const {
             };
 
           const ultimoPagamento =
-            ultimoPagamentoPorProfissional[
-              profissional.id
-            ];
+  ultimoPagamentoPorProfissional[
+    profissional.id
+  ];
 
-         const saldoAnterior = 0;
+const saldoAnterior =
+  Number(
+    ultimoPagamento?.saldo_resultante || 0
+  );
 
           const comissao =
             Number(
@@ -716,8 +719,9 @@ const {
               dadosVales.valor || 0
             );
 
-         const totalDevido =
-  comissao -
+        const totalDevido =
+  comissao +
+  saldoAnterior -
   totalValesProfissional;
 
           totalComissoes += comissao;
@@ -2352,24 +2356,27 @@ return (
       throw erroUltimoPagamento;
     }
 
-    const pagamentoAnterior =
-      (ultimoPagamento || []).find(
-        pagamento => {
+  const pagamentoAnterior =
+  (ultimoPagamento || []).find(
+    pagamento => {
 
-          const status =
-            financeiroNormalizarStatus(
-              pagamento.status
-            );
+      const status =
+        financeiroNormalizarStatus(
+          pagamento.status
+        );
 
-          return ![
-            "cancelado",
-            "cancelada"
-          ].includes(status);
+      return ![
+        "cancelado",
+        "cancelada"
+      ].includes(status);
 
-        }
-      );
+    }
+  );
 
- const saldoAnterior = 0;
+const saldoAnterior =
+  Number(
+    pagamentoAnterior?.saldo_resultante || 0
+  );
 
 
     const {
@@ -2433,7 +2440,8 @@ return (
       );
 
 const totalDevido =
-  comissaoPeriodo -
+  comissaoPeriodo +
+  saldoAnterior -
   totalVales;
 
 
