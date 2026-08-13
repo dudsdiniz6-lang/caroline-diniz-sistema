@@ -1355,18 +1355,23 @@ async function carregarServicos(){
 
   if(!lista) return;
 
-  lista.innerHTML = "Carregando serviços...";
-
+  // PRIMEIRO pega os filtros antes de alterar o HTML
   const categoriaFiltro =
     document.getElementById("filtroCategoriaServico")?.value || "";
 
-  const campoBusca = document.getElementById("buscaServico");
+  const campoBusca =
+    document.getElementById("buscaServico");
 
-const buscaOriginal = campoBusca?.value || "";
-const busca = buscaOriginal.toLowerCase().trim();
+  const buscaOriginal =
+    campoBusca?.value || "";
 
-  const categorias = await carregarCategoriasServico();
+  const busca =
+    buscaOriginal
+      .toLowerCase()
+      .trim();
 
+  const categorias =
+    await carregarCategoriasServico();
   let query = supabaseClient
     .from("servicos")
     .select(`
