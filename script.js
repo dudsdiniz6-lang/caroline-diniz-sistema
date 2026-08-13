@@ -1349,7 +1349,18 @@ const profissionalIdFinal =
 
   alert("Profissional salvo com sucesso.");
 }
-async function carregarServicos(){
+let timerPesquisaServico = null;
+
+function pesquisarServicoComAtraso(){
+
+  clearTimeout(timerPesquisaServico);
+
+  timerPesquisaServico = setTimeout(() => {
+    carregarServicos(true);
+  }, 300);
+
+}
+async function carregarServicos(mantereFoco = false){
 
   const lista = document.getElementById("listaServicos");
 
@@ -1407,7 +1418,7 @@ async function carregarServicos(){
         id="buscaServico"
         placeholder="Pesquisar serviço..."
       value="${buscaOriginal}"
-        oninput="carregarServicos()"
+       oninput="pesquisarServicoComAtraso()"
       >
 
       <select id="filtroCategoriaServico" onchange="carregarServicos()">
@@ -1445,6 +1456,26 @@ async function carregarServicos(){
       `}
     </div>
   `;
+}
+if(mantereFoco){
+
+  const novoCampo =
+    document.getElementById("buscaServico");
+
+  if(novoCampo){
+
+    novoCampo.focus();
+
+    const tamanho =
+      novoCampo.value.length;
+
+    novoCampo.setSelectionRange(
+      tamanho,
+      tamanho
+    );
+
+  }
+
 }
 async function abrirModalServico(id = null){
 
