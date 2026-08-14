@@ -8952,11 +8952,19 @@ async function salvarFaturamentoClienteDiaPago(){
   );
 
   fecharModal();
-  carregarAgenda();
-  carregarComandas();
-  carregarPendenciasFinanceiras();
 
-  alert("Faturamento concluído com sucesso.");
+alert("Faturamento concluído com sucesso.");
+
+Promise.all([
+  carregarAgenda(),
+  carregarComandas(),
+  carregarPendenciasFinanceiras()
+]).catch(erro => {
+  console.error(
+    "Erro ao atualizar telas após faturamento:",
+    erro
+  );
+});
 }
 function abrirReforcoCaixa(caixaId){
 
