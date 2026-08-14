@@ -8831,26 +8831,29 @@ async function salvarFaturamentoClienteDiaPago(){
 
   const comanda = comandaResp.data;
 
-  const itensComanda = [];
+ const itensComanda =
+  await Promise.all(
+    itensPagos.map(async item => {
 
-  for(const item of itensPagos){
+      const percentualComissao =
+        await buscarPercentualComissao(
+          item.profissional_id,
+          item.servico_id,
+          item.servicos?.comissao_padrao || 0
+        );
 
-    const percentualComissao = await buscarPercentualComissao(
-      item.profissional_id,
-      item.servico_id,
-      item.servicos?.comissao_padrao || 0
-    );
+      return {
+        comanda_id: comanda.id,
+        servico_id: item.servico_id,
+        agendamento_id: item.id,
+        profissional_id: item.profissional_id,
+        descricao: item.servicos?.nome || "Serviço",
+        valor: item.total,
+        comissao_percentual: percentualComissao
+      };
 
-    itensComanda.push({
-      comanda_id: comanda.id,
-      servico_id: item.servico_id,
-      agendamento_id: item.id,
-      profissional_id: item.profissional_id,
-      descricao: item.servicos?.nome || "Serviço",
-      valor: item.total,
-      comissao_percentual: percentualComissao
-    });
-  }
+    })
+  );
 
   const itensResp = await supabaseClient
     .from("comanda_itens")
@@ -8861,63 +8864,92 @@ async function salvarFaturamentoClienteDiaPago(){
     return;
   }
 
-  if(tipoRecebimento === "receber_agora"){
+if(tipoRecebimento === "receber_agora"){
 
-    for(const pagamento of pagamentosInformados){
+    const pagamentosBanco =
+      pagamentosInformados.map(pagamento => ({
+        comanda_id: comanda.id,
+        forma_pagamento_id: pagamento.formaPagamentoId,
+        valor: pagamento.valor,
+        data: primeiroItem.data
+      }));
 
-      await supabaseClient
-        .from("pagamentos")
-        .insert([{
-          comanda_id: comanda.id,
-          forma_pagamento_id: pagamento.formaPagamentoId,
-          valor: pagamento.valor,
-          data: primeiroItem.data
-        }]);
-
-      await supabaseClient
-        .from("financeiro_lancamentos")
-        .insert([{
-          unidade_id: unidadeAtualId,
-          tipo: "RECEBIMENTO",
-          origem: "COMANDA",
-          origem_id: comanda.id,
-          cliente_id: primeiroItem.cliente_id,
-          profissional_id: profissionalPrincipal,
-          forma_pagamento_id: pagamento.formaPagamentoId,
-          valor: pagamento.valor,
-          data: new Date().toISOString(),
-          usuario_id: usuarioLogado?.id || null,
-          status: "ATIVO",
-          observacao: "Recebimento de faturamento"
-        }]);
-
-      if(pagamento.formaNome !== "Crédito da Cliente"){
-        await registrarEntradaCaixa(
-          comanda.id,
-          pagamento.formaPagamentoId,
-          pagamento.valor
-        );
-      }
-    }
-
-  }else{
-
-    await supabaseClient
-      .from("financeiro_lancamentos")
-      .insert([{
+    const lancamentosFinanceiros =
+      pagamentosInformados.map(pagamento => ({
         unidade_id: unidadeAtualId,
-        tipo: "PENDENCIA",
+        tipo: "RECEBIMENTO",
         origem: "COMANDA",
         origem_id: comanda.id,
         cliente_id: primeiroItem.cliente_id,
         profissional_id: profissionalPrincipal,
-        valor: totalReceber,
+        forma_pagamento_id: pagamento.formaPagamentoId,
+        valor: pagamento.valor,
         data: new Date().toISOString(),
         usuario_id: usuarioLogado?.id || null,
         status: "ATIVO",
-        observacao: "Faturamento lançado como A Receber"
-      }]);
-  }
+        observacao: "Recebimento de faturamento"
+      }));
+
+    const [
+      pagamentosResp,
+      financeiroResp
+    ] = await Promise.all([
+
+      supabaseClient
+        .from("pagamentos")
+        .insert(pagamentosBanco),
+
+      supabaseClient
+        .from("financeiro_lancamentos")
+        .insert(lancamentosFinanceiros)
+
+    ]);
+
+    if(pagamentosResp.error){
+      throw pagamentosResp.error;
+    }
+
+    if(financeiroResp.error){
+      throw financeiroResp.error;
+    }
+
+    await Promise.all(
+      pagamentosInformados
+        .filter(
+          pagamento =>
+            pagamento.formaNome !== "Crédito da Cliente"
+        )
+        .map(
+          pagamento =>
+            registrarEntradaCaixa(
+              comanda.id,
+              pagamento.formaPagamentoId,
+              pagamento.valor
+            )
+        )
+    );
+
+}else{
+
+ const pendenciaResp = await supabaseClient
+  .from("financeiro_lancamentos")
+  .insert([{
+    unidade_id: unidadeAtualId,
+    tipo: "PENDENCIA",
+    origem: "COMANDA",
+    origem_id: comanda.id,
+    cliente_id: primeiroItem.cliente_id,
+    profissional_id: profissionalPrincipal,
+    valor: totalReceber,
+    data: new Date().toISOString(),
+    usuario_id: usuarioLogado?.id || null,
+    status: "ATIVO",
+    observacao: "Faturamento lançado como A Receber"
+  }]);
+
+if(pendenciaResp.error){
+  throw pendenciaResp.error;
+}
 
   await supabaseClient
     .from("agendamentos")
