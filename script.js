@@ -8951,12 +8951,14 @@ if(pendenciaResp.error){
   throw pendenciaResp.error;
 }
 
-  await supabaseClient
-    .from("agendamentos")
-    .update({
-      status: "Finalizado"
-    })
-    .in("id", idsAgendamentos);
+} // FECHA O ELSE
+
+await supabaseClient
+  .from("agendamentos")
+  .update({
+    status: "Finalizado"
+  })
+  .in("id", idsAgendamentos);
 
   await registrarHistoricoOperacao(
     "faturamento_cliente",
