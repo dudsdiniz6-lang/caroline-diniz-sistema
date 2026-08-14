@@ -637,42 +637,55 @@ const {
 
     });
 
-    const ultimoPagamentoPorProfissional =
-      {};
+  const ultimoPagamentoPorProfissional = {};
 
-    (pagamentos || []).forEach(
-      pagamento => {
+(pagamentos || []).forEach(pagamento => {
 
-        const status =
-          financeiroNormalizarStatus(
-            pagamento.status
-          );
-
-        if(
-          status === "cancelado" ||
-          status === "cancelada"
-        ){
-          return;
-        }
-
-        const profissionalId =
-          pagamento.profissional_id;
-
-        if(
-          profissionalId &&
-          !ultimoPagamentoPorProfissional[
-            profissionalId
-          ]
-        ){
-
-          ultimoPagamentoPorProfissional[
-            profissionalId
-          ] = pagamento;
-
-        }
-
-      }
+  const status =
+    financeiroNormalizarStatus(
+      pagamento.status
     );
+
+  if(
+    status === "cancelado" ||
+    status === "cancelada"
+  ){
+    return;
+  }
+
+  const profissionalId =
+    pagamento.profissional_id;
+
+  if(!profissionalId){
+    return;
+  }
+
+  // O saldo anterior precisa vir de um
+  // fechamento ANTERIOR ao período atual.
+  if(
+    !pagamento.data_fim ||
+    pagamento.data_fim >= dataInicio
+  ){
+    return;
+  }
+
+  const atual =
+    ultimoPagamentoPorProfissional[
+      profissionalId
+    ];
+
+  // Guarda o fechamento imediatamente
+  // anterior ao período atual.
+  if(
+    !atual ||
+    pagamento.data_fim > atual.data_fim
+  ){
+    ultimoPagamentoPorProfissional[
+      profissionalId
+    ] = pagamento;
+  }
+
+});
 
     let totalComissoes = 0;
     let totalVales = 0;
