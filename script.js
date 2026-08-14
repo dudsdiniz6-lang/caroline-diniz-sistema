@@ -1356,19 +1356,23 @@ function pesquisarServicoComAtraso(){
   clearTimeout(timerPesquisaServico);
 
   timerPesquisaServico = setTimeout(() => {
+
     carregarServicos(true);
+
   }, 300);
 
 }
 async function carregarServicos(mantereFoco = false){
 
-  const lista = document.getElementById("listaServicos");
+  const lista =
+    document.getElementById("listaServicos");
 
   if(!lista) return;
 
-  // PRIMEIRO pega os filtros antes de alterar o HTML
+  // Guarda os filtros ANTES de recriar o HTML
   const categoriaFiltro =
-    document.getElementById("filtroCategoriaServico")?.value || "";
+    document.getElementById("filtroCategoriaServico")
+      ?.value || "";
 
   const campoBusca =
     document.getElementById("buscaServico");
@@ -1383,6 +1387,7 @@ async function carregarServicos(mantereFoco = false){
 
   const categorias =
     await carregarCategoriasServico();
+
   let query = supabaseClient
     .from("servicos")
     .select(`
@@ -1393,86 +1398,173 @@ async function carregarServicos(mantereFoco = false){
     .order("nome");
 
   if(categoriaFiltro){
-    query = query.eq("categoria_id", Number(categoriaFiltro));
+    query = query.eq(
+      "categoria_id",
+      Number(categoriaFiltro)
+    );
   }
 
-  const { data, error } = await query;
+  const { data, error } =
+    await query;
 
   if(error){
-    lista.innerHTML = "<div class='card'>Erro ao carregar serviços.</div>";
+
+    console.error(
+      "Erro ao carregar serviços:",
+      error
+    );
+
+    lista.innerHTML = `
+      <div class="card">
+        Erro ao carregar serviços.
+      </div>
+    `;
+
     return;
   }
 
   let servicos = data || [];
 
+  // FILTRO DA PESQUISA
   if(busca){
-    servicos = servicos.filter(servico =>
-      servico.nome?.toLowerCase().includes(busca) ||
-      servico.categorias_servicos?.nome?.toLowerCase().includes(busca)
-    );
+
+    servicos = servicos.filter(servico => {
+
+      const nome =
+        String(servico.nome || "")
+          .toLowerCase();
+
+      const categoria =
+        String(
+          servico.categorias_servicos?.nome || ""
+        ).toLowerCase();
+
+      return (
+        nome.includes(busca) ||
+        categoria.includes(busca)
+      );
+
+    });
+
   }
 
+  // MONTA A TELA
   lista.innerHTML = `
+
     <div class="servicos-filtros">
+
       <input
         id="buscaServico"
         placeholder="Pesquisar serviço..."
-      value="${buscaOriginal}"
-       oninput="pesquisarServicoComAtraso()"
+        value="${buscaOriginal}"
+        oninput="pesquisarServicoComAtraso()"
       >
 
-      <select id="filtroCategoriaServico" onchange="carregarServicos()">
-        <option value="">Todas as categorias</option>
+      <select
+        id="filtroCategoriaServico"
+        onchange="carregarServicos()"
+      >
 
-        ${categorias.map(cat=>`
+        <option value="">
+          Todas as categorias
+        </option>
+
+        ${categorias.map(cat => `
           <option
             value="${cat.id}"
-            ${String(categoriaFiltro) === String(cat.id) ? "selected" : ""}
+            ${
+              String(categoriaFiltro) ===
+              String(cat.id)
+                ? "selected"
+                : ""
+            }
           >
             ${cat.nome}
           </option>
         `).join("")}
+
       </select>
+
     </div>
 
     <div class="servicos-grid">
-      ${servicos.length ? servicos.map(servico=>`
-        <div class="servico-card" onclick="abrirModalServico(${servico.id})">
 
-          <div>
-            <small>${servico.categorias_servicos?.nome || "Sem categoria"}</small>
-            <h3>${servico.nome}</h3>
-          </div>
+      ${
+        servicos.length
+          ? servicos.map(servico => `
 
-          <div class="servico-info">
-            <span>${servico.duracao || 30} min</span>
-            <strong>${dinheiro(servico.valor)}</strong>
-            <em>${servico.comissao_padrao || 0}% comissão</em>
-          </div>
+            <div
+              class="servico-card"
+              onclick="abrirModalServico(${servico.id})"
+            >
 
-        </div>
-      `).join("") : `
-        <div class="card">Nenhum serviço encontrado.</div>
-      `}
+              <div>
+
+                <small>
+                  ${
+                    servico.categorias_servicos?.nome ||
+                    "Sem categoria"
+                  }
+                </small>
+
+                <h3>
+                  ${servico.nome}
+                </h3>
+
+              </div>
+
+              <div class="servico-info">
+
+                <span>
+                  ${servico.duracao || 30} min
+                </span>
+
+                <strong>
+                  ${dinheiro(servico.valor)}
+                </strong>
+
+                <em>
+                  ${servico.comissao_padrao || 0}% comissão
+                </em>
+
+              </div>
+
+            </div>
+
+          `).join("")
+
+          : `
+
+            <div class="card">
+              Nenhum serviço encontrado.
+            </div>
+
+          `
+      }
+
     </div>
   `;
-}
-if(mantereFoco){
 
-  const novoCampo =
-    document.getElementById("buscaServico");
 
-  if(novoCampo){
+  // DEVOLVE O FOCO PARA A PESQUISA
+  if(mantereFoco){
 
-    novoCampo.focus();
+    const novoCampo =
+      document.getElementById("buscaServico");
 
-    const tamanho =
-      novoCampo.value.length;
+    if(novoCampo){
 
-    novoCampo.setSelectionRange(
-      tamanho,
-      tamanho
-    );
+      novoCampo.focus();
+
+      const tamanho =
+        novoCampo.value.length;
+
+      novoCampo.setSelectionRange(
+        tamanho,
+        tamanho
+      );
+
+    }
 
   }
 
