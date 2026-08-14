@@ -8913,22 +8913,42 @@ if(tipoRecebimento === "receber_agora"){
       throw financeiroResp.error;
     }
 
-    await Promise.all(
-      pagamentosInformados
-        .filter(
-          pagamento =>
-            pagamento.formaNome !== "Crédito da Cliente"
-        )
-        .map(
-          pagamento =>
-            registrarEntradaCaixa(
-              comanda.id,
-              pagamento.formaPagamentoId,
-              pagamento.valor
-            )
-        )
-    );
+    const pagamentosParaCaixa =
+  pagamentosInformados.filter(
+    pagamento =>
+      pagamento.formaNome !== "Crédito da Cliente"
+  );
 
+if(pagamentosParaCaixa.length > 0){
+
+  const caixa = await buscarCaixaAberto();
+
+  if(!caixa){
+    throw new Error(
+      "Não existe caixa aberto."
+    );
+  }
+
+  const movimentacoesCaixa =
+    pagamentosParaCaixa.map(pagamento => ({
+      caixa_id: caixa.id,
+      tipo: "Entrada",
+      descricao: "Pagamento de atendimento",
+      valor: Number(pagamento.valor || 0),
+      comanda_id: comanda.id,
+      forma_pagamento_id: pagamento.formaPagamentoId
+    }));
+
+  const caixaResp =
+    await supabaseClient
+      .from("caixa_movimentacoes")
+      .insert(movimentacoesCaixa);
+
+  if(caixaResp.error){
+    throw caixaResp.error;
+  }
+
+}
 }else{
 
  const pendenciaResp = await supabaseClient
