@@ -637,7 +637,7 @@ const {
 
     });
 
-  const ultimoPagamentoPorProfissional = {};
+ const ultimoPagamentoPorProfissional = {};
 
 (pagamentos || []).forEach(pagamento => {
 
@@ -660,8 +660,7 @@ const {
     return;
   }
 
-  // O saldo anterior precisa vir de um
-  // fechamento ANTERIOR ao período atual.
+  // Ignora o relatório atual e os futuros
   if(
     !pagamento.data_fim ||
     pagamento.data_fim >= dataInicio
@@ -669,16 +668,16 @@ const {
     return;
   }
 
-  const atual =
+  const anteriorAtual =
     ultimoPagamentoPorProfissional[
       profissionalId
     ];
 
-  // Guarda o fechamento imediatamente
-  // anterior ao período atual.
+  // Guarda sempre o relatório anterior mais recente
   if(
-    !atual ||
-    pagamento.data_fim > atual.data_fim
+    !anteriorAtual ||
+    pagamento.data_fim >
+      anteriorAtual.data_fim
   ){
     ultimoPagamentoPorProfissional[
       profissionalId
