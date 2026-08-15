@@ -1177,7 +1177,28 @@ async function salvarVendaCreditoCliente(clienteId){
     );
     return;
   }
+  
+  // REGISTRA AS FORMAS DE PAGAMENTO NA COMANDA
+  const pagamentosComanda =
+    pagamentos.map(pagamento => ({
+      comanda_id: comanda.id,
+      forma_pagamento_id: pagamento.formaPagamentoId,
+      valor: pagamento.valor,
+      data: formatarDataISO(new Date())
+    }));
 
+  const pagamentosResp =
+    await supabaseClient
+      .from("pagamentos")
+      .insert(pagamentosComanda);
+
+  if(pagamentosResp.error){
+    alert(
+      "Erro ao registrar pagamentos da comanda: " +
+      pagamentosResp.error.message
+    );
+    return;
+  }
   // GERA A RECEITA EM CADA FORMA DE PAGAMENTO
   const lancamentos =
     pagamentos.map(pagamento => ({
@@ -1215,7 +1236,7 @@ async function salvarVendaCreditoCliente(clienteId){
   for(const pagamento of pagamentos){
 
     await registrarEntradaCaixa(
-      null,
+      comanda.id,
       pagamento.formaPagamentoId,
       pagamento.valor
     );
