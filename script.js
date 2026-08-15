@@ -9113,6 +9113,140 @@ async function carregarFormasPagamentoNosSelects(){
     `;
   });
 }
+async function buscarCreditoDisponivelCliente(clienteId){
+
+  if(!clienteId){
+    return {
+      carteiraId: null,
+      saldo: 0
+    };
+  }
+
+  const { data, error } = await supabaseClient
+    .from("carteira_clientes")
+    .select("id, saldo")
+    .eq("cliente_id", clienteId)
+    .eq("tipo", "CREDITO")
+    .eq("ativo", true)
+    .maybeSingle();
+
+  if(error){
+    console.error(
+      "Erro ao buscar crédito da cliente:",
+      error
+    );
+
+    return {
+      carteiraId: null,
+      saldo: 0
+    };
+  }
+
+  return {
+    carteiraId: data?.id || null,
+    saldo: Number(data?.saldo || 0)
+  };
+}
+async function consumirCreditoCliente(
+  clienteId,
+  valor,
+  origem,
+  origemId = null
+){
+
+  const valorUsar = Number(valor || 0);
+
+  if(valorUsar <= 0){
+    return;
+  }
+
+  const credito =
+    await buscarCreditoDisponivelCliente(
+      clienteId
+    );
+
+  if(!credito.carteiraId){
+    throw new Error(
+      "A cliente não possui crédito disponível."
+    );
+  }
+
+  if(valorUsar > credito.saldo){
+    throw new Error(
+      `Crédito insuficiente. Saldo disponível: ${dinheiro(credito.saldo)}`
+    );
+  }
+
+  const novoSaldo =
+    credito.saldo - valorUsar;
+
+  const { error: erroSaldo } =
+    await supabaseClient
+      .from("carteira_clientes")
+      .update({
+        saldo: novoSaldo,
+        atualizado_em:
+          new Date().toISOString()
+      })
+      .eq("id", credito.carteiraId);
+
+  if(erroSaldo){
+    throw erroSaldo;
+  }
+
+  const { error: erroMovimentacao } =
+    await supabaseClient
+      .from("carteira_movimentacoes")
+      .insert([{
+        carteira_id:
+          credito.carteiraId,
+
+        cliente_id:
+          clienteId,
+
+        tipo:
+          "SAIDA",
+
+        origem:
+          origem,
+
+        origem_id:
+          origemId,
+
+        valor:
+          valorUsar,
+
+        data:
+          new Date().toISOString(),
+
+        observacao:
+          "Utilização de crédito da cliente",
+
+        usuario_id:
+          usuarioLogado?.id || null
+      }]);
+
+  if(erroMovimentacao){
+    throw erroMovimentacao;
+  }
+
+  await registrarHistoricoOperacao(
+    "uso_credito_cliente",
+    String(clienteId),
+    "Crédito utilizado pela cliente",
+    {
+      cliente_id: clienteId,
+      carteira_id: credito.carteiraId,
+      origem,
+      origem_id: origemId,
+      valor_utilizado: valorUsar,
+      saldo_anterior: credito.saldo,
+      saldo_atual: novoSaldo
+    }
+  );
+
+  return novoSaldo;
+}
 async function salvarFaturamentoClienteDiaPago(){
 
   if(!pode("comandas_faturar")){
