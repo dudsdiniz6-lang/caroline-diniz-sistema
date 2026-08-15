@@ -863,14 +863,26 @@ const saldoAnterior =
                     gap:15px;
                   "
                 >
-                  <span>
-                    Vales pendentes
-                    ${
-                      dadosVales.quantidade > 0
-                        ? `(${dadosVales.quantidade})`
-                        : ""
-                    }
-                  </span>
+                  <span
+  style="
+    ${dadosVales.quantidade > 0
+      ? "cursor:pointer;text-decoration:underline;"
+      : ""}
+  "
+  onclick="
+    event.stopPropagation();
+    FinanceiroProfissionais.verValesPendentes(
+      '${profissional.id}'
+    );
+  "
+>
+  Vales pendentes
+  ${
+    dadosVales.quantidade > 0
+      ? `(${dadosVales.quantidade})`
+      : ""
+  }
+</span>
 
                   <strong>
                     -${
@@ -4701,7 +4713,113 @@ async function listarPagamentosFinanceiroProfissionais(){
 
 }
 
+window.FinanceiroProfissionais.verValesPendentes =
+  async function(profissionalId){
 
+    try{
+
+      const { data: vales, error } =
+        await supabaseClient
+          .from("profissionais_vales")
+          .select(`
+            id,
+            profissional_id,
+            data_vale,
+            valor,
+            descricao,
+            status,
+            pagamento_comissao_id,
+            created_at
+          `)
+          .eq("profissional_id", profissionalId)
+          .is("pagamento_comissao_id", null)
+          .order("data_vale", {
+            ascending: false
+          });
+
+      if(error){
+        throw error;
+      }
+
+      const valesPendentes =
+        (vales || []).filter(vale => {
+
+          const status =
+            financeiroNormalizarStatus(
+              vale.status
+            );
+
+          return (
+            status === "aberto" ||
+            status === "pendente"
+          );
+
+        });
+
+      if(valesPendentes.length === 0){
+
+        alert(
+          "Nenhum vale pendente encontrado para este profissional."
+        );
+
+        return;
+      }
+
+      const total =
+        valesPendentes.reduce(
+          (soma, vale) =>
+            soma + Number(vale.valor || 0),
+          0
+        );
+
+      const texto =
+        valesPendentes.map(vale => {
+
+          const data =
+            financeiroFormatarData(
+              vale.data_vale
+            );
+
+          const descricao =
+            vale.descricao ||
+            "Sem descrição";
+
+          return (
+            data +
+            " | " +
+            descricao +
+            " | " +
+            financeiroFormatarMoeda(
+              vale.valor
+            ) +
+            " | " +
+            (vale.status || "PENDENTE")
+          );
+
+        }).join("\n");
+
+      alert(
+        "VALES SENDO DESCONTADOS\n\n" +
+        texto +
+        "\n\nTOTAL: " +
+        financeiroFormatarMoeda(total)
+      );
+
+    }catch(erro){
+
+      console.error(
+        "Erro ao consultar vales:",
+        erro
+      );
+
+      alert(
+        erro?.message ||
+        "Não foi possível consultar os vales."
+      );
+
+    }
+
+  };
 /* =========================================================
    VALES
 ========================================================= */
