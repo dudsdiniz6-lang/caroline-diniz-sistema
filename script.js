@@ -11861,8 +11861,121 @@ async function carregarPerfisSistemaV2(){
    
 async function abrirModalNovoUsuarioV2(){
 
-  alert("Vamos construir modal novo");
+  if(!pode("gestores_criar_usuario")){
+    alert("Você não tem permissão para criar usuários.");
+    return;
+  }
 
+  const profissionaisResp = await supabaseClient
+    .from("profissionais")
+    .select("id, nome")
+    .eq("ativo", true)
+    .order("nome");
+
+  const perfisResp = await supabaseClient
+    .from("perfis_acesso")
+    .select("id, nome")
+    .order("nome");
+
+  if(profissionaisResp.error){
+    console.error(profissionaisResp.error);
+    alert("Erro ao carregar profissionais.");
+    return;
+  }
+
+  if(perfisResp.error){
+    console.error(perfisResp.error);
+    alert("Erro ao carregar perfis.");
+    return;
+  }
+
+  const profissionais = profissionaisResp.data || [];
+  const perfis = perfisResp.data || [];
+
+  abrirModal(`
+
+    <h2>Novo usuário</h2>
+
+    <p style="color:#777; margin-top:-8px;">
+      Crie o acesso e vincule às permissões desejadas.
+    </p>
+
+    <label>Nome</label>
+    <input
+      id="usuarioSistemaNome"
+      placeholder="Ex.: Ana"
+    >
+
+    <label>Login</label>
+    <input
+      id="usuarioSistemaLogin"
+      placeholder="Ex.: ana"
+      autocomplete="off"
+    >
+
+    <label>Senha</label>
+    <input
+      id="usuarioSistemaSenha"
+      type="password"
+      placeholder="Crie uma senha"
+      autocomplete="new-password"
+    >
+
+    <label>Perfil de acesso</label>
+    <select id="usuarioPerfilId">
+
+      <option value="">
+        Selecione
+      </option>
+
+      ${perfis.map(perfil => `
+        <option value="${perfil.id}">
+          ${perfil.nome}
+        </option>
+      `).join("")}
+
+    </select>
+
+    <label>Profissional vinculado</label>
+    <select id="usuarioProfissionalId">
+
+      <option value="">
+        Nenhum
+      </option>
+
+      ${profissionais.map(profissional => `
+        <option value="${profissional.id}">
+          ${profissional.nome}
+        </option>
+      `).join("")}
+
+    </select>
+
+    <div style="
+      display:flex;
+      justify-content:flex-end;
+      gap:10px;
+      margin-top:24px;
+    ">
+
+      <button
+        type="button"
+        onclick="fecharModal()"
+      >
+        Cancelar
+      </button>
+
+      <button
+        type="button"
+        class="principal"
+        onclick="salvarNovoUsuarioV2()"
+      >
+        Criar usuário
+      </button>
+
+    </div>
+
+  `);
 }
 async function abrirModalNovoPerfil(){
 
