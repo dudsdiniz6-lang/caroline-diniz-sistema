@@ -10027,9 +10027,46 @@ async function abrirModalCliente(id = null){
 
     cliente = resposta.data;
   }
+  let creditoCliente = {
+  saldo: 0
+};
+
+if(id){
+  creditoCliente =
+    await buscarCreditoDisponivelCliente(id);
+}
 
   abrirModal(`
     <h2>${id ? "Editar cliente" : "Novo cliente"}</h2>
+    ${id && creditoCliente.saldo > 0 ? `
+
+  <div style="
+    margin:12px 0 20px;
+    padding:14px 16px;
+    border:2px solid #111;
+    border-radius:12px;
+    background:#fafafa;
+  ">
+
+    <div style="
+      font-size:12px;
+      font-weight:700;
+      letter-spacing:1px;
+    ">
+      CRÉDITO DISPONÍVEL
+    </div>
+
+    <div style="
+      font-size:22px;
+      font-weight:700;
+      margin-top:4px;
+    ">
+      ${cliente?.nome || "Cliente"} — ${dinheiro(creditoCliente.saldo)}
+    </div>
+
+  </div>
+
+` : ""}
 
     <input id="clienteId" type="hidden" value="${cliente?.id || ""}">
 
