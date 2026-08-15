@@ -4487,41 +4487,135 @@ async function verificarCreditoVendaPacote(){
 
   area.style.display = "block";
 
-  area.innerHTML = `
+ area.innerHTML = `
+
+  <div style="
+    border:2px solid #111;
+    border-radius:14px;
+    padding:16px;
+    margin:16px 0;
+    background:#fafafa;
+  ">
+
     <div style="
-      border:2px solid #111;
-      border-radius:14px;
-      padding:16px;
-      margin:16px 0;
-      background:#fafafa;
+      font-size:12px;
+      font-weight:700;
+      letter-spacing:1px;
+    ">
+      CRÉDITO DISPONÍVEL
+    </div>
+
+    <div style="
+      font-size:26px;
+      font-weight:700;
+      margin-top:4px;
+    ">
+      ${dinheiro(credito.saldo)}
+    </div>
+
+    <label style="
+      display:flex;
+      align-items:center;
+      gap:8px;
+      margin-top:14px;
+      font-weight:600;
+      cursor:pointer;
     ">
 
-      <div style="
-        font-size:12px;
-        font-weight:700;
-        letter-spacing:1px;
-        margin-bottom:5px;
-      ">
-        CRÉDITO DISPONÍVEL
-      </div>
+      <input
+        type="checkbox"
+        id="usarCreditoVendaPacote"
+        onchange="alterarUsoCreditoVendaPacote()"
+        style="
+          width:18px;
+          height:18px;
+        "
+      >
 
-      <div style="
-        font-size:26px;
-        font-weight:700;
-      ">
-        ${dinheiro(credito.saldo)}
-      </div>
+      Usar crédito nesta venda
 
-      <div style="
-        font-size:12px;
-        color:#666;
+    </label>
+
+    <div
+      id="areaValorCreditoVendaPacote"
+      style="display:none; margin-top:12px;"
+    >
+
+      <label>
+        Valor do crédito a utilizar
+      </label>
+
+      <input
+        id="valorCreditoVendaPacote"
+        type="number"
+        min="0"
+        step="0.01"
+        max="${credito.saldo}"
+        placeholder="0,00"
+      >
+
+      <small style="
+        display:block;
         margin-top:5px;
+        color:#666;
       ">
-        Este saldo pode ser usado total ou parcialmente nesta venda.
-      </div>
+        Saldo disponível: ${dinheiro(credito.saldo)}
+      </small>
 
     </div>
-  `;
+
+  </div>
+`;
+}
+async function alterarUsoCreditoVendaPacote(){
+
+  const marcado =
+    document.getElementById("usarCreditoVendaPacote")
+      ?.checked;
+
+  const area =
+    document.getElementById("areaValorCreditoVendaPacote");
+
+  const campo =
+    document.getElementById("valorCreditoVendaPacote");
+
+  if(!area || !campo) return;
+
+  if(!marcado){
+
+    area.style.display = "none";
+    campo.value = "";
+
+    return;
+  }
+
+  area.style.display = "block";
+
+  const clienteId =
+    Number(
+      document.getElementById("vendaPacoteCliente")
+        ?.value || 0
+    );
+
+  if(!clienteId) return;
+
+  const credito =
+    await buscarCreditoDisponivelCliente(clienteId);
+
+  const valorPacote =
+    Number(
+      window.pacoteVendaAtual?.valor || 0
+    );
+
+  const valorUsar =
+    Math.min(
+      credito.saldo,
+      valorPacote
+    );
+
+  campo.value =
+    valorUsar.toFixed(2);
+
 }
 function alterarTipoRecebimentoPacote(){
 
