@@ -11858,10 +11858,202 @@ async function carregarPerfisSistemaV2(){
     </div>
   `;
 }
+    </button>
+
+      </div>
+
+      <br>
+
+      ${perfis.map(perfil => `
+
+        <div class="caixa-linha">
+
+          <span>
+            <strong>${perfil.nome}</strong>
+          </span>
+
+          <button
+            onclick="editarPerfilSistema(${perfil.id})"
+          >
+            Editar
+          </button>
+
+        </div>
+
+      `).join("")}
+
+      <br>
+
+      <button onclick="carregarGestores()">
+        Voltar
+      </button>
+
+    </div>
+  `;
+}
 async function abrirModalNovoUsuarioV2(){
 
   alert("Vamos construir modal novo");
 
+}
+async function abrirModalNovoPerfil(){
+
+  abrirModal(`
+
+    <h2>Novo perfil</h2>
+
+    <label>Nome perfil</label>
+
+    <input id="novoPerfilNome">
+
+    <button class="principal"
+      onclick="salvarNovoPerfil()">
+      Salvar
+    </button>
+
+  `);
+
+}
+async function salvarNovoPerfil(){
+
+  const nome =
+    document.getElementById("novoPerfilNome").value.trim();
+
+  if(!nome){
+    alert("Digite o nome.");
+    return;
+  }
+
+  await supabaseClient
+    .from("perfis_acesso")
+    .insert({
+      nome
+    });
+
+  fecharModal();
+
+  carregarPerfisSistemaV2();
+
+}
+async function salvarNovoUsuarioV2(){
+
+  if(!pode("gestores_criar_usuario")){
+    alert("Você não tem permissão para criar usuários.");
+    return;
+  }
+
+  const nome =
+    document.getElementById("usuarioSistemaNome")
+      ?.value.trim();
+
+  const usuario =
+    document.getElementById("usuarioSistemaLogin")
+      ?.value.trim()
+      .toLowerCase();
+
+  const senha =
+    document.getElementById("usuarioSistemaSenha")
+      ?.value.trim();
+
+  const perfilId =
+    document.getElementById("usuarioPerfilId")
+      ?.value;
+
+  const profissionalId =
+    document.getElementById("usuarioProfissionalId")
+      ?.value;
+
+  if(!nome){
+    alert("Informe o nome.");
+    return;
+  }
+
+  if(!usuario){
+    alert("Informe o login.");
+    return;
+  }
+
+  if(!senha){
+    alert("Informe a senha.");
+    return;
+  }
+
+  if(!perfilId){
+    alert("Selecione o perfil.");
+    return;
+  }
+
+  // Confere se o login já existe
+  const { data: usuarioExistente, error: erroConsulta } =
+    await supabaseClient
+      .from("usuarios_sistema")
+      .select("id")
+      .eq("usuario", usuario)
+      .maybeSingle();
+
+  if(erroConsulta){
+    console.error(erroConsulta);
+    alert("Erro ao verificar o login.");
+    return;
+  }
+
+  if(usuarioExistente){
+    alert("Este login já está sendo utilizado.");
+    return;
+  }
+
+  const { data: novoUsuario, error } =
+    await supabaseClient
+      .from("usuarios_sistema")
+      .insert([{
+        nome: nome,
+        usuario: usuario,
+        senha: senha,
+        perfil_acesso_id: Number(perfilId),
+        profissional_id:
+          profissionalId
+            ? Number(profissionalId)
+            : null,
+        ativo: true
+      }])
+      .select()
+      .single();
+
+  if(error){
+    console.error(
+      "Erro ao criar usuário:",
+      error
+    );
+
+    alert(
+      "Erro ao criar usuário: " +
+      error.message
+    );
+
+    return;
+  }
+
+  await registrarHistoricoOperacao(
+    "criacao_usuario",
+    String(novoUsuario.id),
+    "Usuário do sistema criado",
+    {
+      usuario_id: novoUsuario.id,
+      nome: nome,
+      login: usuario,
+      perfil_acesso_id: Number(perfilId),
+      profissional_id:
+        profissionalId
+          ? Number(profissionalId)
+          : null
+    }
+  );
+
+  fecharModal();
+
+  await carregarUsuariosSistemaV2();
+
+  alert("Usuário criado com sucesso.");
 }
 async function abrirModalNovoPerfil(){
 
