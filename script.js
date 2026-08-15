@@ -530,14 +530,23 @@ if(nome === "gestores"){
   await carregarGestores();
 }
 
+if(nome === "configuracoes" && !telasCarregadas.configuracoes){
+  await carregarConfiguracoes();
+  telasCarregadas.configuracoes = true;
+}
+
+if(nome === "gestores"){
+  await carregarGestores();
+}
+
 if(nome === "auditoria" && !telasCarregadas.auditoria){
   await carregarAuditoria();
   telasCarregadas.auditoria = true;
+}
+
 if(nome === "relatorios"){
   document.getElementById("areaRelatorios").innerHTML = "";
 }
-}
-
 function abrirModal(html){
 
   const modal = document.getElementById("modal");
