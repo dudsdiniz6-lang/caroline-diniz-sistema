@@ -13486,10 +13486,14 @@ async function listarValesProfissionais(){
               Status
             </th>
 
-            <th style="text-align:center;padding:12px;">
               Assinatura
-            </th>
-          </tr>
+</th>
+
+<th style="text-align:center;padding:12px;">
+  Ações
+</th>
+
+</tr>
         </thead>
 
         <tbody>
@@ -13548,9 +13552,13 @@ async function listarValesProfissionais(){
                   padding:12px;
                   text-align:center;
                 ">
-                  ${status === "pendente"
-                    ? "Pendente"
-                    : "Quitado"}
+               ${
+  String(status).toLowerCase() === "pendente"
+    ? "Pendente"
+    : String(status).toLowerCase() === "cancelado"
+      ? "Cancelado"
+      : "Quitado"
+}
                 </td>
 
                 <td style="
@@ -13571,6 +13579,26 @@ async function listarValesProfissionais(){
                   }
 
                 </td>
+                <td style="
+  padding:12px;
+  text-align:center;
+">
+
+  ${
+    String(status).toLowerCase() === "pendente"
+      ? `
+        <button
+          type="button"
+          onclick="cancelarValeProfissional('${vale.id}')"
+          style="color:#b42318;"
+        >
+          Cancelar
+        </button>
+      `
+      : "-"
+  }
+
+</td>
 
               </tr>
             `;
@@ -13584,7 +13612,84 @@ async function listarValesProfissionais(){
     </div>
   `;
 }
+async function cancelarValeProfissional(valeId){
 
+  const confirmar = confirm(
+    "Deseja realmente cancelar este vale?\n\n" +
+    "Ele deixará de ser descontado do profissional, mas continuará registrado no histórico."
+  );
+
+  if(!confirmar) return;
+
+  const { data: vale, error: erroBusca } =
+    await supabaseClient
+      .from("profissionais_vales")
+      .select("*")
+      .eq("id", valeId)
+      .single();
+
+  if(erroBusca || !vale){
+    alert("Vale não encontrado.");
+    return;
+  }
+
+  const statusAtual =
+    String(vale.status || "")
+      .trim()
+      .toLowerCase();
+
+  if(statusAtual !== "pendente"){
+    alert(
+      "Somente vales pendentes podem ser cancelados."
+    );
+    return;
+  }
+
+  if(vale.pagamento_comissao_id){
+    alert(
+      "Este vale já está vinculado a um pagamento de comissão e não pode ser cancelado por aqui."
+    );
+    return;
+  }
+
+  const { error } =
+    await supabaseClient
+      .from("profissionais_vales")
+      .update({
+        status: "cancelado"
+      })
+      .eq("id", valeId);
+
+  if(error){
+    console.error(error);
+    alert("Erro ao cancelar vale.");
+    return;
+  }
+
+  await registrarHistoricoOperacao(
+    "cancelamento_vale",
+    String(valeId),
+    "Vale de profissional cancelado",
+    {
+      vale_id: valeId,
+      profissional_id: vale.profissional_id,
+      valor: vale.valor,
+      data_vale: vale.data_vale,
+      descricao: vale.descricao
+    }
+  );
+
+  alert("Vale cancelado com sucesso.");
+
+  await listarValesProfissionais();
+
+  if(
+    typeof carregarFinanceiroProfissionais === "function"
+  ){
+    telasCarregadas.financeiroProfissionais = false;
+  }
+
+}
 
 function formatarDataValeProfissional(data){
 
