@@ -12092,73 +12092,193 @@ async function editarPerfilSistema(perfilId){
 
   const salvas = permissoesResp.data || [];
 
-  abrirModal(`
-
-    <h2>${perfil.nome}</h2>
-
-    <input
-      id="perfilPermissaoId"
-      type="hidden"
-      value="${perfilId}"
-    >
+   abrirModal(`
 
     <div style="
-      display:grid;
-      grid-template-columns:repeat(2,1fr);
-      gap:20px;
-      max-height:500px;
-      overflow:auto;
+      width:min(1000px, 90vw);
+      max-height:82vh;
+      display:flex;
+      flex-direction:column;
     ">
 
-      ${grupos.map(grupo=>`
+      <div style="
+        display:flex;
+        justify-content:space-between;
+        align-items:center;
+        margin-bottom:18px;
+      ">
+        <div>
+          <h2 style="margin:0;">${perfil.nome}</h2>
 
-        <div style="
-          border:1px solid #eee;
-          border-radius:16px;
-          padding:20px;
-        ">
-
-          <h3>${grupo.titulo}</h3>
-
-          ${grupo.itens.map(([chave,nome])=>`
-
-            <label style="
-              display:flex;
-              gap:10px;
-              margin-bottom:12px;
-              align-items:center;
-            ">
-
-              <input
-                type="checkbox"
-                class="checkPermissaoPerfil"
-                value="${chave}"
-
-                ${salvas.find(p=>p.permissao===chave)?.permitido ? "checked" : ""}
-              >
-
-              ${nome}
-
-            </label>
-
-          `).join("")}
-
+          <p style="
+            margin:5px 0 0;
+            color:#777;
+            font-size:13px;
+          ">
+            Configure o que este perfil pode acessar e alterar.
+          </p>
         </div>
+      </div>
 
-      `).join("")}
+      <input
+        id="perfilPermissaoId"
+        type="hidden"
+        value="${perfilId}"
+      >
+
+      <div style="
+        overflow-y:auto;
+        padding-right:8px;
+        flex:1;
+      ">
+
+        ${grupos.map((grupo, indice) => `
+
+          <div style="
+            border:1px solid #e8e8e8;
+            border-radius:12px;
+            margin-bottom:10px;
+            overflow:hidden;
+            background:#fff;
+          ">
+
+            <div
+              onclick="alternarGrupoPermissao(${indice})"
+              style="
+                padding:15px 18px;
+                display:flex;
+                justify-content:space-between;
+                align-items:center;
+                cursor:pointer;
+                background:#fafafa;
+                font-weight:600;
+              "
+            >
+              <span>${grupo.titulo}</span>
+
+              <span id="setaPermissao${indice}">
+                ${indice === 0 ? "−" : "+"}
+              </span>
+            </div>
+
+            <div
+              id="grupoPermissao${indice}"
+              style="
+                display:${indice === 0 ? "grid" : "none"};
+                grid-template-columns:
+                  repeat(auto-fit,minmax(250px,1fr));
+                gap:8px 20px;
+                padding:16px 18px;
+              "
+            >
+
+              ${grupo.itens.map(([chave,nome]) => `
+
+                <label style="
+                  display:flex;
+                  align-items:center;
+                  gap:10px;
+                  padding:8px;
+                  cursor:pointer;
+                  border-radius:8px;
+                ">
+
+                  <input
+                    type="checkbox"
+                    class="checkPermissaoPerfil"
+                    value="${chave}"
+                    style="
+                      width:18px;
+                      height:18px;
+                      margin:0;
+                    "
+                    ${
+                      salvas.find(
+                        p => p.permissao === chave
+                      )?.permitido
+                        ? "checked"
+                        : ""
+                    }
+                  >
+
+                  <span style="
+                    font-size:14px;
+                    line-height:1.3;
+                  ">
+                    ${nome}
+                  </span>
+
+                </label>
+
+              `).join("")}
+
+            </div>
+
+          </div>
+
+        `).join("")}
+
+      </div>
+
+      <div style="
+        display:flex;
+        justify-content:flex-end;
+        gap:10px;
+        padding-top:16px;
+        margin-top:10px;
+        border-top:1px solid #eee;
+      ">
+
+        <button
+          onclick="fecharModal()"
+        >
+          Cancelar
+        </button>
+
+        <button
+          class="principal"
+          onclick="salvarPermissoesPerfilV2()"
+        >
+          Salvar permissões
+        </button>
+
+      </div>
 
     </div>
 
-    <br>
-
-    <button
-      class="principal"
-      onclick="salvarPermissoesPerfilV2()"
-    >
-      Salvar permissões
-    </button>
-
   `);
+}
+function alternarGrupoPermissao(indice){
+
+  const grupo =
+    document.getElementById(
+      `grupoPermissao${indice}`
+    );
+
+  const seta =
+    document.getElementById(
+      `setaPermissao${indice}`
+    );
+
+  if(!grupo) return;
+
+  const estaAberto =
+    grupo.style.display !== "none";
+
+  if(estaAberto){
+    grupo.style.display = "none";
+
+    if(seta){
+      seta.innerText = "+";
+    }
+
+  }else{
+    grupo.style.display = "grid";
+
+    if(seta){
+      seta.innerText = "−";
+    }
+  }
 }
 async function salvarPermissoesPerfilV2(){
 
