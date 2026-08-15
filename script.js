@@ -10455,16 +10455,46 @@ async function carregarAuditoria(){
 
   if(!lista) return;
 
-  lista.innerHTML = "Carregando auditoria...";
+ lista.innerHTML = "Carregando auditoria...";
 
-  const busca =
-    document.getElementById("buscaAuditoria")?.value?.toLowerCase().trim() || "";
+const busca =
+  document.getElementById("buscaAuditoria")
+    ?.value
+    ?.toLowerCase()
+    .trim() || "";
 
-const { data, error } = await supabaseClient
+const dataInicio =
+  document.getElementById("auditoriaDataInicio")
+    ?.value || "";
+
+const dataFim =
+  document.getElementById("auditoriaDataFim")
+    ?.value || "";
+
+let query = supabaseClient
   .from("historico_operacoes")
   .select("*")
-    .order("criado_em", { ascending: false })
-    .limit(150);
+  .order("criado_em", { ascending: false });
+
+if(dataInicio){
+
+  query = query.gte(
+    "criado_em",
+    `${dataInicio}T00:00:00`
+  );
+
+}
+
+if(dataFim){
+
+  query = query.lte(
+    "criado_em",
+    `${dataFim}T23:59:59.999`
+  );
+
+}
+
+const { data, error } = await query;
 
   if(error){
     lista.innerHTML = "<div class='card'>Erro ao carregar auditoria.</div>";
