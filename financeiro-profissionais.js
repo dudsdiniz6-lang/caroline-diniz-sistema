@@ -3067,11 +3067,16 @@ async function confirmarPagamentoComissaoPeriodo(){
     return;
   }
 
-  const saldoResultante =
+  const valorDevidoParaPagamento =
+  Math.max(
+    0,
     Number(
-      pagamentoComissaoAtual
-        .totalDevido
-    ) - valorPago;
+      pagamentoComissaoAtual.totalDevido || 0
+    )
+  );
+
+const saldoResultante =
+  valorDevidoParaPagamento - valorPago
 
   const assinaturaImagem =
     assinaturaCanvas
