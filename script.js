@@ -11858,39 +11858,7 @@ async function carregarPerfisSistemaV2(){
     </div>
   `;
 }
-    </button>
-
-      </div>
-
-      <br>
-
-      ${perfis.map(perfil => `
-
-        <div class="caixa-linha">
-
-          <span>
-            <strong>${perfil.nome}</strong>
-          </span>
-
-          <button
-            onclick="editarPerfilSistema(${perfil.id})"
-          >
-            Editar
-          </button>
-
-        </div>
-
-      `).join("")}
-
-      <br>
-
-      <button onclick="carregarGestores()">
-        Voltar
-      </button>
-
-    </div>
-  `;
-}
+   
 async function abrirModalNovoUsuarioV2(){
 
   alert("Vamos construir modal novo");
