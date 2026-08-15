@@ -617,12 +617,13 @@ const {
         ]
       ){
 
-        valesPorProfissional[
-          profissionalId
-        ] = {
-          valor: 0,
-          quantidade: 0
-        };
+    valesPorProfissional[
+  profissionalId
+] = {
+  valor: 0,
+  quantidade: 0,
+  itens: []
+};
 
       }
 
@@ -634,6 +635,9 @@ const {
       valesPorProfissional[
         profissionalId
       ].quantidade += 1;
+      valesPorProfissional[
+  profissionalId
+].itens.push(vale);
 
     });
 
