@@ -4335,7 +4335,10 @@ async function venderPacote(pacoteId){
 
     <label>Cliente</label>
 
-    <select id="vendaPacoteCliente">
+<select
+  id="vendaPacoteCliente"
+  onchange="verificarCreditoVendaPacote()"
+>
       <option value="">Selecione</option>
 
       ${(clientes || []).map(c => `
@@ -4361,21 +4364,49 @@ async function venderPacote(pacoteId){
     </select>
 
     <div id="areaPagamentoVendaPacote">
+<div
+  id="creditoDisponivelVendaPacote"
+  style="display:none;"
+></div>
 
-      <label>Forma de pagamento</label>
+<label>Formas de pagamento</label>
 
-      <select id="vendaPacoteForma">
-        <option value="">Selecione</option>
+<div id="areaPagamentosVendaPacote">
 
-        ${(formas || []).map(f => `
-          <option
-            value="${f.id}"
-            data-nome="${f.nome}"
-          >
-            ${f.nome}
-          </option>
-        `).join("")}
-      </select>
+  <div class="linha-pagamento-pacote">
+
+    <select class="vendaPacoteForma">
+      <option value="">Forma</option>
+
+      ${formas.map(f=>`
+        <option
+          value="${f.id}"
+          data-nome="${f.nome}"
+        >
+          ${f.nome}
+        </option>
+      `).join("")}
+
+    </select>
+
+    <input
+      class="vendaPacoteValorPagamento"
+      type="number"
+      min="0"
+      step="0.01"
+      placeholder="Valor"
+    >
+
+  </div>
+
+</div>
+
+<button
+  type="button"
+  onclick="adicionarPagamentoVendaPacote()"
+>
+  + Adicionar forma de pagamento
+</button>
 
     </div>
 
@@ -4394,6 +4425,103 @@ async function venderPacote(pacoteId){
       Cancelar
     </button>
   `);
+}
+function adicionarPagamentoVendaPacote(){
+
+  const area =
+    document.getElementById(
+      "areaPagamentosVendaPacote"
+    );
+
+  if(!area) return;
+
+  const primeira =
+    area.querySelector(
+      ".linha-pagamento-pacote"
+    );
+
+  if(!primeira) return;
+
+  const nova =
+    primeira.cloneNode(true);
+
+  nova.querySelector(
+    ".vendaPacoteForma"
+  ).value = "";
+
+  nova.querySelector(
+    ".vendaPacoteValorPagamento"
+  ).value = "";
+
+  area.appendChild(nova);
+}
+async function verificarCreditoVendaPacote(){
+
+  const clienteId =
+    Number(
+      document.getElementById(
+        "vendaPacoteCliente"
+      )?.value || 0
+    );
+
+  const area =
+    document.getElementById(
+      "creditoDisponivelVendaPacote"
+    );
+
+  if(!area) return;
+
+  area.innerHTML = "";
+  area.style.display = "none";
+
+  if(!clienteId) return;
+
+  const credito =
+    await buscarCreditoDisponivelCliente(
+      clienteId
+    );
+
+  if(credito.saldo <= 0){
+    return;
+  }
+
+  area.style.display = "block";
+
+  area.innerHTML = `
+    <div style="
+      border:2px solid #111;
+      border-radius:14px;
+      padding:16px;
+      margin:16px 0;
+      background:#fafafa;
+    ">
+
+      <div style="
+        font-size:12px;
+        font-weight:700;
+        letter-spacing:1px;
+        margin-bottom:5px;
+      ">
+        CRÉDITO DISPONÍVEL
+      </div>
+
+      <div style="
+        font-size:26px;
+        font-weight:700;
+      ">
+        ${dinheiro(credito.saldo)}
+      </div>
+
+      <div style="
+        font-size:12px;
+        color:#666;
+        margin-top:5px;
+      ">
+        Este saldo pode ser usado total ou parcialmente nesta venda.
+      </div>
+
+    </div>
+  `;
 }
 function alterarTipoRecebimentoPacote(){
 
