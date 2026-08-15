@@ -955,6 +955,281 @@ function adicionarLinhaPagamentoCreditoCliente(){
 
   area.appendChild(nova);
 }
+async function salvarVendaCreditoCliente(clienteId){
+
+  const valorCredito =
+    Number(
+      document.getElementById("creditoClienteValor")
+        ?.value || 0
+    );
+
+  const observacao =
+    document.getElementById("creditoClienteObservacao")
+      ?.value
+      ?.trim() || "";
+
+  if(valorCredito <= 0){
+    alert("Informe o valor do crédito.");
+    return;
+  }
+
+  const pagamentos = Array.from(
+    document.querySelectorAll(".linha-pagamento-credito")
+  )
+    .map(linha => {
+
+      const select =
+        linha.querySelector(".creditoFormaPagamento");
+
+      const input =
+        linha.querySelector(".creditoValorPagamento");
+
+      return {
+        formaPagamentoId:
+          Number(select?.value || 0),
+
+        formaNome:
+          select?.selectedOptions?.[0]?.dataset?.nome || "",
+
+        valor:
+          Number(input?.value || 0)
+      };
+
+    })
+    .filter(
+      pagamento =>
+        pagamento.formaPagamentoId &&
+        pagamento.valor > 0
+    );
+
+  if(pagamentos.length === 0){
+    alert("Informe pelo menos uma forma de pagamento.");
+    return;
+  }
+
+  const totalPagamentos =
+    pagamentos.reduce(
+      (total, pagamento) =>
+        total + Number(pagamento.valor || 0),
+      0
+    );
+
+  if(
+    Number(totalPagamentos.toFixed(2)) !==
+    Number(valorCredito.toFixed(2))
+  ){
+    alert(
+      "A soma das formas de pagamento precisa ser igual ao valor do crédito."
+    );
+    return;
+  }
+
+  // NÃO PERMITE COMPRAR CRÉDITO USANDO CRÉDITO
+  const usandoCredito =
+    pagamentos.some(
+      pagamento =>
+        pagamento.formaNome === "Crédito da Cliente"
+    );
+
+  if(usandoCredito){
+    alert(
+      "Não é possível comprar crédito utilizando Crédito da Cliente."
+    );
+    return;
+  }
+
+  const caixa = await buscarCaixaAberto();
+
+  if(!caixa){
+    alert(
+      "Não existe caixa aberto. Abra o caixa antes de vender crédito."
+    );
+    return;
+  }
+
+  // BUSCA CARTEIRA ATUAL DA CLIENTE
+  const carteiraResp =
+    await supabaseClient
+      .from("carteira_clientes")
+      .select("*")
+      .eq("cliente_id", clienteId)
+      .eq("tipo", "CREDITO")
+      .maybeSingle();
+
+  if(carteiraResp.error){
+    alert(
+      "Erro ao consultar crédito da cliente: " +
+      carteiraResp.error.message
+    );
+    return;
+  }
+
+  let carteiraId = null;
+
+  const saldoAnterior =
+    Number(carteiraResp.data?.saldo || 0);
+
+  const novoSaldo =
+    saldoAnterior + valorCredito;
+
+  // ATUALIZA OU CRIA A CARTEIRA
+  if(carteiraResp.data){
+
+    carteiraId =
+      carteiraResp.data.id;
+
+    const atualizacao =
+      await supabaseClient
+        .from("carteira_clientes")
+        .update({
+          saldo: novoSaldo,
+          atualizado_em: new Date().toISOString(),
+          ativo: true
+        })
+        .eq("id", carteiraId);
+
+    if(atualizacao.error){
+      alert(
+        "Erro ao atualizar saldo: " +
+        atualizacao.error.message
+      );
+      return;
+    }
+
+  }else{
+
+    const criacao =
+      await supabaseClient
+        .from("carteira_clientes")
+        .insert([{
+          unidade_id: unidadeAtualId,
+          cliente_id: clienteId,
+          tipo: "CREDITO",
+          saldo: valorCredito,
+          observacao:
+            observacao || "Compra de crédito",
+          ativo: true
+        }])
+        .select()
+        .single();
+
+    if(criacao.error){
+      alert(
+        "Erro ao criar crédito: " +
+        criacao.error.message
+      );
+      return;
+    }
+
+    carteiraId =
+      criacao.data.id;
+  }
+
+  // HISTÓRICO DA CARTEIRA
+  const movimentacaoResp =
+    await supabaseClient
+      .from("carteira_movimentacoes")
+      .insert([{
+        carteira_id: carteiraId,
+        cliente_id: clienteId,
+        tipo: "ENTRADA",
+        origem: "COMPRA",
+        origem_id: null,
+        valor: valorCredito,
+        data: new Date().toISOString(),
+        observacao:
+          observacao || "Compra de crédito",
+        usuario_id:
+          usuarioLogado?.id || null
+      }]);
+
+  if(movimentacaoResp.error){
+    alert(
+      "Erro ao registrar movimentação do crédito: " +
+      movimentacaoResp.error.message
+    );
+    return;
+  }
+
+  // GERA A RECEITA EM CADA FORMA DE PAGAMENTO
+  const lancamentos =
+    pagamentos.map(pagamento => ({
+      unidade_id: unidadeAtualId,
+      tipo: "CREDITO",
+      origem: "CARTEIRA",
+      origem_id: carteiraId,
+      cliente_id: clienteId,
+      forma_pagamento_id:
+        pagamento.formaPagamentoId,
+      valor:
+        pagamento.valor,
+      data: new Date().toISOString(),
+      usuario_id:
+        usuarioLogado?.id || null,
+      status: "ATIVO",
+      observacao:
+        observacao || "Venda de crédito para cliente"
+    }));
+
+  const financeiroResp =
+    await supabaseClient
+      .from("financeiro_lancamentos")
+      .insert(lancamentos);
+
+  if(financeiroResp.error){
+    alert(
+      "Erro ao registrar receita: " +
+      financeiroResp.error.message
+    );
+    return;
+  }
+
+  // REGISTRA CADA FORMA NO CAIXA
+  for(const pagamento of pagamentos){
+
+    await registrarEntradaCaixa(
+      null,
+      pagamento.formaPagamentoId,
+      pagamento.valor
+    );
+
+  }
+
+  // HISTÓRICO / AUDITORIA
+  await registrarHistoricoOperacao(
+    "venda_credito_cliente",
+    String(clienteId),
+    "Crédito vendido para cliente",
+    {
+      cliente_id: clienteId,
+      carteira_id: carteiraId,
+      saldo_anterior: saldoAnterior,
+      valor_vendido: valorCredito,
+      novo_saldo: novoSaldo,
+
+      pagamentos:
+        pagamentos.map(p => ({
+          forma_pagamento_id:
+            p.formaPagamentoId,
+          forma:
+            p.formaNome,
+          valor:
+            p.valor
+        })),
+
+      observacao
+    }
+  );
+
+  fecharModal();
+
+  carregarClientes();
+  carregarCaixas();
+
+  alert(
+    `Crédito vendido com sucesso. Saldo atual: ${dinheiro(novoSaldo)}`
+  );
+}
 async function carregarProfissionais(){
 
   const lista = document.getElementById("listaProfissionais");
