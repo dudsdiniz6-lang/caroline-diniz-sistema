@@ -808,18 +808,152 @@ async function carregarClientes(){
 
         <br><br>
 
-       <button class="principal" onclick="abrirModalCliente(${cliente.id})">
+      <button class="principal" onclick="abrirModalCliente(${cliente.id})">
   Editar
 </button>
 
 <button onclick="abrirHistoricoCliente(${cliente.id})">
   Histórico
 </button>
+
+<button onclick="abrirVendaCreditoCliente(${cliente.id})">
+  Vender crédito
+</button>
       </div>
     `;
 
   });
 
+}
+async function abrirVendaCreditoCliente(clienteId){
+
+  const clienteResp = await supabaseClient
+    .from("clientes")
+    .select("id,nome")
+    .eq("id", clienteId)
+    .single();
+
+  if(clienteResp.error || !clienteResp.data){
+    alert("Cliente não encontrada.");
+    return;
+  }
+
+  const formas = await obterFormasPagamento();
+
+  const cliente = clienteResp.data;
+
+  abrirModal(`
+
+    <h2>Vender crédito</h2>
+
+    <p>
+      <strong>${cliente.nome}</strong>
+    </p>
+
+    <label>Valor do crédito</label>
+    <input
+      id="creditoClienteValor"
+      type="number"
+      min="0"
+      step="0.01"
+      placeholder="0,00"
+    >
+
+    <label>Formas de pagamento</label>
+
+    <div id="areaPagamentosCreditoCliente">
+
+      <div class="linha-pagamento-credito">
+
+        <select class="creditoFormaPagamento">
+          <option value="">Forma</option>
+
+          ${formas.map(f => `
+            <option
+              value="${f.id}"
+              data-nome="${f.nome}"
+            >
+              ${f.nome}
+            </option>
+          `).join("")}
+
+        </select>
+
+        <input
+          class="creditoValorPagamento"
+          type="number"
+          min="0"
+          step="0.01"
+          placeholder="Valor"
+        >
+
+      </div>
+
+    </div>
+
+    <button
+      type="button"
+      onclick="adicionarLinhaPagamentoCreditoCliente()"
+    >
+      + Adicionar forma de pagamento
+    </button>
+
+    <label>Observação</label>
+    <textarea
+      id="creditoClienteObservacao"
+      placeholder="Opcional"
+    ></textarea>
+
+    <div style="
+      display:flex;
+      justify-content:flex-end;
+      gap:10px;
+      margin-top:20px;
+    ">
+
+      <button onclick="fecharModal()">
+        Cancelar
+      </button>
+
+      <button
+        class="principal"
+        onclick="salvarVendaCreditoCliente(${cliente.id})"
+      >
+        Confirmar venda
+      </button>
+
+    </div>
+
+  `);
+}
+function adicionarLinhaPagamentoCreditoCliente(){
+
+  const area =
+    document.getElementById(
+      "areaPagamentosCreditoCliente"
+    );
+
+  if(!area) return;
+
+  const primeira =
+    area.querySelector(
+      ".linha-pagamento-credito"
+    );
+
+  if(!primeira) return;
+
+  const nova =
+    primeira.cloneNode(true);
+
+  nova.querySelector(
+    ".creditoFormaPagamento"
+  ).value = "";
+
+  nova.querySelector(
+    ".creditoValorPagamento"
+  ).value = "";
+
+  area.appendChild(nova);
 }
 async function carregarProfissionais(){
 
