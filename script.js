@@ -1046,7 +1046,34 @@ async function salvarVendaCreditoCliente(clienteId){
     );
     return;
   }
+  // CRIA COMANDA DA VENDA DO CRÉDITO
+  const comandaResp =
+    await supabaseClient
+      .from("comandas")
+      .insert([{
+        unidade_id: unidadeAtualId,
+        cliente_id: clienteId,
+        data: formatarDataISO(new Date()),
+        subtotal: valorCredito,
+        desconto: 0,
+        total: valorCredito,
+        status: "Fechada",
+        forma_origem: "credito",
+        cancelada: false
+      }])
+      .select()
+      .single();
 
+  if(comandaResp.error){
+    alert(
+      "Erro ao criar comanda do crédito: " +
+      comandaResp.error.message
+    );
+    return;
+  }
+
+  const comanda =
+    comandaResp.data;
   // BUSCA CARTEIRA ATUAL DA CLIENTE
   const carteiraResp =
     await supabaseClient
