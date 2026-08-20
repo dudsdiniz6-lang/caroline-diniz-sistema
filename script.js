@@ -5939,7 +5939,8 @@ function limparClienteAgendamento(){
 }
 async function carregarComandas(){
 
-  const lista = document.getElementById("listaComandas");
+  const lista =
+    document.getElementById("listaComandas");
 
   if(!lista) return;
 
@@ -5951,10 +5952,17 @@ async function carregarComandas(){
       ?.toLowerCase()
       .trim() || "";
 
-  const { data, error } = await supabaseClient
+  let query = supabaseClient
     .from("comandas")
     .select(`
-      *,
+      id,
+      cliente_id,
+      profissional_id,
+      data,
+      total,
+      status,
+      cancelada,
+      forma_origem,
       clientes(nome),
       profissionais(nome),
       comanda_itens(descricao)
@@ -5962,12 +5970,27 @@ async function carregarComandas(){
     .order("data", { ascending:false })
     .order("id", { ascending:false });
 
+  // SEM PESQUISA:
+  // carrega somente as 100 comandas mais recentes.
+  if(!busca){
+    query = query.limit(100);
+  }
+
+  const { data, error } = await query;
+
   if(error){
+
+    console.error(
+      "Erro ao carregar comandas:",
+      error
+    );
+
     lista.innerHTML = `
       <div class="card">
         Erro ao carregar comandas.
       </div>
     `;
+
     return;
   }
 
@@ -5975,10 +5998,12 @@ async function carregarComandas(){
 
   if(busca){
 
-    comandas = comandas.filter((comanda)=>{
+    comandas = comandas.filter(comanda => {
 
       const cliente =
-        comanda.clientes?.nome?.toLowerCase() || "";
+        String(
+          comanda.clientes?.nome || ""
+        ).toLowerCase();
 
       const servicos =
         (comanda.comanda_itens || [])
@@ -5988,7 +6013,8 @@ async function carregarComandas(){
 
       return (
         cliente.includes(busca) ||
-        servicos.includes(busca)
+        servicos.includes(busca) ||
+        String(comanda.id).includes(busca)
       );
 
     });
@@ -5996,17 +6022,19 @@ async function carregarComandas(){
   }
 
   if(comandas.length === 0){
+
     lista.innerHTML = `
       <div class="card">
         Nenhuma comanda encontrada.
       </div>
     `;
+
     return;
   }
 
   const porData = {};
 
-  comandas.forEach((comanda)=>{
+  comandas.forEach(comanda => {
 
     const dataComanda =
       comanda.data || "Sem data";
@@ -6019,19 +6047,30 @@ async function carregarComandas(){
 
   });
 
-  lista.innerHTML = "";
 
-  Object.keys(porData).forEach((data)=>{
+  // MONTA TODO O HTML PRIMEIRO
+  // E ALTERA A TELA UMA ÚNICA VEZ.
 
-    lista.innerHTML += `
-      <div style="grid-column:1/-1;margin:10px 0;">
+  const html = [];
+
+  Object.keys(porData).forEach(data => {
+
+    html.push(`
+
+      <div style="
+        grid-column:1/-1;
+        margin:10px 0;
+      ">
+
         <h2 style="font-size:20px;">
           ${formatarDataComanda(data)}
         </h2>
-      </div>
-    `;
 
-    porData[data].forEach((comanda)=>{
+      </div>
+
+    `);
+
+    porData[data].forEach(comanda => {
 
       const servicos =
         (comanda.comanda_itens || [])
@@ -6039,7 +6078,8 @@ async function carregarComandas(){
           .filter(Boolean)
           .join(", ") || "Sem itens";
 
-      lista.innerHTML += `
+      html.push(`
+
         <div class="card">
 
           <h3>
@@ -6074,21 +6114,35 @@ async function carregarComandas(){
             </strong>
           </p>
 
-         <button onclick="abrirComanda(${comanda.id})">
-  Visualizar
-</button>
+          <button
+            onclick="abrirComanda(${comanda.id})"
+          >
+            Visualizar
+          </button>
 
-${comanda.status !== "Cancelada" && comanda.cancelada !== true && pode("comandas_cancelar") ? `
-  <button onclick="cancelarComandaPelaAba(${comanda.id})">
-    Cancelar faturamento
-  </button>
-` : ""}
+          ${
+            comanda.status !== "Cancelada" &&
+            comanda.cancelada !== true &&
+            pode("comandas_cancelar")
+              ? `
+                <button
+                  onclick="cancelarComandaPelaAba(${comanda.id})"
+                >
+                  Cancelar faturamento
+                </button>
+              `
+              : ""
+          }
 
         </div>
-      `;
+
+      `);
+
     });
 
   });
+
+  lista.innerHTML = html.join("");
 
 }
 
