@@ -1300,6 +1300,884 @@ const saldoAnterior =
   }
 
 }
+async function atualizarResumoFinanceiroProfissionaisPagamento(dataFim){
+
+  const container =
+    document.getElementById("cardsResumoFinanceiro");
+
+  const areaTotais =
+    document.getElementById(
+      "totaisGeraisFinanceiroProfissionais"
+    );
+
+  const modo =
+    document.getElementById(
+      "modoFinanceiroProfissionais"
+    );
+
+  if(!container) return;
+
+  if(!dataFim){
+    alert("Informe até qual data deseja pagar.");
+    return;
+  }
+
+  if(modo){
+    modo.innerHTML =
+      `PAGAMENTO: serviços pendentes até ${
+        financeiroFormatarData(dataFim)
+      }`;
+  }
+
+  container.innerHTML = `
+    <div class="card">
+      Buscando todos os serviços ainda não pagos...
+    </div>
+  `;
+
+  if(areaTotais){
+    areaTotais.innerHTML = "";
+  }
+
+  try{
+
+    // ==========================================
+    // PROFISSIONAIS
+    // ==========================================
+
+    const profissionais =
+      await obterProfissionais();
+
+    const profissionaisAtivos =
+      (profissionais || [])
+        .filter(
+          profissional =>
+            profissional.ativo !== false
+        )
+        .sort(
+          (a, b) =>
+            String(a.nome || "")
+              .localeCompare(
+                String(b.nome || ""),
+                "pt-BR"
+              )
+        );
+
+
+    // ==========================================
+    // TODAS AS COMANDAS ATÉ A DATA ESCOLHIDA
+    // SEM DATA INICIAL
+    // ==========================================
+
+    const {
+      data: comandas,
+      error: erroComandas
+    } =
+      await supabaseClient
+        .from("comandas")
+        .select(`
+          id,
+          profissional_id,
+          data,
+          status,
+          cancelada
+        `)
+        .lte("data", dataFim)
+        .or(
+          "cancelada.eq.false,cancelada.is.null"
+        );
+
+    if(erroComandas){
+      throw erroComandas;
+    }
+
+
+    const comandasValidas =
+      (comandas || []).filter(comanda => {
+
+        if(comanda.cancelada === true){
+          return false;
+        }
+
+        const status =
+          financeiroNormalizarStatus(
+            comanda.status
+          );
+
+        return ![
+          "",
+          "aberta",
+          "aberto",
+          "pendente",
+          "cancelada",
+          "cancelado"
+        ].includes(status);
+
+      });
+
+
+    const mapaComandas = {};
+
+    comandasValidas.forEach(comanda => {
+      mapaComandas[comanda.id] = comanda;
+    });
+
+
+    const idsComandas =
+      comandasValidas.map(
+        comanda => comanda.id
+      );
+
+
+    // ==========================================
+    // ITENS QUE JÁ FORAM PAGOS
+    // ==========================================
+
+    const idsBloqueados =
+      await obterIdsItensComissaoBloqueados();
+
+
+    // ==========================================
+    // ITENS DAS COMANDAS
+    // ==========================================
+
+    let itensPendentes = [];
+
+    if(idsComandas.length > 0){
+
+      const {
+        data: itens,
+        error: erroItens
+      } =
+        await supabaseClient
+          .from("comanda_itens")
+          .select(`
+            id,
+            comanda_id,
+            profissional_id,
+            descricao,
+            valor,
+            comissao_percentual
+          `)
+          .in(
+            "comanda_id",
+            idsComandas
+          );
+
+      if(erroItens){
+        throw erroItens;
+      }
+
+      // A REGRA PRINCIPAL:
+      // se o item já está em um pagamento,
+      // ele não entra novamente.
+      itensPendentes =
+        (itens || []).filter(
+          item =>
+            !idsBloqueados.has(
+              String(item.id)
+            )
+        );
+
+    }
+
+
+    // ==========================================
+    // COMISSÕES PENDENTES POR PROFISSIONAL
+    // ==========================================
+
+    const comissoesPorProfissional = {};
+
+    itensPendentes.forEach(item => {
+
+      const comanda =
+        mapaComandas[item.comanda_id];
+
+      if(!comanda){
+        return;
+      }
+
+      const profissionalId =
+        item.profissional_id ??
+        comanda.profissional_id;
+
+      if(!profissionalId){
+        return;
+      }
+
+      const valor =
+        Number(item.valor || 0);
+
+      const percentual =
+        Number(
+          item.comissao_percentual || 0
+        );
+
+      const comissao =
+        valor * percentual / 100;
+
+
+      if(
+        !comissoesPorProfissional[
+          profissionalId
+        ]
+      ){
+
+        comissoesPorProfissional[
+          profissionalId
+        ] = {
+          valor: 0,
+          quantidade: 0,
+          itens: [],
+          primeiraData: null
+        };
+
+      }
+
+
+      const dados =
+        comissoesPorProfissional[
+          profissionalId
+        ];
+
+      dados.valor += comissao;
+      dados.quantidade += 1;
+
+      dados.itens.push(item);
+
+
+      const dataComanda =
+        comanda.data || null;
+
+      if(
+        dataComanda &&
+        (
+          !dados.primeiraData ||
+          dataComanda < dados.primeiraData
+        )
+      ){
+        dados.primeiraData =
+          dataComanda;
+      }
+
+    });
+
+
+    // ==========================================
+    // VALES AINDA NÃO DESCONTADOS
+    // ==========================================
+
+    const {
+      data: vales,
+      error: erroVales
+    } =
+      await supabaseClient
+        .from("profissionais_vales")
+        .select(`
+          id,
+          profissional_id,
+          data_vale,
+          valor,
+          descricao,
+          status,
+          pagamento_comissao_id
+        `)
+        .lte(
+          "data_vale",
+          dataFim
+        )
+        .is(
+          "pagamento_comissao_id",
+          null
+        );
+
+    if(erroVales){
+      throw erroVales;
+    }
+
+
+    const valesPorProfissional = {};
+
+    (vales || []).forEach(vale => {
+
+      const status =
+        financeiroNormalizarStatus(
+          vale.status
+        );
+
+      const pendente =
+        status === "aberto" ||
+        status === "pendente" ||
+        !status;
+
+      if(!pendente){
+        return;
+      }
+
+      const profissionalId =
+        vale.profissional_id;
+
+      if(!profissionalId){
+        return;
+      }
+
+      if(
+        !valesPorProfissional[
+          profissionalId
+        ]
+      ){
+
+        valesPorProfissional[
+          profissionalId
+        ] = {
+          valor: 0,
+          quantidade: 0,
+          itens: []
+        };
+
+      }
+
+      valesPorProfissional[
+        profissionalId
+      ].valor +=
+        Number(vale.valor || 0);
+
+      valesPorProfissional[
+        profissionalId
+      ].quantidade += 1;
+
+      valesPorProfissional[
+        profissionalId
+      ].itens.push(vale);
+
+    });
+
+
+    // ==========================================
+    // ÚLTIMO PAGAMENTO VÁLIDO
+    // PARA CARREGAR O SALDO ANTERIOR
+    // ==========================================
+
+    const {
+      data: pagamentos,
+      error: erroPagamentos
+    } =
+      await supabaseClient
+        .from("comissoes_pagamentos")
+        .select(`
+          id,
+          profissional_id,
+          data_inicio,
+          data_fim,
+          data_pagamento,
+          saldo_resultante,
+          status,
+          created_at
+        `)
+        .lte(
+          "data_fim",
+          dataFim
+        )
+        .order(
+          "data_fim",
+          {
+            ascending: false
+          }
+        )
+        .order(
+          "created_at",
+          {
+            ascending: false
+          }
+        );
+
+    if(erroPagamentos){
+      throw erroPagamentos;
+    }
+
+
+    const ultimoPagamentoPorProfissional = {};
+
+    (pagamentos || []).forEach(
+      pagamento => {
+
+        const status =
+          financeiroNormalizarStatus(
+            pagamento.status
+          );
+
+        if(
+          status === "cancelado" ||
+          status === "cancelada"
+        ){
+          return;
+        }
+
+        const profissionalId =
+          pagamento.profissional_id;
+
+        if(!profissionalId){
+          return;
+        }
+
+        // Como a consulta já veio ordenada,
+        // o primeiro válido é o último pagamento.
+        if(
+          !ultimoPagamentoPorProfissional[
+            profissionalId
+          ]
+        ){
+          ultimoPagamentoPorProfissional[
+            profissionalId
+          ] = pagamento;
+        }
+
+      }
+    );
+
+
+    // ==========================================
+    // MONTA OS CARDS
+    // ==========================================
+
+    let totalComissoes = 0;
+    let totalVales = 0;
+    let totalSaldos = 0;
+    let totalPagar = 0;
+
+
+    const cards =
+      profissionaisAtivos.map(
+        profissional => {
+
+          const dadosComissao =
+            comissoesPorProfissional[
+              profissional.id
+            ] || {
+              valor: 0,
+              quantidade: 0,
+              itens: [],
+              primeiraData: null
+            };
+
+
+          const dadosVales =
+            valesPorProfissional[
+              profissional.id
+            ] || {
+              valor: 0,
+              quantidade: 0,
+              itens: []
+            };
+
+
+          const ultimoPagamento =
+            ultimoPagamentoPorProfissional[
+              profissional.id
+            ];
+
+
+          const saldoAnterior =
+            Number(
+              ultimoPagamento
+                ?.saldo_resultante || 0
+            );
+
+
+          const comissao =
+            Number(
+              dadosComissao.valor || 0
+            );
+
+
+          const totalValesProfissional =
+            Number(
+              dadosVales.valor || 0
+            );
+
+
+          const totalDevido =
+            comissao +
+            saldoAnterior -
+            totalValesProfissional;
+
+
+          totalComissoes += comissao;
+          totalVales += totalValesProfissional;
+          totalSaldos += saldoAnterior;
+          totalPagar += totalDevido;
+
+
+          const inicioPendente =
+            dadosComissao.primeiraData;
+
+
+          return `
+
+            <div
+              class="card"
+              style="
+                padding:18px;
+                border:1px solid #e5e5e5;
+              "
+            >
+
+              <div style="
+                display:flex;
+                justify-content:space-between;
+                align-items:flex-start;
+                gap:10px;
+              ">
+
+                <div>
+
+                  <h3 style="margin:0;">
+                    ${
+                      financeiroEscaparHTML(
+                        profissional.nome
+                      )
+                    }
+                  </h3>
+
+                  <small>
+                    ${
+                      dadosComissao.quantidade
+                    } serviço(s) ainda não pago(s)
+                  </small>
+
+                </div>
+
+                <span style="
+                  padding:5px 8px;
+                  border-radius:20px;
+                  background:#f3f3f3;
+                  font-size:12px;
+                ">
+                  ${
+                    financeiroEscaparHTML(
+                      profissional.tipo_pagamento ||
+                      "semanal"
+                    )
+                  }
+                </span>
+
+              </div>
+
+
+              ${
+                inicioPendente
+                  ? `
+                    <div style="
+                      margin-top:12px;
+                      padding:10px;
+                      background:#fafafa;
+                      border-radius:8px;
+                      font-size:12px;
+                    ">
+                      Pendências consideradas desde
+                      <strong>
+                        ${
+                          financeiroFormatarData(
+                            inicioPendente
+                          )
+                        }
+                      </strong>
+                      até
+                      <strong>
+                        ${
+                          financeiroFormatarData(
+                            dataFim
+                          )
+                        }
+                      </strong>
+                    </div>
+                  `
+                  : ""
+              }
+
+
+              <div style="
+                border-top:1px solid #ddd;
+                margin:14px 0;
+              "></div>
+
+
+              <div style="
+                display:grid;
+                gap:10px;
+              ">
+
+                <div style="
+                  display:flex;
+                  justify-content:space-between;
+                  gap:15px;
+                ">
+                  <span>Comissões pendentes</span>
+
+                  <strong>
+                    ${
+                      financeiroFormatarMoeda(
+                        comissao
+                      )
+                    }
+                  </strong>
+                </div>
+
+
+                <div style="
+                  display:flex;
+                  justify-content:space-between;
+                  gap:15px;
+                ">
+
+                  <span
+                    style="${
+                      dadosVales.quantidade > 0
+                        ? "cursor:pointer;text-decoration:underline;"
+                        : ""
+                    }"
+                    onclick="
+                      ${
+                        dadosVales.quantidade > 0
+                          ? `
+                            FinanceiroProfissionais
+                              .verValesPendentes(
+                                '${profissional.id}'
+                              );
+                          `
+                          : ""
+                      }
+                    "
+                  >
+                    Vales pendentes
+                    ${
+                      dadosVales.quantidade > 0
+                        ? `(${dadosVales.quantidade})`
+                        : ""
+                    }
+                  </span>
+
+                  <strong>
+                    -${
+                      financeiroFormatarMoeda(
+                        totalValesProfissional
+                      )
+                    }
+                  </strong>
+
+                </div>
+
+
+                <div style="
+                  display:flex;
+                  justify-content:space-between;
+                  gap:15px;
+                ">
+
+                  <span>
+                    Saldo do último pagamento
+                  </span>
+
+                  <strong>
+                    ${
+                      financeiroFormatarMoeda(
+                        saldoAnterior
+                      )
+                    }
+                  </strong>
+
+                </div>
+
+              </div>
+
+
+              <div style="
+                border-top:1px solid #ddd;
+                margin:14px 0;
+              "></div>
+
+
+              <div style="
+                display:flex;
+                justify-content:space-between;
+                align-items:flex-end;
+                gap:15px;
+              ">
+
+                <div>
+
+                  <small>
+                    Total a pagar
+                  </small>
+
+                  <div style="
+                    font-size:22px;
+                    font-weight:700;
+                    margin-top:3px;
+                    ${
+                      totalDevido < 0
+                        ? "color:#b42318;"
+                        : ""
+                    }
+                  ">
+                    ${
+                      financeiroFormatarMoeda(
+                        totalDevido
+                      )
+                    }
+                  </div>
+
+                </div>
+
+
+                <button
+                  type="button"
+                  class="principal"
+                  onclick="
+                    FinanceiroProfissionais
+                      .abrirPagamentoAutomatico(
+                        '${profissional.id}',
+                        '${dataFim}'
+                      )
+                  "
+                >
+                  Conferir pagamento
+                </button>
+
+              </div>
+
+            </div>
+
+          `;
+
+        }
+      ).join("");
+
+
+    container.innerHTML =
+      cards ||
+      `
+        <div class="card">
+          Nenhum profissional ativo encontrado.
+        </div>
+      `;
+
+
+    // ==========================================
+    // TOTAIS GERAIS
+    // ==========================================
+
+    if(areaTotais){
+
+      areaTotais.innerHTML = `
+
+        <div style="
+          display:grid;
+          grid-template-columns:
+            repeat(auto-fit,minmax(180px,1fr));
+          gap:12px;
+        ">
+
+          <div
+            class="card"
+            style="padding:15px;"
+          >
+            <small>Comissões pendentes</small>
+
+            <div style="
+              font-size:20px;
+              font-weight:700;
+              margin-top:5px;
+            ">
+              ${
+                financeiroFormatarMoeda(
+                  totalComissoes
+                )
+              }
+            </div>
+          </div>
+
+
+          <div
+            class="card"
+            style="padding:15px;"
+          >
+            <small>Vales pendentes</small>
+
+            <div style="
+              font-size:20px;
+              font-weight:700;
+              margin-top:5px;
+            ">
+              -${
+                financeiroFormatarMoeda(
+                  totalVales
+                )
+              }
+            </div>
+          </div>
+
+
+          <div
+            class="card"
+            style="padding:15px;"
+          >
+            <small>Saldos anteriores</small>
+
+            <div style="
+              font-size:20px;
+              font-weight:700;
+              margin-top:5px;
+            ">
+              ${
+                financeiroFormatarMoeda(
+                  totalSaldos
+                )
+              }
+            </div>
+          </div>
+
+
+          <div
+            class="card"
+            style="padding:15px;"
+          >
+            <small>Total previsto</small>
+
+            <div style="
+              font-size:20px;
+              font-weight:700;
+              margin-top:5px;
+            ">
+              ${
+                financeiroFormatarMoeda(
+                  totalPagar
+                )
+              }
+            </div>
+          </div>
+
+        </div>
+      `;
+
+    }
+
+  }catch(erro){
+
+    console.error(
+      "Erro ao calcular pagamentos automáticos:",
+      erro
+    );
+
+    financeiroMostrarErro(
+      container,
+      erro?.message ||
+      "Erro desconhecido."
+    );
+
+  }
+
+}
 /* =========================================================
    DETALHES DO PERÍODO
 ========================================================= */
@@ -2154,6 +3032,8 @@ let assinaturaPossuiTraco = false;
 
 window.FinanceiroProfissionais.abrirPagamentoPeriodo =
   abrirPagamentoComissaoPeriodo;
+window.FinanceiroProfissionais.abrirPagamentoAutomatico =
+  abrirPagamentoComissaoAutomatico;
 
 window.FinanceiroProfissionais.confirmarPagamentoPeriodo =
   confirmarPagamentoComissaoPeriodo;
@@ -2446,7 +3326,251 @@ function limparAssinaturaPagamento(){
 
 }
 
+async function abrirPagamentoComissaoAutomatico(
+  profissionalId,
+  dataFim
+){
 
+  if(!profissionalId || !dataFim){
+    alert("Dados do pagamento inválidos.");
+    return;
+  }
+
+  try{
+
+    // Procura TODOS os serviços válidos até a data escolhida.
+    const {
+      data: comandas,
+      error: erroComandas
+    } =
+      await supabaseClient
+        .from("comandas")
+        .select(`
+          id,
+          data,
+          status,
+          cancelada,
+          profissional_id
+        `)
+        .lte("data", dataFim)
+        .or(
+          "cancelada.eq.false,cancelada.is.null"
+        );
+
+    if(erroComandas){
+      throw erroComandas;
+    }
+
+
+    const comandasValidas =
+      (comandas || []).filter(comanda => {
+
+        if(comanda.cancelada === true){
+          return false;
+        }
+
+        const status =
+          financeiroNormalizarStatus(
+            comanda.status
+          );
+
+        return ![
+          "",
+          "aberta",
+          "aberto",
+          "pendente",
+          "cancelada",
+          "cancelado"
+        ].includes(status);
+
+      });
+
+
+    const idsComandas =
+      comandasValidas.map(
+        comanda => comanda.id
+      );
+
+
+    if(idsComandas.length === 0){
+      alert(
+        "Não existem serviços pendentes até esta data."
+      );
+      return;
+    }
+
+
+    const mapaComandas = {};
+
+    comandasValidas.forEach(comanda => {
+      mapaComandas[comanda.id] = comanda;
+    });
+
+
+    const {
+      data: itensRecebidos,
+      error: erroItens
+    } =
+      await supabaseClient
+        .from("comanda_itens")
+        .select(`
+          id,
+          comanda_id,
+          profissional_id
+        `)
+        .in(
+          "comanda_id",
+          idsComandas
+        );
+
+    if(erroItens){
+      throw erroItens;
+    }
+
+
+    const idsBloqueados =
+      await obterIdsItensComissaoBloqueados();
+
+
+    const itensPendentesProfissional =
+      (itensRecebidos || []).filter(item => {
+
+        const comanda =
+          mapaComandas[item.comanda_id];
+
+        const profissionalItem =
+          item.profissional_id ??
+          comanda?.profissional_id;
+
+        return (
+          profissionalItem != null &&
+          String(profissionalItem) ===
+            String(profissionalId) &&
+          !idsBloqueados.has(
+            String(item.id)
+          )
+        );
+
+      });
+
+
+    /*
+      Descobre qual é o serviço pendente
+      mais antigo.
+
+      Essa data será usada somente para abrir
+      a função antiga.
+
+      A segurança real continua sendo feita
+      pelos IDs dos itens já pagos.
+    */
+
+    let dataInicio = dataFim;
+
+
+    if(itensPendentesProfissional.length > 0){
+
+      const datas =
+        itensPendentesProfissional
+          .map(item =>
+            mapaComandas[
+              item.comanda_id
+            ]?.data
+          )
+          .filter(Boolean)
+          .sort();
+
+      if(datas.length > 0){
+        dataInicio = datas[0];
+      }
+
+    }else{
+
+      /*
+        Pode não haver comissão nova,
+        mas ainda existir saldo anterior ou vale.
+        Nesse caso usamos o último fechamento
+        como referência.
+      */
+
+      const {
+        data: pagamentos,
+        error: erroPagamentos
+      } =
+        await supabaseClient
+          .from("comissoes_pagamentos")
+          .select(`
+            data_fim,
+            status
+          `)
+          .eq(
+            "profissional_id",
+            profissionalId
+          )
+          .lte(
+            "data_fim",
+            dataFim
+          )
+          .order(
+            "data_fim",
+            {
+              ascending:false
+            }
+          )
+          .limit(20);
+
+      if(erroPagamentos){
+        throw erroPagamentos;
+      }
+
+
+      const ultimoValido =
+        (pagamentos || []).find(
+          pagamento => {
+
+            const status =
+              financeiroNormalizarStatus(
+                pagamento.status
+              );
+
+            return ![
+              "cancelado",
+              "cancelada"
+            ].includes(status);
+
+          }
+        );
+
+
+      if(ultimoValido?.data_fim){
+        dataInicio =
+          ultimoValido.data_fim;
+      }
+
+    }
+
+
+    await abrirPagamentoComissaoPeriodo(
+      profissionalId,
+      dataInicio,
+      dataFim
+    );
+
+  }catch(erro){
+
+    console.error(
+      "Erro ao preparar pagamento automático:",
+      erro
+    );
+
+    alert(
+      erro?.message ||
+      "Não foi possível preparar o pagamento."
+    );
+
+  }
+
+}
 async function abrirPagamentoComissaoPeriodo(
   profissionalId,
   dataInicio,
