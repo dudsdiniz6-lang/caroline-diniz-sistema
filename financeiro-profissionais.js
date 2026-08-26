@@ -2659,7 +2659,7 @@ const totalValesDetalhes =
 
 const totalPagarDetalhes =
   totalComissao +
-  saldoAnterior -
+  saldoAnteriorDetalhes -
   totalValesDetalhes;
 
     /* =========================
