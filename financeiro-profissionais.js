@@ -3615,30 +3615,35 @@ async function abrirPagamentoComissaoPeriodo(
       );
     }
 
+const {
+  data: pagamentosExistentes,
+  error: erroPagamentoExistente
+} =
+  await supabaseClient
+    .from("comissoes_pagamentos")
+    .select(`
+      id,
+      status,
+      valor_pago,
+      data_inicio,
+      data_fim
+    `)
+    .eq(
+      "profissional_id",
+      profissionalId
+    )
+    .eq(
+      "data_inicio",
+      dataInicio
+    )
+    .eq(
+      "data_fim",
+      dataFim
+    );
 
-    const {
-      data: pagamentosExistentes,
-      error: erroPagamentoExistente
-    } =
-      await supabaseClient
-        .from("comissoes_pagamentos")
-        .select(`
-          id,
-          status,
-          valor_pago
-        `)
-       .eq(
-  "profissional_id",
-  profissionalId
-)
-.lte(
-  "data_vale",
-  dataFim
-)
-.is(
-  "pagamento_comissao_id",
-  null
-);
+if(erroPagamentoExistente){
+  throw erroPagamentoExistente;
+}
     if(erroPagamentoExistente){
       throw erroPagamentoExistente;
     }
@@ -3867,41 +3872,37 @@ const saldoAnterior =
   );
 
 
-    const {
-      data: vales,
-      error: erroVales
-    } =
-      await supabaseClient
-        .from("profissionais_vales")
-        .select(`
-          id,
-          profissional_id,
-          data_vale,
-          valor,
-          descricao,
-          status,
-          pagamento_comissao_id
-        `)
-       .eq(
-  "profissional_id",
-  profissionalId
-)
-.gte(
-  "data_vale",
-  dataInicio
-)
-.lte(
-  "data_vale",
-  dataFim
-)
-        .is(
-          "pagamento_comissao_id",
-          null
-        );
+const {
+  data: vales,
+  error: erroVales
+} =
+  await supabaseClient
+    .from("profissionais_vales")
+    .select(`
+      id,
+      profissional_id,
+      data_vale,
+      valor,
+      descricao,
+      status,
+      pagamento_comissao_id
+    `)
+    .eq(
+      "profissional_id",
+      profissionalId
+    )
+    .lte(
+      "data_vale",
+      dataFim
+    )
+    .is(
+      "pagamento_comissao_id",
+      null
+    );
 
-    if(erroVales){
-      throw erroVales;
-    }
+if(erroVales){
+  throw erroVales;
+}
 
     const valesPendentes =
       (vales || []).filter(vale => {
