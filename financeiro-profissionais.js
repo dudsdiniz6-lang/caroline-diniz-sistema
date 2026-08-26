@@ -4355,35 +4355,33 @@ async function confirmarPagamentoComissaoPeriodo(){
       "botaoConfirmarPagamentoComissao"
     );
 
+
   if(
     !Number.isFinite(valorPago) ||
     valorPago < 0
   ){
 
-    alert(
-      "Informe um valor pago válido."
-    );
-
+    alert("Informe um valor pago válido.");
     return;
+
   }
+
 
   if(!dataPagamento){
 
-    alert(
-      "Informe a data do pagamento."
-    );
-
+    alert("Informe a data do pagamento.");
     return;
+
   }
+
 
   if(!assinaturaNome){
 
-    alert(
-      "Informe o nome da profissional."
-    );
-
+    alert("Informe o nome da profissional.");
     return;
+
   }
+
 
   if(!assinaturaPossuiTraco){
 
@@ -4392,7 +4390,9 @@ async function confirmarPagamentoComissaoPeriodo(){
     );
 
     return;
+
   }
+
 
   if(!assinaturaConfirmada){
 
@@ -4401,58 +4401,386 @@ async function confirmarPagamentoComissaoPeriodo(){
     );
 
     return;
+
   }
 
-  const valorDevidoParaPagamento =
-  Math.max(
-    0,
-    Number(
-      pagamentoComissaoAtual.totalDevido || 0
-    )
-  );
-
-const saldoResultante =
-  valorDevidoParaPagamento - valorPago
-
-  const assinaturaImagem =
-    assinaturaCanvas
-      .toDataURL("image/png");
 
   if(botao){
 
     botao.disabled = true;
-    botao.textContent =
-      "Finalizando...";
+    botao.textContent = "Finalizando...";
 
   }
 
+
   let pagamentoCriadoId = null;
+
 
   try{
 
-    const {
-      data: duplicados,
-      error: erroDuplicados
-    } =
-      await supabaseClient
-        .from("comissoes_pagamentos_itens")
-        .select("comanda_item_id")
-        .in(
-          "comanda_item_id",
-          pagamentoComissaoAtual.itensIds
-        );
+    /*
+    ==================================================
+    1. CONFERE NOVAMENTE QUAIS ITENS JÁ FORAM PAGOS
+    ==================================================
+    */
 
-    if(erroDuplicados){
-      throw erroDuplicados;
-    }
+    const idsOriginais =
+      [
+        ...new Set(
+          (
+            pagamentoComissaoAtual.itensIds ||
+            []
+          )
+            .filter(Boolean)
+            .map(String)
+        )
+      ];
 
-    if((duplicados || []).length > 0){
+
+    if(idsOriginais.length === 0){
 
       throw new Error(
-        "Um ou mais serviços deste período já foram incluídos em outro pagamento. Atualize a tela e tente novamente."
+        "Não existem serviços pendentes para este pagamento."
       );
 
     }
+
+
+    const {
+      data: vinculosExistentes,
+      error: erroVinculosExistentes
+    } =
+      await supabaseClient
+        .from("comissoes_pagamentos_itens")
+        .select(`
+          comanda_item_id,
+          pagamento_id
+        `)
+        .in(
+          "comanda_item_id",
+          idsOriginais
+        );
+
+
+    if(erroVinculosExistentes){
+      throw erroVinculosExistentes;
+    }
+
+
+    const idsJaPagos =
+      new Set(
+        (vinculosExistentes || [])
+          .map(
+            item =>
+              String(item.comanda_item_id)
+          )
+      );
+
+
+    const itensIdsValidos =
+      idsOriginais.filter(
+        id => !idsJaPagos.has(String(id))
+      );
+
+
+    /*
+    ==================================================
+    2. SE ALGUM ITEM JÁ FOI PAGO, NÃO VAMOS
+       SIMPLESMENTE CONTINUAR COM O VALOR ANTIGO.
+
+       RECALCULAMOS A COMISSÃO DOS ITENS REALMENTE
+       PENDENTES.
+    ==================================================
+    */
+
+    if(itensIdsValidos.length === 0){
+
+      throw new Error(
+        "Todos os serviços desta tela já foram incluídos em pagamentos anteriores. Atualize o financeiro."
+      );
+
+    }
+
+
+    const {
+      data: itensValidos,
+      error: erroItensValidos
+    } =
+      await supabaseClient
+        .from("comanda_itens")
+        .select(`
+          id,
+          valor,
+          comissao_percentual
+        `)
+        .in(
+          "id",
+          itensIdsValidos
+        );
+
+
+    if(erroItensValidos){
+      throw erroItensValidos;
+    }
+
+
+    const comissaoReal =
+      (itensValidos || [])
+        .reduce(
+          (total, item) => {
+
+            const valor =
+              Number(item.valor || 0);
+
+            const percentual =
+              Number(
+                item.comissao_percentual || 0
+              );
+
+            return (
+              total +
+              (
+                valor *
+                percentual /
+                100
+              )
+            );
+
+          },
+          0
+        );
+
+
+    /*
+    ==================================================
+    3. VALES
+
+       CONFERE NOVAMENTE QUAIS AINDA ESTÃO PENDENTES.
+    ==================================================
+    */
+
+    const valesIdsOriginais =
+      [
+        ...new Set(
+          (
+            pagamentoComissaoAtual.valesIds ||
+            []
+          )
+            .filter(Boolean)
+            .map(String)
+        )
+      ];
+
+
+    let valesIdsValidos = [];
+    let totalValesReal = 0;
+
+
+    if(valesIdsOriginais.length > 0){
+
+      const {
+        data: valesValidos,
+        error: erroValesValidos
+      } =
+        await supabaseClient
+          .from("profissionais_vales")
+          .select(`
+            id,
+            valor,
+            status,
+            pagamento_comissao_id
+          `)
+          .in(
+            "id",
+            valesIdsOriginais
+          );
+
+
+      if(erroValesValidos){
+        throw erroValesValidos;
+      }
+
+
+      const valesPendentes =
+        (valesValidos || [])
+          .filter(vale => {
+
+            if(vale.pagamento_comissao_id){
+              return false;
+            }
+
+            const status =
+              financeiroNormalizarStatus(
+                vale.status
+              );
+
+            return (
+              !status ||
+              status === "aberto" ||
+              status === "pendente"
+            );
+
+          });
+
+
+      valesIdsValidos =
+        valesPendentes.map(
+          vale => vale.id
+        );
+
+
+      totalValesReal =
+        valesPendentes.reduce(
+          (total, vale) =>
+            total +
+            Number(vale.valor || 0),
+          0
+        );
+
+    }
+
+
+    /*
+    ==================================================
+    4. SALDO ANTERIOR
+    ==================================================
+    */
+
+    const saldoAnteriorReal =
+      Number(
+        pagamentoComissaoAtual
+          .saldoAnterior || 0
+      );
+
+
+    const totalDevidoReal =
+      comissaoReal +
+      saldoAnteriorReal -
+      totalValesReal;
+
+
+    const valorDevidoParaPagamento =
+      Math.max(
+        0,
+        totalDevidoReal
+      );
+
+
+    /*
+      Se a tela estava desatualizada e algum serviço
+      já havia sido pago, não podemos aceitar um valor
+      digitado maior que o novo total.
+    */
+
+    if(
+      valorPago >
+      valorDevidoParaPagamento + 0.01
+    ){
+
+      throw new Error(
+        "Os valores mudaram porque alguns serviços já estavam pagos. Atualize a tela antes de finalizar."
+      );
+
+    }
+
+
+    const saldoResultante =
+      valorDevidoParaPagamento -
+      valorPago;
+
+
+    const assinaturaImagem =
+      assinaturaCanvas
+        .toDataURL("image/png");
+
+
+    /*
+    ==================================================
+    5. DESCOBRE A DATA REAL DO ITEM PENDENTE MAIS ANTIGO
+
+       DATA INICIAL PASSA A SER INFORMATIVA.
+    ==================================================
+    */
+
+    const {
+      data: itensComComanda,
+      error: erroItensComComanda
+    } =
+      await supabaseClient
+        .from("comanda_itens")
+        .select(`
+          id,
+          comanda_id
+        `)
+        .in(
+          "id",
+          itensIdsValidos
+        );
+
+
+    if(erroItensComComanda){
+      throw erroItensComComanda;
+    }
+
+
+    const idsComandas =
+      [
+        ...new Set(
+          (itensComComanda || [])
+            .map(item => item.comanda_id)
+            .filter(Boolean)
+        )
+      ];
+
+
+    let dataInicioReal =
+      pagamentoComissaoAtual.dataFim;
+
+
+    if(idsComandas.length > 0){
+
+      const {
+        data: comandasItens,
+        error: erroComandasItens
+      } =
+        await supabaseClient
+          .from("comandas")
+          .select(`
+            id,
+            data
+          `)
+          .in(
+            "id",
+            idsComandas
+          )
+          .order(
+            "data",
+            {
+              ascending:true
+            }
+          );
+
+
+      if(erroComandasItens){
+        throw erroComandasItens;
+      }
+
+
+      if(comandasItens?.[0]?.data){
+
+        dataInicioReal =
+          comandasItens[0].data;
+
+      }
+
+    }
+
+
+    /*
+    ==================================================
+    6. CRIA O PAGAMENTO
+    ==================================================
+    */
 
     const {
       data: pagamentoCriado,
@@ -4461,40 +4789,33 @@ const saldoResultante =
       await supabaseClient
         .from("comissoes_pagamentos")
         .insert({
+
           unidade_id:
-            pagamentoComissaoAtual
-              .unidadeId,
+            pagamentoComissaoAtual.unidadeId,
 
           profissional_id:
-            pagamentoComissaoAtual
-              .profissionalId,
+            pagamentoComissaoAtual.profissionalId,
 
           data_inicio:
-            pagamentoComissaoAtual
-              .dataInicio,
+            dataInicioReal,
 
           data_fim:
-            pagamentoComissaoAtual
-              .dataFim,
+            pagamentoComissaoAtual.dataFim,
 
           data_pagamento:
             dataPagamento,
 
           comissao_periodo:
-            pagamentoComissaoAtual
-              .comissaoPeriodo,
+            comissaoReal,
 
           saldo_anterior:
-            pagamentoComissaoAtual
-              .saldoAnterior,
+            saldoAnteriorReal,
 
           total_vales:
-            pagamentoComissaoAtual
-              .totalVales,
+            totalValesReal,
 
           total_devido:
-            pagamentoComissaoAtual
-              .totalDevido,
+            totalDevidoReal,
 
           valor_pago:
             valorPago,
@@ -4524,28 +4845,38 @@ const saldoResultante =
 
           assinatura_imagem:
             assinaturaImagem
+
         })
         .select("id")
         .single();
+
 
     if(erroPagamento){
       throw erroPagamento;
     }
 
-    pagamentoCriadoId =
-       pagamentoCriado.id;
 
+    pagamentoCriadoId =
+      pagamentoCriado.id;
+
+
+    /*
+    ==================================================
+    7. VINCULA EXATAMENTE OS ITENS PAGOS
+    ==================================================
+    */
 
     const vinculosItens =
-      pagamentoComissaoAtual
-        .itensIds.map(
-          itemId => ({
-            pagamento_id:
-              pagamentoCriadoId,
-            comanda_item_id:
-              itemId
-          })
-        );
+      itensIdsValidos.map(
+        itemId => ({
+          pagamento_id:
+            pagamentoCriadoId,
+
+          comanda_item_id:
+            itemId
+        })
+      );
+
 
     const {
       error: erroVinculos
@@ -4554,22 +4885,29 @@ const saldoResultante =
         .from("comissoes_pagamentos_itens")
         .insert(vinculosItens);
 
+
     if(erroVinculos){
 
       await supabaseClient
         .from("comissoes_pagamentos")
         .delete()
-        .eq("id", pagamentoCriadoId);
+        .eq(
+          "id",
+          pagamentoCriadoId
+        );
 
       throw erroVinculos;
 
     }
 
 
-    if(
-      pagamentoComissaoAtual
-        .valesIds.length > 0
-    ){
+    /*
+    ==================================================
+    8. BAIXA SOMENTE OS VALES QUE REALMENTE ENTRARAM
+    ==================================================
+    */
+
+    if(valesIdsValidos.length > 0){
 
       const {
         error: erroAtualizarVales
@@ -4577,17 +4915,19 @@ const saldoResultante =
         await supabaseClient
           .from("profissionais_vales")
           .update({
+
             pagamento_comissao_id:
               pagamentoCriadoId,
 
             status:
               "DESCONTADO"
+
           })
           .in(
             "id",
-            pagamentoComissaoAtual
-              .valesIds
+            valesIdsValidos
           );
+
 
       if(erroAtualizarVales){
 
@@ -4613,14 +4953,18 @@ const saldoResultante =
 
     }
 
+
     alert(
       "Pagamento de comissão finalizado com sucesso."
     );
 
+
     fecharModalPagamentoComissao();
+
 
     FinanceiroProfissionais
       .abrirAba("pagamentos");
+
 
   }catch(erro){
 
@@ -4634,12 +4978,13 @@ const saldoResultante =
       "Não foi possível finalizar o pagamento."
     );
 
+
   }finally{
 
     if(botao){
 
       botao.disabled = false;
-       botao.textContent =
+      botao.textContent =
         "Finalizar pagamento";
 
     }
@@ -4647,8 +4992,6 @@ const saldoResultante =
   }
 
 }
-
-
 async function obterDadosReciboComissao(
   pagamentoId
 ){
