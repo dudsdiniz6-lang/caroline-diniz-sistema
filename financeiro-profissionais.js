@@ -3,6 +3,9 @@
 let financeiroResumoDataInicio;
 let financeiroResumoDataFim;
 
+let financeiroPagamentoDataFim;
+let financeiroModoResumo = "pagamento";
+
 window.FinanceiroProfissionais = {
   abrirAba
 };
@@ -170,130 +173,325 @@ async function carregarResumoFinanceiroProfissionaisNovo(){
   if(!area){
     return;
   }
-if(!financeiroResumoDataInicio){
-  financeiroResumoDataInicio =
-    financeiroPrimeiroDiaMes();
-}
 
-if(!financeiroResumoDataFim){
-  financeiroResumoDataFim =
-    financeiroUltimoDiaMes();
-}
+  const hoje =
+    financeiroDataLocalISO(new Date());
+
+  if(!financeiroPagamentoDataFim){
+    financeiroPagamentoDataFim = hoje;
+  }
+
+  if(!financeiroResumoDataInicio){
+    financeiroResumoDataInicio =
+      financeiroPrimeiroDiaMes();
+  }
+
+  if(!financeiroResumoDataFim){
+    financeiroResumoDataFim = hoje;
+  }
+
   area.innerHTML = `
+
     <div class="card">
 
-      <div
-        style="
+      <div>
+
+        <h2 style="margin:0 0 5px;">
+          Financeiro dos profissionais
+        </h2>
+
+        <p style="margin:0;">
+          Pagamentos, comissões, vales e saldos.
+        </p>
+
+      </div>
+
+
+      <!-- PAGAMENTO -->
+
+      <div style="
+        margin-top:22px;
+        padding:18px;
+        border:1px solid #ddd;
+        border-radius:12px;
+      ">
+
+        <div style="
           display:flex;
           justify-content:space-between;
           align-items:flex-end;
           gap:15px;
           flex-wrap:wrap;
-        "
-      >
+        ">
 
-        <div>
-          <h2 style="margin:0 0 5px;">
-            Resumo financeiro
-          </h2>
+          <div>
 
-          <p style="margin:0;">
-            Comissões, vales e saldo dos profissionais.
-          </p>
-        </div>
+            <strong style="
+              display:block;
+              font-size:16px;
+              margin-bottom:5px;
+            ">
+              PAGAMENTO
+            </strong>
 
-        <div
-          style="
+            <small>
+              O sistema considera automaticamente
+              serviços anteriores ainda não pagos.
+            </small>
+
+          </div>
+
+
+          <div style="
             display:flex;
             align-items:flex-end;
             gap:10px;
             flex-wrap:wrap;
-          "
-        >
+          ">
 
-          <div>
-            <label
-              for="financeiroResumoDataInicio"
-              style="
-                display:block;
-                margin-bottom:5px;
-                font-size:13px;
+            <div>
+
+              <label
+                for="financeiroPagamentoDataFim"
+                style="
+                  display:block;
+                  margin-bottom:5px;
+                  font-size:13px;
+                "
+              >
+                Pagar serviços até
+              </label>
+
+              <input
+                id="financeiroPagamentoDataFim"
+                type="date"
+                value="${financeiroPagamentoDataFim}"
+              >
+
+            </div>
+
+            <button
+              type="button"
+              class="principal"
+              onclick="
+                FinanceiroProfissionais
+                  .carregarParaPagamento()
               "
             >
-              Data inicial
-            </label>
+              Calcular pagamentos
+            </button>
 
-            <input
-              id="financeiroResumoDataInicio"
-              type="date"
-             value="${financeiroResumoDataInicio}"
-            >
           </div>
-
-          <div>
-            <label
-              for="financeiroResumoDataFim"
-              style="
-                display:block;
-                margin-bottom:5px;
-                font-size:13px;
-              "
-            >
-              Data final
-            </label>
-
-            <input
-              id="financeiroResumoDataFim"
-              type="date"
-             value="${financeiroResumoDataFim}"
-            >
-          </div>
-
-          <button
-            type="button"
-            class="principal"
-            onclick="FinanceiroProfissionais.atualizarResumo()"
-          >
-            Atualizar
-          </button>
 
         </div>
 
       </div>
 
+
+      <!-- PESQUISA -->
+
+      <div style="
+        margin-top:14px;
+        padding:18px;
+        border:1px solid #eee;
+        border-radius:12px;
+        background:#fafafa;
+      ">
+
+        <div style="
+          display:flex;
+          justify-content:space-between;
+          align-items:flex-end;
+          gap:15px;
+          flex-wrap:wrap;
+        ">
+
+          <div>
+
+            <strong style="
+              display:block;
+              font-size:14px;
+              margin-bottom:5px;
+            ">
+              CONSULTAR PERÍODO
+            </strong>
+
+            <small>
+              Apenas para pesquisa. Não define o pagamento.
+            </small>
+
+          </div>
+
+
+          <div style="
+            display:flex;
+            align-items:flex-end;
+            gap:10px;
+            flex-wrap:wrap;
+          ">
+
+            <div>
+
+              <label
+                style="
+                  display:block;
+                  margin-bottom:5px;
+                  font-size:13px;
+                "
+              >
+                De
+              </label>
+
+              <input
+                id="financeiroResumoDataInicio"
+                type="date"
+                value="${financeiroResumoDataInicio}"
+              >
+
+            </div>
+
+
+            <div>
+
+              <label
+                style="
+                  display:block;
+                  margin-bottom:5px;
+                  font-size:13px;
+                "
+              >
+                Até
+              </label>
+
+              <input
+                id="financeiroResumoDataFim"
+                type="date"
+                value="${financeiroResumoDataFim}"
+              >
+
+            </div>
+
+
+            <button
+              type="button"
+              onclick="
+                FinanceiroProfissionais
+                  .pesquisarPeriodo()
+              "
+            >
+              Pesquisar
+            </button>
+
+          </div>
+
+        </div>
+
+      </div>
+
+
+      <div
+        id="modoFinanceiroProfissionais"
+        style="
+          margin-top:18px;
+          font-size:13px;
+          font-weight:600;
+        "
+      ></div>
+
+
       <div
         id="totaisGeraisFinanceiroProfissionais"
-        style="margin-top:22px;"
+        style="margin-top:14px;"
       >
       </div>
+
 
       <div
         id="cardsResumoFinanceiro"
         style="
           display:grid;
-          grid-template-columns:repeat(
-            auto-fill,
-            minmax(310px, 1fr)
-          );
+          grid-template-columns:
+            repeat(auto-fill,minmax(310px,1fr));
           gap:16px;
           margin-top:20px;
         "
       >
-        Carregando...
+        Selecione pagamento ou pesquisa.
       </div>
 
     </div>
   `;
 
-  await atualizarResumoFinanceiroProfissionais();
-
 }
+window.FinanceiroProfissionais.carregarParaPagamento =
+  async function(){
+
+    const dataFim =
+      document.getElementById(
+        "financeiroPagamentoDataFim"
+      )?.value;
+
+    if(!dataFim){
+      alert("Informe até qual data deseja pagar.");
+      return;
+    }
+
+    financeiroPagamentoDataFim = dataFim;
+    financeiroModoResumo = "pagamento";
+
+    await atualizarResumoFinanceiroProfissionaisPagamento(
+      dataFim
+    );
+
+  };
 
 
-window.FinanceiroProfissionais.atualizarResumo =
-  atualizarResumoFinanceiroProfissionais;
+window.FinanceiroProfissionais.pesquisarPeriodo =
+  async function(){
 
+    const dataInicio =
+      document.getElementById(
+        "financeiroResumoDataInicio"
+      )?.value;
 
+    const dataFim =
+      document.getElementById(
+        "financeiroResumoDataFim"
+      )?.value;
+
+    if(!dataInicio || !dataFim){
+      alert("Informe as duas datas.");
+      return;
+    }
+
+    if(dataInicio > dataFim){
+      alert(
+        "A data inicial não pode ser maior que a final."
+      );
+      return;
+    }
+
+    financeiroResumoDataInicio = dataInicio;
+    financeiroResumoDataFim = dataFim;
+    financeiroModoResumo = "pesquisa";
+
+    const modo =
+      document.getElementById(
+        "modoFinanceiroProfissionais"
+      );
+
+    if(modo){
+      modo.innerHTML =
+        `CONSULTA: ${
+          financeiroFormatarData(dataInicio)
+        } até ${
+          financeiroFormatarData(dataFim)
+        }`;
+    }
+
+    await atualizarResumoFinanceiroProfissionais();
+
+  };
 async function atualizarResumoFinanceiroProfissionais(){
 
   const container =
