@@ -2573,12 +2573,14 @@ const { data: pagamentosAnteriores, error: erroSaldoAnterior } =
       id,
       saldo_resultante,
       data_fim,
-      status
+      status,
+      created_at
     `)
     .eq("profissional_id", profissionalId)
-    .lt("data_fim", dataInicio)
+    .lte("data_fim", dataFim)
     .order("data_fim", { ascending: false })
-    .limit(20);
+    .order("created_at", { ascending: false })
+    .limit(50);
 
 if(erroSaldoAnterior){
   throw erroSaldoAnterior;
@@ -2657,7 +2659,7 @@ const totalValesDetalhes =
 
 const totalPagarDetalhes =
   totalComissao +
-  saldoAnteriorDetalhes -
+  saldoAnterior -
   totalValesDetalhes;
 
     /* =========================
@@ -3625,19 +3627,18 @@ async function abrirPagamentoComissaoPeriodo(
           status,
           valor_pago
         `)
-        .eq(
-          "profissional_id",
-          profissionalId
-        )
-        .eq(
-          "data_inicio",
-          dataInicio
-        )
-        .eq(
-          "data_fim",
-          dataFim
-        );
-
+       .eq(
+  "profissional_id",
+  profissionalId
+)
+.lte(
+  "data_vale",
+  dataFim
+)
+.is(
+  "pagamento_comissao_id",
+  null
+);
     if(erroPagamentoExistente){
       throw erroPagamentoExistente;
     }
