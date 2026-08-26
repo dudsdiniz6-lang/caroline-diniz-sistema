@@ -2387,74 +2387,70 @@ async function carregarDetalhesFinanceiroProfissional(
     }
 
 
-    /* =========================
-       BUSCAR ITENS DAS COMANDAS
-    ========================= */
+ /* =========================
+   BUSCAR ITENS DAS COMANDAS
+========================= */
 
-    let itens = [];
+let itens = [];
 
+// Busca uma única vez todos os itens
+// que já foram vinculados a pagamentos.
+const idsBloqueados =
+  await obterIdsItensComissaoBloqueados();
 
-    if(idsComandas.length > 0){
+if(idsComandas.length > 0){
 
-      const {
-        data: itensRecebidos,
-        error: erroItens
-      } =
-        await supabaseClient
-          .from("comanda_itens")
-          .select(`
-            id,
-            comanda_id,
-            profissional_id,
-            descricao,
-            valor,
-            comissao_percentual
-          `)
-          .in(
-            "comanda_id",
-            idsComandas
-          );
+  const {
+    data: itensRecebidos,
+    error: erroItens
+  } =
+    await supabaseClient
+      .from("comanda_itens")
+      .select(`
+        id,
+        comanda_id,
+        profissional_id,
+        descricao,
+        valor,
+        comissao_percentual
+      `)
+      .in(
+        "comanda_id",
+        idsComandas
+      );
 
-      if(erroItens){
-        throw erroItens;
-      }
+  if(erroItens){
+    throw erroItens;
+  }
 
+  itens =
+    (itensRecebidos || []).filter(item => {
 
-   !idsBloqueados.has(
-  String(item.id)
-)
+      const comanda =
+        mapaComandas[item.comanda_id];
 
-      itens =
-        (itensRecebidos || []).filter(
-          item => {
+      const profissionalItem =
+        item.profissional_id ??
+        comanda?.profissional_id;
 
-            const comanda =
-              mapaComandas[
-                item.comanda_id
-              ];
+      const pertenceAoProfissional =
+        profissionalItem != null &&
+        String(profissionalItem).trim() ===
+          String(profissionalId).trim();
 
-           const profissionalItem =
-  item.profissional_id ??
-  comanda?.profissional_id;
-
-return (
-  profissionalItem != null &&
-  String(profissionalItem).trim() ===
-    String(profissionalId).trim() &&
-  !idsBloqueados.has(
-    String(item.id)
-  )
-);
-
-          }
+      const jaFoiPago =
+        idsBloqueados.has(
+          String(item.id)
         );
 
-    }
+      return (
+        pertenceAoProfissional &&
+        !jaFoiPago
+      );
 
+    });
 
-    /* =========================
-       CALCULAR TOTAIS
-    ========================= */
+}
 
     let totalServicos = 0;
     let totalComissao = 0;
