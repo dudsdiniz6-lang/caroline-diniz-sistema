@@ -3611,63 +3611,7 @@ async function abrirPagamentoComissaoPeriodo(
       );
     }
 
-const {
-  data: pagamentosExistentes,
-  error: erroPagamentoExistente
-} =
-  await supabaseClient
-    .from("comissoes_pagamentos")
-    .select(`
-      id,
-      status,
-      valor_pago,
-      data_inicio,
-      data_fim
-    `)
-    .eq(
-      "profissional_id",
-      profissionalId
-    )
-    .eq(
-      "data_inicio",
-      dataInicio
-    )
-    .eq(
-      "data_fim",
-      dataFim
-    );
 
-if(erroPagamentoExistente){
-  throw erroPagamentoExistente;
-}
-    if(erroPagamentoExistente){
-      throw erroPagamentoExistente;
-    }
-
-    const pagamentoAtivo =
-      (pagamentosExistentes || []).find(
-        pagamento => {
-
-          const status =
-            financeiroNormalizarStatus(
-              pagamento.status
-            );
-
-          return ![
-            "cancelado",
-            "cancelada"
-          ].includes(status);
-
-        }
-      );
-
-    if(pagamentoAtivo){
-
-      throw new Error(
-        "Esse período já possui um pagamento registrado para esta profissional."
-      );
-
-    }
 
 
     const {
