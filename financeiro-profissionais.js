@@ -2273,16 +2273,17 @@ async function carregarDetalhesFinanceiroProfissional(
       error: erroComandas
     } =
       await supabaseClient
-        .from("comandas")
-        .select(`
-          id,
-          data,
-          status,
-          cancelada,
-          profissional_id,
-          cliente_id
-        `)
-      .lte("data", dataFim)
+       .from("comandas")
+.select(`
+  id,
+  data,
+  status,
+  cancelada,
+  profissional_id,
+  cliente_id
+`)
+.gte("data", FINANCEIRO_PROFISSIONAIS_DATA_CORTE)
+.lte("data", dataFim)
 .or(
   "cancelada.eq.false,cancelada.is.null"
 );
@@ -3323,7 +3324,7 @@ function limparAssinaturaPagamento(){
   assinaturaPossuiTraco = false;
 
 }
-
+const FINANCEIRO_PROFISSIONAIS_DATA_CORTE = "2026-08-02";
 async function abrirPagamentoComissaoAutomatico(
   profissionalId,
   dataFim
@@ -3343,17 +3344,18 @@ async function abrirPagamentoComissaoAutomatico(
     } =
       await supabaseClient
         .from("comandas")
-        .select(`
-          id,
-          data,
-          status,
-          cancelada,
-          profissional_id
-        `)
-        .lte("data", dataFim)
-        .or(
-          "cancelada.eq.false,cancelada.is.null"
-        );
+.select(`
+  id,
+  data,
+  status,
+  cancelada,
+  profissional_id
+`)
+.gte("data", FINANCEIRO_PROFISSIONAIS_DATA_CORTE)
+.lte("data", dataFim)
+.or(
+  "cancelada.eq.false,cancelada.is.null"
+);
 
     if(erroComandas){
       throw erroComandas;
