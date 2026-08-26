@@ -2282,11 +2282,10 @@ async function carregarDetalhesFinanceiroProfissional(
           profissional_id,
           cliente_id
         `)
-        .gte("data", dataInicio)
-        .lte("data", dataFim)
-        .or(
-          "cancelada.eq.false,cancelada.is.null"
-        );
+      .lte("data", dataFim)
+.or(
+  "cancelada.eq.false,cancelada.is.null"
+);
 
     if(erroComandas){
       throw erroComandas;
@@ -2421,8 +2420,9 @@ async function carregarDetalhesFinanceiroProfissional(
       }
 
 
-      const idsBloqueados =
-  await obterIdsItensComissaoBloqueados();
+   !idsBloqueados.has(
+  String(item.id)
+)
 
       itens =
         (itensRecebidos || []).filter(
@@ -3552,11 +3552,11 @@ async function abrirPagamentoComissaoAutomatico(
     }
 
 
-    await abrirPagamentoComissaoPeriodo(
-      profissionalId,
-      dataInicio,
-      dataFim
-    );
+ await carregarDetalhesFinanceiroProfissional(
+  profissionalId,
+  dataInicio,
+  dataFim
+);
 
   }catch(erro){
 
