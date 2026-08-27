@@ -4051,33 +4051,33 @@ return (
       );
 
 
-    const {
-      data: ultimoPagamento,
-      error: erroUltimoPagamento
-    } =
-      await supabaseClient
-        .from("comissoes_pagamentos")
-        .select(`
-          id,
-          saldo_resultante,
-          data_fim,
-          status
-        `)
-        .eq(
-          "profissional_id",
-          profissionalId
-        )
-        .lt(
-          "data_fim",
-          dataInicio
-        )
-        .order(
-          "data_fim",
-          {
-            ascending: false
-          }
-        )
-        .limit(10);
+const {
+  data: ultimoPagamento,
+  error: erroUltimoPagamento
+} =
+  await supabaseClient
+    .from("comissoes_pagamentos")
+    .select(`
+      id,
+      saldo_resultante,
+      data_fim,
+      status
+    `)
+    .eq(
+      "profissional_id",
+      profissionalId
+    )
+    .lt(
+      "data_fim",
+      dataInicio
+    )
+    .order(
+      "data_fim",
+      {
+        ascending: false
+      }
+    )
+    .limit(10);
 
     if(erroUltimoPagamento){
       throw erroUltimoPagamento;
@@ -4122,17 +4122,21 @@ const {
       pagamento_comissao_id
     `)
     .eq(
-      "profissional_id",
-      profissionalId
-    )
-    .lte(
-      "data_vale",
-      dataFim
-    )
-    .is(
-      "pagamento_comissao_id",
-      null
-    );
+  "profissional_id",
+  profissionalId
+)
+.gte(
+  "data_vale",
+  FINANCEIRO_PROFISSIONAIS_DATA_CORTE
+)
+.lte(
+  "data_vale",
+  dataFim
+)
+.is(
+  "pagamento_comissao_id",
+  null
+);
 
 if(erroVales){
   throw erroVales;
