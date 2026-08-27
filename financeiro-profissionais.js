@@ -5352,9 +5352,9 @@ const valorPagoEfetivo =
   );
 
 
-  const saldoResultante =
-  valorDevidoParaPagamento -
-  valorPagoEfetivo;
+ const saldoResultante =
+  totalDevidoReal -
+  valorPago;
 
 
     const assinaturaImagem =
@@ -5485,8 +5485,8 @@ const valorPagoEfetivo =
           total_devido:
             totalDevidoReal,
 
-         valor_pago:
-  valorPagoEfetivo,
+        valor_pago:
+  valorPago,
 
           saldo_resultante:
             saldoResultante,
