@@ -5335,21 +5335,26 @@ const itensIdsValidos =
       digitado maior que o novo total.
     */
 
-    if(
-      valorPago >
-      valorDevidoParaPagamento + 0.01
-    ){
+   /*
+==================================================
+SE ALGUM SERVIÇO DEIXOU DE SER PENDENTE ENTRE
+A ABERTURA DO MODAL E A FINALIZAÇÃO, NÃO BLOQUEIA.
 
-      throw new Error(
-        "Os valores mudaram porque alguns serviços já estavam pagos. Atualize a tela antes de finalizar."
-      );
+O pagamento será gravado usando somente os
+serviços que continuam realmente pendentes.
+==================================================
+*/
 
-    }
+const valorPagoEfetivo =
+  Math.min(
+    valorPago,
+    valorDevidoParaPagamento
+  );
 
 
-    const saldoResultante =
-      valorDevidoParaPagamento -
-      valorPago;
+  const saldoResultante =
+  valorDevidoParaPagamento -
+  valorPagoEfetivo;
 
 
     const assinaturaImagem =
@@ -5480,8 +5485,8 @@ const itensIdsValidos =
           total_devido:
             totalDevidoReal,
 
-          valor_pago:
-            valorPago,
+         valor_pago:
+  valorPagoEfetivo,
 
           saldo_resultante:
             saldoResultante,
