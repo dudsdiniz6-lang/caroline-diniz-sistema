@@ -583,12 +583,17 @@ financeiroResumoDataFim = dataFim;
             cancelada
           `
         )
-        .gte("data", dataInicio)
-        .lte("data", dataFim)
-        .or(
-          "cancelada.eq.false,cancelada.is.null"
-        );
-
+       .gte(
+  "data",
+  FINANCEIRO_PROFISSIONAIS_DATA_CORTE
+)
+.lte(
+  "data",
+  dataFim
+)
+.or(
+  "cancelada.eq.false,cancelada.is.null"
+);
     if(erroComandas){
       throw erroComandas;
     }
@@ -1375,17 +1380,18 @@ async function atualizarResumoFinanceiroProfissionaisPagamento(dataFim){
     } =
       await supabaseClient
         .from("comandas")
-        .select(`
-          id,
-          profissional_id,
-          data,
-          status,
-          cancelada
-        `)
-        .lte("data", dataFim)
-        .or(
-          "cancelada.eq.false,cancelada.is.null"
-        );
+.select(`
+  id,
+  profissional_id,
+  data,
+  status,
+  cancelada
+`)
+.gte("data", FINANCEIRO_PROFISSIONAIS_DATA_CORTE)
+.lte("data", dataFim)
+.or(
+  "cancelada.eq.false,cancelada.is.null"
+);
 
     if(erroComandas){
       throw erroComandas;
@@ -1572,24 +1578,28 @@ async function atualizarResumoFinanceiroProfissionaisPagamento(dataFim){
       error: erroVales
     } =
       await supabaseClient
-        .from("profissionais_vales")
-        .select(`
-          id,
-          profissional_id,
-          data_vale,
-          valor,
-          descricao,
-          status,
-          pagamento_comissao_id
-        `)
-        .lte(
-          "data_vale",
-          dataFim
-        )
-        .is(
-          "pagamento_comissao_id",
-          null
-        );
+   .from("profissionais_vales")
+.select(`
+  id,
+  profissional_id,
+  data_vale,
+  valor,
+  descricao,
+  status,
+  pagamento_comissao_id
+`)
+.gte(
+  "data_vale",
+  FINANCEIRO_PROFISSIONAIS_DATA_CORTE
+)
+.lte(
+  "data_vale",
+  dataFim
+)
+.is(
+  "pagamento_comissao_id",
+  null
+);
 
     if(erroVales){
       throw erroVales;
@@ -2618,9 +2628,13 @@ const { data: valesDetalhes, error: erroValesDetalhes } =
       pagamento_comissao_id,
       data_vale
     `)
-    .eq("profissional_id", profissionalId)
-    .lte("data_vale", dataFim)
-    .is("pagamento_comissao_id", null);
+ .eq("profissional_id", profissionalId)
+.gte(
+  "data_vale",
+  FINANCEIRO_PROFISSIONAIS_DATA_CORTE
+)
+.lte("data_vale", dataFim)
+.is("pagamento_comissao_id", null);
 
 if(erroValesDetalhes){
   throw erroValesDetalhes;
@@ -3351,8 +3365,14 @@ async function abrirPagamentoComissaoAutomatico(
   cancelada,
   profissional_id
 `)
-.gte("data", FINANCEIRO_PROFISSIONAIS_DATA_CORTE)
-.lte("data", dataFim)
+.gte(
+  "data",
+  FINANCEIRO_PROFISSIONAIS_DATA_CORTE
+)
+.lte(
+  "data",
+  dataFim
+)
 .or(
   "cancelada.eq.false,cancelada.is.null"
 );
@@ -3629,11 +3649,17 @@ async function abrirPagamentoComissaoPeriodo(
           status,
           cancelada
         `)
-        .gte("data", dataInicio)
-        .lte("data", dataFim)
-        .or(
-          "cancelada.eq.false,cancelada.is.null"
-        );
+      .gte(
+  "data",
+  FINANCEIRO_PROFISSIONAIS_DATA_CORTE
+)
+.lte(
+  "data",
+  dataFim
+)
+.or(
+  "cancelada.eq.false,cancelada.is.null"
+);
 
     if(erroComandas){
       throw erroComandas;
@@ -6340,8 +6366,12 @@ window.FinanceiroProfissionais.verValesPendentes =
             pagamento_comissao_id,
             created_at
           `)
-          .eq("profissional_id", profissionalId)
-          .is("pagamento_comissao_id", null)
+         .eq("profissional_id", profissionalId)
+.gte(
+  "data_vale",
+  FINANCEIRO_PROFISSIONAIS_DATA_CORTE
+)
+.is("pagamento_comissao_id", null)
           .order("data_vale", {
             ascending: false
           });
