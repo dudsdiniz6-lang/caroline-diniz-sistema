@@ -3383,7 +3383,6 @@ async function obterIdsItensComissaoBloqueados(){
    .or(
   "cancelada.eq.false,cancelada.is.null"
 );
-      );
 
   if(erroComandas){
     throw erroComandas;
@@ -5346,73 +5345,40 @@ const itensIdsValidos =
     pagamentoCriadoId =
       pagamentoCriado.id;
 
-
-    /*
-    ==================================================
-    7. VINCULA EXATAMENTE OS ITENS PAGOS
-    ==================================================
-    */
-
-   /*
+/*
 ==================================================
-VINCULA SOMENTE OS SERVIÇOS REALMENTE PENDENTES
-AO NOVO FECHAMENTO
+7. VINCULA EXATAMENTE OS ITENS PAGOS
 ==================================================
 */
 
 const idsParaVincular =
-  Array.from(
-    new Set(
-      itensIdsValidos.map(
-        id => String(id)
-      )
+  [
+    ...new Set(
+      itensIdsValidos.map(String)
     )
-  );
+  ];
 
 
-const vinculosItens =
-  idsParaVincular.map(
-    itemId => ({
-      pagamento_id:
-        pagamentoCriadoId,
+/*
+==================================================
+VERIFICA VÍNCULOS ANTIGOS
 
-      comanda_item_id:
-        itemId
-    })
-  );
+A constraint do banco permite somente um vínculo
+por comanda_item_id.
 
+Se existir vínculo pertencente a pagamento
+cancelado, removemos antes de criar o novo.
 
-if(vinculosItens.length > 0){
+Se pertencer a pagamento ativo, interrompemos:
+esse serviço já foi pago.
+==================================================
+*/
 
-  /*
-  ================================================
-  CONFERE NO BANCO MAIS UMA VEZ ANTES DE GRAVAR
-  ================================================
-  */
-
-  const idsCandidatos =
-    vinculosItens.map(
-      item => item.comanda_item_id
-    );
-
-
-  if(vinculosItens.length > 0){
-
-  /*
-  ==================================================
-  CONFERE VÍNCULOS ANTIGOS
-  ==================================================
-  */
-
-  const idsCandidatos =
-    vinculosItens.map(
-      item => item.comanda_item_id
-    );
-
+if(idsParaVincular.length > 0){
 
   const {
     data: vinculosExistentes,
-    error: erroConsultaExistentes
+    error: erroVinculosExistentes
   } =
     await supabaseClient
       .from("comissoes_pagamentos_itens")
@@ -5422,38 +5388,32 @@ if(vinculosItens.length > 0){
       `)
       .in(
         "comanda_item_id",
-        idsCandidatos
+        idsParaVincular
       );
 
 
-  if(erroConsultaExistentes){
-    throw erroConsultaExistentes;
+  if(erroVinculosExistentes){
+    throw erroVinculosExistentes;
   }
 
 
-  /*
-  ==================================================
-  DESCOBRE SE OS VÍNCULOS ANTIGOS PERTENCEM
-  A PAGAMENTOS CANCELADOS
-  ==================================================
-  */
-
-  const idsPagamentosAntigos =
+  const pagamentosIdsExistentes =
     [
       ...new Set(
         (vinculosExistentes || [])
           .map(
-            item => item.pagamento_id
+            vinculo =>
+              vinculo.pagamento_id
           )
           .filter(Boolean)
       )
     ];
 
 
-  let pagamentosAntigos = [];
+  let pagamentosExistentes = [];
 
 
-  if(idsPagamentosAntigos.length > 0){
+  if(pagamentosIdsExistentes.length > 0){
 
     const {
       data,
@@ -5467,7 +5427,7 @@ if(vinculosItens.length > 0){
         `)
         .in(
           "id",
-          idsPagamentosAntigos
+          pagamentosIdsExistentes
         );
 
 
@@ -5476,15 +5436,14 @@ if(vinculosItens.length > 0){
     }
 
 
-    pagamentosAntigos =
+    pagamentosExistentes =
       data || [];
-
   }
 
 
-  const mapaStatusPagamento =
+  const statusPorPagamento =
     new Map(
-      pagamentosAntigos.map(
+      pagamentosExistentes.map(
         pagamento => [
           String(pagamento.id),
           financeiroNormalizarStatus(
@@ -5495,198 +5454,240 @@ if(vinculosItens.length > 0){
     );
 
 
-  /*
-  ==================================================
-  REMOVE SOMENTE VÍNCULOS DE PAGAMENTOS CANCELADOS
+  const idsComVinculoAtivo =
+    new Set();
 
-  Isso libera o serviço para entrar no novo fechamento.
-  ==================================================
+
+  const idsComVinculoCancelado =
+    [];
+
+
+  (vinculosExistentes || [])
+    .forEach(vinculo => {
+
+      const status =
+        statusPorPagamento.get(
+          String(vinculo.pagamento_id)
+        );
+
+
+      if(
+        status === "cancelado" ||
+        status === "cancelada"
+      ){
+
+        idsComVinculoCancelado.push(
+          vinculo.comanda_item_id
+        );
+
+        return;
+      }
+
+
+      idsComVinculoAtivo.add(
+        String(vinculo.comanda_item_id)
+      );
+
+    });
+
+
+  /*
+  Segurança:
+  nenhum serviço deste pagamento pode estar
+  vinculado a outro fechamento ativo.
   */
 
-  const idsVinculosCancelados =
-    (vinculosExistentes || [])
-      .filter(
-        vinculo => {
+  const conflitoAtivo =
+    idsParaVincular.some(
+      id =>
+        idsComVinculoAtivo.has(
+          String(id)
+        )
+    );
 
-          const status =
-            mapaStatusPagamento.get(
-              String(
-                vinculo.pagamento_id
-              )
-            );
 
-          return (
-            status === "cancelado" ||
-            status === "cancelada"
-          );
+  if(conflitoAtivo){
 
-        }
-      )
-      .map(
-        vinculo =>
-          vinculo.comanda_item_id
+    /*
+    Remove o pagamento que acabamos de criar,
+    pois os itens ainda não foram vinculados.
+    */
+
+    await supabaseClient
+      .from("comissoes_pagamentos")
+      .delete()
+      .eq(
+        "id",
+        pagamentoCriadoId
       );
 
 
-  if(idsVinculosCancelados.length > 0){
+    throw new Error(
+      "Um ou mais serviços já pertencem a outro pagamento ativo. Atualize o financeiro e tente novamente."
+    );
+  }
+
+
+  /*
+  Libera vínculos antigos pertencentes
+  exclusivamente a pagamentos cancelados.
+  */
+
+  if(idsComVinculoCancelado.length > 0){
 
     const {
-      error: erroLimparVinculos
+      error: erroRemoverCancelados
     } =
       await supabaseClient
         .from("comissoes_pagamentos_itens")
         .delete()
         .in(
           "comanda_item_id",
-          idsVinculosCancelados
+          [
+            ...new Set(
+              idsComVinculoCancelado
+            )
+          ]
         );
 
 
-    if(erroLimparVinculos){
-      throw erroLimparVinculos;
-    }
+    if(erroRemoverCancelados){
 
+      await supabaseClient
+        .from("comissoes_pagamentos")
+        .delete()
+        .eq(
+          "id",
+          pagamentoCriadoId
+        );
+
+      throw erroRemoverCancelados;
+    }
   }
 
 
   /*
-  ==================================================
-  CONFERE NOVAMENTE O QUE AINDA ESTÁ OCUPADO
-  ==================================================
+  Agora todos os itens estão livres.
+  Vincula TODOS ao pagamento recém-criado.
+  */
+
+  const vinculosItens =
+    idsParaVincular.map(
+      itemId => ({
+        pagamento_id:
+          pagamentoCriadoId,
+
+        comanda_item_id:
+          itemId
+      })
+    );
+
+
+  const {
+    error: erroInserirVinculos
+  } =
+    await supabaseClient
+      .from("comissoes_pagamentos_itens")
+      .insert(
+        vinculosItens
+      );
+
+
+  if(erroInserirVinculos){
+
+    await supabaseClient
+      .from("comissoes_pagamentos_itens")
+      .delete()
+      .eq(
+        "pagamento_id",
+        pagamentoCriadoId
+      );
+
+
+    await supabaseClient
+      .from("comissoes_pagamentos")
+      .delete()
+      .eq(
+        "id",
+        pagamentoCriadoId
+      );
+
+
+    throw erroInserirVinculos;
+  }
+
+
+  /*
+  Conferência final.
+
+  Não consideramos o pagamento concluído se
+  todos os serviços não estiverem efetivamente
+  vinculados ao fechamento.
   */
 
   const {
-    data: aindaExistentes,
-    error: erroAindaExistentes
+    data: vinculosConfirmados,
+    error: erroConfirmacao
   } =
     await supabaseClient
       .from("comissoes_pagamentos_itens")
       .select("comanda_item_id")
-      .in(
-        "comanda_item_id",
-        idsCandidatos
+      .eq(
+        "pagamento_id",
+        pagamentoCriadoId
       );
 
 
-  if(erroAindaExistentes){
-    throw erroAindaExistentes;
+  if(erroConfirmacao){
+    throw erroConfirmacao;
   }
 
 
-  const setAindaExistentes =
+  const idsConfirmados =
     new Set(
-      (aindaExistentes || []).map(
-        item =>
-          String(item.comanda_item_id)
-      )
-    );
-
-
-  const vinculosNovos =
-    vinculosItens.filter(
-      item =>
-        !setAindaExistentes.has(
-          String(item.comanda_item_id)
+      (vinculosConfirmados || [])
+        .map(
+          item =>
+            String(item.comanda_item_id)
         )
     );
 
 
-  /*
-  ==================================================
-  GRAVA OS SERVIÇOS NO NOVO FECHAMENTO
-  ==================================================
-  */
-
-  if(vinculosNovos.length > 0){
-
-    const {
-      error: erroVinculos
-    } =
-      await supabaseClient
-        .from("comissoes_pagamentos_itens")
-        .insert(vinculosNovos);
-
-
-    if(erroVinculos){
-
-      await supabaseClient
-        .from("comissoes_pagamentos")
-        .delete()
-        .eq(
-          "id",
-          pagamentoCriadoId
-        );
-
-      throw erroVinculos;
-
-    }
-
-  }
-
-}
-
-
-  if(erroConsultaExistentes){
-    throw erroConsultaExistentes;
-  }
-
-
-  const setJaExistentes =
-    new Set(
-      (jaExistentes || []).map(
-        item =>
-          String(item.comanda_item_id)
-      )
-    );
-
-
-  const vinculosNovos =
-    vinculosItens.filter(
-      item =>
-        !setJaExistentes.has(
-          String(item.comanda_item_id)
+  const todosVinculados =
+    idsParaVincular.every(
+      id =>
+        idsConfirmados.has(
+          String(id)
         )
     );
 
 
-  /*
-  ================================================
-  INSERE SOMENTE O QUE REALMENTE NÃO EXISTE
-  ================================================
-  */
+  if(!todosVinculados){
 
-  if(vinculosNovos.length > 0){
-
-    const {
-      error: erroVinculos
-    } =
-      await supabaseClient
-        .from("comissoes_pagamentos_itens")
-        .insert(vinculosNovos);
+    await supabaseClient
+      .from("comissoes_pagamentos_itens")
+      .delete()
+      .eq(
+        "pagamento_id",
+        pagamentoCriadoId
+      );
 
 
-    if(erroVinculos){
+    await supabaseClient
+      .from("comissoes_pagamentos")
+      .delete()
+      .eq(
+        "id",
+        pagamentoCriadoId
+      );
 
-      await supabaseClient
-        .from("comissoes_pagamentos")
-        .delete()
-        .eq(
-          "id",
-          pagamentoCriadoId
-        );
 
-      throw erroVinculos;
-
-    }
-
+    throw new Error(
+      "O pagamento não foi concluído porque nem todos os serviços puderam ser vinculados."
+    );
   }
 
 }
-    /*
-    ==================================================
-    8. BAIXA SOMENTE OS VALES QUE REALMENTE ENTRARAM
-    ==================================================
-    */
 
     if(valesIdsValidos.length > 0){
 
