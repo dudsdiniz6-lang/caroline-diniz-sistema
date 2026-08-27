@@ -5384,30 +5384,87 @@ const vinculosItens =
 
 if(vinculosItens.length > 0){
 
+  /*
+  ================================================
+  CONFERE NO BANCO MAIS UMA VEZ ANTES DE GRAVAR
+  ================================================
+  */
+
+  const idsCandidatos =
+    vinculosItens.map(
+      item => item.comanda_item_id
+    );
+
+
   const {
-    error: erroVinculos
+    data: jaExistentes,
+    error: erroConsultaExistentes
   } =
     await supabaseClient
       .from("comissoes_pagamentos_itens")
-      .insert(vinculosItens);
-
-
-  if(erroVinculos){
-
-    await supabaseClient
-      .from("comissoes_pagamentos")
-      .delete()
-      .eq(
-        "id",
-        pagamentoCriadoId
+      .select("comanda_item_id")
+      .in(
+        "comanda_item_id",
+        idsCandidatos
       );
 
-    throw erroVinculos;
+
+  if(erroConsultaExistentes){
+    throw erroConsultaExistentes;
+  }
+
+
+  const setJaExistentes =
+    new Set(
+      (jaExistentes || []).map(
+        item =>
+          String(item.comanda_item_id)
+      )
+    );
+
+
+  const vinculosNovos =
+    vinculosItens.filter(
+      item =>
+        !setJaExistentes.has(
+          String(item.comanda_item_id)
+        )
+    );
+
+
+  /*
+  ================================================
+  INSERE SOMENTE O QUE REALMENTE NÃO EXISTE
+  ================================================
+  */
+
+  if(vinculosNovos.length > 0){
+
+    const {
+      error: erroVinculos
+    } =
+      await supabaseClient
+        .from("comissoes_pagamentos_itens")
+        .insert(vinculosNovos);
+
+
+    if(erroVinculos){
+
+      await supabaseClient
+        .from("comissoes_pagamentos")
+        .delete()
+        .eq(
+          "id",
+          pagamentoCriadoId
+        );
+
+      throw erroVinculos;
+
+    }
 
   }
 
 }
-
     /*
     ==================================================
     8. BAIXA SOMENTE OS VALES QUE REALMENTE ENTRARAM
