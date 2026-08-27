@@ -3225,14 +3225,13 @@ async function obterIdsItensComissaoBloqueados(){
 
   /*
   ==================================================
-  REGRA DEFINITIVA
+  VERSÃO OTIMIZADA
 
-  Tudo que pertence a um FECHAMENTO ATIVO
-  é considerado pago e não pode voltar ao Resumo.
+  Regra:
+  serviço pertencente a fechamento ativo = PAGO.
 
-  1. Usa vínculos exatos existentes.
-  2. Para fechamentos antigos sem vínculos completos,
-     reconstrói pelo profissional + período.
+  Faz consultas em lote, sem consultar o banco
+  uma vez para cada fechamento.
   ==================================================
   */
 
@@ -3254,6 +3253,7 @@ async function obterIdsItensComissaoBloqueados(){
     throw erroPagamentos;
   }
 
+
   const pagamentosAtivos =
     (pagamentos || []).filter(
       pagamento => {
@@ -3271,6 +3271,7 @@ async function obterIdsItensComissaoBloqueados(){
       }
     );
 
+
   if(pagamentosAtivos.length === 0){
     return new Set();
   }
@@ -3278,7 +3279,7 @@ async function obterIdsItensComissaoBloqueados(){
 
   /*
   ==================================================
-  1. VÍNCULOS EXATOS JÁ REGISTRADOS
+  1. PEGA OS VÍNCULOS EXATOS
   ==================================================
   */
 
@@ -3306,6 +3307,7 @@ async function obterIdsItensComissaoBloqueados(){
     throw erroVinculos;
   }
 
+
   const idsPagos =
     new Set(
       (vinculos || []).map(
@@ -3317,98 +3319,147 @@ async function obterIdsItensComissaoBloqueados(){
 
   /*
   ==================================================
-  2. RECONSTRÓI FECHAMENTOS ANTIGOS
+  2. DESCOBRE O MENOR E MAIOR PERÍODO
+     DE TODOS OS FECHAMENTOS
 
-  Se existe fechamento ativo para a profissional,
-  os serviços dela naquele período são considerados
-  pagos mesmo que o vínculo antigo não tenha sido
-  gravado corretamente.
+  Assim buscamos as comandas UMA VEZ.
   ==================================================
   */
 
+  const datasInicio =
+    pagamentosAtivos
+      .map(p => p.data_inicio)
+      .filter(Boolean);
+
+  const datasFim =
+    pagamentosAtivos
+      .map(p => p.data_fim)
+      .filter(Boolean);
+
+
+  if(
+    datasInicio.length === 0 ||
+    datasFim.length === 0
+  ){
+    return idsPagos;
+  }
+
+
+  const menorData =
+    datasInicio.sort()[0];
+
+  const maiorData =
+    datasFim.sort().reverse()[0];
+
+
+  /*
+  ==================================================
+  3. BUSCA TODAS AS COMANDAS NECESSÁRIAS
+     EM UMA ÚNICA CONSULTA
+  ==================================================
+  */
+
+  const {
+    data: comandas,
+    error: erroComandas
+  } =
+    await supabaseClient
+      .from("comandas")
+      .select(`
+        id,
+        data,
+        profissional_id,
+        status,
+        cancelada
+      `)
+      .gte(
+        "data",
+        menorData
+      )
+      .lte(
+        "data",
+        maiorData
+      )
+      .eq(
+        "cancelada",
+        false
+      );
+
+  if(erroComandas){
+    throw erroComandas;
+  }
+
+
+  const comandasValidas =
+    (comandas || []).filter(
+      comanda => {
+
+        const status =
+          financeiroNormalizarStatus(
+            comanda.status
+          );
+
+        return ![
+          "",
+          "aberta",
+          "aberto",
+          "pendente",
+          "cancelada",
+          "cancelado"
+        ].includes(status);
+
+      }
+    );
+
+
+  if(comandasValidas.length === 0){
+    return idsPagos;
+  }
+
+
+  /*
+  ==================================================
+  4. BUSCA OS ITENS EM LOTE
+  ==================================================
+  */
+
+  const idsComandas =
+    comandasValidas.map(
+      comanda => comanda.id
+    );
+
+
+  const mapaComandas =
+    new Map(
+      comandasValidas.map(
+        comanda => [
+          String(comanda.id),
+          comanda
+        ]
+      )
+    );
+
+
+  /*
+  Supabase/PostgREST pode sofrer com IN gigantes.
+  Vamos buscar em blocos.
+  */
+
+  const TAMANHO_LOTE = 500;
+
+  let todosItens = [];
+
+
   for(
-    const pagamento
-    of pagamentosAtivos
+    let i = 0;
+    i < idsComandas.length;
+    i += TAMANHO_LOTE
   ){
 
-    if(
-      !pagamento.profissional_id ||
-      !pagamento.data_inicio ||
-      !pagamento.data_fim
-    ){
-      continue;
-    }
-
-
-    const {
-      data: comandas,
-      error: erroComandas
-    } =
-      await supabaseClient
-        .from("comandas")
-        .select(`
-          id,
-          data,
-          profissional_id,
-          status,
-          cancelada
-        `)
-        .gte(
-          "data",
-          pagamento.data_inicio
-        )
-        .lte(
-          "data",
-          pagamento.data_fim
-        )
-        .eq(
-          "cancelada",
-          false
-        );
-
-    if(erroComandas){
-      throw erroComandas;
-    }
-
-    const comandasValidas =
-      (comandas || []).filter(
-        comanda => {
-
-          const status =
-            financeiroNormalizarStatus(
-              comanda.status
-            );
-
-          return ![
-            "",
-            "aberta",
-            "aberto",
-            "pendente",
-            "cancelada",
-            "cancelado"
-          ].includes(status);
-
-        }
-      );
-
-    if(comandasValidas.length === 0){
-      continue;
-    }
-
-
-    const idsComandas =
-      comandasValidas.map(
-        comanda => comanda.id
-      );
-
-    const mapaComandas =
-      new Map(
-        comandasValidas.map(
-          comanda => [
-            String(comanda.id),
-            comanda
-          ]
-        )
+    const lote =
+      idsComandas.slice(
+        i,
+        i + TAMANHO_LOTE
       );
 
 
@@ -3425,47 +3476,144 @@ async function obterIdsItensComissaoBloqueados(){
         `)
         .in(
           "comanda_id",
-          idsComandas
+          lote
         );
+
 
     if(erroItens){
       throw erroItens;
     }
 
 
-    (itens || []).forEach(
-      item => {
-
-        const comanda =
-          mapaComandas.get(
-            String(item.comanda_id)
-          );
-
-        if(!comanda){
-          return;
-        }
-
-        const profissionalItem =
-          item.profissional_id ||
-          comanda.profissional_id;
-
-        if(
-          String(profissionalItem) ===
-          String(
-            pagamento.profissional_id
-          )
-        ){
-
-          idsPagos.add(
-            String(item.id)
-          );
-
-        }
-
-      }
+    todosItens.push(
+      ...(itens || [])
     );
 
   }
+
+
+  /*
+  ==================================================
+  5. ORGANIZA OS FECHAMENTOS POR PROFISSIONAL
+  ==================================================
+  */
+
+  const pagamentosPorProfissional =
+    new Map();
+
+
+  pagamentosAtivos.forEach(
+    pagamento => {
+
+      if(
+        !pagamento.profissional_id ||
+        !pagamento.data_inicio ||
+        !pagamento.data_fim
+      ){
+        return;
+      }
+
+
+      const chave =
+        String(
+          pagamento.profissional_id
+        );
+
+
+      if(
+        !pagamentosPorProfissional.has(
+          chave
+        )
+      ){
+        pagamentosPorProfissional.set(
+          chave,
+          []
+        );
+      }
+
+
+      pagamentosPorProfissional
+        .get(chave)
+        .push(pagamento);
+
+    }
+  );
+
+
+  /*
+  ==================================================
+  6. CONFERE LOCALMENTE
+
+  Aqui não existe mais consulta ao Supabase.
+  ==================================================
+  */
+
+  todosItens.forEach(
+    item => {
+
+      const comanda =
+        mapaComandas.get(
+          String(item.comanda_id)
+        );
+
+
+      if(!comanda){
+        return;
+      }
+
+
+      const profissionalId =
+        item.profissional_id ||
+        comanda.profissional_id;
+
+
+      if(!profissionalId){
+        return;
+      }
+
+
+      const fechamentos =
+        pagamentosPorProfissional.get(
+          String(profissionalId)
+        );
+
+
+      if(
+        !fechamentos ||
+        fechamentos.length === 0
+      ){
+        return;
+      }
+
+
+      const dataServico =
+        comanda.data;
+
+
+      const estaEmFechamento =
+        fechamentos.some(
+          fechamento =>
+
+            dataServico >=
+              fechamento.data_inicio
+
+            &&
+
+            dataServico <=
+              fechamento.data_fim
+        );
+
+
+      if(estaEmFechamento){
+
+        idsPagos.add(
+          String(item.id)
+        );
+
+      }
+
+    }
+  );
 
 
   return idsPagos;
