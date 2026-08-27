@@ -5353,40 +5353,60 @@ const itensIdsValidos =
     ==================================================
     */
 
-    const vinculosItens =
-      itensIdsValidos.map(
-        itemId => ({
-          pagamento_id:
-            pagamentoCriadoId,
+   /*
+==================================================
+VINCULA SOMENTE OS SERVIÇOS REALMENTE PENDENTES
+AO NOVO FECHAMENTO
+==================================================
+*/
 
-          comanda_item_id:
-            itemId
-        })
+const idsParaVincular =
+  Array.from(
+    new Set(
+      itensIdsValidos.map(
+        id => String(id)
+      )
+    )
+  );
+
+
+const vinculosItens =
+  idsParaVincular.map(
+    itemId => ({
+      pagamento_id:
+        pagamentoCriadoId,
+
+      comanda_item_id:
+        itemId
+    })
+  );
+
+
+if(vinculosItens.length > 0){
+
+  const {
+    error: erroVinculos
+  } =
+    await supabaseClient
+      .from("comissoes_pagamentos_itens")
+      .insert(vinculosItens);
+
+
+  if(erroVinculos){
+
+    await supabaseClient
+      .from("comissoes_pagamentos")
+      .delete()
+      .eq(
+        "id",
+        pagamentoCriadoId
       );
 
+    throw erroVinculos;
 
-    const {
-      error: erroVinculos
-    } =
-      await supabaseClient
-        .from("comissoes_pagamentos_itens")
-        .insert(vinculosItens);
+  }
 
-
-    if(erroVinculos){
-
-      await supabaseClient
-        .from("comissoes_pagamentos")
-        .delete()
-        .eq(
-          "id",
-          pagamentoCriadoId
-        );
-
-      throw erroVinculos;
-
-    }
-
+}
 
     /*
     ==================================================
