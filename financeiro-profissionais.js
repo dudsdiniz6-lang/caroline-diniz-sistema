@@ -133,7 +133,47 @@ function financeiroNormalizarStatus(valor){
     .toLowerCase();
 }
 
+function financeiroValeEstaPendente(vale){
 
+  if(!vale){
+    return false;
+  }
+
+  /*
+  Se já pertence a um fechamento,
+  não pode ser descontado novamente.
+  */
+  if(vale.pagamento_comissao_id){
+    return false;
+  }
+
+
+  const status =
+    financeiroNormalizarStatus(
+      vale.status
+    );
+
+
+  /*
+  Somente estes estados retiram o vale
+  da fila de desconto.
+  */
+  if([
+    "descontado",
+    "cancelado",
+    "cancelada"
+  ].includes(status)){
+    return false;
+  }
+
+
+  /*
+  Todo vale sem pagamento associado
+  continua pendente.
+  */
+  return true;
+
+}
 function financeiroMostrarErro(area, mensagem){
 
   if(!area){
@@ -1787,10 +1827,8 @@ if(dataFim < FINANCEIRO_PROFISSIONAIS_DATA_CORTE){
           vale.status
         );
 
-      const pendente =
-        status === "aberto" ||
-        status === "pendente" ||
-        !status;
+   const pendente =
+  financeiroValeEstaPendente(vale);
 
       if(!pendente){
         return;
@@ -2792,20 +2830,9 @@ if(erroValesDetalhes){
 }
 
 const valesPendentesDetalhes =
-  (valesDetalhes || []).filter(vale => {
-
-    const status =
-      financeiroNormalizarStatus(
-        vale.status
-      );
-
-    return (
-      status === "aberto" ||
-      status === "pendente" ||
-      !status
-    );
-
-  });
+  (valesDetalhes || []).filter(
+    financeiroValeEstaPendente
+  );
 
 const totalValesDetalhes =
   valesPendentesDetalhes.reduce(
@@ -4582,21 +4609,9 @@ if(erroVales){
 }
 
     const valesPendentes =
-      (vales || []).filter(vale => {
-
-        const status =
-          financeiroNormalizarStatus(
-            vale.status
-          );
-
-        return (
-          status === "aberto" ||
-          status === "pendente" ||
-          !status
-        );
-
-      });
-
+  (vales || []).filter(
+    financeiroValeEstaPendente
+  );
     const totalVales =
       valesPendentes.reduce(
         (total, vale) =>
@@ -5265,26 +5280,10 @@ const itensIdsValidos =
       }
 
 
-      const valesPendentes =
-        (valesValidos || [])
-          .filter(vale => {
-
-            if(vale.pagamento_comissao_id){
-              return false;
-            }
-
-            const status =
-              financeiroNormalizarStatus(
-                vale.status
-              );
-
-            return (
-              !status ||
-              status === "aberto" ||
-              status === "pendente"
-            );
-
-          });
+     const valesPendentes =
+  (valesValidos || []).filter(
+    financeiroValeEstaPendente
+  );
 
 
       valesIdsValidos =
