@@ -3380,9 +3380,9 @@ async function obterIdsItensComissaoBloqueados(){
         "data",
         maiorData
       )
-      .eq(
-        "cancelada",
-        false
+   .or(
+  "cancelada.eq.false,cancelada.is.null"
+);
       );
 
   if(erroComandas){
@@ -5396,9 +5396,168 @@ if(vinculosItens.length > 0){
     );
 
 
+  if(vinculosItens.length > 0){
+
+  /*
+  ==================================================
+  CONFERE VÍNCULOS ANTIGOS
+  ==================================================
+  */
+
+  const idsCandidatos =
+    vinculosItens.map(
+      item => item.comanda_item_id
+    );
+
+
   const {
-    data: jaExistentes,
+    data: vinculosExistentes,
     error: erroConsultaExistentes
+  } =
+    await supabaseClient
+      .from("comissoes_pagamentos_itens")
+      .select(`
+        pagamento_id,
+        comanda_item_id
+      `)
+      .in(
+        "comanda_item_id",
+        idsCandidatos
+      );
+
+
+  if(erroConsultaExistentes){
+    throw erroConsultaExistentes;
+  }
+
+
+  /*
+  ==================================================
+  DESCOBRE SE OS VÍNCULOS ANTIGOS PERTENCEM
+  A PAGAMENTOS CANCELADOS
+  ==================================================
+  */
+
+  const idsPagamentosAntigos =
+    [
+      ...new Set(
+        (vinculosExistentes || [])
+          .map(
+            item => item.pagamento_id
+          )
+          .filter(Boolean)
+      )
+    ];
+
+
+  let pagamentosAntigos = [];
+
+
+  if(idsPagamentosAntigos.length > 0){
+
+    const {
+      data,
+      error
+    } =
+      await supabaseClient
+        .from("comissoes_pagamentos")
+        .select(`
+          id,
+          status
+        `)
+        .in(
+          "id",
+          idsPagamentosAntigos
+        );
+
+
+    if(error){
+      throw error;
+    }
+
+
+    pagamentosAntigos =
+      data || [];
+
+  }
+
+
+  const mapaStatusPagamento =
+    new Map(
+      pagamentosAntigos.map(
+        pagamento => [
+          String(pagamento.id),
+          financeiroNormalizarStatus(
+            pagamento.status
+          )
+        ]
+      )
+    );
+
+
+  /*
+  ==================================================
+  REMOVE SOMENTE VÍNCULOS DE PAGAMENTOS CANCELADOS
+
+  Isso libera o serviço para entrar no novo fechamento.
+  ==================================================
+  */
+
+  const idsVinculosCancelados =
+    (vinculosExistentes || [])
+      .filter(
+        vinculo => {
+
+          const status =
+            mapaStatusPagamento.get(
+              String(
+                vinculo.pagamento_id
+              )
+            );
+
+          return (
+            status === "cancelado" ||
+            status === "cancelada"
+          );
+
+        }
+      )
+      .map(
+        vinculo =>
+          vinculo.comanda_item_id
+      );
+
+
+  if(idsVinculosCancelados.length > 0){
+
+    const {
+      error: erroLimparVinculos
+    } =
+      await supabaseClient
+        .from("comissoes_pagamentos_itens")
+        .delete()
+        .in(
+          "comanda_item_id",
+          idsVinculosCancelados
+        );
+
+
+    if(erroLimparVinculos){
+      throw erroLimparVinculos;
+    }
+
+  }
+
+
+  /*
+  ==================================================
+  CONFERE NOVAMENTE O QUE AINDA ESTÁ OCUPADO
+  ==================================================
+  */
+
+  const {
+    data: aindaExistentes,
+    error: erroAindaExistentes
   } =
     await supabaseClient
       .from("comissoes_pagamentos_itens")
@@ -5407,6 +5566,64 @@ if(vinculosItens.length > 0){
         "comanda_item_id",
         idsCandidatos
       );
+
+
+  if(erroAindaExistentes){
+    throw erroAindaExistentes;
+  }
+
+
+  const setAindaExistentes =
+    new Set(
+      (aindaExistentes || []).map(
+        item =>
+          String(item.comanda_item_id)
+      )
+    );
+
+
+  const vinculosNovos =
+    vinculosItens.filter(
+      item =>
+        !setAindaExistentes.has(
+          String(item.comanda_item_id)
+        )
+    );
+
+
+  /*
+  ==================================================
+  GRAVA OS SERVIÇOS NO NOVO FECHAMENTO
+  ==================================================
+  */
+
+  if(vinculosNovos.length > 0){
+
+    const {
+      error: erroVinculos
+    } =
+      await supabaseClient
+        .from("comissoes_pagamentos_itens")
+        .insert(vinculosNovos);
+
+
+    if(erroVinculos){
+
+      await supabaseClient
+        .from("comissoes_pagamentos")
+        .delete()
+        .eq(
+          "id",
+          pagamentoCriadoId
+        );
+
+      throw erroVinculos;
+
+    }
+
+  }
+
+}
 
 
   if(erroConsultaExistentes){
