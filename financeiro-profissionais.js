@@ -1326,6 +1326,178 @@ async function atualizarResumoFinanceiroProfissionaisPagamento(dataFim){
     alert("Informe até qual data deseja pagar.");
     return;
   }
+  // DATA ANTERIOR AO INÍCIO DO NOVO FINANCEIRO:
+// TUDO DEVE APARECER ZERADO.
+if(dataFim < FINANCEIRO_PROFISSIONAIS_DATA_CORTE){
+
+  if(modo){
+    modo.innerHTML =
+      `PAGAMENTO: serviços pendentes até ${
+        financeiroFormatarData(dataFim)
+      }`;
+  }
+
+  const profissionais =
+    await obterProfissionais();
+
+  const profissionaisAtivos =
+    (profissionais || [])
+      .filter(
+        profissional =>
+          profissional.ativo !== false
+      )
+      .sort(
+        (a, b) =>
+          String(a.nome || "")
+            .localeCompare(
+              String(b.nome || ""),
+              "pt-BR"
+            )
+      );
+
+  if(areaTotais){
+
+    areaTotais.innerHTML = `
+      <div style="
+        display:grid;
+        grid-template-columns:repeat(4,1fr);
+        gap:12px;
+      ">
+
+        <div class="card" style="padding:15px;">
+          <small>Comissões pendentes</small>
+          <div style="font-size:20px;font-weight:700;margin-top:5px;">
+            R$ 0,00
+          </div>
+        </div>
+
+        <div class="card" style="padding:15px;">
+          <small>Vales pendentes</small>
+          <div style="font-size:20px;font-weight:700;margin-top:5px;">
+            R$ 0,00
+          </div>
+        </div>
+
+        <div class="card" style="padding:15px;">
+          <small>Saldos anteriores</small>
+          <div style="font-size:20px;font-weight:700;margin-top:5px;">
+            R$ 0,00
+          </div>
+        </div>
+
+        <div class="card" style="padding:15px;">
+          <small>Total previsto</small>
+          <div style="font-size:20px;font-weight:700;margin-top:5px;">
+            R$ 0,00
+          </div>
+        </div>
+
+      </div>
+    `;
+  }
+
+  container.innerHTML =
+    profissionaisAtivos.map(
+      profissional => `
+
+        <div
+          class="card"
+          style="
+            padding:18px;
+            border:1px solid #e5e5e5;
+          "
+        >
+
+          <div style="
+            display:flex;
+            justify-content:space-between;
+            align-items:flex-start;
+            gap:10px;
+          ">
+
+            <h3 style="margin:0;">
+              ${
+                financeiroEscaparHTML(
+                  profissional.nome
+                )
+              }
+            </h3>
+
+            <span style="
+              padding:5px 8px;
+              border-radius:20px;
+              background:#f3f3f3;
+              font-size:12px;
+            ">
+              ${
+                financeiroEscaparHTML(
+                  profissional.tipo_pagamento ||
+                  "semanal"
+                )
+              }
+            </span>
+
+          </div>
+
+          <small>
+            0 serviço(s) ainda não pago(s)
+          </small>
+
+          <div style="
+            border-top:1px solid #ddd;
+            margin:14px 0;
+          "></div>
+
+          <div style="display:grid;gap:10px;">
+
+            <div style="
+              display:flex;
+              justify-content:space-between;
+            ">
+              <span>Comissões pendentes</span>
+              <strong>R$ 0,00</strong>
+            </div>
+
+            <div style="
+              display:flex;
+              justify-content:space-between;
+            ">
+              <span>Vales pendentes</span>
+              <strong>R$ 0,00</strong>
+            </div>
+
+            <div style="
+              display:flex;
+              justify-content:space-between;
+            ">
+              <span>Saldo anterior</span>
+              <strong>R$ 0,00</strong>
+            </div>
+
+          </div>
+
+          <div style="
+            border-top:1px solid #ddd;
+            margin:14px 0;
+          "></div>
+
+          <small>Total a pagar</small>
+
+          <div style="
+            font-size:20px;
+            font-weight:700;
+            margin-top:4px;
+          ">
+            R$ 0,00
+          </div>
+
+        </div>
+
+      `
+    ).join("");
+
+  return;
+}
 
   if(modo){
     modo.innerHTML =
