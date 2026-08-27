@@ -1833,94 +1833,73 @@ if(dataFim < FINANCEIRO_PROFISSIONAIS_DATA_CORTE){
       ].itens.push(vale);
 
     });
+// ==========================================
+// ÚLTIMO FECHAMENTO ATIVO DE CADA PROFISSIONAL
+// ==========================================
 
-
-    // ==========================================
-    // ÚLTIMO PAGAMENTO VÁLIDO
-    // PARA CARREGAR O SALDO ANTERIOR
-    // ==========================================
-
-    const {
-      data: pagamentos,
-      error: erroPagamentos
-    } =
-      await supabaseClient
-        .from("comissoes_pagamentos")
-        .select(`
-          id,
-          profissional_id,
-          data_inicio,
-          data_fim,
-          data_pagamento,
-          saldo_resultante,
-          status,
-          created_at
-        `)
-        .lte(
-          "data_fim",
-          dataFim
-        )
-        .order(
-          "data_fim",
-          {
-            ascending: false
-          }
-        )
-        .order(
-          "created_at",
-          {
-            ascending: false
-          }
-        );
-
-    if(erroPagamentos){
-      throw erroPagamentos;
-    }
-
-
-    const ultimoPagamentoPorProfissional = {};
-
-    (pagamentos || []).forEach(
-      pagamento => {
-
-        const status =
-          financeiroNormalizarStatus(
-            pagamento.status
-          );
-
-        if(
-          status === "cancelado" ||
-          status === "cancelada"
-        ){
-          return;
-        }
-
-        const profissionalId =
-          pagamento.profissional_id;
-
-        if(!profissionalId){
-          return;
-        }
-
-        // Como a consulta já veio ordenada,
-        // o primeiro válido é o último pagamento.
-        if(
-          !ultimoPagamentoPorProfissional[
-            profissionalId
-          ]
-        ){
-          ultimoPagamentoPorProfissional[
-            profissionalId
-          ] = pagamento;
-        }
-
+const {
+  data: pagamentos,
+  error: erroPagamentos
+} =
+  await supabaseClient
+    .from("comissoes_pagamentos")
+    .select(`
+      id,
+      profissional_id,
+      data_inicio,
+      data_fim,
+      data_pagamento,
+      saldo_resultante,
+      status,
+      created_at
+    `)
+    .order(
+      "created_at",
+      {
+        ascending: false
       }
     );
 
+if(erroPagamentos){
+  throw erroPagamentos;
+}
 
-    // ==========================================
-    // MONTA OS CARDS
-    // ==========================================
+const ultimoPagamentoPorProfissional = {};
+
+(pagamentos || []).forEach(
+  pagamento => {
+
+    const status =
+      financeiroNormalizarStatus(
+        pagamento.status
+      );
+
+    if(
+      status === "cancelado" ||
+      status === "cancelada"
+    ){
+      return;
+    }
+
+    const profissionalId =
+      pagamento.profissional_id;
+
+    if(!profissionalId){
+      return;
+    }
+
+    if(
+      !ultimoPagamentoPorProfissional[
+        profissionalId
+      ]
+    ){
+      ultimoPagamentoPorProfissional[
+        profissionalId
+      ] = pagamento;
+    }
+
+  }
+);
 
     let totalComissoes = 0;
     let totalVales = 0;
@@ -4050,7 +4029,6 @@ return (
         0
       );
 
-
 const {
   data: ultimoPagamento,
   error: erroUltimoPagamento
@@ -4061,29 +4039,27 @@ const {
       id,
       saldo_resultante,
       data_fim,
-      status
+      data_pagamento,
+      status,
+      created_at
     `)
     .eq(
       "profissional_id",
       profissionalId
     )
-    .lt(
-      "data_fim",
-      dataInicio
-    )
     .order(
-      "data_fim",
+      "created_at",
       {
         ascending: false
       }
     )
-    .limit(10);
+    .limit(50);
 
-    if(erroUltimoPagamento){
-      throw erroUltimoPagamento;
-    }
+if(erroUltimoPagamento){
+  throw erroUltimoPagamento;
+}
 
-  const pagamentoAnterior =
+const pagamentoAnterior =
   (ultimoPagamento || []).find(
     pagamento => {
 
@@ -4104,7 +4080,6 @@ const saldoAnterior =
   Number(
     pagamentoAnterior?.saldo_resultante || 0
   );
-
 
 const {
   data: vales,
