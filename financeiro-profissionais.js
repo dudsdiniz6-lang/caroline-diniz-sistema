@@ -3224,45 +3224,17 @@ function financeiroValorInput(valor){
 async function obterIdsItensComissaoBloqueados(){
 
   /*
-    Busca os vínculos entre serviços e pagamentos.
+  ==================================================
+  REGRA DEFINITIVA
+
+  Tudo que pertence a um FECHAMENTO ATIVO
+  é considerado pago e não pode voltar ao Resumo.
+
+  1. Usa vínculos exatos existentes.
+  2. Para fechamentos antigos sem vínculos completos,
+     reconstrói pelo profissional + período.
+  ==================================================
   */
-  const {
-    data: vinculos,
-    error: erroVinculos
-  } =
-    await supabaseClient
-      .from("comissoes_pagamentos_itens")
-      .select(`
-        pagamento_id,
-        comanda_item_id
-      `);
-
-  if(erroVinculos){
-    throw erroVinculos;
-  }
-
-  if(!vinculos || vinculos.length === 0){
-    return new Set();
-  }
-
-
-  /*
-    Busca os pagamentos relacionados aos vínculos.
-  */
-  const pagamentosIds =
-    [
-      ...new Set(
-        vinculos
-          .map(item => item.pagamento_id)
-          .filter(Boolean)
-      )
-    ];
-
-
-  if(pagamentosIds.length === 0){
-    return new Set();
-  }
-
 
   const {
     data: pagamentos,
@@ -3272,66 +3244,233 @@ async function obterIdsItensComissaoBloqueados(){
       .from("comissoes_pagamentos")
       .select(`
         id,
+        profissional_id,
+        data_inicio,
+        data_fim,
         status
-      `)
-      .in(
-        "id",
-        pagamentosIds
-      );
+      `);
 
   if(erroPagamentos){
     throw erroPagamentos;
   }
 
+  const pagamentosAtivos =
+    (pagamentos || []).filter(
+      pagamento => {
+
+        const status =
+          financeiroNormalizarStatus(
+            pagamento.status
+          );
+
+        return ![
+          "cancelado",
+          "cancelada"
+        ].includes(status);
+
+      }
+    );
+
+  if(pagamentosAtivos.length === 0){
+    return new Set();
+  }
+
 
   /*
-    Somente pagamentos que NÃO foram cancelados
-    bloqueiam o serviço.
+  ==================================================
+  1. VÍNCULOS EXATOS JÁ REGISTRADOS
+  ==================================================
   */
-  const pagamentosAtivos =
+
+  const pagamentosIds =
+    pagamentosAtivos.map(
+      pagamento => pagamento.id
+    );
+
+  const {
+    data: vinculos,
+    error: erroVinculos
+  } =
+    await supabaseClient
+      .from("comissoes_pagamentos_itens")
+      .select(`
+        pagamento_id,
+        comanda_item_id
+      `)
+      .in(
+        "pagamento_id",
+        pagamentosIds
+      );
+
+  if(erroVinculos){
+    throw erroVinculos;
+  }
+
+  const idsPagos =
     new Set(
-      (pagamentos || [])
-        .filter(pagamento => {
+      (vinculos || []).map(
+        vinculo =>
+          String(vinculo.comanda_item_id)
+      )
+    );
+
+
+  /*
+  ==================================================
+  2. RECONSTRÓI FECHAMENTOS ANTIGOS
+
+  Se existe fechamento ativo para a profissional,
+  os serviços dela naquele período são considerados
+  pagos mesmo que o vínculo antigo não tenha sido
+  gravado corretamente.
+  ==================================================
+  */
+
+  for(
+    const pagamento
+    of pagamentosAtivos
+  ){
+
+    if(
+      !pagamento.profissional_id ||
+      !pagamento.data_inicio ||
+      !pagamento.data_fim
+    ){
+      continue;
+    }
+
+
+    const {
+      data: comandas,
+      error: erroComandas
+    } =
+      await supabaseClient
+        .from("comandas")
+        .select(`
+          id,
+          data,
+          profissional_id,
+          status,
+          cancelada
+        `)
+        .gte(
+          "data",
+          pagamento.data_inicio
+        )
+        .lte(
+          "data",
+          pagamento.data_fim
+        )
+        .eq(
+          "cancelada",
+          false
+        );
+
+    if(erroComandas){
+      throw erroComandas;
+    }
+
+    const comandasValidas =
+      (comandas || []).filter(
+        comanda => {
 
           const status =
             financeiroNormalizarStatus(
-              pagamento.status
+              comanda.status
             );
 
           return ![
-            "cancelado",
-            "cancelada"
+            "",
+            "aberta",
+            "aberto",
+            "pendente",
+            "cancelada",
+            "cancelado"
           ].includes(status);
 
-        })
-        .map(
-          pagamento =>
-            String(pagamento.id)
+        }
+      );
+
+    if(comandasValidas.length === 0){
+      continue;
+    }
+
+
+    const idsComandas =
+      comandasValidas.map(
+        comanda => comanda.id
+      );
+
+    const mapaComandas =
+      new Map(
+        comandasValidas.map(
+          comanda => [
+            String(comanda.id),
+            comanda
+          ]
         )
-    );
+      );
 
 
-  /*
-    Retorna somente os serviços realmente pagos.
-  */
-  const idsBloqueados =
-    new Set(
-      vinculos
-        .filter(item =>
-          pagamentosAtivos.has(
-            String(item.pagamento_id)
+    const {
+      data: itens,
+      error: erroItens
+    } =
+      await supabaseClient
+        .from("comanda_itens")
+        .select(`
+          id,
+          comanda_id,
+          profissional_id
+        `)
+        .in(
+          "comanda_id",
+          idsComandas
+        );
+
+    if(erroItens){
+      throw erroItens;
+    }
+
+
+    (itens || []).forEach(
+      item => {
+
+        const comanda =
+          mapaComandas.get(
+            String(item.comanda_id)
+          );
+
+        if(!comanda){
+          return;
+        }
+
+        const profissionalItem =
+          item.profissional_id ||
+          comanda.profissional_id;
+
+        if(
+          String(profissionalItem) ===
+          String(
+            pagamento.profissional_id
           )
-        )
-        .map(item =>
-          String(item.comanda_item_id)
-        )
+        ){
+
+          idsPagos.add(
+            String(item.id)
+          );
+
+        }
+
+      }
     );
 
+  }
 
-  return idsBloqueados;
+
+  return idsPagos;
 
 }
-
 function garantirModalPagamentoComissao(){
 
   let modal =
