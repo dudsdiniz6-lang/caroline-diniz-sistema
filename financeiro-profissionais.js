@@ -4662,43 +4662,26 @@ async function confirmarPagamentoComissaoPeriodo(){
 
     }
 
+/*
+==================================================
+1. CONFERE OS ITENS REALMENTE JÁ PAGOS
 
-    const {
-      data: vinculosExistentes,
-      error: erroVinculosExistentes
-    } =
-      await supabaseClient
-        .from("comissoes_pagamentos_itens")
-        .select(`
-          comanda_item_id,
-          pagamento_id
-        `)
-        .in(
-          "comanda_item_id",
-          idsOriginais
-        );
+USA A MESMA REGRA DO RESUMO E DOS DETALHES:
+SOMENTE PAGAMENTO ATIVO BLOQUEIA O SERVIÇO.
+==================================================
+*/
 
+const idsJaPagos =
+  await obterIdsItensComissaoBloqueados();
 
-    if(erroVinculosExistentes){
-      throw erroVinculosExistentes;
-    }
-
-
-    const idsJaPagos =
-      new Set(
-        (vinculosExistentes || [])
-          .map(
-            item =>
-              String(item.comanda_item_id)
-          )
-      );
-
-
-    const itensIdsValidos =
-      idsOriginais.filter(
-        id => !idsJaPagos.has(String(id))
-      );
-
+const itensIdsValidos =
+  idsOriginais.filter(
+    id =>
+      !idsJaPagos.has(
+        String(id)
+      )
+  );
+   
 
     /*
     ==================================================
