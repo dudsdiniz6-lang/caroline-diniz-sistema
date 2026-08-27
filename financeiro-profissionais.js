@@ -3242,23 +3242,117 @@ function financeiroValorInput(valor){
 
 }
 
-
 async function obterIdsItensComissaoBloqueados(){
 
-  const { data, error } =
+  /*
+    Busca os vínculos entre serviços e pagamentos.
+  */
+  const {
+    data: vinculos,
+    error: erroVinculos
+  } =
     await supabaseClient
       .from("comissoes_pagamentos_itens")
-      .select("comanda_item_id");
+      .select(`
+        pagamento_id,
+        comanda_item_id
+      `);
 
-  if(error){
-    throw error;
+  if(erroVinculos){
+    throw erroVinculos;
   }
 
-  return new Set(
-    (data || []).map(item => String(item.comanda_item_id))
-  );
+  if(!vinculos || vinculos.length === 0){
+    return new Set();
+  }
+
+
+  /*
+    Busca os pagamentos relacionados aos vínculos.
+  */
+  const pagamentosIds =
+    [
+      ...new Set(
+        vinculos
+          .map(item => item.pagamento_id)
+          .filter(Boolean)
+      )
+    ];
+
+
+  if(pagamentosIds.length === 0){
+    return new Set();
+  }
+
+
+  const {
+    data: pagamentos,
+    error: erroPagamentos
+  } =
+    await supabaseClient
+      .from("comissoes_pagamentos")
+      .select(`
+        id,
+        status
+      `)
+      .in(
+        "id",
+        pagamentosIds
+      );
+
+  if(erroPagamentos){
+    throw erroPagamentos;
+  }
+
+
+  /*
+    Somente pagamentos que NÃO foram cancelados
+    bloqueiam o serviço.
+  */
+  const pagamentosAtivos =
+    new Set(
+      (pagamentos || [])
+        .filter(pagamento => {
+
+          const status =
+            financeiroNormalizarStatus(
+              pagamento.status
+            );
+
+          return ![
+            "cancelado",
+            "cancelada"
+          ].includes(status);
+
+        })
+        .map(
+          pagamento =>
+            String(pagamento.id)
+        )
+    );
+
+
+  /*
+    Retorna somente os serviços realmente pagos.
+  */
+  const idsBloqueados =
+    new Set(
+      vinculos
+        .filter(item =>
+          pagamentosAtivos.has(
+            String(item.pagamento_id)
+          )
+        )
+        .map(item =>
+          String(item.comanda_item_id)
+        )
+    );
+
+
+  return idsBloqueados;
 
 }
+
 function garantirModalPagamentoComissao(){
 
   let modal =
