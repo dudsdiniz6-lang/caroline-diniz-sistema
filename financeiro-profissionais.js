@@ -3225,13 +3225,19 @@ async function obterIdsItensComissaoBloqueados(){
 
   /*
   ==================================================
-  VERSÃO OTIMIZADA
+  REGRA DEFINITIVA
 
-  Regra:
-  serviço pertencente a fechamento ativo = PAGO.
+  PAGAMENTO ATIVO = SERVIÇO PAGO.
 
-  Faz consultas em lote, sem consultar o banco
-  uma vez para cada fechamento.
+  A consulta dos vínculos é PAGINADA para impedir
+  que o limite do Supabase deixe pagamentos de fora.
+  ==================================================
+  */
+
+
+  /*
+  ==================================================
+  1. PAGAMENTOS
   ==================================================
   */
 
@@ -3248,6 +3254,7 @@ async function obterIdsItensComissaoBloqueados(){
         data_fim,
         status
       `);
+
 
   if(erroPagamentos){
     throw erroPagamentos;
@@ -3277,126 +3284,246 @@ async function obterIdsItensComissaoBloqueados(){
   }
 
 
-  /*
-  ==================================================
-  1. PEGA OS VÍNCULOS EXATOS
-  ==================================================
-  */
-
   const pagamentosIds =
     pagamentosAtivos.map(
       pagamento => pagamento.id
     );
 
-  const {
-    data: vinculos,
-    error: erroVinculos
-  } =
-    await supabaseClient
-      .from("comissoes_pagamentos_itens")
-      .select(`
-        pagamento_id,
-        comanda_item_id
-      `)
-      .in(
-        "pagamento_id",
-        pagamentosIds
-      );
 
-  if(erroVinculos){
-    throw erroVinculos;
-  }
+  /*
+  ==================================================
+  2. BUSCA TODOS OS VÍNCULOS PAGOS
 
+  IMPORTANTE:
+  não fazemos mais uma consulta única.
+
+  Buscamos página por página para não perder
+  registros quando a tabela ficar grande.
+  ==================================================
+  */
 
   const idsPagos =
-    new Set(
-      (vinculos || []).map(
-        vinculo =>
-          String(vinculo.comanda_item_id)
-      )
+    new Set();
+
+
+  const TAMANHO_PAGINA = 500;
+
+  let inicio = 0;
+
+
+  while(true){
+
+    const {
+      data: vinculos,
+      error: erroVinculos
+    } =
+      await supabaseClient
+        .from("comissoes_pagamentos_itens")
+        .select(`
+          pagamento_id,
+          comanda_item_id
+        `)
+        .in(
+          "pagamento_id",
+          pagamentosIds
+        )
+        .range(
+          inicio,
+          inicio + TAMANHO_PAGINA - 1
+        );
+
+
+    if(erroVinculos){
+      throw erroVinculos;
+    }
+
+
+    const pagina =
+      vinculos || [];
+
+
+    pagina.forEach(
+      vinculo => {
+
+        if(
+          vinculo.comanda_item_id != null
+        ){
+
+          idsPagos.add(
+            String(
+              vinculo.comanda_item_id
+            )
+          );
+
+        }
+
+      }
     );
+
+
+    if(
+      pagina.length <
+      TAMANHO_PAGINA
+    ){
+      break;
+    }
+
+
+    inicio += TAMANHO_PAGINA;
+
+  }
 
 
   /*
   ==================================================
-  2. DESCOBRE O MENOR E MAIOR PERÍODO
-     DE TODOS OS FECHAMENTOS
+  3. PROTEÇÃO PARA FECHAMENTOS ANTIGOS
 
-  Assim buscamos as comandas UMA VEZ.
+  Alguns fechamentos antigos foram criados antes
+  de o sistema vincular corretamente cada item.
+
+  Por isso mantemos a regra:
+  profissional + período de fechamento ativo
+  também significa pago.
   ==================================================
   */
 
-  const datasInicio =
-    pagamentosAtivos
-      .map(p => p.data_inicio)
-      .filter(Boolean);
 
-  const datasFim =
-    pagamentosAtivos
-      .map(p => p.data_fim)
-      .filter(Boolean);
+  const pagamentosComPeriodo =
+    pagamentosAtivos.filter(
+      pagamento =>
+        pagamento.profissional_id &&
+        pagamento.data_inicio &&
+        pagamento.data_fim
+    );
 
 
   if(
-    datasInicio.length === 0 ||
-    datasFim.length === 0
+    pagamentosComPeriodo.length === 0
   ){
     return idsPagos;
   }
 
 
+  const datasInicio =
+    pagamentosComPeriodo
+      .map(
+        pagamento =>
+          pagamento.data_inicio
+      )
+      .sort();
+
+
+  const datasFim =
+    pagamentosComPeriodo
+      .map(
+        pagamento =>
+          pagamento.data_fim
+      )
+      .sort();
+
+
   const menorData =
-    datasInicio.sort()[0];
+    datasInicio[0];
+
 
   const maiorData =
-    datasFim.sort().reverse()[0];
+    datasFim[
+      datasFim.length - 1
+    ];
 
 
   /*
   ==================================================
-  3. BUSCA TODAS AS COMANDAS NECESSÁRIAS
-     EM UMA ÚNICA CONSULTA
+  4. BUSCA COMANDAS DO HISTÓRICO
   ==================================================
   */
 
-  const {
-    data: comandas,
-    error: erroComandas
-  } =
-    await supabaseClient
-      .from("comandas")
-      .select(`
-        id,
-        data,
-        profissional_id,
-        status,
-        cancelada
-      `)
-      .gte(
-        "data",
-        menorData
-      )
-      .lte(
-        "data",
-        maiorData
-      )
-   .or(
-  "cancelada.eq.false,cancelada.is.null"
-);
+  let todasComandas = [];
 
-  if(erroComandas){
-    throw erroComandas;
+  inicio = 0;
+
+
+  while(true){
+
+    const {
+      data: comandas,
+      error: erroComandas
+    } =
+      await supabaseClient
+        .from("comandas")
+        .select(`
+          id,
+          data,
+          profissional_id,
+          status,
+          cancelada
+        `)
+        .gte(
+          "data",
+          menorData
+        )
+        .lte(
+          "data",
+          maiorData
+        )
+        .or(
+          "cancelada.eq.false,cancelada.is.null"
+        )
+        .order(
+          "id",
+          {
+            ascending:true
+          }
+        )
+        .range(
+          inicio,
+          inicio + TAMANHO_PAGINA - 1
+        );
+
+
+    if(erroComandas){
+      throw erroComandas;
+    }
+
+
+    const pagina =
+      comandas || [];
+
+
+    todasComandas.push(
+      ...pagina
+    );
+
+
+    if(
+      pagina.length <
+      TAMANHO_PAGINA
+    ){
+      break;
+    }
+
+
+    inicio += TAMANHO_PAGINA;
+
   }
 
 
   const comandasValidas =
-    (comandas || []).filter(
+    todasComandas.filter(
       comanda => {
+
+        if(
+          comanda.cancelada === true
+        ){
+          return false;
+        }
+
 
         const status =
           financeiroNormalizarStatus(
             comanda.status
           );
+
 
         return ![
           "",
@@ -3411,22 +3538,18 @@ async function obterIdsItensComissaoBloqueados(){
     );
 
 
-  if(comandasValidas.length === 0){
+  if(
+    comandasValidas.length === 0
+  ){
     return idsPagos;
   }
 
 
   /*
   ==================================================
-  4. BUSCA OS ITENS EM LOTE
+  5. MAPA DAS COMANDAS
   ==================================================
   */
-
-  const idsComandas =
-    comandasValidas.map(
-      comanda => comanda.id
-    );
-
 
   const mapaComandas =
     new Map(
@@ -3439,61 +3562,106 @@ async function obterIdsItensComissaoBloqueados(){
     );
 
 
+  const idsComandas =
+    comandasValidas.map(
+      comanda => comanda.id
+    );
+
+
   /*
-  Supabase/PostgREST pode sofrer com IN gigantes.
-  Vamos buscar em blocos.
+  ==================================================
+  6. BUSCA TODOS OS ITENS
+
+  Também em lotes pequenos para nunca depender
+  do limite padrão do Supabase.
+  ==================================================
   */
 
-  const TAMANHO_LOTE = 500;
+  const todosItens = [];
 
-  let todosItens = [];
+  const TAMANHO_LOTE_COMANDAS = 100;
 
 
   for(
     let i = 0;
     i < idsComandas.length;
-    i += TAMANHO_LOTE
+    i += TAMANHO_LOTE_COMANDAS
   ){
 
     const lote =
       idsComandas.slice(
         i,
-        i + TAMANHO_LOTE
+        i + TAMANHO_LOTE_COMANDAS
       );
 
 
-    const {
-      data: itens,
-      error: erroItens
-    } =
-      await supabaseClient
-        .from("comanda_itens")
-        .select(`
-          id,
-          comanda_id,
-          profissional_id
-        `)
-        .in(
-          "comanda_id",
-          lote
-        );
+    let inicioItens = 0;
 
 
-    if(erroItens){
-      throw erroItens;
+    while(true){
+
+      const {
+        data: itens,
+        error: erroItens
+      } =
+        await supabaseClient
+          .from("comanda_itens")
+          .select(`
+            id,
+            comanda_id,
+            profissional_id
+          `)
+          .in(
+            "comanda_id",
+            lote
+          )
+          .order(
+            "id",
+            {
+              ascending:true
+            }
+          )
+          .range(
+            inicioItens,
+            inicioItens +
+              TAMANHO_PAGINA -
+              1
+          );
+
+
+      if(erroItens){
+        throw erroItens;
+      }
+
+
+      const pagina =
+        itens || [];
+
+
+      todosItens.push(
+        ...pagina
+      );
+
+
+      if(
+        pagina.length <
+        TAMANHO_PAGINA
+      ){
+        break;
+      }
+
+
+      inicioItens +=
+        TAMANHO_PAGINA;
+
     }
-
-
-    todosItens.push(
-      ...(itens || [])
-    );
 
   }
 
 
   /*
   ==================================================
-  5. ORGANIZA OS FECHAMENTOS POR PROFISSIONAL
+  7. ORGANIZA FECHAMENTOS POR PROFISSIONAL
   ==================================================
   */
 
@@ -3501,17 +3669,8 @@ async function obterIdsItensComissaoBloqueados(){
     new Map();
 
 
-  pagamentosAtivos.forEach(
+  pagamentosComPeriodo.forEach(
     pagamento => {
-
-      if(
-        !pagamento.profissional_id ||
-        !pagamento.data_inicio ||
-        !pagamento.data_fim
-      ){
-        return;
-      }
-
 
       const chave =
         String(
@@ -3524,16 +3683,24 @@ async function obterIdsItensComissaoBloqueados(){
           chave
         )
       ){
+
         pagamentosPorProfissional.set(
           chave,
           []
         );
+
       }
 
 
       pagamentosPorProfissional
         .get(chave)
-        .push(pagamento);
+        .push({
+          inicio:
+            pagamento.data_inicio,
+
+          fim:
+            pagamento.data_fim
+        });
 
     }
   );
@@ -3541,14 +3708,26 @@ async function obterIdsItensComissaoBloqueados(){
 
   /*
   ==================================================
-  6. CONFERE LOCALMENTE
-
-  Aqui não existe mais consulta ao Supabase.
+  8. RECONSTRUÇÃO RETROATIVA
   ==================================================
   */
 
   todosItens.forEach(
     item => {
+
+      /*
+      Se já sabemos pelo vínculo exato que foi
+      pago, não precisamos conferir novamente.
+      */
+
+      if(
+        idsPagos.has(
+          String(item.id)
+        )
+      ){
+        return;
+      }
+
 
       const comanda =
         mapaComandas.get(
@@ -3562,11 +3741,13 @@ async function obterIdsItensComissaoBloqueados(){
 
 
       const profissionalId =
-        item.profissional_id ||
+        item.profissional_id ??
         comanda.profissional_id;
 
 
-      if(!profissionalId){
+      if(
+        profissionalId == null
+      ){
         return;
       }
 
@@ -3589,21 +3770,18 @@ async function obterIdsItensComissaoBloqueados(){
         comanda.data;
 
 
-      const estaEmFechamento =
+      const pertenceAFechamento =
         fechamentos.some(
           fechamento =>
-
             dataServico >=
-              fechamento.data_inicio
-
+              fechamento.inicio
             &&
-
             dataServico <=
-              fechamento.data_fim
+              fechamento.fim
         );
 
 
-      if(estaEmFechamento){
+      if(pertenceAFechamento){
 
         idsPagos.add(
           String(item.id)
