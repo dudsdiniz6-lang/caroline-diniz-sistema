@@ -3658,22 +3658,22 @@ async function carregarCaixas(){
 
   const caixasIds = caixas.map(caixa => caixa.id);
 
-  const { data: todasMovimentacoes, error: erroMovimentacoes } =
-    await supabaseClient
-      .from("caixa_movimentacoes")
-      .select(`
-        *,
-        formas_pagamento(nome),
-        comandas(
-          id,
-          total,
-          status,
-          cancelada,
-          clientes(nome)
-        )
-      `)
-      .in("caixa_id", caixasIds)
-      .neq("cancelada", true);
+ const { data: todasMovimentacoes, error: erroMovimentacoes } =
+  await supabaseClient
+    .from("caixa_movimentacoes")
+    .select(`
+      *,
+      formas_pagamento(nome),
+      comandas(
+        id,
+        total,
+        status,
+        cancelada,
+        clientes(nome)
+      )
+    `)
+    .in("caixa_id", caixasIds)
+    .or("cancelada.eq.false,cancelada.is.null");
 
   if(erroMovimentacoes){
     console.error(
