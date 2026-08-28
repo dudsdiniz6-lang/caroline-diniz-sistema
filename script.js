@@ -5458,22 +5458,261 @@ async function salvarAgendamento(){
 
     }
 
-    if(modo === "futuros"){
+  if(modo === "futuros"){
 
-      resposta = await supabaseClient
+  /*
+  ==================================================
+  ALTERAR ESTE E TODOS OS FUTUROS
+
+  Mantém cada ocorrência na sua própria data.
+  Se a data da ocorrência atual mudou, desloca
+  toda a série futura pela mesma quantidade de dias.
+  ==================================================
+  */
+
+  const {
+    data: agendamentosFuturos,
+    error: erroFuturos
+  } =
+    await supabaseClient
+      .from("agendamentos")
+      .select("*")
+      .eq(
+        "recorrencia_id",
+        agendamentoAtual.recorrencia_id
+      )
+      .gte(
+        "data",
+        agendamentoAtual.data
+      )
+      .order(
+        "data",
+        { ascending: true }
+      );
+
+
+  if(erroFuturos){
+
+    alert(
+      "Erro ao buscar os agendamentos recorrentes: " +
+      erroFuturos.message
+    );
+
+    return;
+  }
+
+
+  if(
+    !agendamentosFuturos ||
+    agendamentosFuturos.length === 0
+  ){
+
+    alert(
+      "Nenhum agendamento futuro foi encontrado."
+    );
+
+    return;
+  }
+
+
+  /*
+  ==================================================
+  CALCULA SE HOUVE MUDANÇA DE DATA
+
+  Exemplo:
+  estava 15/08 e mudou para 16/08
+  deslocamento = +1 dia
+
+  Então:
+  15/08 -> 16/08
+  22/08 -> 23/08
+  29/08 -> 30/08
+  ==================================================
+  */
+
+  const dataOriginal =
+    new Date(
+      agendamentoAtual.data +
+      "T00:00:00"
+    );
+
+
+  const novaData =
+    new Date(
+      dados.data +
+      "T00:00:00"
+    );
+
+
+  const diferencaDias =
+    Math.round(
+      (
+        novaData.getTime() -
+        dataOriginal.getTime()
+      )
+      /
+      86400000
+    );
+
+
+  /*
+  ==================================================
+  ATUALIZA UM POR UM
+
+  Isso é essencial:
+  NÃO fazemos mais .update(dados) na série inteira,
+  porque isso colocava todos na mesma data.
+  ==================================================
+  */
+
+  let erroAtualizacao = null;
+
+
+  for(
+    const agendamentoFuturo
+    of agendamentosFuturos
+  ){
+
+    const dataAntiga =
+      new Date(
+        agendamentoFuturo.data +
+        "T00:00:00"
+      );
+
+
+    dataAntiga.setDate(
+      dataAntiga.getDate() +
+      diferencaDias
+    );
+
+
+    const novaDataOcorrencia =
+      formatarDataISO(
+        dataAntiga
+      );
+
+
+    /*
+    Dados que podem ser alterados para toda
+    a série futura.
+    */
+
+    const dadosAtualizados = {
+
+      unidade_id:
+        dados.unidade_id,
+
+      cliente_id:
+        dados.cliente_id,
+
+      profissional_id:
+        dados.profissional_id,
+
+      servico_id:
+        dados.servico_id,
+
+      horario:
+        dados.horario,
+
+      duracao:
+        dados.duracao,
+
+      valor:
+        dados.valor,
+
+      desconto:
+        dados.desconto,
+
+      tipo_desconto:
+        dados.tipo_desconto,
+
+      total:
+        dados.total,
+
+      status:
+        dados.status,
+
+      observacoes:
+        dados.observacoes,
+
+      usar_pacote:
+        dados.usar_pacote,
+
+      pacote_cliente_id:
+        dados.pacote_cliente_id,
+
+      pacote_saldo_id:
+        dados.pacote_saldo_id,
+
+      /*
+      Cada ocorrência recebe sua própria data.
+      */
+
+      data:
+        novaDataOcorrencia
+
+    };
+
+
+    const {
+      error: erroUpdate
+    } =
+      await supabaseClient
         .from("agendamentos")
-        .update(dados)
-        .eq("recorrencia_id", agendamentoAtual.recorrencia_id)
-        .gte("data", agendamentoAtual.data);
+        .update(
+          dadosAtualizados
+        )
+        .eq(
+          "id",
+          agendamentoFuturo.id
+        );
 
-    }else{
 
-      resposta = await supabaseClient
-        .from("agendamentos")
-        .update(dados)
-        .eq("id", id);
+    if(erroUpdate){
 
+      erroAtualizacao =
+        erroUpdate;
+
+      break;
     }
+
+  }
+
+
+  if(erroAtualizacao){
+
+    alert(
+      "Erro ao alterar a recorrência: " +
+      erroAtualizacao.message
+    );
+
+    return;
+  }
+
+
+  resposta = {
+    error: null
+  };
+
+
+}else{
+
+  /*
+  ==================================================
+  ALTERAR SOMENTE ESTE AGENDAMENTO
+  ==================================================
+  */
+
+  resposta =
+    await supabaseClient
+      .from("agendamentos")
+      .update(dados)
+      .eq(
+        "id",
+        id
+      );
+
+}
 
   }else{
 
