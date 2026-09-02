@@ -3804,17 +3804,14 @@ async function carregarCaixas(){
     const caixasIds =
       caixas.map(caixa => caixa.id);
 
-    const {
-      data: movimentacoes,
-      error: erroMovimentacoes
-    } =
-      await supabaseClient
-        .from("caixa_movimentacoes")
-        .select("*")
-        .in("caixa_id", caixasIds)
-        .or(
-          "cancelada.eq.false,cancelada.is.null"
-        );
+   const {
+  data: movimentacoes,
+  error: erroMovimentacoes
+} =
+  await supabaseClient
+    .from("caixa_movimentacoes")
+    .select("*")
+    .in("caixa_id", caixasIds);
 
     if(erroMovimentacoes){
       throw erroMovimentacoes;
@@ -3829,17 +3826,11 @@ async function carregarCaixas(){
 
     (movimentacoes || []).forEach(movimento => {
 
-      if(
-        movimento.cancelada === true
-      ){
-        return;
-      }
-
-      if(
-        !movimentosPorCaixa[
-          movimento.caixa_id
-        ]
-      ){
+  if(
+    !movimentosPorCaixa[
+      movimento.caixa_id
+    ]
+  ){
         movimentosPorCaixa[
           movimento.caixa_id
         ] = [];
@@ -11018,8 +11009,7 @@ async function abrirFechamentoCaixa(caixaId){
   const { data: movs } = await supabaseClient
     .from("caixa_movimentacoes")
     .select("*")
-    .eq("caixa_id", caixaId)
-    .neq("cancelada", true);
+   .eq("caixa_id", caixaId);
 
   const movimentacoes = movs || [];
 
