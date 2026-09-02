@@ -10934,14 +10934,15 @@ async function salvarMovimentacaoCaixa(caixaId, tipo){
     return;
   }
 
-  const { error } = await supabaseClient
-    .from("caixa_movimentacoes")
-    .insert([{
-      caixa_id: caixaId,
-      tipo,
-      descricao,
-      valor
-    }]);
+const { error } = await supabaseClient
+  .from("caixa_movimentacoes")
+  .insert([{
+    caixa_id: caixaId,
+    tipo,
+    descricao,
+    valor: Number(valor),
+    cancelada: false
+  }]);
 
   if(error){
     alert("Erro ao salvar movimentação: " + error.message);
