@@ -3793,56 +3793,35 @@ async function carregarCaixas(){
 
     }
 
+/* =====================================================
+   5. BUSCAR REFORÇOS E SANGRIAS POR CAIXA
+===================================================== */
 
-    /* =====================================================
-       5. BUSCAR REFORÇOS E SANGRIAS
+const movimentosPorCaixa = {};
 
-       caixa_movimentacoes NÃO será mais a fonte
-       dos pagamentos de clientes.
-    ===================================================== */
+for(const caixa of caixas){
 
-    const caixasIds =
-      caixas.map(caixa => caixa.id);
-
-   const {
-  data: movimentacoes,
-  error: erroMovimentacoes
-} =
-  await supabaseClient
+  const {
+    data: movimentosCaixa,
+    error: erroMovimentosCaixa
+  } = await supabaseClient
     .from("caixa_movimentacoes")
     .select("*")
-    .in("caixa_id", caixasIds);
+    .eq("caixa_id", caixa.id)
+    .order("id", { ascending: true });
 
-    if(erroMovimentacoes){
-      throw erroMovimentacoes;
-    }
+  if(erroMovimentosCaixa){
+    console.error(
+      `Erro ao buscar movimentações do caixa ${caixa.id}:`,
+      erroMovimentosCaixa
+    );
 
+    throw erroMovimentosCaixa;
+  }
 
-    /* =====================================================
-       6. AGRUPAR MOVIMENTAÇÕES MANUAIS POR CAIXA
-    ===================================================== */
-
-    const movimentosPorCaixa = {};
-
-    (movimentacoes || []).forEach(movimento => {
-
-  if(
-    !movimentosPorCaixa[
-      movimento.caixa_id
-    ]
-  ){
-        movimentosPorCaixa[
-          movimento.caixa_id
-        ] = [];
-      }
-
-      movimentosPorCaixa[
-        movimento.caixa_id
-      ].push(movimento);
-
-    });
-
-
+  movimentosPorCaixa[String(caixa.id)] =
+    movimentosCaixa || [];
+}
     /* =====================================================
        7. MONTAR CADA CAIXA
     ===================================================== */
@@ -3917,10 +3896,10 @@ async function carregarCaixas(){
            cópias de pagamentos e NÃO serão somadas.
         --------------------------------------------- */
 
-        const movimentosCaixa =
-          movimentosPorCaixa[
-            caixa.id
-          ] || [];
+       const movimentosCaixa =
+  movimentosPorCaixa[
+    String(caixa.id)
+  ] || [];
 
 
         const reforcos =
