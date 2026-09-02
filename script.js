@@ -3639,11 +3639,12 @@ async function carregarCaixas(){
 
   lista.innerHTML = "Carregando caixas...";
 
-  const { data: caixas, error: erroCaixas } = await supabaseClient
-    .from("caixas")
-    .select("*")
-    .neq("status", "Excluído")
-    .order("id", { ascending:false });
+ const { data: caixas, error: erroCaixas } = await supabaseClient
+  .from("caixas")
+  .select("*")
+  .eq("unidade_id", unidadeAtualId)
+  .neq("status", "Excluído")
+  .order("id", { ascending:false });
 
   if(erroCaixas){
     console.error("Erro ao carregar caixas:", erroCaixas);
@@ -4028,18 +4029,22 @@ async function buscarCaixaAberto(){
   const { data, error } = await supabaseClient
     .from("caixas")
     .select("*")
+    .eq("unidade_id", unidadeAtualId)
     .eq("status", "Aberto")
-    .eq("aberto_por_usuario_id", usuarioLogado?.id)
     .order("id", { ascending:false })
     .limit(1)
     .maybeSingle();
 
   if(error){
-    console.error("Erro ao buscar caixa aberto:", error);
-    return null;
+    console.error(
+      "Erro ao buscar caixa aberto:",
+      error
+    );
+
+    throw error;
   }
 
-  return data;
+  return data || null;
 }
 async function registrarEntradaCaixa(comandaId, formaPagamentoId, valor){
 
