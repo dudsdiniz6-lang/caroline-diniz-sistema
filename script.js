@@ -16509,100 +16509,809 @@ if(document.readyState === "loading"){
 }
 async function carregarConfirmacoes(){
 
-  const lista = document.getElementById("listaConfirmacoes");
+  const lista =
+    document.getElementById("listaConfirmacoes");
+
   if(!lista) return;
 
+  lista.innerHTML = "Carregando confirmações...";
 
-  const data = formatarDataISO(dataAgenda);
+  try{
 
-  const { data: agendamentos, error } = await supabaseClient
-    .from("agendamentos")
-    .select(`
-      *,
-      clientes(nome, telefone),
-      profissionais(nome),
-      servicos(nome)
-    `)
-    .eq("data", data)
-    .neq("status", "Cancelado")
-    .order("horario");
+    const data =
+      formatarDataISO(dataAgenda);
 
-  if(error){
-    console.error(error);
-    lista.innerHTML = "Erro ao carregar confirmações.";
-    return;
-  }
 
-  if(!agendamentos || agendamentos.length === 0){
+    /* =====================================================
+       1. BUSCAR AGENDAMENTOS DO DIA
+    ===================================================== */
+
+    const {
+      data: agendamentos,
+      error
+    } = await supabaseClient
+      .from("agendamentos")
+      .select(`
+        *,
+        clientes(
+          nome,
+          telefone
+        ),
+        servicos(
+          nome
+        )
+      `)
+      .eq("data", data)
+      .neq("status", "Cancelado")
+      .order("horario", {
+        ascending: true
+      });
+
+
+    if(error){
+      throw error;
+    }
+
+
+    /* =====================================================
+       2. REMOVER CANCELADOS E JÁ CONFIRMADOS
+    ===================================================== */
+
+    const agendamentosPendentes =
+      (agendamentos || []).filter(a => {
+
+        const status =
+          String(a.status || "")
+            .trim()
+            .toLowerCase();
+
+        const confirmacao =
+          String(
+            a.confirmacao_status || "pendente"
+          )
+            .trim()
+            .toLowerCase();
+
+        if(
+          status === "cancelado" ||
+          status === "cancelada"
+        ){
+          return false;
+        }
+
+        /*
+          Cliente confirmada desaparece
+          desta aba.
+        */
+        if(confirmacao === "confirmado"){
+          return false;
+        }
+
+        return true;
+
+      });
+
+
+    if(agendamentosPendentes.length === 0){
+
+      lista.innerHTML = `
+        <div class="card">
+          Nenhuma confirmação pendente para este dia.
+        </div>
+      `;
+
+      return;
+    }
+
+
+    /* =====================================================
+       3. AGRUPAR POR CLIENTE
+    ===================================================== */
+
+    const clientesAgrupados = {};
+
+
+    agendamentosPendentes.forEach(a => {
+
+      /*
+        Preferimos cliente_id porque é único.
+
+        Caso exista algum agendamento antigo sem
+        cliente_id, usamos nome + telefone.
+      */
+
+      const chave =
+        a.cliente_id
+          ? `cliente_${a.cliente_id}`
+          : `
+              cliente_
+              ${a.clientes?.nome || ""}
+              _
+              ${a.clientes?.telefone || ""}
+            `;
+
+
+      if(!clientesAgrupados[chave]){
+
+        clientesAgrupados[chave] = {
+
+          clienteId:
+            a.cliente_id || null,
+
+          nome:
+            a.clientes?.nome ||
+            "Cliente",
+
+          telefone:
+            a.clientes?.telefone ||
+            "",
+
+          data:
+            a.data,
+
+          agendamentos: []
+
+        };
+
+      }
+
+
+      clientesAgrupados[chave]
+        .agendamentos
+        .push(a);
+
+    });
+
+
+    /* =====================================================
+       4. ORDENAR PROCEDIMENTOS DE CADA CLIENTE
+    ===================================================== */
+
+    const grupos =
+      Object.values(clientesAgrupados);
+
+
+    grupos.forEach(grupo => {
+
+      grupo.agendamentos.sort(
+        (a, b) =>
+          String(a.horario || "")
+            .localeCompare(
+              String(b.horario || "")
+            )
+      );
+
+    });
+
+
+    /* =====================================================
+       5. ORDENAR CLIENTES PELO PRIMEIRO HORÁRIO
+    ===================================================== */
+
+    grupos.sort((grupoA, grupoB) => {
+
+      const horarioA =
+        grupoA.agendamentos[0]
+          ?.horario || "";
+
+      const horarioB =
+        grupoB.agendamentos[0]
+          ?.horario || "";
+
+      return String(horarioA)
+        .localeCompare(
+          String(horarioB)
+        );
+
+    });
+
+
+    /* =====================================================
+       6. GUARDAR DADOS PARA OS BOTÕES
+    ===================================================== */
+
+    window.confirmacoesClientesCache = {};
+
+
+    grupos.forEach((grupo, indice) => {
+
+      window.confirmacoesClientesCache[
+        indice
+      ] = grupo;
+
+    });
+
+
+    /* =====================================================
+       7. MONTAR CARDS
+    ===================================================== */
+
+    lista.innerHTML =
+      grupos.map((grupo, indice) => {
+
+
+        const procedimentos =
+          grupo.agendamentos
+            .map(a => `
+
+              <div
+                style="
+                  display:flex;
+                  gap:8px;
+                  align-items:flex-start;
+                  margin-bottom:5px;
+                "
+              >
+
+                <strong
+                  style="
+                    min-width:55px;
+                  "
+                >
+                  ${formatarHorarioBonito(
+                    a.horario
+                  )}
+                </strong>
+
+                <span>
+                  ${
+                    a.servicos?.nome ||
+                    "Serviço"
+                  }
+                </span>
+
+              </div>
+
+            `)
+            .join("");
+
+
+        /*
+          Se algum procedimento já teve
+          WhatsApp enviado, mostramos enviado.
+        */
+
+        const algumEnviado =
+          grupo.agendamentos.some(a =>
+
+            String(
+              a.confirmacao_status || ""
+            )
+              .toLowerCase() ===
+              "enviado"
+
+          );
+
+
+        const statusTexto =
+          algumEnviado
+            ? "Confirmação enviada"
+            : "Pendente";
+
+
+        return `
+
+          <div
+            class="card confirmacao-card"
+            id="confirmacaoCliente_${indice}"
+          >
+
+            <div>
+
+              <h3
+                style="
+                  margin-bottom:8px;
+                "
+              >
+                ${grupo.nome}
+              </h3>
+
+
+              <div
+                style="
+                  margin-bottom:10px;
+                "
+              >
+
+                ${procedimentos}
+
+              </div>
+
+
+              <p>
+                Telefone:
+                ${
+                  grupo.telefone ||
+                  "Não informado"
+                }
+              </p>
+
+
+              <strong>
+                ${statusTexto}
+              </strong>
+
+            </div>
+
+
+            <div
+              style="
+                display:flex;
+                gap:8px;
+                flex-wrap:wrap;
+                margin-top:10px;
+              "
+            >
+
+
+              <button
+                onclick="
+                  enviarConfirmacaoWhatsAppCliente(
+                    ${indice}
+                  )
+                "
+              >
+                Enviar WhatsApp
+              </button>
+
+
+              <button
+                class="principal"
+                onclick="
+                  confirmarClienteDia(
+                    ${indice}
+                  )
+                "
+              >
+                Confirmar
+              </button>
+
+
+              <button
+                onclick="
+                  cancelarConfirmacaoClienteDia(
+                    ${indice}
+                  )
+                "
+              >
+                Cancelar
+              </button>
+
+
+            </div>
+
+          </div>
+
+        `;
+
+      }).join("");
+
+
+  }catch(erro){
+
+    console.error(
+      "Erro ao carregar confirmações:",
+      erro
+    );
+
     lista.innerHTML = `
       <div class="card">
-        Nenhum agendamento encontrado para este dia.
+        Erro ao carregar confirmações:
+        ${erro?.message || "erro desconhecido"}
       </div>
     `;
+
+  }
+
+}
+
+
+/* =========================================================
+   FORMATAR DATA DA CONFIRMAÇÃO
+========================================================= */
+
+function formatarDataConfirmacao(dataISO){
+
+  if(!dataISO){
+    return "";
+  }
+
+  const partes =
+    String(dataISO)
+      .split("-");
+
+  if(partes.length !== 3){
+    return dataISO;
+  }
+
+  return (
+    partes[2] +
+    "/" +
+    partes[1] +
+    "/" +
+    partes[0]
+  );
+
+}
+
+
+/* =========================================================
+   NORMALIZAR TELEFONE PARA WHATSAPP
+========================================================= */
+
+function normalizarTelefoneWhatsApp(telefone){
+
+  let numero =
+    String(telefone || "")
+      .replace(/\D/g, "");
+
+
+  if(!numero){
+    return "";
+  }
+
+
+  /*
+    Número brasileiro sem código do país.
+  */
+
+  if(
+    numero.length === 10 ||
+    numero.length === 11
+  ){
+    numero = "55" + numero;
+  }
+
+
+  return numero;
+
+}
+
+
+/* =========================================================
+   GERAR MENSAGEM PERSONALIZADA
+========================================================= */
+
+function gerarMensagemConfirmacaoCliente(grupo){
+
+  const nome =
+    grupo.nome || "Cliente";
+
+  const data =
+    formatarDataConfirmacao(
+      grupo.data
+    );
+
+
+  const procedimentos =
+    grupo.agendamentos
+      .map(a => {
+
+        const horario =
+          formatarHorarioBonito(
+            a.horario
+          );
+
+        const servico =
+          a.servicos?.nome ||
+          "Procedimento";
+
+        return (
+          horario +
+          " - " +
+          servico
+        );
+
+      })
+      .join("\n");
+
+
+  return (
+`Olá, ${nome}!
+
+Estamos passando para confirmar seus horários de atendimento.
+
+Data: ${data}
+
+Horários e procedimentos:
+${procedimentos}
+
+Podemos confirmar seus horários?`
+  );
+
+}
+
+
+/* =========================================================
+   ENVIAR WHATSAPP
+========================================================= */
+
+async function enviarConfirmacaoWhatsAppCliente(indice){
+
+  const grupo =
+    window.confirmacoesClientesCache?.[
+      indice
+    ];
+
+
+  if(!grupo){
+    alert(
+      "Não foi possível localizar os agendamentos da cliente."
+    );
     return;
   }
 
-  lista.innerHTML = agendamentos.map(a => {
 
-    const status = a.confirmacao_status || "pendente";
+  const telefone =
+    normalizarTelefoneWhatsApp(
+      grupo.telefone
+    );
 
-    const textosStatus = {
-      pendente: "Pendente",
-      enviado: "Confirmação enviada",
-      confirmado: "Confirmado",
-      cancelado: "Cancelado"
-    };
 
-    return `
-      <div class="card confirmacao-card confirmacao-${status}">
+  if(!telefone){
 
-        <div>
-          <h3>${a.clientes?.nome || "Cliente"}</h3>
+    alert(
+      "Esta cliente não possui telefone cadastrado."
+    );
 
-          <p>
-            ${formatarHorarioBonito(a.horario)}
-            - ${a.servicos?.nome || "Serviço"}
-          </p>
+    return;
+  }
 
-          <p>
-            Profissional: ${a.profissionais?.nome || "Não informado"}
-          </p>
 
-          <p>
-            Telefone: ${a.clientes?.telefone || "Não informado"}
-          </p>
+  const mensagem =
+    gerarMensagemConfirmacaoCliente(
+      grupo
+    );
 
-          <strong>
-            ${textosStatus[status] || "Pendente"}
-          </strong>
-        </div>
 
-        <div style="display:flex; gap:8px; flex-wrap:wrap;">
+  /*
+    Marca todos os procedimentos da cliente
+    como confirmação enviada.
+  */
 
-          <button
-            onclick="enviarConfirmacaoWhatsApp(${a.id})"
-          >
-            Enviar WhatsApp
-          </button>
+  const ids =
+    grupo.agendamentos
+      .map(a => a.id)
+      .filter(Boolean);
 
-          <button
-            onclick="marcarConfirmacaoAgendamento(${a.id}, 'confirmado')"
-          >
-            Confirmar
-          </button>
 
-          <button
-            onclick="marcarConfirmacaoAgendamento(${a.id}, 'cancelado')"
-          >
-            Cancelar
-          </button>
+  if(ids.length){
 
-        </div>
+    const { error } =
+      await supabaseClient
+        .from("agendamentos")
+        .update({
+          confirmacao_status:
+            "enviado"
+        })
+        .in("id", ids);
 
-      </div>
-    `;
-  }).join("");
+
+    if(error){
+
+      console.error(
+        "Erro ao marcar confirmação como enviada:",
+        error
+      );
+
+    }
+
+  }
+
+
+  /*
+    Abre WhatsApp com mensagem pronta.
+  */
+
+  const url =
+    "https://wa.me/" +
+    telefone +
+    "?text=" +
+    encodeURIComponent(
+      mensagem
+    );
+
+
+  window.open(
+    url,
+    "_blank"
+  );
+
+
+  /*
+    Atualiza visualmente a aba.
+  */
+
+  await carregarConfirmacoes();
+
 }
+
+
+/* =========================================================
+   CONFIRMAR TODOS OS HORÁRIOS DA CLIENTE
+========================================================= */
+
+async function confirmarClienteDia(indice){
+
+  const grupo =
+    window.confirmacoesClientesCache?.[
+      indice
+    ];
+
+
+  if(!grupo){
+
+    alert(
+      "Não foi possível localizar os agendamentos da cliente."
+    );
+
+    return;
+  }
+
+
+  const ids =
+    grupo.agendamentos
+      .map(a => a.id)
+      .filter(Boolean);
+
+
+  if(ids.length === 0){
+    return;
+  }
+
+
+  const { error } =
+    await supabaseClient
+      .from("agendamentos")
+      .update({
+
+        /*
+          Faz desaparecer da aba
+          Confirmações.
+        */
+
+        confirmacao_status:
+          "confirmado",
+
+        /*
+          Faz aparecer como Confirmado
+          na agenda.
+        */
+
+        status:
+          "Confirmado"
+
+      })
+      .in("id", ids);
+
+
+  if(error){
+
+    console.error(
+      "Erro ao confirmar cliente:",
+      error
+    );
+
+    alert(
+      "Erro ao confirmar os horários: " +
+      error.message
+    );
+
+    return;
+  }
+
+
+  /*
+    Invalidamos a agenda para que ela
+    seja carregada novamente com o
+    status Confirmado.
+  */
+
+  telasCarregadas.agenda = false;
+
+
+  /*
+    Recarrega Confirmações.
+
+    Como confirmacao_status agora é
+    confirmado, o card desaparece.
+  */
+
+  await carregarConfirmacoes();
+
+}
+
+
+/* =========================================================
+   CANCELAR CONFIRMAÇÃO DA CLIENTE
+========================================================= */
+
+async function cancelarConfirmacaoClienteDia(indice){
+
+  const grupo =
+    window.confirmacoesClientesCache?.[
+      indice
+    ];
+
+
+  if(!grupo){
+
+    alert(
+      "Não foi possível localizar os agendamentos da cliente."
+    );
+
+    return;
+  }
+
+
+  const confirmar =
+    confirm(
+      `Cancelar todos os horários de ${grupo.nome} neste dia?`
+    );
+
+
+  if(!confirmar){
+    return;
+  }
+
+
+  const ids =
+    grupo.agendamentos
+      .map(a => a.id)
+      .filter(Boolean);
+
+
+  if(ids.length === 0){
+    return;
+  }
+
+
+  const { error } =
+    await supabaseClient
+      .from("agendamentos")
+      .update({
+
+        confirmacao_status:
+          "cancelado",
+
+        status:
+          "Cancelado"
+
+      })
+      .in("id", ids);
+
+
+  if(error){
+
+    console.error(
+      "Erro ao cancelar horários:",
+      error
+    );
+
+    alert(
+      "Erro ao cancelar os horários: " +
+      error.message
+    );
+
+    return;
+  }
+
+
+  telasCarregadas.agenda = false;
+
+  await carregarConfirmacoes();
+
+}
+
+
+/* =========================================================
+   ENVIO EM MASSA
+========================================================= */
+
 function enviarConfirmacoesDia(){
-  alert("O envio de todas as confirmações será configurado depois.");
+
+  alert(
+    "O envio de todas as confirmações será configurado depois."
+  );
+
 }
