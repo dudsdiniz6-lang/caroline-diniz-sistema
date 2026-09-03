@@ -16851,7 +16851,7 @@ async function carregarConfirmacoes(){
                   )
                 "
               >
-                Enviar WhatsApp
+                Gerar mensagem
               </button>
 
 
@@ -17033,25 +17033,10 @@ async function enviarConfirmacaoWhatsAppCliente(indice){
       indice
     ];
 
-
   if(!grupo){
+
     alert(
       "Não foi possível localizar os agendamentos da cliente."
-    );
-    return;
-  }
-
-
-  const telefone =
-    normalizarTelefoneWhatsApp(
-      grupo.telefone
-    );
-
-
-  if(!telefone){
-
-    alert(
-      "Esta cliente não possui telefone cadastrado."
     );
 
     return;
@@ -17065,8 +17050,8 @@ async function enviarConfirmacaoWhatsAppCliente(indice){
 
 
   /*
-    Marca todos os procedimentos da cliente
-    como confirmação enviada.
+    Marca todos os procedimentos como
+    confirmação preparada/enviada.
   */
 
   const ids =
@@ -17081,8 +17066,7 @@ async function enviarConfirmacaoWhatsAppCliente(indice){
       await supabaseClient
         .from("agendamentos")
         .update({
-          confirmacao_status:
-            "enviado"
+          confirmacao_status: "enviado"
         })
         .in("id", ids);
 
@@ -17090,7 +17074,7 @@ async function enviarConfirmacaoWhatsAppCliente(indice){
     if(error){
 
       console.error(
-        "Erro ao marcar confirmação como enviada:",
+        "Erro ao atualizar confirmação:",
         error
       );
 
@@ -17100,36 +17084,160 @@ async function enviarConfirmacaoWhatsAppCliente(indice){
 
 
   /*
-    Abre WhatsApp com mensagem pronta.
+    Abre a mensagem dentro do próprio sistema.
   */
 
-  const url =
-    "https://wa.me/" +
-    telefone +
-    "?text=" +
-    encodeURIComponent(
-      mensagem
-    );
+  abrirModal(`
+
+    <h2>
+      Mensagem de confirmação
+    </h2>
+
+    <p style="margin-bottom:15px;">
+      <strong>${grupo.nome}</strong>
+    </p>
 
 
-  window.open(
-    url,
-    "_blank"
-  );
+    <textarea
+      id="mensagemConfirmacaoCopiar"
+      readonly
+      style="
+        width:100%;
+        min-height:300px;
+        padding:14px;
+        box-sizing:border-box;
+        resize:vertical;
+        font-family:inherit;
+        font-size:15px;
+        line-height:1.5;
+        border:1px solid #ddd;
+        border-radius:10px;
+        background:#fff;
+      "
+    ></textarea>
+
+
+    <div
+      style="
+        display:flex;
+        gap:10px;
+        margin-top:15px;
+        flex-wrap:wrap;
+      "
+    >
+
+      <button
+        class="principal"
+        onclick="copiarMensagemConfirmacao()"
+      >
+        Copiar mensagem
+      </button>
+
+
+      <button
+        onclick="fecharModal()"
+      >
+        Fechar
+      </button>
+
+    </div>
+
+  `);
 
 
   /*
-    Atualiza visualmente a aba.
+    Colocamos o texto pelo value para preservar
+    perfeitamente as quebras de linha.
   */
 
-  await carregarConfirmacoes();
+  const campo =
+    document.getElementById(
+      "mensagemConfirmacaoCopiar"
+    );
+
+  if(campo){
+    campo.value = mensagem;
+  }
+
+
+  /*
+    Atualiza o status visual sem fechar o modal.
+  */
+
+  grupo.agendamentos.forEach(a => {
+    a.confirmacao_status = "enviado";
+  });
 
 }
+async function copiarMensagemConfirmacao(){
+
+  const campo =
+    document.getElementById(
+      "mensagemConfirmacaoCopiar"
+    );
+
+  if(!campo){
+    return;
+  }
 
 
-/* =========================================================
-   CONFIRMAR TODOS OS HORÁRIOS DA CLIENTE
-========================================================= */
+  const texto =
+    campo.value;
+
+
+  try{
+
+    await navigator.clipboard.writeText(
+      texto
+    );
+
+
+    const botao =
+      event?.currentTarget;
+
+    if(botao){
+
+      const textoOriginal =
+        botao.innerText;
+
+      botao.innerText =
+        "Mensagem copiada";
+
+      setTimeout(() => {
+
+        botao.innerText =
+          textoOriginal;
+
+      }, 1800);
+
+    }
+
+
+  }catch(erro){
+
+    /*
+      Alternativa para navegadores que
+      bloquearem o clipboard.
+    */
+
+    campo.removeAttribute("readonly");
+
+    campo.select();
+
+    document.execCommand("copy");
+
+    campo.setAttribute(
+      "readonly",
+      true
+    );
+
+    alert(
+      "Mensagem copiada."
+    );
+
+  }
+
+}
 
 async function confirmarClienteDia(indice){
 
