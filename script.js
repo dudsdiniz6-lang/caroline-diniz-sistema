@@ -16514,12 +16514,89 @@ async function carregarConfirmacoes(){
 
   if(!lista) return;
 
-  lista.innerHTML = "Carregando confirmações...";
+
+  /* =====================================================
+     DATA PADRÃO DAS CONFIRMAÇÕES
+
+     Como as confirmações são feitas 1 dia antes,
+     ao abrir a aba pela primeira vez mostramos amanhã.
+  ===================================================== */
+
+  if(!window.dataConfirmacoesSelecionada){
+
+    const amanha = new Date();
+
+    amanha.setDate(
+      amanha.getDate() + 1
+    );
+
+    window.dataConfirmacoesSelecionada =
+      formatarDataISO(amanha);
+
+  }
+
+
+  /* =====================================================
+     FILTRO DE DATA + ÁREA DOS CARDS
+  ===================================================== */
+
+  lista.innerHTML = `
+
+    <div
+      class="card"
+      style="
+        margin-bottom:16px;
+        display:flex;
+        gap:12px;
+        align-items:flex-end;
+        flex-wrap:wrap;
+      "
+    >
+
+      <div>
+
+        <label>
+          Data dos agendamentos
+        </label>
+
+        <input
+          type="date"
+          id="dataFiltroConfirmacoes"
+          value="${window.dataConfirmacoesSelecionada}"
+          onchange="alterarDataConfirmacoes(this.value)"
+        >
+
+      </div>
+
+
+      <button
+        onclick="irParaConfirmacoesAmanha()"
+      >
+        Amanhã
+      </button>
+
+    </div>
+
+
+    <div id="listaConfirmacoesCards">
+      Carregando confirmações...
+    </div>
+
+  `;
+
+
+  const areaCards =
+    document.getElementById(
+      "listaConfirmacoesCards"
+    );
+
+  if(!areaCards) return;
+
 
   try{
 
     const data =
-      formatarDataISO(dataAgenda);
+      window.dataConfirmacoesSelecionada;
 
 
     /* =====================================================
@@ -16572,6 +16649,7 @@ async function carregarConfirmacoes(){
             .trim()
             .toLowerCase();
 
+
         if(
           status === "cancelado" ||
           status === "cancelada"
@@ -16579,28 +16657,41 @@ async function carregarConfirmacoes(){
           return false;
         }
 
+
         /*
           Cliente confirmada desaparece
           desta aba.
         */
+
         if(confirmacao === "confirmado"){
           return false;
         }
+
 
         return true;
 
       });
 
 
+    /* =====================================================
+       NENHUMA CONFIRMAÇÃO
+    ===================================================== */
+
     if(agendamentosPendentes.length === 0){
 
-      lista.innerHTML = `
+      areaCards.innerHTML = `
+
         <div class="card">
-          Nenhuma confirmação pendente para este dia.
+
+          Nenhuma confirmação pendente
+          para este dia.
+
         </div>
+
       `;
 
       return;
+
     }
 
 
@@ -16726,7 +16817,7 @@ async function carregarConfirmacoes(){
        7. MONTAR CARDS
     ===================================================== */
 
-    lista.innerHTML =
+    areaCards.innerHTML =
       grupos.map((grupo, indice) => {
 
 
@@ -16768,7 +16859,8 @@ async function carregarConfirmacoes(){
 
         /*
           Se algum procedimento já teve
-          WhatsApp enviado, mostramos enviado.
+          confirmação marcada como enviada,
+          mostramos "Confirmação enviada".
         */
 
         const algumEnviado =
@@ -16844,38 +16936,38 @@ async function carregarConfirmacoes(){
             >
 
 
-             <button
-  onclick="
-    enviarConfirmacaoWhatsAppCliente(
-      ${indice}
-    )
-  "
->
-  Gerar mensagem
-</button>
+              <button
+                onclick="
+                  enviarConfirmacaoWhatsAppCliente(
+                    ${indice}
+                  )
+                "
+              >
+                Gerar mensagem
+              </button>
 
 
-<button
-  onclick="
-    marcarMensagemEnviadaCliente(
-      ${indice}
-    )
-  "
->
-  Marcar como enviada
-</button>
+              <button
+                onclick="
+                  marcarMensagemEnviadaCliente(
+                    ${indice}
+                  )
+                "
+              >
+                Marcar como enviada
+              </button>
 
 
-<button
-  class="principal"
-  onclick="
-    confirmarClienteDia(
-      ${indice}
-    )
-  "
->
-  Confirmar
-</button>
+              <button
+                class="principal"
+                onclick="
+                  confirmarClienteDia(
+                    ${indice}
+                  )
+                "
+              >
+                Confirmar
+              </button>
 
 
               <button
@@ -16905,17 +16997,59 @@ async function carregarConfirmacoes(){
       erro
     );
 
-    lista.innerHTML = `
+    areaCards.innerHTML = `
+
       <div class="card">
+
         Erro ao carregar confirmações:
         ${erro?.message || "erro desconhecido"}
+
       </div>
+
     `;
 
   }
 
 }
 
+
+/* =========================================================
+   ALTERAR DATA DAS CONFIRMAÇÕES
+========================================================= */
+
+async function alterarDataConfirmacoes(data){
+
+  if(!data){
+    return;
+  }
+
+  window.dataConfirmacoesSelecionada =
+    data;
+
+  await carregarConfirmacoes();
+
+}
+
+
+/* =========================================================
+   IR PARA AMANHÃ
+========================================================= */
+
+async function irParaConfirmacoesAmanha(){
+
+  const amanha =
+    new Date();
+
+  amanha.setDate(
+    amanha.getDate() + 1
+  );
+
+  window.dataConfirmacoesSelecionada =
+    formatarDataISO(amanha);
+
+  await carregarConfirmacoes();
+
+}
 
 /* =========================================================
    FORMATAR DATA DA CONFIRMAÇÃO
