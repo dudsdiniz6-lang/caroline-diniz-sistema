@@ -17127,11 +17127,11 @@ async function enviarConfirmacaoWhatsAppCliente(indice){
     >
 
       <button
-        class="principal"
-        onclick="copiarMensagemConfirmacao()"
-      >
-        Copiar mensagem
-      </button>
+  class="principal"
+  onclick="copiarMensagemConfirmacao(this)"
+>
+  Copiar mensagem
+</button>
 
 
       <button
@@ -17169,7 +17169,7 @@ async function enviarConfirmacaoWhatsAppCliente(indice){
   });
 
 }
-async function copiarMensagemConfirmacao(){
+async function copiarMensagemConfirmacao(botao){
 
   const campo =
     document.getElementById(
@@ -17190,10 +17190,6 @@ async function copiarMensagemConfirmacao(){
     await navigator.clipboard.writeText(
       texto
     );
-
-
-    const botao =
-      event?.currentTarget;
 
     if(botao){
 
