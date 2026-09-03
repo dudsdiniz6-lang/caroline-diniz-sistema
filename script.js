@@ -3643,7 +3643,7 @@ async function carregarCaixas(){
   try{
 
     /* =====================================================
-       1. BUSCAR CAIXAS
+       1. BUSCAR CAIXAS DA UNIDADE
     ===================================================== */
 
     const { data: caixas, error: erroCaixas } =
@@ -3659,731 +3659,578 @@ async function carregarCaixas(){
     }
 
     if(!caixas || caixas.length === 0){
-
       lista.innerHTML =
         "<div class='card'>Nenhum caixa encontrado.</div>";
-
       return;
     }
 
 
     /* =====================================================
-       2. DESCOBRIR PERÍODO DOS CAIXAS
+       2. BUSCAR MOVIMENTAÇÕES DE CADA CAIXA
+
+       A movimentação do caixa é a fonte usada aqui para:
+       - pagamentos
+       - reforços
+       - sangrias
     ===================================================== */
 
-    const datasCaixas =
-      caixas
-        .map(caixa => caixa.data)
-        .filter(Boolean)
-        .sort();
+    const movimentosPorCaixa = {};
 
-    const dataInicial = datasCaixas[0];
-    const dataFinal = datasCaixas[datasCaixas.length - 1];
+    for(const caixa of caixas){
+
+      const {
+        data: movimentos,
+        error: erroMovimentos
+      } = await supabaseClient
+        .from("caixa_movimentacoes")
+        .select(`
+          *,
+          formas_pagamento(nome),
+          comandas(
+            id,
+            status,
+            cancelada,
+            clientes(nome)
+          )
+        `)
+        .eq("caixa_id", caixa.id)
+        .order("id", { ascending:true });
+
+      if(erroMovimentos){
+        console.error(
+          "Erro ao buscar movimentações do caixa:",
+          erroMovimentos
+        );
+        throw erroMovimentos;
+      }
+
+      movimentosPorCaixa[String(caixa.id)] =
+        movimentos || [];
+    }
 
 
     /* =====================================================
-       3. BUSCAR COMANDAS DO PERÍODO
-
-       A comanda serve para:
-       - identificar cliente
-       - identificar unidade
-       - saber se foi cancelada
+       3. MONTAR CADA CAIXA
     ===================================================== */
 
-    const { data: comandas, error: erroComandas } =
-      await supabaseClient
-        .from("comandas")
-        .select(`
-          id,
-          data,
-          unidade_id,
-          status,
-          cancelada,
-          cliente_id,
-          clientes(nome)
-        `)
-        .eq("unidade_id", unidadeAtualId)
-        .gte("data", dataInicial)
-        .lte("data", dataFinal)
-        .or("cancelada.eq.false,cancelada.is.null");
+    const htmlCaixas = caixas.map(caixa => {
 
-    if(erroComandas){
-      throw erroComandas;
-    }
+      const movimentosCaixa =
+        movimentosPorCaixa[String(caixa.id)] || [];
 
-    const comandasValidas =
-      (comandas || []).filter(comanda => {
 
-        if(comanda.cancelada === true){
-          return false;
-        }
+      /* ===================================================
+         PAGAMENTOS VÁLIDOS
+      =================================================== */
 
-        const status =
-          String(comanda.status || "")
+      const entradasPagamento =
+        movimentosCaixa.filter(movimento => {
+
+          if(movimento.cancelada === true){
+            return false;
+          }
+
+          if(movimento.tipo !== "Entrada"){
+            return false;
+          }
+
+          if(!movimento.forma_pagamento_id){
+            return false;
+          }
+
+          if(movimento.comandas?.cancelada === true){
+            return false;
+          }
+
+          const statusComanda =
+            String(
+              movimento.comandas?.status || ""
+            )
             .trim()
             .toLowerCase();
 
-        return ![
-          "cancelada",
-          "cancelado"
-        ].includes(status);
+          if(
+            statusComanda === "cancelada" ||
+            statusComanda === "cancelado"
+          ){
+            return false;
+          }
+
+          return true;
+        });
+
+
+      /* ===================================================
+         REFORÇOS
+      =================================================== */
+
+      const reforcos =
+        movimentosCaixa.filter(movimento =>
+          movimento.tipo === "Entrada" &&
+          !movimento.forma_pagamento_id &&
+          movimento.cancelada !== true
+        );
+
+
+      /* ===================================================
+         SANGRIAS
+      =================================================== */
+
+      const sangrias =
+        movimentosCaixa.filter(movimento =>
+          movimento.tipo === "Saída" &&
+          movimento.cancelada !== true
+        );
+
+
+      /* ===================================================
+         AGRUPAR PAGAMENTOS POR FORMA
+      =================================================== */
+
+      const porForma = {};
+
+      entradasPagamento.forEach(movimento => {
+
+        const forma =
+          movimento.formas_pagamento?.nome ||
+          "Forma não informada";
+
+        const cliente =
+          movimento.comandas?.clientes?.nome ||
+          "Cliente não informado";
+
+        if(!porForma[forma]){
+          porForma[forma] = {
+            total: 0,
+            itens: []
+          };
+        }
+
+        const valor =
+          Number(movimento.valor || 0);
+
+        porForma[forma].total += valor;
+
+        porForma[forma].itens.push({
+          cliente,
+          valor
+        });
 
       });
 
 
-    const mapaComandas = {};
+      /* ===================================================
+         TOTAIS
+      =================================================== */
 
-    comandasValidas.forEach(comanda => {
-      mapaComandas[String(comanda.id)] = comanda;
-    });
-
-    const idsComandas =
-      comandasValidas.map(comanda => comanda.id);
-
-
-    /* =====================================================
-       4. BUSCAR PAGAMENTOS REAIS
-
-       AGORA A FONTE DO CAIXA É A TABELA PAGAMENTOS.
-    ===================================================== */
-
-    let pagamentos = [];
-
-    if(idsComandas.length > 0){
-
-      const tamanhoLote = 100;
-
-      for(
-        let inicio = 0;
-        inicio < idsComandas.length;
-        inicio += tamanhoLote
-      ){
-
-        const lote =
-          idsComandas.slice(
-            inicio,
-            inicio + tamanhoLote
-          );
-
-        const {
-          data: pagamentosLote,
-          error: erroPagamentos
-        } =
-          await supabaseClient
-            .from("pagamentos")
-            .select(`
-              id,
-              comanda_id,
-              forma_pagamento_id,
-              valor,
-              data,
-              formas_pagamento(nome)
-            `)
-            .in("comanda_id", lote);
-
-        if(erroPagamentos){
-          throw erroPagamentos;
-        }
-
-        pagamentos.push(
-          ...(pagamentosLote || [])
+      const totalPagamentos =
+        entradasPagamento.reduce(
+          (total, movimento) =>
+            total + Number(movimento.valor || 0),
+          0
         );
 
-      }
 
-    }
-
-/* =====================================================
-   5. BUSCAR TODAS AS MOVIMENTAÇÕES DOS CAIXAS
-===================================================== */
-
-const movimentosPorCaixa = {};
-
-for(const caixa of caixas){
-
-  const {
-    data: movimentosCaixa,
-    error: erroMovimentosCaixa
-  } = await supabaseClient
-    .from("caixa_movimentacoes")
-    .select(`
-      *,
-      formas_pagamento(nome),
-      comandas(
-        id,
-        status,
-        cancelada,
-        clientes(nome)
-      )
-    `)
-    .eq("caixa_id", caixa.id)
-    .order("id", { ascending:true });
-
-  if(erroMovimentosCaixa){
-    console.error(
-      "Erro ao buscar movimentações do caixa:",
-      erroMovimentosCaixa
-    );
-    throw erroMovimentosCaixa;
-  }
-
-  movimentosPorCaixa[String(caixa.id)] =
-    movimentosCaixa || [];
-}
-    /* =====================================================
-       7. MONTAR CADA CAIXA
-    ===================================================== */
-
-    const htmlCaixas =
-      caixas.map(caixa => {
-
-        /* ---------------------------------------------
-           PAGAMENTOS DESTE DIA
-        --------------------------------------------- */
-
-   const movimentosCaixa =
-  movimentosPorCaixa[
-    String(caixa.id)
-  ] || [];
+      const totalReforcos =
+        reforcos.reduce(
+          (total, movimento) =>
+            total + Number(movimento.valor || 0),
+          0
+        );
 
 
-/* PAGAMENTOS GERADOS PELO FATURAMENTO */
-
-const entradasPagamento =
-  movimentosCaixa.filter(movimento => {
-
-    if(movimento.cancelada === true){
-      return false;
-    }
-
-    if(
-      movimento.comandas?.cancelada === true ||
-      String(
-        movimento.comandas?.status || ""
-      ).toLowerCase() === "cancelada"
-    ){
-      return false;
-    }
-
-    return (
-      movimento.tipo === "Entrada" &&
-      movimento.forma_pagamento_id
-    );
-
-  });
+      const totalSangrias =
+        sangrias.reduce(
+          (total, movimento) =>
+            total + Number(movimento.valor || 0),
+          0
+        );
 
 
-/* REFORÇOS */
-
-const reforcos =
-  movimentosCaixa.filter(movimento =>
-    movimento.tipo === "Entrada" &&
-    !movimento.forma_pagamento_id &&
-    movimento.cancelada !== true
-  );
-
-
-/* SANGRIAS */
-
-const sangrias =
-  movimentosCaixa.filter(movimento =>
-    movimento.tipo === "Saída" &&
-    movimento.cancelada !== true
-  );
-        /* ---------------------------------------------
-           REFORÇOS E SANGRIAS DESTE CAIXA
-
-           Entradas com forma_pagamento_id são antigas
-           cópias de pagamentos e NÃO serão somadas.
-        --------------------------------------------- */
-
-       const movimentosCaixa =
-  movimentosPorCaixa[
-    String(caixa.id)
-  ] || [];
-
-
-        const reforcos =
-          movimentosCaixa.filter(
-            movimento =>
-              movimento.tipo === "Entrada" &&
-              !movimento.forma_pagamento_id
-          );
-
-
-        const sangrias =
-          movimentosCaixa.filter(
-            movimento =>
-              movimento.tipo === "Saída"
-          );
-
-
-        /* =================================================
-           AGRUPAR PAGAMENTOS POR FORMA
-        ================================================= */
-
-        const porForma = {};
-
-       
-const porForma = {};
-
-entradasPagamento.forEach(movimento => {
-
-  const forma =
-    movimento.formas_pagamento?.nome ||
-    "Forma não informada";
-
-  const cliente =
-    movimento.comandas
-      ?.clientes
-      ?.nome ||
-    "Cliente não informado";
-
-  if(!porForma[forma]){
-    porForma[forma] = {
-      total: 0,
-      itens: []
-    };
-  }
-
-  const valor =
-    Number(movimento.valor || 0);
-
-  porForma[forma].total += valor;
-
-  porForma[forma].itens.push({
-    cliente,
-    valor
-  });
-
-});
-
-        /* =================================================
-           TOTAIS
-        ================================================= */
-
-       const totalPagamentos =
-  entradasPagamento.reduce(
-    (total, movimento) =>
-      total + Number(movimento.valor || 0),
-    0
-  );
-
-
-        const totalReforcos =
-          reforcos.reduce(
-            (total, movimento) =>
-              total +
-              Number(
-                movimento.valor || 0
-              ),
-            0
-          );
-
-
-        const totalSangrias =
-          sangrias.reduce(
-            (total, movimento) =>
-              total +
-              Number(
-                movimento.valor || 0
-              ),
-            0
-          );
-
+      /* ===================================================
+         PAGAMENTOS EM DINHEIRO
+      =================================================== */
 
       const totalDinheiroEntradas =
-  entradasPagamento
-    .filter(movimento => {
+        entradasPagamento
+          .filter(movimento => {
 
-      const forma =
-        String(
-          movimento
-            .formas_pagamento
-            ?.nome || ""
-        ).toLowerCase();
+            const forma =
+              String(
+                movimento.formas_pagamento?.nome || ""
+              )
+              .trim()
+              .toLowerCase();
 
-      return forma.includes("dinheiro");
+            return forma.includes("dinheiro");
 
-    })
-    .reduce(
-      (total, movimento) =>
-        total + Number(movimento.valor || 0),
-      0
-    );
-
-
-        /*
-          DINHEIRO FÍSICO NO CAIXA
-
-          abertura
-          + pagamentos em dinheiro
-          + reforços
-          - sangrias
-        */
-
-        const totalDinheiro =
-          Number(caixa.abertura || 0) +
-          totalDinheiroEntradas +
-          totalReforcos -
-          totalSangrias;
+          })
+          .reduce(
+            (total, movimento) =>
+              total + Number(movimento.valor || 0),
+            0
+          );
 
 
-        /*
-          MOVIMENTO FINANCEIRO DO DIA
+      /* ===================================================
+         DINHEIRO FÍSICO NO CAIXA
 
-          todas as formas recebidas
-          + reforços
-          - sangrias
-        */
+         abertura
+         + pagamentos em dinheiro
+         + reforços
+         - sangrias
+      =================================================== */
 
-        const totalTodasFormas =
-          totalPagamentos +
-          totalReforcos -
-          totalSangrias;
-
-
-        /* =================================================
-           HTML
-        ================================================= */
-
-        return `
-
-          <div class="caixa-card">
-
-            <div
-              class="caixa-resumo-topo"
-              onclick="alternarDetalheCaixa(${caixa.id})"
-            >
-
-              <div>
-
-                <h3>
-                  Caixa ${formatarDataComanda(caixa.data)}
-                </h3>
-
-                <small>
-                  ${caixa.status}
-                  •
-                  ${caixa.aberto_por || "Usuário não informado"}
-                </small>
-
-              </div>
-
-            </div>
+      const totalDinheiro =
+        Number(caixa.abertura || 0) +
+        totalDinheiroEntradas +
+        totalReforcos -
+        totalSangrias;
 
 
-            <div class="caixa-acoes">
+      /* ===================================================
+         MOVIMENTO FINANCEIRO
 
-              ${
-                caixa.status === "Aberto"
-                  ? `
+         pagamentos de todas as formas
+         + reforços
+         - sangrias
+      =================================================== */
 
-                    ${
-                      pode("caixa_reforco")
-                        ? `
-                          <button
-                            class="principal"
-                            onclick="abrirReforcoCaixa(${caixa.id})"
-                          >
-                            Reforço
-                          </button>
-                        `
-                        : ""
-                    }
-
-                    ${
-                      pode("caixa_sangria")
-                        ? `
-                          <button
-                            onclick="abrirSangriaCaixa(${caixa.id})"
-                          >
-                            Sangria
-                          </button>
-                        `
-                        : ""
-                    }
-
-                    ${
-                      pode("caixa_fechar")
-                        ? `
-                          <button
-                            onclick="abrirFechamentoCaixa(${caixa.id})"
-                          >
-                            Fechar caixa
-                          </button>
-                        `
-                        : ""
-                    }
-
-                  `
-                  : ""
-              }
+      const totalTodasFormas =
+        totalPagamentos +
+        totalReforcos -
+        totalSangrias;
 
 
-              ${
-                pode("caixa_excluir")
-                  ? `
-                    <button
-                      onclick="excluirCaixa(${caixa.id})"
-                    >
-                      Excluir caixa
-                    </button>
-                  `
-                  : ""
-              }
+      /* ===================================================
+         HTML
+      =================================================== */
 
-            </div>
+      return `
 
+        <div class="caixa-card">
 
-            <div
-              id="detalheCaixa_${caixa.id}"
-              class="caixa-detalhe"
-            >
+          <div
+            class="caixa-resumo-topo"
+            onclick="alternarDetalheCaixa(${caixa.id})"
+          >
 
-
-              <h3>Abertura do caixa</h3>
-
-              <div class="caixa-linha">
-
-                <span>
-                  Valor de abertura
-                </span>
-
-                <strong>
-                  ${dinheiro(caixa.abertura || 0)}
-                </strong>
-
-              </div>
-
+            <div>
 
               <h3>
-                Entradas por forma de pagamento
+                Caixa ${formatarDataComanda(caixa.data)}
               </h3>
 
-
-              ${
-                Object.keys(porForma).length
-
-                  ? Object.keys(porForma)
-                      .map(forma => `
-
-                        <div
-                          style="
-                            margin-bottom:18px;
-                          "
-                        >
-
-                          <div class="caixa-linha">
-
-                            <strong>
-                              ${forma}
-                            </strong>
-
-                            <strong>
-                              ${dinheiro(
-                                porForma[forma].total
-                              )}
-                            </strong>
-
-                          </div>
-
-
-                          ${
-                            porForma[forma]
-                              .itens
-                              .map(item => `
-
-                                <div class="caixa-linha">
-
-                                  <small>
-                                    ${item.cliente}
-                                  </small>
-
-                                  <span>
-                                    ${dinheiro(item.valor)}
-                                  </span>
-
-                                </div>
-
-                              `)
-                              .join("")
-                          }
-
-                        </div>
-
-                      `)
-                      .join("")
-
-                  : `
-                      <p>
-                        Nenhuma entrada de pagamento registrada.
-                      </p>
-                    `
-              }
-
-
-              <h3>Reforço</h3>
-
-              ${
-                reforcos.length
-
-                  ? reforcos.map(
-                      movimento => `
-
-                        <div class="caixa-linha">
-
-                          <span>
-                            ${
-                              movimento.descricao ||
-                              "Reforço de caixa"
-                            }
-                          </span>
-
-                          <strong>
-                            ${dinheiro(
-                              movimento.valor
-                            )}
-                          </strong>
-
-                        </div>
-
-                      `
-                    ).join("")
-
-                  : `
-                      <p>
-                        Nenhum reforço registrado.
-                      </p>
-                    `
-              }
-
-
-              <h3>Sangria</h3>
-
-              ${
-                sangrias.length
-
-                  ? sangrias.map(
-                      movimento => `
-
-                        <div class="caixa-linha">
-
-                          <span>
-                            ${
-                              movimento.descricao ||
-                              "Sangria de caixa"
-                            }
-                          </span>
-
-                          <strong>
-                            ${dinheiro(
-                              movimento.valor
-                            )}
-                          </strong>
-
-                        </div>
-
-                      `
-                    ).join("")
-
-                  : `
-                      <p>
-                        Nenhuma sangria registrada.
-                      </p>
-                    `
-              }
-
-
-              <h3>Resumo final</h3>
-
-
-              <div class="caixa-linha">
-
-                <span>
-                  Total em dinheiro
-                </span>
-
-                <strong>
-                  ${dinheiro(totalDinheiro)}
-                </strong>
-
-              </div>
-
-
-              <div class="caixa-linha">
-
-                <span>
-                  Total todas as formas de pagamento
-                </span>
-
-                <strong>
-                  ${dinheiro(totalTodasFormas)}
-                </strong>
-
-              </div>
-
-
-              ${
-                caixa.status === "Fechado"
-                  ? `
-
-                    <div class="caixa-linha">
-
-                      <span>
-                        Fechamento informado
-                      </span>
-
-                      <strong>
-                        ${dinheiro(
-                          caixa.fechamento || 0
-                        )}
-                      </strong>
-
-                    </div>
-
-
-                    <div class="caixa-linha">
-
-                      <span>
-                        Diferença
-                      </span>
-
-                      <strong>
-                        ${dinheiro(
-                          caixa.diferenca || 0
-                        )}
-                      </strong>
-
-                    </div>
-
-
-                    ${
-                      usuarioLogado?.perfil === "dono" ||
-                      pode("caixa_reabrir")
-
-                        ? `
-                            <button
-                              onclick="reabrirCaixa(${caixa.id})"
-                            >
-                              Reabrir caixa
-                            </button>
-                          `
-
-                        : ""
-                    }
-
-                  `
-                  : ""
-              }
+              <small>
+                ${caixa.status}
+                •
+                ${caixa.aberto_por || "Usuário não informado"}
+              </small>
 
             </div>
 
           </div>
 
-        `;
 
-      }).join("");
+          <div class="caixa-acoes">
+
+            ${
+              caixa.status === "Aberto"
+                ? `
+
+                  ${
+                    pode("caixa_reforco")
+                      ? `
+                        <button
+                          class="principal"
+                          onclick="abrirReforcoCaixa(${caixa.id})"
+                        >
+                          Reforço
+                        </button>
+                      `
+                      : ""
+                  }
+
+                  ${
+                    pode("caixa_sangria")
+                      ? `
+                        <button
+                          onclick="abrirSangriaCaixa(${caixa.id})"
+                        >
+                          Sangria
+                        </button>
+                      `
+                      : ""
+                  }
+
+                  ${
+                    pode("caixa_fechar")
+                      ? `
+                        <button
+                          onclick="abrirFechamentoCaixa(${caixa.id})"
+                        >
+                          Fechar caixa
+                        </button>
+                      `
+                      : ""
+                  }
+
+                `
+                : ""
+            }
+
+
+            ${
+              pode("caixa_excluir")
+                ? `
+                  <button
+                    onclick="excluirCaixa(${caixa.id})"
+                  >
+                    Excluir caixa
+                  </button>
+                `
+                : ""
+            }
+
+          </div>
+
+
+          <div
+            id="detalheCaixa_${caixa.id}"
+            class="caixa-detalhe"
+          >
+
+
+            <h3>Abertura do caixa</h3>
+
+            <div class="caixa-linha">
+
+              <span>Valor de abertura</span>
+
+              <strong>
+                ${dinheiro(caixa.abertura || 0)}
+              </strong>
+
+            </div>
+
+
+            <h3>
+              Entradas por forma de pagamento
+            </h3>
+
+
+            ${
+              Object.keys(porForma).length
+
+                ? Object.keys(porForma)
+                    .map(forma => `
+
+                      <div
+                        style="margin-bottom:18px;"
+                      >
+
+                        <div class="caixa-linha">
+
+                          <strong>
+                            ${forma}
+                          </strong>
+
+                          <strong>
+                            ${dinheiro(
+                              porForma[forma].total
+                            )}
+                          </strong>
+
+                        </div>
+
+
+                        ${
+                          porForma[forma]
+                            .itens
+                            .map(item => `
+
+                              <div class="caixa-linha">
+
+                                <small>
+                                  ${item.cliente}
+                                </small>
+
+                                <span>
+                                  ${dinheiro(item.valor)}
+                                </span>
+
+                              </div>
+
+                            `)
+                            .join("")
+                        }
+
+                      </div>
+
+                    `)
+                    .join("")
+
+                : `
+                    <p>
+                      Nenhuma entrada de pagamento registrada.
+                    </p>
+                  `
+            }
+
+
+            <h3>Reforço</h3>
+
+            ${
+              reforcos.length
+
+                ? reforcos.map(
+                    movimento => `
+
+                      <div class="caixa-linha">
+
+                        <span>
+                          ${
+                            movimento.descricao ||
+                            "Reforço de caixa"
+                          }
+                        </span>
+
+                        <strong>
+                          ${dinheiro(movimento.valor)}
+                        </strong>
+
+                      </div>
+
+                    `
+                  ).join("")
+
+                : `
+                    <p>
+                      Nenhum reforço registrado.
+                    </p>
+                  `
+            }
+
+
+            <h3>Sangria</h3>
+
+            ${
+              sangrias.length
+
+                ? sangrias.map(
+                    movimento => `
+
+                      <div class="caixa-linha">
+
+                        <span>
+                          ${
+                            movimento.descricao ||
+                            "Sangria de caixa"
+                          }
+                        </span>
+
+                        <strong>
+                          ${dinheiro(movimento.valor)}
+                        </strong>
+
+                      </div>
+
+                    `
+                  ).join("")
+
+                : `
+                    <p>
+                      Nenhuma sangria registrada.
+                    </p>
+                  `
+            }
+
+
+            <h3>Resumo final</h3>
+
+
+            <div class="caixa-linha">
+
+              <span>
+                Total em dinheiro
+              </span>
+
+              <strong>
+                ${dinheiro(totalDinheiro)}
+              </strong>
+
+            </div>
+
+
+            <div class="caixa-linha">
+
+              <span>
+                Total todas as formas de pagamento
+              </span>
+
+              <strong>
+                ${dinheiro(totalTodasFormas)}
+              </strong>
+
+            </div>
+
+
+            ${
+              caixa.status === "Fechado"
+                ? `
+
+                  <div class="caixa-linha">
+
+                    <span>
+                      Fechamento informado
+                    </span>
+
+                    <strong>
+                      ${dinheiro(caixa.fechamento || 0)}
+                    </strong>
+
+                  </div>
+
+
+                  <div class="caixa-linha">
+
+                    <span>
+                      Diferença
+                    </span>
+
+                    <strong>
+                      ${dinheiro(caixa.diferenca || 0)}
+                    </strong>
+
+                  </div>
+
+
+                  ${
+                    usuarioLogado?.perfil === "dono" ||
+                    pode("caixa_reabrir")
+
+                      ? `
+                          <button
+                            onclick="reabrirCaixa(${caixa.id})"
+                          >
+                            Reabrir caixa
+                          </button>
+                        `
+
+                      : ""
+                  }
+
+                `
+                : ""
+            }
+
+          </div>
+
+        </div>
+
+      `;
+
+    }).join("");
 
 
     lista.innerHTML = htmlCaixas;
@@ -4473,14 +4320,15 @@ async function registrarEntradaCaixa(comandaId, formaPagamentoId, valor){
 
   const { error } = await supabaseClient
     .from("caixa_movimentacoes")
-    .insert([{
-      caixa_id: caixa.id,
-      tipo: "Entrada",
-      descricao: "Pagamento de atendimento",
-      valor: Number(valor || 0),
-      comanda_id: comandaId,
-      forma_pagamento_id: formaPagamentoId
-    }]);
+   .insert([{
+  caixa_id: caixa.id,
+  tipo: "Entrada",
+  descricao: "Pagamento de atendimento",
+  valor: Number(valor || 0),
+  comanda_id: comandaId,
+  forma_pagamento_id: formaPagamentoId,
+  cancelada: false
+}]);
 
   if(error){
     alert("Erro ao registrar entrada no caixa: " + error.message);
@@ -10727,16 +10575,17 @@ if(pagamentosParaCaixa.length > 0){
     );
   }
 
-  const movimentacoesCaixa =
-    pagamentosParaCaixa.map(pagamento => ({
-      caixa_id: caixa.id,
-      tipo: "Entrada",
-      descricao: "Pagamento de atendimento",
-      valor: Number(pagamento.valor || 0),
-      comanda_id: comanda.id,
-      forma_pagamento_id: pagamento.formaPagamentoId
-    }));
-
+const movimentacoesCaixa =
+  pagamentosParaCaixa.map(pagamento => ({
+    caixa_id: caixa.id,
+    tipo: "Entrada",
+    descricao: "Pagamento de atendimento",
+    valor: Number(pagamento.valor || 0),
+    comanda_id: comanda.id,
+    forma_pagamento_id: pagamento.formaPagamentoId,
+    cancelada: false
+  }));
+  
   const caixaResp =
     await supabaseClient
       .from("caixa_movimentacoes")
@@ -10964,10 +10813,24 @@ async function abrirFechamentoCaixa(caixaId){
   }
 }
 
-  const { data: movs } = await supabaseClient
-    .from("caixa_movimentacoes")
-    .select("*")
-   .eq("caixa_id", caixaId);
+  const { data: movs, error: erroMovs } = await supabaseClient
+  .from("caixa_movimentacoes")
+  .select("*")
+  .eq("caixa_id", caixaId)
+  .or("cancelada.eq.false,cancelada.is.null");
+
+if(erroMovs){
+  console.error(
+    "Erro ao buscar movimentações para fechamento:",
+    erroMovs
+  );
+
+  alert(
+    "Erro ao calcular o fechamento do caixa."
+  );
+
+  return;
+}
 
   const movimentacoes = movs || [];
 
