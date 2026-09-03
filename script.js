@@ -16844,27 +16844,38 @@ async function carregarConfirmacoes(){
             >
 
 
-              <button
-                onclick="
-                  enviarConfirmacaoWhatsAppCliente(
-                    ${indice}
-                  )
-                "
-              >
-                Gerar mensagem
-              </button>
+             <button
+  onclick="
+    enviarConfirmacaoWhatsAppCliente(
+      ${indice}
+    )
+  "
+>
+  Gerar mensagem
+</button>
 
 
-              <button
-                class="principal"
-                onclick="
-                  confirmarClienteDia(
-                    ${indice}
-                  )
-                "
-              >
-                Confirmar
-              </button>
+<button
+  onclick="
+    marcarMensagemEnviadaCliente(
+      ${indice}
+    )
+  "
+>
+  Marcar como enviada
+</button>
+
+
+<button
+  class="principal"
+  onclick="
+    confirmarClienteDia(
+      ${indice}
+    )
+  "
+>
+  Confirmar
+</button>
 
 
               <button
@@ -17034,69 +17045,24 @@ async function enviarConfirmacaoWhatsAppCliente(indice){
     ];
 
   if(!grupo){
-
     alert(
       "Não foi possível localizar os agendamentos da cliente."
     );
-
     return;
   }
-
 
   const mensagem =
     gerarMensagemConfirmacaoCliente(
       grupo
     );
 
-
-  /*
-    Marca todos os procedimentos como
-    confirmação preparada/enviada.
-  */
-
-  const ids =
-    grupo.agendamentos
-      .map(a => a.id)
-      .filter(Boolean);
-
-
-  if(ids.length){
-
-    const { error } =
-      await supabaseClient
-        .from("agendamentos")
-        .update({
-          confirmacao_status: "enviado"
-        })
-        .in("id", ids);
-
-
-    if(error){
-
-      console.error(
-        "Erro ao atualizar confirmação:",
-        error
-      );
-
-    }
-
-  }
-
-
-  /*
-    Abre a mensagem dentro do próprio sistema.
-  */
-
   abrirModal(`
 
-    <h2>
-      Mensagem de confirmação
-    </h2>
+    <h2>Mensagem de confirmação</h2>
 
     <p style="margin-bottom:15px;">
       <strong>${grupo.nome}</strong>
     </p>
-
 
     <textarea
       id="mensagemConfirmacaoCopiar"
@@ -17116,7 +17082,6 @@ async function enviarConfirmacaoWhatsAppCliente(indice){
       "
     ></textarea>
 
-
     <div
       style="
         display:flex;
@@ -17127,12 +17092,11 @@ async function enviarConfirmacaoWhatsAppCliente(indice){
     >
 
       <button
-  class="principal"
-  onclick="copiarMensagemConfirmacao(this)"
->
-  Copiar mensagem
-</button>
-
+        class="principal"
+        onclick="copiarMensagemConfirmacao(this)"
+      >
+        Copiar mensagem
+      </button>
 
       <button
         onclick="fecharModal()"
@@ -17144,12 +17108,6 @@ async function enviarConfirmacaoWhatsAppCliente(indice){
 
   `);
 
-
-  /*
-    Colocamos o texto pelo value para preservar
-    perfeitamente as quebras de linha.
-  */
-
   const campo =
     document.getElementById(
       "mensagemConfirmacaoCopiar"
@@ -17158,15 +17116,6 @@ async function enviarConfirmacaoWhatsAppCliente(indice){
   if(campo){
     campo.value = mensagem;
   }
-
-
-  /*
-    Atualiza o status visual sem fechar o modal.
-  */
-
-  grupo.agendamentos.forEach(a => {
-    a.confirmacao_status = "enviado";
-  });
 
 }
 async function copiarMensagemConfirmacao(botao){
@@ -17232,6 +17181,57 @@ async function copiarMensagemConfirmacao(botao){
     );
 
   }
+
+}
+async function marcarMensagemEnviadaCliente(indice){
+
+  const grupo =
+    window.confirmacoesClientesCache?.[
+      indice
+    ];
+
+  if(!grupo){
+
+    alert(
+      "Não foi possível localizar os agendamentos da cliente."
+    );
+
+    return;
+  }
+
+  const ids =
+    grupo.agendamentos
+      .map(a => a.id)
+      .filter(Boolean);
+
+  if(ids.length === 0){
+    return;
+  }
+
+  const { error } =
+    await supabaseClient
+      .from("agendamentos")
+      .update({
+        confirmacao_status: "enviado"
+      })
+      .in("id", ids);
+
+  if(error){
+
+    console.error(
+      "Erro ao marcar confirmação como enviada:",
+      error
+    );
+
+    alert(
+      "Erro ao atualizar a confirmação: " +
+      error.message
+    );
+
+    return;
+  }
+
+  await carregarConfirmacoes();
 
 }
 
