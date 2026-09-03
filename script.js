@@ -1,4 +1,4 @@
-const SUPABASE_URL = "https://hndksymtlzqtbzgrvfkh.supabase.co";
+issoconst SUPABASE_URL = "https://hndksymtlzqtbzgrvfkh.supabase.co";
 const SUPABASE_KEY = "sb_publishable_F4-5yOEa-lfaK5I-arqfMg_-j9pU0N8";
 
 const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
@@ -3794,7 +3794,7 @@ async function carregarCaixas(){
     }
 
 /* =====================================================
-   5. BUSCAR REFORÇOS E SANGRIAS POR CAIXA
+   5. BUSCAR TODAS AS MOVIMENTAÇÕES DOS CAIXAS
 ===================================================== */
 
 const movimentosPorCaixa = {};
@@ -3806,16 +3806,24 @@ for(const caixa of caixas){
     error: erroMovimentosCaixa
   } = await supabaseClient
     .from("caixa_movimentacoes")
-    .select("*")
+    .select(`
+      *,
+      formas_pagamento(nome),
+      comandas(
+        id,
+        status,
+        cancelada,
+        clientes(nome)
+      )
+    `)
     .eq("caixa_id", caixa.id)
-    .order("id", { ascending: true });
+    .order("id", { ascending:true });
 
   if(erroMovimentosCaixa){
     console.error(
-      `Erro ao buscar movimentações do caixa ${caixa.id}:`,
+      "Erro ao buscar movimentações do caixa:",
       erroMovimentosCaixa
     );
-
     throw erroMovimentosCaixa;
   }
 
@@ -3833,62 +3841,55 @@ for(const caixa of caixas){
            PAGAMENTOS DESTE DIA
         --------------------------------------------- */
 
-        const pagamentosCaixa =
-          pagamentos.filter(pagamento => {
-
-            const comanda =
-              mapaComandas[
-                String(pagamento.comanda_id)
-              ];
-
-            if(!comanda){
-              return false;
-            }
-
-            /*
-              Preferimos a data do pagamento.
-
-              Se algum registro antigo não tiver data,
-              usamos a data da comanda.
-            */
-
-            const dataPagamento =
-              pagamento.data ||
-              comanda.data;
-
-            return (
-              String(dataPagamento).slice(0,10) ===
-              String(caixa.data).slice(0,10)
-            );
-
-          });
+   const movimentosCaixa =
+  movimentosPorCaixa[
+    String(caixa.id)
+  ] || [];
 
 
-        /* ---------------------------------------------
-           NÃO CONTA "CRÉDITO DA CLIENTE"
+/* PAGAMENTOS GERADOS PELO FATURAMENTO */
 
-           Usar crédito já comprado não é uma nova
-           entrada financeira.
-        --------------------------------------------- */
+const entradasPagamento =
+  movimentosCaixa.filter(movimento => {
 
-        const pagamentosFinanceiros =
-          pagamentosCaixa.filter(pagamento => {
+    if(movimento.cancelada === true){
+      return false;
+    }
 
-            const nomeForma =
-              String(
-                pagamento
-                  .formas_pagamento
-                  ?.nome || ""
-              )
-                .trim()
-                .toLowerCase();
+    if(
+      movimento.comandas?.cancelada === true ||
+      String(
+        movimento.comandas?.status || ""
+      ).toLowerCase() === "cancelada"
+    ){
+      return false;
+    }
 
-            return nomeForma !==
-              "crédito da cliente".toLowerCase();
+    return (
+      movimento.tipo === "Entrada" &&
+      movimento.forma_pagamento_id
+    );
 
-          });
+  });
 
 
+/* REFORÇOS */
+
+const reforcos =
+  movimentosCaixa.filter(movimento =>
+    movimento.tipo === "Entrada" &&
+    !movimento.forma_pagamento_id &&
+    movimento.cancelada !== true
+  );
+
+
+/* SANGRIAS */
+
+const sangrias =
+  movimentosCaixa.filter(movimento =>
+    movimento.tipo === "Saída" &&
+    movimento.cancelada !== true
+  );
         /* ---------------------------------------------
            REFORÇOS E SANGRIAS DESTE CAIXA
 
@@ -3923,66 +3924,50 @@ for(const caixa of caixas){
 
         const porForma = {};
 
-        pagamentosFinanceiros.forEach(
-          pagamento => {
+       
+const porForma = {};
 
-            const forma =
-              pagamento
-                .formas_pagamento
-                ?.nome ||
-              "Forma não informada";
+entradasPagamento.forEach(movimento => {
 
-            const comanda =
-              mapaComandas[
-                String(
-                  pagamento.comanda_id
-                )
-              ];
+  const forma =
+    movimento.formas_pagamento?.nome ||
+    "Forma não informada";
 
-            const cliente =
-              comanda
-                ?.clientes
-                ?.nome ||
-              "Cliente não informado";
+  const cliente =
+    movimento.comandas
+      ?.clientes
+      ?.nome ||
+    "Cliente não informado";
 
-            if(!porForma[forma]){
+  if(!porForma[forma]){
+    porForma[forma] = {
+      total: 0,
+      itens: []
+    };
+  }
 
-              porForma[forma] = {
-                total: 0,
-                itens: []
-              };
+  const valor =
+    Number(movimento.valor || 0);
 
-            }
+  porForma[forma].total += valor;
 
-            const valor =
-              Number(
-                pagamento.valor || 0
-              );
+  porForma[forma].itens.push({
+    cliente,
+    valor
+  });
 
-            porForma[forma].total += valor;
-
-            porForma[forma].itens.push({
-              cliente,
-              valor
-            });
-
-          }
-        );
-
+});
 
         /* =================================================
            TOTAIS
         ================================================= */
 
-        const totalPagamentos =
-          pagamentosFinanceiros.reduce(
-            (total, pagamento) =>
-              total +
-              Number(
-                pagamento.valor || 0
-              ),
-            0
-          );
+       const totalPagamentos =
+  entradasPagamento.reduce(
+    (total, movimento) =>
+      total + Number(movimento.valor || 0),
+    0
+  );
 
 
         const totalReforcos =
@@ -4007,31 +3992,25 @@ for(const caixa of caixas){
           );
 
 
-        const totalDinheiroEntradas =
-          pagamentosFinanceiros
-            .filter(pagamento => {
+      const totalDinheiroEntradas =
+  entradasPagamento
+    .filter(movimento => {
 
-              const forma =
-                String(
-                  pagamento
-                    .formas_pagamento
-                    ?.nome || ""
-                )
-                  .toLowerCase();
+      const forma =
+        String(
+          movimento
+            .formas_pagamento
+            ?.nome || ""
+        ).toLowerCase();
 
-              return forma.includes(
-                "dinheiro"
-              );
+      return forma.includes("dinheiro");
 
-            })
-            .reduce(
-              (total, pagamento) =>
-                total +
-                Number(
-                  pagamento.valor || 0
-                ),
-              0
-            );
+    })
+    .reduce(
+      (total, movimento) =>
+        total + Number(movimento.valor || 0),
+      0
+    );
 
 
         /*
