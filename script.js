@@ -16516,10 +16516,7 @@ async function carregarConfirmacoes(){
 
 
   /* =====================================================
-     DATA PADRÃO DAS CONFIRMAÇÕES
-
-     Como as confirmações são feitas 1 dia antes,
-     ao abrir a aba pela primeira vez mostramos amanhã.
+     DATA INICIAL = AMANHÃ
   ===================================================== */
 
   if(!window.dataConfirmacoesSelecionada){
@@ -16536,8 +16533,12 @@ async function carregarConfirmacoes(){
   }
 
 
+  const dataSelecionada =
+    window.dataConfirmacoesSelecionada;
+
+
   /* =====================================================
-     FILTRO DE DATA + ÁREA DOS CARDS
+     MONTA FILTRO DE DATA
   ===================================================== */
 
   lista.innerHTML = `
@@ -16545,41 +16546,69 @@ async function carregarConfirmacoes(){
     <div
       class="card"
       style="
-        margin-bottom:16px;
-        display:flex;
-        gap:12px;
-        align-items:flex-end;
-        flex-wrap:wrap;
+        margin-bottom:20px;
+        padding:16px;
       "
     >
 
-      <div>
+      <div
+        style="
+          display:flex;
+          align-items:flex-end;
+          gap:10px;
+          flex-wrap:wrap;
+        "
+      >
 
-        <label>
-          Data dos agendamentos
-        </label>
+        <div>
 
-        <input
-          type="date"
-          id="dataFiltroConfirmacoes"
-          value="${window.dataConfirmacoesSelecionada}"
-          onchange="alterarDataConfirmacoes(this.value)"
+          <label
+            for="dataFiltroConfirmacoes"
+            style="
+              display:block;
+              margin-bottom:6px;
+              font-weight:600;
+            "
+          >
+            Data dos agendamentos
+          </label>
+
+          <input
+            id="dataFiltroConfirmacoes"
+            type="date"
+            value="${dataSelecionada}"
+            onchange="alterarDataConfirmacoes(this.value)"
+          >
+
+        </div>
+
+
+        <button
+          type="button"
+          onclick="irParaConfirmacoesHoje()"
         >
+          Hoje
+        </button>
+
+
+        <button
+          type="button"
+          onclick="irParaConfirmacoesAmanha()"
+        >
+          Amanhã
+        </button>
 
       </div>
-
-
-      <button
-        onclick="irParaConfirmacoesAmanha()"
-      >
-        Amanhã
-      </button>
 
     </div>
 
 
     <div id="listaConfirmacoesCards">
-      Carregando confirmações...
+
+      <div class="card">
+        Carregando confirmações...
+      </div>
+
     </div>
 
   `;
@@ -16595,12 +16624,9 @@ async function carregarConfirmacoes(){
 
   try{
 
-    const data =
-      window.dataConfirmacoesSelecionada;
-
 
     /* =====================================================
-       1. BUSCAR AGENDAMENTOS DO DIA
+       BUSCAR SOMENTE AGENDAMENTOS DA DATA SELECIONADA
     ===================================================== */
 
     const {
@@ -16618,11 +16644,20 @@ async function carregarConfirmacoes(){
           nome
         )
       `)
-      .eq("data", data)
-      .neq("status", "Cancelado")
-      .order("horario", {
-        ascending: true
-      });
+      .eq(
+        "data",
+        dataSelecionada
+      )
+      .neq(
+        "status",
+        "Cancelado"
+      )
+      .order(
+        "horario",
+        {
+          ascending: true
+        }
+      );
 
 
     if(error){
@@ -16631,64 +16666,72 @@ async function carregarConfirmacoes(){
 
 
     /* =====================================================
-       2. REMOVER CANCELADOS E JÁ CONFIRMADOS
+       REMOVER CANCELADOS E JÁ CONFIRMADOS
     ===================================================== */
 
     const agendamentosPendentes =
-      (agendamentos || []).filter(a => {
+      (agendamentos || [])
+        .filter(a => {
 
-        const status =
-          String(a.status || "")
-            .trim()
-            .toLowerCase();
-
-        const confirmacao =
-          String(
-            a.confirmacao_status || "pendente"
-          )
-            .trim()
-            .toLowerCase();
+          const status =
+            String(
+              a.status || ""
+            )
+              .trim()
+              .toLowerCase();
 
 
-        if(
-          status === "cancelado" ||
-          status === "cancelada"
-        ){
-          return false;
-        }
+          const confirmacao =
+            String(
+              a.confirmacao_status ||
+              "pendente"
+            )
+              .trim()
+              .toLowerCase();
 
 
-        /*
-          Cliente confirmada desaparece
-          desta aba.
-        */
-
-        if(confirmacao === "confirmado"){
-          return false;
-        }
+          if(
+            status === "cancelado" ||
+            status === "cancelada"
+          ){
+            return false;
+          }
 
 
-        return true;
+          if(
+            confirmacao === "confirmado"
+          ){
+            return false;
+          }
 
-      });
+
+          return true;
+
+        });
 
 
     /* =====================================================
-       NENHUMA CONFIRMAÇÃO
+       NENHUM AGENDAMENTO
     ===================================================== */
 
-    if(agendamentosPendentes.length === 0){
+    if(
+      agendamentosPendentes.length === 0
+    ){
 
       areaCards.innerHTML = `
 
         <div class="card">
 
           Nenhuma confirmação pendente
-          para este dia.
+          para ${formatarDataConfirmacao(
+            dataSelecionada
+          )}.
 
         </div>
 
       `;
+
+      window.confirmacoesClientesCache = {};
 
       return;
 
@@ -16696,7 +16739,7 @@ async function carregarConfirmacoes(){
 
 
     /* =====================================================
-       3. AGRUPAR POR CLIENTE
+       AGRUPAR AGENDAMENTOS POR CLIENTE
     ===================================================== */
 
     const clientesAgrupados = {};
@@ -16704,22 +16747,11 @@ async function carregarConfirmacoes(){
 
     agendamentosPendentes.forEach(a => {
 
-      /*
-        Preferimos cliente_id porque é único.
-
-        Caso exista algum agendamento antigo sem
-        cliente_id, usamos nome + telefone.
-      */
 
       const chave =
         a.cliente_id
           ? `cliente_${a.cliente_id}`
-          : `
-              cliente_
-              ${a.clientes?.nome || ""}
-              _
-              ${a.clientes?.telefone || ""}
-            `;
+          : `cliente_${a.clientes?.nome || ""}_${a.clientes?.telefone || ""}`;
 
 
       if(!clientesAgrupados[chave]){
@@ -16754,240 +16786,255 @@ async function carregarConfirmacoes(){
     });
 
 
-    /* =====================================================
-       4. ORDENAR PROCEDIMENTOS DE CADA CLIENTE
-    ===================================================== */
-
     const grupos =
-      Object.values(clientesAgrupados);
+      Object.values(
+        clientesAgrupados
+      );
 
+
+    /* =====================================================
+       ORDENAR SERVIÇOS DE CADA CLIENTE
+    ===================================================== */
 
     grupos.forEach(grupo => {
 
       grupo.agendamentos.sort(
         (a, b) =>
-          String(a.horario || "")
-            .localeCompare(
-              String(b.horario || "")
+          String(
+            a.horario || ""
+          ).localeCompare(
+            String(
+              b.horario || ""
             )
+          )
       );
 
     });
 
 
     /* =====================================================
-       5. ORDENAR CLIENTES PELO PRIMEIRO HORÁRIO
+       ORDENAR CLIENTES PELO PRIMEIRO HORÁRIO
     ===================================================== */
 
-    grupos.sort((grupoA, grupoB) => {
+    grupos.sort(
+      (grupoA, grupoB) => {
 
-      const horarioA =
-        grupoA.agendamentos[0]
-          ?.horario || "";
+        const horarioA =
+          grupoA.agendamentos[0]
+            ?.horario || "";
 
-      const horarioB =
-        grupoB.agendamentos[0]
-          ?.horario || "";
+        const horarioB =
+          grupoB.agendamentos[0]
+            ?.horario || "";
 
-      return String(horarioA)
-        .localeCompare(
-          String(horarioB)
+        return String(
+          horarioA
+        ).localeCompare(
+          String(
+            horarioB
+          )
         );
 
-    });
+      }
+    );
 
 
     /* =====================================================
-       6. GUARDAR DADOS PARA OS BOTÕES
+       CACHE DOS BOTÕES
     ===================================================== */
 
     window.confirmacoesClientesCache = {};
 
 
-    grupos.forEach((grupo, indice) => {
+    grupos.forEach(
+      (grupo, indice) => {
 
-      window.confirmacoesClientesCache[
-        indice
-      ] = grupo;
+        window.confirmacoesClientesCache[
+          indice
+        ] = grupo;
 
-    });
+      }
+    );
 
 
     /* =====================================================
-       7. MONTAR CARDS
+       MONTAR CARDS
     ===================================================== */
 
     areaCards.innerHTML =
-      grupos.map((grupo, indice) => {
+      grupos
+        .map(
+          (grupo, indice) => {
 
 
-        const procedimentos =
-          grupo.agendamentos
-            .map(a => `
+            const procedimentos =
+              grupo.agendamentos
+                .map(a => `
+
+                  <div
+                    style="
+                      display:flex;
+                      gap:8px;
+                      align-items:flex-start;
+                      margin-bottom:5px;
+                    "
+                  >
+
+                    <strong
+                      style="
+                        min-width:55px;
+                      "
+                    >
+                      ${formatarHorarioBonito(
+                        a.horario
+                      )}
+                    </strong>
+
+                    <span>
+                      ${
+                        a.servicos?.nome ||
+                        "Serviço"
+                      }
+                    </span>
+
+                  </div>
+
+                `)
+                .join("");
+
+
+            const algumEnviado =
+              grupo.agendamentos
+                .some(a =>
+
+                  String(
+                    a.confirmacao_status ||
+                    ""
+                  )
+                    .trim()
+                    .toLowerCase() ===
+                    "enviado"
+
+                );
+
+
+            const statusTexto =
+              algumEnviado
+                ? "Confirmação enviada"
+                : "Pendente";
+
+
+            return `
 
               <div
-                style="
-                  display:flex;
-                  gap:8px;
-                  align-items:flex-start;
-                  margin-bottom:5px;
-                "
+                class="card confirmacao-card"
+                id="confirmacaoCliente_${indice}"
               >
 
-                <strong
+                <div>
+
+                  <h3
+                    style="
+                      margin-bottom:8px;
+                    "
+                  >
+                    ${grupo.nome}
+                  </h3>
+
+
+                  <div
+                    style="
+                      margin-bottom:10px;
+                    "
+                  >
+                    ${procedimentos}
+                  </div>
+
+
+                  <p>
+                    Telefone:
+                    ${
+                      grupo.telefone ||
+                      "Não informado"
+                    }
+                  </p>
+
+
+                  <strong>
+                    ${statusTexto}
+                  </strong>
+
+                </div>
+
+
+                <div
                   style="
-                    min-width:55px;
+                    display:flex;
+                    gap:8px;
+                    flex-wrap:wrap;
+                    margin-top:10px;
                   "
                 >
-                  ${formatarHorarioBonito(
-                    a.horario
-                  )}
-                </strong>
-
-                <span>
-                  ${
-                    a.servicos?.nome ||
-                    "Serviço"
-                  }
-                </span>
-
-              </div>
-
-            `)
-            .join("");
 
 
-        /*
-          Se algum procedimento já teve
-          confirmação marcada como enviada,
-          mostramos "Confirmação enviada".
-        */
-
-        const algumEnviado =
-          grupo.agendamentos.some(a =>
-
-            String(
-              a.confirmacao_status || ""
-            )
-              .toLowerCase() ===
-              "enviado"
-
-          );
+                  <button
+                    type="button"
+                    onclick="
+                      enviarConfirmacaoWhatsAppCliente(
+                        ${indice}
+                      )
+                    "
+                  >
+                    Gerar mensagem
+                  </button>
 
 
-        const statusTexto =
-          algumEnviado
-            ? "Confirmação enviada"
-            : "Pendente";
+                  <button
+                    type="button"
+                    onclick="
+                      marcarMensagemEnviadaCliente(
+                        ${indice}
+                      )
+                    "
+                  >
+                    Marcar como enviada
+                  </button>
 
 
-        return `
-
-          <div
-            class="card confirmacao-card"
-            id="confirmacaoCliente_${indice}"
-          >
-
-            <div>
-
-              <h3
-                style="
-                  margin-bottom:8px;
-                "
-              >
-                ${grupo.nome}
-              </h3>
+                  <button
+                    type="button"
+                    class="principal"
+                    onclick="
+                      confirmarClienteDia(
+                        ${indice}
+                      )
+                    "
+                  >
+                    Confirmar
+                  </button>
 
 
-              <div
-                style="
-                  margin-bottom:10px;
-                "
-              >
+                  <button
+                    type="button"
+                    onclick="
+                      cancelarConfirmacaoClienteDia(
+                        ${indice}
+                      )
+                    "
+                  >
+                    Cancelar
+                  </button>
 
-                ${procedimentos}
+
+                </div>
 
               </div>
 
+            `;
 
-              <p>
-                Telefone:
-                ${
-                  grupo.telefone ||
-                  "Não informado"
-                }
-              </p>
-
-
-              <strong>
-                ${statusTexto}
-              </strong>
-
-            </div>
-
-
-            <div
-              style="
-                display:flex;
-                gap:8px;
-                flex-wrap:wrap;
-                margin-top:10px;
-              "
-            >
-
-
-              <button
-                onclick="
-                  enviarConfirmacaoWhatsAppCliente(
-                    ${indice}
-                  )
-                "
-              >
-                Gerar mensagem
-              </button>
-
-
-              <button
-                onclick="
-                  marcarMensagemEnviadaCliente(
-                    ${indice}
-                  )
-                "
-              >
-                Marcar como enviada
-              </button>
-
-
-              <button
-                class="principal"
-                onclick="
-                  confirmarClienteDia(
-                    ${indice}
-                  )
-                "
-              >
-                Confirmar
-              </button>
-
-
-              <button
-                onclick="
-                  cancelarConfirmacaoClienteDia(
-                    ${indice}
-                  )
-                "
-              >
-                Cancelar
-              </button>
-
-
-            </div>
-
-          </div>
-
-        `;
-
-      }).join("");
+          }
+        )
+        .join("");
 
 
   }catch(erro){
@@ -16997,12 +17044,16 @@ async function carregarConfirmacoes(){
       erro
     );
 
+
     areaCards.innerHTML = `
 
       <div class="card">
 
         Erro ao carregar confirmações:
-        ${erro?.message || "erro desconhecido"}
+        ${
+          erro?.message ||
+          "erro desconhecido"
+        }
 
       </div>
 
@@ -17014,7 +17065,7 @@ async function carregarConfirmacoes(){
 
 
 /* =========================================================
-   ALTERAR DATA DAS CONFIRMAÇÕES
+   TROCAR DATA DO FILTRO
 ========================================================= */
 
 async function alterarDataConfirmacoes(data){
@@ -17032,7 +17083,23 @@ async function alterarDataConfirmacoes(data){
 
 
 /* =========================================================
-   IR PARA AMANHÃ
+   FILTRAR HOJE
+========================================================= */
+
+async function irParaConfirmacoesHoje(){
+
+  window.dataConfirmacoesSelecionada =
+    formatarDataISO(
+      new Date()
+    );
+
+  await carregarConfirmacoes();
+
+}
+
+
+/* =========================================================
+   FILTRAR AMANHÃ
 ========================================================= */
 
 async function irParaConfirmacoesAmanha(){
@@ -17050,10 +17117,6 @@ async function irParaConfirmacoesAmanha(){
   await carregarConfirmacoes();
 
 }
-
-/* =========================================================
-   FORMATAR DATA DA CONFIRMAÇÃO
-========================================================= */
 
 function formatarDataConfirmacao(dataISO){
 
