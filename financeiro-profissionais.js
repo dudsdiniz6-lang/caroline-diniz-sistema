@@ -1659,45 +1659,63 @@ if(dataFim < FINANCEIRO_PROFISSIONAIS_DATA_CORTE){
     // ITENS DAS COMANDAS
     // ==========================================
 
-    let itensPendentes = [];
+   let itensPendentes = [];
 
-    if(idsComandas.length > 0){
+if(idsComandas.length > 0){
 
-      const {
-        data: itens,
-        error: erroItens
-      } =
-        await supabaseClient
-          .from("comanda_itens")
-          .select(`
-            id,
-            comanda_id,
-            profissional_id,
-            descricao,
-            valor,
-            comissao_percentual
-          `)
-          .in(
-            "comanda_id",
-            idsComandas
-          );
+  const TAMANHO_LOTE_COMANDAS = 200;
 
-      if(erroItens){
-        throw erroItens;
-      }
+  let todosItens = [];
 
-      // A REGRA PRINCIPAL:
-      // se o item já está em um pagamento,
-      // ele não entra novamente.
-      itensPendentes =
-        (itens || []).filter(
-          item =>
-            !idsBloqueados.has(
-              String(item.id)
-            )
+  for(
+    let i = 0;
+    i < idsComandas.length;
+    i += TAMANHO_LOTE_COMANDAS
+  ){
+
+    const loteIdsComandas =
+      idsComandas.slice(
+        i,
+        i + TAMANHO_LOTE_COMANDAS
+      );
+
+    const {
+      data: itensLote,
+      error: erroItens
+    } =
+      await supabaseClient
+        .from("comanda_itens")
+        .select(`
+          id,
+          comanda_id,
+          profissional_id,
+          descricao,
+          valor,
+          comissao_percentual
+        `)
+        .in(
+          "comanda_id",
+          loteIdsComandas
         );
 
+    if(erroItens){
+      throw erroItens;
     }
+
+    todosItens.push(
+      ...(itensLote || [])
+    );
+  }
+
+  itensPendentes =
+    todosItens.filter(
+      item =>
+        !idsBloqueados.has(
+          String(item.id)
+        )
+    );
+
+}
 
 
     // ==========================================
