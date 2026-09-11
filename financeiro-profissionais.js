@@ -2618,31 +2618,52 @@ const idsBloqueados =
 
 if(idsComandas.length > 0){
 
-  const {
-    data: itensRecebidos,
-    error: erroItens
-  } =
-    await supabaseClient
-      .from("comanda_itens")
-      .select(`
-        id,
-        comanda_id,
-        profissional_id,
-        descricao,
-        valor,
-        comissao_percentual
-      `)
-      .in(
-        "comanda_id",
-        idsComandas
+  const TAMANHO_LOTE_COMANDAS = 200;
+
+  let todosItens = [];
+
+  for(
+    let i = 0;
+    i < idsComandas.length;
+    i += TAMANHO_LOTE_COMANDAS
+  ){
+
+    const loteIdsComandas =
+      idsComandas.slice(
+        i,
+        i + TAMANHO_LOTE_COMANDAS
       );
 
-  if(erroItens){
-    throw erroItens;
+    const {
+      data: itensLote,
+      error: erroItens
+    } =
+      await supabaseClient
+        .from("comanda_itens")
+        .select(`
+          id,
+          comanda_id,
+          profissional_id,
+          descricao,
+          valor,
+          comissao_percentual
+        `)
+        .in(
+          "comanda_id",
+          loteIdsComandas
+        );
+
+    if(erroItens){
+      throw erroItens;
+    }
+
+    todosItens.push(
+      ...(itensLote || [])
+    );
   }
 
   itens =
-    (itensRecebidos || []).filter(item => {
+    todosItens.filter(item => {
 
       const comanda =
         mapaComandas[item.comanda_id];
