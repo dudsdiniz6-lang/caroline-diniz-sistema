@@ -3447,15 +3447,17 @@ if(
     agendamento.servicos?.comissao_padrao || 0
   );
 
-  await supabaseClient
-    .from("comanda_itens")
-    .insert([{
-      comanda_id: comanda.id,
-      servico_id: agendamento.servico_id,
-      descricao: agendamento.servicos?.nome || "Serviço",
-      valor: agendamento.total,
-      comissao_percentual: percentualComissao
-    }]);
+ await supabaseClient
+  .from("comanda_itens")
+  .insert([{
+    comanda_id: comanda.id,
+    servico_id: agendamento.servico_id,
+    agendamento_id: agendamento.id,
+    profissional_id: agendamento.profissional_id,
+    descricao: agendamento.servicos?.nome || "Serviço",
+    valor: agendamento.total,
+    comissao_percentual: percentualComissao
+  }]);
 
  if(tipoRecebimento === "receber_agora"){
 
