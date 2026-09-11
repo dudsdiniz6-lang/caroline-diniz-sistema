@@ -3595,29 +3595,10 @@ async function obterIdsItensComissaoBloqueados(){
     );
 
 
-  /*
-  ==================================================
-  6. BUSCA TODOS OS ITENS
-
-  Também em lotes pequenos para nunca depender
-  do limite padrão do Supabase.
-  ==================================================
-  */
-
-  const todosItens = [];
-
-  const TAMANHO_LOTE_COMANDAS = 100;
-
-
-  for(
-    let i = 0;
-    i < idsComandas.length;
-    i += TAMANHO_LOTE_COMANDAS
-  ){
-
   return idsPagos;
 
 }
+
 function garantirModalPagamentoComissao(){
 
   let modal =
