@@ -4256,54 +4256,74 @@ return ![
   await obterIdsItensComissaoBloqueados();
     let itensProfissional = [];
 
-    if(idsComandas.length > 0){
+if(idsComandas.length > 0){
 
-      const {
-        data: itens,
-        error: erroItens
-      } =
-        await supabaseClient
-          .from("comanda_itens")
-          .select(`
-            id,
-            comanda_id,
-            profissional_id,
-            descricao,
-            valor,
-            comissao_percentual
-          `)
-          .in(
-            "comanda_id",
-            idsComandas
-          );
+  const TAMANHO_LOTE_COMANDAS = 200;
 
-      if(erroItens){
-        throw erroItens;
-      }
+  let todosItens = [];
 
-      itensProfissional =
-        (itens || []).filter(item => {
+  for(
+    let i = 0;
+    i < idsComandas.length;
+    i += TAMANHO_LOTE_COMANDAS
+  ){
 
-          const comanda =
-            mapaComandas[
-              item.comanda_id
-            ];
+    const loteIdsComandas =
+      idsComandas.slice(
+        i,
+        i + TAMANHO_LOTE_COMANDAS
+      );
 
-          const profissionalItem =
-  item.profissional_id ??
-  comanda?.profissional_id;
+    const {
+      data: itensLote,
+      error: erroItens
+    } =
+      await supabaseClient
+        .from("comanda_itens")
+        .select(`
+          id,
+          comanda_id,
+          profissional_id,
+          descricao,
+          valor,
+          comissao_percentual
+        `)
+        .in(
+          "comanda_id",
+          loteIdsComandas
+        );
 
-return (
-  profissionalItem != null &&
-  String(profissionalItem).trim() ===
-    String(profissionalId).trim() &&
-  !idsBloqueados.has(
-    String(item.id)
-  )
-);
-        });
-
+    if(erroItens){
+      throw erroItens;
     }
+
+    todosItens.push(
+      ...(itensLote || [])
+    );
+  }
+
+  itensProfissional =
+    todosItens.filter(item => {
+
+      const comanda =
+        mapaComandas[item.comanda_id];
+
+      const profissionalItem =
+        item.profissional_id ??
+        comanda?.profissional_id;
+
+      return (
+        profissionalItem != null &&
+        String(profissionalItem).trim() ===
+          String(profissionalId).trim() &&
+        !idsBloqueados.has(
+          String(item.id)
+        )
+      );
+
+    });
+
+}
 
     if(itensProfissional.length === 0){
 
