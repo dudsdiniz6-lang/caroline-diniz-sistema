@@ -1510,44 +1510,21 @@ if(dataFim < FINANCEIRO_PROFISSIONAIS_DATA_CORTE){
         );
 
 
-    // ==========================================
-    // TODAS AS COMANDAS ATÉ A DATA ESCOLHIDA
-    // SEM DATA INICIAL
-    // ==========================================
+// ==========================================
+// TODAS AS COMANDAS ATÉ A DATA ESCOLHIDA
+// SEM DATA INICIAL
+// ==========================================
 
-    const {
-      data: comandas,
-      error: erroComandas
-    } =
-      await supabaseClient
-        .from("comandas")
-.select(`
-  id,
-  profissional_id,
-  data,
-  status,
-  cancelada
-`)
-.gte("data", FINANCEIRO_PROFISSIONAIS_DATA_CORTE)
-.lte("data", dataFim)
-.or(
-  "cancelada.eq.false,cancelada.is.null"
-);
-
-    if(erroComandas){
-      throw erroComandas;
-    }
 const comandasValidas =
-  (comandas || []).filter(
-    comanda =>
-      comanda.cancelada !== true
+  await buscarTodasComandasFinanceiroAte(
+    dataFim
   );
 
-    const mapaComandas = {};
+const mapaComandas = {};
 
-    comandasValidas.forEach(comanda => {
-      mapaComandas[comanda.id] = comanda;
-    });
+comandasValidas.forEach(comanda => {
+  mapaComandas[comanda.id] = comanda;
+});
 
 
     const idsComandas =
