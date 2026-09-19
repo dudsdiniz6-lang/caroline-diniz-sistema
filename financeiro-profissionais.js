@@ -4420,13 +4420,23 @@ const totalDevido =
         >
           <span>Saldo anterior</span>
 
-          <strong>
-            ${
-              financeiroFormatarMoeda(
-                saldoAnterior
-              )
-            }
-          </strong>
+          <strong
+  style="
+    ${
+      saldoAnterior > 0
+        ? "color:#15803d;"
+        : saldoAnterior < 0
+          ? "color:#b42318;"
+          : ""
+    }
+  "
+>
+  ${
+    financeiroFormatarMoeda(
+      saldoAnterior
+    )
+  }
+</strong>
         </div>
 
         <div
@@ -4445,13 +4455,13 @@ const totalDevido =
             }
           </span>
 
-          <strong>
-            -${
-              financeiroFormatarMoeda(
-                totalVales
-              )
-            }
-          </strong>
+          <strong style="color:#b42318;">
+  -${
+    financeiroFormatarMoeda(
+      totalVales
+    )
+  }
+</strong>
         </div>
 
         <div
@@ -4466,16 +4476,18 @@ const totalDevido =
         >
           <strong>Total líquido</strong>
 
-          <strong
-            style="
-              font-size:23px;
-              ${
-                totalDevido < 0
-                  ? "color:#b42318;"
-                  : ""
-              }
-            "
-          >
+          <<strong
+  style="
+    font-size:23px;
+    ${
+      totalDevido > 0
+        ? "color:#15803d;"
+        : totalDevido < 0
+          ? "color:#b42318;"
+          : ""
+    }
+  "
+>
             ${
               financeiroFormatarMoeda(
                 totalDevido
