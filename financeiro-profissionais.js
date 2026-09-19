@@ -5,6 +5,7 @@ let financeiroResumoDataFim;
 
 let financeiroPagamentoDataFim;
 let financeiroModoResumo = "pagamento";
+let financeiroSnapshotPagamento = {};
 
 window.FinanceiroProfissionais = {
   abrirAba
@@ -326,108 +327,6 @@ async function carregarResumoFinanceiroProfissionaisNovo(){
         </div>
 
       </div>
-
-
-      <!-- PESQUISA -->
-
-      <div style="
-        margin-top:14px;
-        padding:18px;
-        border:1px solid #eee;
-        border-radius:12px;
-        background:#fafafa;
-      ">
-
-        <div style="
-          display:flex;
-          justify-content:space-between;
-          align-items:flex-end;
-          gap:15px;
-          flex-wrap:wrap;
-        ">
-
-          <div>
-
-            <strong style="
-              display:block;
-              font-size:14px;
-              margin-bottom:5px;
-            ">
-              CONSULTAR PERÍODO
-            </strong>
-
-            <small>
-              Apenas para pesquisa. Não define o pagamento.
-            </small>
-
-          </div>
-
-
-          <div style="
-            display:flex;
-            align-items:flex-end;
-            gap:10px;
-            flex-wrap:wrap;
-          ">
-
-            <div>
-
-              <label
-                style="
-                  display:block;
-                  margin-bottom:5px;
-                  font-size:13px;
-                "
-              >
-                De
-              </label>
-
-              <input
-                id="financeiroResumoDataInicio"
-                type="date"
-                value="${financeiroResumoDataInicio}"
-              >
-
-            </div>
-
-
-            <div>
-
-              <label
-                style="
-                  display:block;
-                  margin-bottom:5px;
-                  font-size:13px;
-                "
-              >
-                Até
-              </label>
-
-              <input
-                id="financeiroResumoDataFim"
-                type="date"
-                value="${financeiroResumoDataFim}"
-              >
-
-            </div>
-
-
-            <button
-              type="button"
-              onclick="
-                FinanceiroProfissionais
-                  .pesquisarPeriodo()
-              "
-            >
-              Pesquisar
-            </button>
-
-          </div>
-
-        </div>
-
-      </div>
-
 
       <div
         id="modoFinanceiroProfissionais"
@@ -1608,31 +1507,11 @@ if(dataFim < FINANCEIRO_PROFISSIONAIS_DATA_CORTE){
     if(erroComandas){
       throw erroComandas;
     }
-
-
-    const comandasValidas =
-      (comandas || []).filter(comanda => {
-
-        if(comanda.cancelada === true){
-          return false;
-        }
-
-        const status =
-          financeiroNormalizarStatus(
-            comanda.status
-          );
-
-        return ![
-          "",
-          "aberta",
-          "aberto",
-          "pendente",
-          "cancelada",
-          "cancelado"
-        ].includes(status);
-
-      });
-
+const comandasValidas =
+  (comandas || []).filter(
+    comanda =>
+      comanda.cancelada !== true
+  );
 
     const mapaComandas = {};
 
@@ -1722,9 +1601,11 @@ if(idsComandas.length > 0){
     // COMISSÕES PENDENTES POR PROFISSIONAL
     // ==========================================
 
-    const comissoesPorProfissional = {};
+ const comissoesPorProfissional = {};
+const itensPendentesPorProfissional = {};
+    financeiroSnapshotPagamento = {};
 
-    itensPendentes.forEach(item => {
+itensPendentes.forEach(item => {
 
       const comanda =
         mapaComandas[item.comanda_id];
@@ -1740,6 +1621,15 @@ if(idsComandas.length > 0){
       if(!profissionalId){
         return;
       }
+  if(!itensPendentesPorProfissional[profissionalId]){
+  itensPendentesPorProfissional[profissionalId] = [];
+}
+
+itensPendentesPorProfissional[profissionalId].push({
+  ...item,
+  data: comanda.data,
+  cliente_id: comanda.cliente_id
+});
 
       const valor =
         Number(item.valor || 0);
@@ -2027,6 +1917,16 @@ const ultimoPagamentoPorProfissional = {};
 
           const inicioPendente =
             dadosComissao.primeiraData;
+          financeiroSnapshotPagamento[String(profissional.id)] = {
+  profissionalId: profissional.id,
+  dataFim: dataFim,
+  itens: itensPendentesPorProfissional[profissional.id] || [],
+  comissao: comissao,
+  vales: dadosVales.itens || [],
+  totalVales: totalValesProfissional,
+  saldoAnterior: saldoAnterior,
+  totalDevido: totalDevido
+};
 
 
           return `
