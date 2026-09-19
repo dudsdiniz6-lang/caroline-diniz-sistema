@@ -2410,35 +2410,17 @@ async function carregarDetalhesFinanceiroProfissional(
     }
 
 
-    /* =========================
-       FILTRAR COMANDAS VÁLIDAS
-    ========================= */
+  /* =========================
+   FILTRAR COMANDAS VÁLIDAS
+========================= */
 
-    const comandasValidas =
-      (comandas || []).filter(comanda => {
+const comandasValidas =
+  (comandas || []).filter(
+    comanda =>
+      comanda.cancelada !== true
+  );
 
-        if(comanda.cancelada === true){
-          return false;
-        }
-
-        const status =
-          financeiroNormalizarStatus(
-            comanda.status
-          );
-
-      return ![
-  "",
-  "aberta",
-  "aberto",
-  "pendente",
-  "cancelada",
-  "cancelado"
-].includes(status);
-
-      });
-
-
-    const mapaComandas = {};
+const mapaComandas = {};
 
     comandasValidas.forEach(comanda => {
 
