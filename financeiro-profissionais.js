@@ -3810,39 +3810,20 @@ async function abrirPagamentoComissaoAutomatico(
   "cancelada.eq.false,cancelada.is.null"
 );
 
-    if(erroComandas){
-      throw erroComandas;
-    }
+if(erroComandas){
+  throw erroComandas;
+}
 
+const comandasValidas =
+  (comandas || []).filter(
+    comanda =>
+      comanda.cancelada !== true
+  );
 
-    const comandasValidas =
-      (comandas || []).filter(comanda => {
-
-        if(comanda.cancelada === true){
-          return false;
-        }
-
-        const status =
-          financeiroNormalizarStatus(
-            comanda.status
-          );
-
-        return ![
-          "",
-          "aberta",
-          "aberto",
-          "pendente",
-          "cancelada",
-          "cancelado"
-        ].includes(status);
-
-      });
-
-
-    const idsComandas =
-      comandasValidas.map(
-        comanda => comanda.id
-      );
+const idsComandas =
+  comandasValidas.map(
+    comanda => comanda.id
+  );
 
 
     if(idsComandas.length === 0){
