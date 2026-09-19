@@ -355,7 +355,7 @@ async function carregarResumoFinanceiroProfissionaisNovo(){
           margin-top:20px;
         "
       >
-        Selecione pagamento ou pesquisa.
+       Informe a data e clique em Calcular pagamentos.
       </div>
 
     </div>
@@ -384,53 +384,6 @@ window.FinanceiroProfissionais.carregarParaPagamento =
 
   };
 
-
-window.FinanceiroProfissionais.pesquisarPeriodo =
-  async function(){
-
-    const dataInicio =
-      document.getElementById(
-        "financeiroResumoDataInicio"
-      )?.value;
-
-    const dataFim =
-      document.getElementById(
-        "financeiroResumoDataFim"
-      )?.value;
-
-    if(!dataInicio || !dataFim){
-      alert("Informe as duas datas.");
-      return;
-    }
-
-    if(dataInicio > dataFim){
-      alert(
-        "A data inicial não pode ser maior que a final."
-      );
-      return;
-    }
-
-    financeiroResumoDataInicio = dataInicio;
-    financeiroResumoDataFim = dataFim;
-    financeiroModoResumo = "pesquisa";
-
-    const modo =
-      document.getElementById(
-        "modoFinanceiroProfissionais"
-      );
-
-    if(modo){
-      modo.innerHTML =
-        `CONSULTA: ${
-          financeiroFormatarData(dataInicio)
-        } até ${
-          financeiroFormatarData(dataFim)
-        }`;
-    }
-
-    await atualizarResumoFinanceiroProfissionais();
-
-  };
 async function atualizarResumoFinanceiroProfissionais(){
 
   const container =
