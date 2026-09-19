@@ -3863,40 +3863,11 @@ async function abrirPagamentoComissaoAutomatico(
 
   try{
 
-    // Procura TODOS os serviços válidos até a data escolhida.
-    const {
-      data: comandas,
-      error: erroComandas
-    } =
-      await supabaseClient
-        .from("comandas")
-.select(`
-  id,
-  data,
-  status,
-  cancelada,
-  profissional_id
-`)
-.gte(
-  "data",
-  FINANCEIRO_PROFISSIONAIS_DATA_CORTE
-)
-.lte(
-  "data",
-  dataFim
-)
-.or(
-  "cancelada.eq.false,cancelada.is.null"
-);
-
-if(erroComandas){
-  throw erroComandas;
-}
+  // Procura TODOS os serviços válidos até a data escolhida.
 
 const comandasValidas =
-  (comandas || []).filter(
-    comanda =>
-      comanda.cancelada !== true
+  await buscarTodasComandasFinanceiroAte(
+    dataFim
   );
 
 const idsComandas =
@@ -3920,25 +3891,47 @@ const idsComandas =
     });
 
 
-    const {
-      data: itensRecebidos,
-      error: erroItens
-    } =
-      await supabaseClient
-        .from("comanda_itens")
-        .select(`
-          id,
-          comanda_id,
-          profissional_id
-        `)
-        .in(
-          "comanda_id",
-          idsComandas
-        );
+    const itensRecebidos = [];
 
-    if(erroItens){
-      throw erroItens;
-    }
+const TAMANHO_LOTE_COMANDAS = 200;
+
+for(
+  let i = 0;
+  i < idsComandas.length;
+  i += TAMANHO_LOTE_COMANDAS
+){
+
+  const loteIdsComandas =
+    idsComandas.slice(
+      i,
+      i + TAMANHO_LOTE_COMANDAS
+    );
+
+  const {
+    data: itensLote,
+    error: erroItens
+  } =
+    await supabaseClient
+      .from("comanda_itens")
+      .select(`
+        id,
+        comanda_id,
+        profissional_id
+      `)
+      .in(
+        "comanda_id",
+        loteIdsComandas
+      );
+
+  if(erroItens){
+    throw erroItens;
+  }
+
+  itensRecebidos.push(
+    ...(itensLote || [])
+  );
+
+}
 
 
     const idsBloqueados =
