@@ -3490,7 +3490,116 @@ if(
     );
 
 
-  return idsPagos;
+/*
+==================================================
+6. BUSCA OS ITENS DAS COMANDAS DO HISTÓRICO
+==================================================
+*/
+
+const itensHistoricos = [];
+
+const TAMANHO_LOTE_COMANDAS = 200;
+
+for(
+  let i = 0;
+  i < idsComandas.length;
+  i += TAMANHO_LOTE_COMANDAS
+){
+
+  const loteComandas =
+    idsComandas.slice(
+      i,
+      i + TAMANHO_LOTE_COMANDAS
+    );
+
+  const {
+    data: itensLote,
+    error: erroItensHistoricos
+  } =
+    await supabaseClient
+      .from("comanda_itens")
+      .select(`
+        id,
+        comanda_id,
+        profissional_id
+      `)
+      .in(
+        "comanda_id",
+        loteComandas
+      );
+
+  if(erroItensHistoricos){
+    throw erroItensHistoricos;
+  }
+
+  itensHistoricos.push(
+    ...(itensLote || [])
+  );
+
+}
+
+
+/*
+==================================================
+7. BLOQUEIA ITENS COBERTOS POR FECHAMENTOS ANTIGOS
+==================================================
+*/
+
+itensHistoricos.forEach(item => {
+
+  const comanda =
+    mapaComandas.get(
+      String(item.comanda_id)
+    );
+
+  if(!comanda){
+    return;
+  }
+
+  const profissionalId =
+    item.profissional_id ??
+    comanda.profissional_id;
+
+  if(!profissionalId){
+    return;
+  }
+
+  const pertenceAFechamentoAtivo =
+    pagamentosComPeriodo.some(
+      pagamento => {
+
+        const mesmoProfissional =
+          String(
+            pagamento.profissional_id
+          ) ===
+          String(profissionalId);
+
+        const dentroDoPeriodo =
+          comanda.data >=
+            pagamento.data_inicio &&
+          comanda.data <=
+            pagamento.data_fim;
+
+        return (
+          mesmoProfissional &&
+          dentroDoPeriodo
+        );
+
+      }
+    );
+
+  if(pertenceAFechamentoAtivo){
+
+    idsPagos.add(
+      String(item.id)
+    );
+
+  }
+
+});
+
+
+return idsPagos;
 
 }
 
