@@ -2388,34 +2388,23 @@ async function carregarDetalhesFinanceiroProfissional(
       );
 
 
-    /* =========================
-       BUSCAR COMANDAS
-    ========================= */
+ /* =========================
+   BUSCAR COMANDAS
+========================= */
 
-    const {
-      data: comandas,
-      error: erroComandas
-    } =
-      await supabaseClient
-       .from("comandas")
-.select(`
-  id,
-  data,
-  status,
-  cancelada,
-  profissional_id,
-  cliente_id
-`)
-.gte("data", FINANCEIRO_PROFISSIONAIS_DATA_CORTE)
-.lte("data", dataFim)
-.or(
-  "cancelada.eq.false,cancelada.is.null"
-);
+const comandasValidas =
+  await buscarTodasComandasFinanceiroAte(
+    dataFim
+  );
 
-    if(erroComandas){
-      throw erroComandas;
-    }
+const mapaComandas = {};
 
+comandasValidas.forEach(comanda => {
+
+  mapaComandas[comanda.id] =
+    comanda;
+
+});
 
   /* =========================
    FILTRAR COMANDAS VÁLIDAS
