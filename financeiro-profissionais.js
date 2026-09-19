@@ -6418,7 +6418,35 @@ async function carregarPagamentosProfissionaisNovo(){
   if(!area){
     return;
   }
+const profissionaisFiltro =
+  await obterProfissionais();
 
+const opcoesProfissionaisFiltro =
+  (profissionaisFiltro || [])
+    .filter(
+      profissional =>
+        profissional.ativo !== false
+    )
+    .sort(
+      (a, b) =>
+        String(a.nome || "")
+          .localeCompare(
+            String(b.nome || ""),
+            "pt-BR"
+          )
+    )
+    .map(
+      profissional => `
+        <option value="${profissional.id}">
+          ${
+            financeiroEscaparHTML(
+              profissional.nome
+            )
+          }
+        </option>
+      `
+    )
+    .join("");
   area.innerHTML = `
     <div class="card">
 
@@ -6449,6 +6477,23 @@ async function carregarPagamentosProfissionaisNovo(){
             flex-wrap:wrap;
           "
         >
+        <div>
+  <label
+    for="filtroPagamentoProfissional"
+    style="
+      display:block;
+      margin-bottom:5px;
+      font-size:13px;
+    "
+  >
+    Profissional
+  </label>
+
+  <select id="filtroPagamentoProfissional">
+    <option value="">Todos os profissionais</option>
+    ${opcoesProfissionaisFiltro}
+  </select>
+</div>
           <div>
             <label
               for="filtroPagamentoDataInicio"
@@ -6544,7 +6589,11 @@ async function listarPagamentosFinanceiroProfissionais(){
     "Carregando fechamentos...";
 
   try{
-
+    
+const profissionalId =
+  document.getElementById(
+    "filtroPagamentoProfissional"
+  )?.value;
     const dataInicio =
       document.getElementById(
         "filtroPagamentoDataInicio"
@@ -6587,6 +6636,13 @@ async function listarPagamentosFinanceiroProfissionais(){
           }
         );
 
+    if(profissionalId){
+  consulta =
+    consulta.eq(
+      "profissional_id",
+      profissionalId
+    );
+}
     if(dataInicio){
       consulta =
         consulta.gte(
