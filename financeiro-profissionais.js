@@ -4119,42 +4119,9 @@ async function abrirPagamentoComissaoPeriodo(
       );
     }
 
-
-
-
-    const {
-      data: comandas,
-      error: erroComandas
-    } =
-      await supabaseClient
-        .from("comandas")
-        .select(`
-          id,
-          profissional_id,
-          data,
-          status,
-          cancelada
-        `)
-      .gte(
-  "data",
-  FINANCEIRO_PROFISSIONAIS_DATA_CORTE
-)
-.lte(
-  "data",
-  dataFim
-)
-.or(
-  "cancelada.eq.false,cancelada.is.null"
-);
-
-   if(erroComandas){
-  throw erroComandas;
-}
-
 const comandasValidas =
-  (comandas || []).filter(
-    comanda =>
-      comanda.cancelada !== true
+  await buscarTodasComandasFinanceiroAte(
+    dataFim
   );
 
 const mapaComandas = {};
