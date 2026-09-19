@@ -4873,14 +4873,6 @@ const itensIdsValidos =
         String(id)
       )
   );
-    
-const itensIdsValidos =
-  idsOriginais.filter(
-    id =>
-      !idsJaPagos.has(
-        String(id)
-      )
-  );
 
 if(
   itensIdsValidos.length !==
