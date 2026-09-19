@@ -5044,72 +5044,39 @@ if(itensIdsValidos.length === 0){
     }
 
 
-    /*
-    ==================================================
-    4. SALDO ANTERIOR
-    ==================================================
-    */
-
-    const saldoAnteriorReal =
-      Number(
-        pagamentoComissaoAtual
-          .saldoAnterior || 0
-      );
-
-
-    const totalDevidoReal =
-      comissaoReal +
-      saldoAnteriorReal -
-      totalValesReal;
-
-
-    const valorDevidoParaPagamento =
-      Math.max(
-        0,
-        totalDevidoReal
-      );
-
-
-    /*
-      Se a tela estava desatualizada e algum serviço
-      já havia sido pago, não podemos aceitar um valor
-      digitado maior que o novo total.
-    */
-
    /*
 ==================================================
-SE ALGUM SERVIÇO DEIXOU DE SER PENDENTE ENTRE
-A ABERTURA DO MODAL E A FINALIZAÇÃO, NÃO BLOQUEIA.
-
-O pagamento será gravado usando somente os
-serviços que continuam realmente pendentes.
+4. SALDO ANTERIOR
 ==================================================
 */
 
-const valorPagoEfetivo =
-  Math.min(
-    valorPago,
-    valorDevidoParaPagamento
+const saldoAnteriorReal =
+  Number(
+    pagamentoComissaoAtual
+      .saldoAnterior || 0
   );
 
+const totalDevidoReal =
+  comissaoReal +
+  saldoAnteriorReal -
+  totalValesReal;
 
- const saldoResultante =
+const saldoResultante =
   totalDevidoReal -
   valorPago;
 
+const assinaturaImagem =
+  assinaturaCanvas
+    .toDataURL("image/png");
 
-    const assinaturaImagem =
-      assinaturaCanvas
-        .toDataURL("image/png");
 
+/*
+==================================================
+5. DESCOBRE A DATA REAL DO ITEM PENDENTE MAIS ANTIGO
 
-    /*
-    ==================================================
-    5. DESCOBRE A DATA REAL DO ITEM PENDENTE MAIS ANTIGO
-
-       DATA INICIAL PASSA A SER INFORMATIVA.
-    ==================================================
-    */
+DATA INICIAL PASSA A SER INFORMATIVA.
+==================================================
+*/
 
     const {
       data: itensComComanda,
