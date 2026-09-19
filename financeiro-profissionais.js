@@ -4075,33 +4075,17 @@ async function abrirPagamentoComissaoPeriodo(
   "cancelada.eq.false,cancelada.is.null"
 );
 
-    if(erroComandas){
-      throw erroComandas;
-    }
+   if(erroComandas){
+  throw erroComandas;
+}
 
-    const comandasValidas =
-      (comandas || []).filter(comanda => {
+const comandasValidas =
+  (comandas || []).filter(
+    comanda =>
+      comanda.cancelada !== true
+  );
 
-        if(comanda.cancelada === true){
-          return false;
-        }
-
-        const status =
-          financeiroNormalizarStatus(
-            comanda.status
-          );
-return ![
-  "",
-  "aberta",
-  "aberto",
-  "pendente",
-  "cancelada",
-  "cancelado"
-].includes(status);
-
-      });
-
-    const mapaComandas = {};
+const mapaComandas = {};
 
     comandasValidas.forEach(comanda => {
 
