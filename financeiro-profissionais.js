@@ -3454,43 +3454,17 @@ async function obterIdsItensComissaoBloqueados(){
     inicio += TAMANHO_PAGINA;
 
   }
+const comandasValidas =
+  todasComandas.filter(
+    comanda =>
+      comanda.cancelada !== true
+  );
 
-
-  const comandasValidas =
-    todasComandas.filter(
-      comanda => {
-
-        if(
-          comanda.cancelada === true
-        ){
-          return false;
-        }
-
-
-        const status =
-          financeiroNormalizarStatus(
-            comanda.status
-          );
-
-
-        return ![
-          "",
-          "aberta",
-          "aberto",
-          "pendente",
-          "cancelada",
-          "cancelado"
-        ].includes(status);
-
-      }
-    );
-
-
-  if(
-    comandasValidas.length === 0
-  ){
-    return idsPagos;
-  }
+if(
+  comandasValidas.length === 0
+){
+  return idsPagos;
+}
 
 
   /*
