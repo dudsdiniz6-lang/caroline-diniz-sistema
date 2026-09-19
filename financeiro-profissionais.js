@@ -4890,25 +4890,33 @@ const itensIdsValidos =
         String(id)
       )
   );
-   
+    
+const itensIdsValidos =
+  idsOriginais.filter(
+    id =>
+      !idsJaPagos.has(
+        String(id)
+      )
+  );
 
-    /*
-    ==================================================
-    2. SE ALGUM ITEM JÁ FOI PAGO, NÃO VAMOS
-       SIMPLESMENTE CONTINUAR COM O VALOR ANTIGO.
+if(
+  itensIdsValidos.length !==
+  idsOriginais.length
+){
 
-       RECALCULAMOS A COMISSÃO DOS ITENS REALMENTE
-       PENDENTES.
-    ==================================================
-    */
+  throw new Error(
+    "Um ou mais serviços desta tela já foram pagos em outro fechamento. O pagamento foi bloqueado. Feche esta tela, atualize o financeiro e confira novamente."
+  );
 
-    if(itensIdsValidos.length === 0){
+}
 
-      throw new Error(
-        "Todos os serviços desta tela já foram incluídos em pagamentos anteriores. Atualize o financeiro."
-      );
+if(itensIdsValidos.length === 0){
 
-    }
+  throw new Error(
+    "Todos os serviços desta tela já foram incluídos em pagamentos anteriores. Atualize o financeiro."
+  );
+
+}
 
 
     const {
