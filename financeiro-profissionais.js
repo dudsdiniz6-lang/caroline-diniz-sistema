@@ -2406,26 +2406,6 @@ comandasValidas.forEach(comanda => {
 
 });
 
-  /* =========================
-   FILTRAR COMANDAS VÁLIDAS
-========================= */
-
-const comandasValidas =
-  (comandas || []).filter(
-    comanda =>
-      comanda.cancelada !== true
-  );
-
-const mapaComandas = {};
-
-    comandasValidas.forEach(comanda => {
-
-      mapaComandas[comanda.id] =
-        comanda;
-
-    });
-
-
     const idsComandas =
       comandasValidas.map(
         comanda => comanda.id
