@@ -199,7 +199,84 @@ function financeiroMostrarErro(area, mensagem){
 
 }
 
+async function buscarTodasComandasFinanceiroAte(
+  dataFim
+){
 
+  const todasComandas = [];
+
+  const TAMANHO_PAGINA = 500;
+
+  let inicio = 0;
+
+
+  while(true){
+
+    const {
+      data: pagina,
+      error
+    } =
+      await supabaseClient
+        .from("comandas")
+        .select(`
+          id,
+          profissional_id,
+          cliente_id,
+          data,
+          status,
+          cancelada
+        `)
+        .gte(
+          "data",
+          FINANCEIRO_PROFISSIONAIS_DATA_CORTE
+        )
+        .lte(
+          "data",
+          dataFim
+        )
+        .or(
+          "cancelada.eq.false,cancelada.is.null"
+        )
+        .order(
+          "id",
+          {
+            ascending:true
+          }
+        )
+        .range(
+          inicio,
+          inicio + TAMANHO_PAGINA - 1
+        );
+
+    if(error){
+      throw error;
+    }
+
+    const registros =
+      pagina || [];
+
+    todasComandas.push(
+      ...registros
+    );
+
+    if(
+      registros.length <
+      TAMANHO_PAGINA
+    ){
+      break;
+    }
+
+    inicio += TAMANHO_PAGINA;
+
+  }
+
+
+  return todasComandas.filter(
+    comanda =>
+      comanda.cancelada !== true
+  );
+
+}
 /* =========================================================
    RESUMO
 ========================================================= */
