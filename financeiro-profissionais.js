@@ -4576,16 +4576,16 @@ const totalDevido =
         >
           Observações
         </label>
-
-        <textarea
-          id="pagamentoComissaoObservacoes"
-          rows="3"
-          style="
-            width:100%;
-            resize:vertical;
-          "
-          placeholder="Observação opcional"
-        ></textarea>
+<textarea
+  id="pagamentoComissaoObservacoes"
+  rows="2"
+  style="
+    width:100%;
+    min-height:60px;
+    resize:vertical;
+  "
+  placeholder="Observação opcional"
+></textarea>
       </div>
 
 
