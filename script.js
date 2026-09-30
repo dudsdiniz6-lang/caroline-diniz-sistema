@@ -2442,7 +2442,24 @@ async function salvarServico(){
     document.getElementById(
       "servicoCategoria"
     ).value;
+const retornoAtivo =
+  document.getElementById(
+    "servicoRetornoAtivo"
+  )?.checked === true;
 
+const retornoDias =
+  Number(
+    document.getElementById(
+      "servicoRetornoDias"
+    )?.value || 0
+  );
+
+const retornoAvisoDias =
+  Number(
+    document.getElementById(
+      "servicoRetornoAvisoDias"
+    )?.value || 0
+  );
   const dados = {
 
     unidade_id: unidadeAtualId,
@@ -2473,16 +2490,52 @@ async function salvarServico(){
       ),
 
     comissao_padrao:
-      Number(
-        document.getElementById(
-          "servicoComissao"
-        ).value || 0
-      ),
+  Number(
+    document.getElementById(
+      "servicoComissao"
+    ).value || 0
+  ),
 
-    ativo: true
+retorno_ativo:
+  retornoAtivo,
 
+retorno_dias:
+  retornoAtivo
+    ? retornoDias
+    : null,
+
+retorno_aviso_dias:
+  retornoAtivo
+    ? retornoAvisoDias
+    : 5,
+
+ativo: true
   };
+if(
+  retornoAtivo &&
+  retornoDias < 1
+){
 
+  alert(
+    "Informe em quantos dias a cliente deve retornar."
+  );
+
+  return;
+
+}
+
+if(
+  retornoAtivo &&
+  retornoAvisoDias < 0
+){
+
+  alert(
+    "A antecedência do aviso não pode ser negativa."
+  );
+
+  return;
+
+}
   if(!dados.nome){
 
     alert(
