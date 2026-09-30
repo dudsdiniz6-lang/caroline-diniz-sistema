@@ -11793,6 +11793,25 @@ async function carregarDashboard(){
   area.innerHTML = "Carregando dashboard...";
 
   const hoje = formatarDataISO(new Date());
+  let retornosProximos = [];
+
+let erroRetornosDashboard = null;
+
+try{
+
+  retornosProximos =
+    await buscarRetornosProximosDashboard();
+
+}catch(erro){
+
+  console.error(
+    "Erro ao carregar retornos:",
+    erro
+  );
+
+  erroRetornosDashboard = erro;
+
+}
 
  const comandasResp = await supabaseClient
   .from("comandas")
