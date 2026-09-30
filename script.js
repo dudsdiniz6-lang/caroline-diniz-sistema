@@ -12050,6 +12050,272 @@ async function alternarContatoRetorno(
   await carregarDashboard();
 
 }
+function abrirListaRetornosDashboard(
+  tipo = "pendentes"
+){
+
+  const todosRetornos =
+    Object.values(
+      window.retornosDashboardCache || {}
+    );
+
+
+  const mostrarRealizados =
+    tipo === "realizados";
+
+
+  const lista =
+    todosRetornos.filter(
+      retorno =>
+        mostrarRealizados
+          ? retorno.contatoRealizado === true
+          : retorno.contatoRealizado !== true
+    );
+
+
+  const titulo =
+    mostrarRealizados
+      ? "Contatos realizados"
+      : "Retornos próximos";
+
+
+  const descricao =
+    mostrarRealizados
+      ? "Clientes que já receberam contato sobre o retorno."
+      : "Clientes que precisam ser contatadas para um novo agendamento.";
+
+
+  const linhas =
+    lista.length === 0
+
+      ? `
+        <div
+          style="
+            padding:25px;
+            text-align:center;
+            border:1px solid #e5e5e5;
+            border-radius:10px;
+          "
+        >
+          Nenhuma cliente nesta lista.
+        </div>
+      `
+
+      : lista.map(
+          retorno => {
+
+            const dataRetorno =
+              new Date(
+                `${
+                  retorno.dataRetorno
+                }T12:00:00`
+              ).toLocaleDateString(
+                "pt-BR"
+              );
+
+
+            const telefoneNumeros =
+              String(
+                retorno.telefone || ""
+              ).replace(
+                /\D/g,
+                ""
+              );
+
+
+            const telefoneWhatsapp =
+              telefoneNumeros
+                ? (
+                    telefoneNumeros
+                      .startsWith("55")
+                      ? telefoneNumeros
+                      : `55${telefoneNumeros}`
+                  )
+                : "";
+
+
+            const dataContato =
+              retorno.contatoEm
+                ? new Date(
+                    retorno.contatoEm
+                  ).toLocaleString(
+                    "pt-BR"
+                  )
+                : "";
+
+
+            return `
+              <div
+                style="
+                  padding:14px;
+                  border:1px solid #e5e5e5;
+                  border-radius:10px;
+                  margin-bottom:10px;
+                "
+              >
+                <div
+                  style="
+                    display:flex;
+                    justify-content:space-between;
+                    align-items:flex-start;
+                    gap:15px;
+                    flex-wrap:wrap;
+                  "
+                >
+                  <div>
+                    <strong
+                      style="
+                        display:block;
+                        font-size:16px;
+                      "
+                    >
+                      ${retorno.clienteNome}
+                    </strong>
+
+                    <span
+                      style="
+                        display:block;
+                        margin-top:4px;
+                      "
+                    >
+                      ${retorno.servicoNome}
+                    </span>
+
+                    <small
+                      style="
+                        display:block;
+                        margin-top:4px;
+                      "
+                    >
+                      Retorno previsto:
+                      ${dataRetorno}
+                    </small>
+
+                    <small
+                      style="
+                        display:block;
+                        margin-top:3px;
+                      "
+                    >
+                      Profissional:
+                      ${retorno.profissionalNome}
+                    </small>
+
+                    <small
+                      style="
+                        display:block;
+                        margin-top:3px;
+                      "
+                    >
+                      Telefone:
+                      ${retorno.telefone || "-"}
+                    </small>
+
+                    ${
+                      retorno.contatoRealizado
+                        ? `
+                          <small
+                            style="
+                              display:block;
+                              margin-top:6px;
+                              color:#15803d;
+                              font-weight:600;
+                            "
+                          >
+                            Contato realizado em
+                            ${dataContato}
+                            ${
+                              retorno.contatoPorNome
+                                ? ` por ${retorno.contatoPorNome}`
+                                : ""
+                            }
+                          </small>
+                        `
+                        : ""
+                    }
+                  </div>
+
+                  <div
+                    style="
+                      display:flex;
+                      gap:8px;
+                      flex-wrap:wrap;
+                    "
+                  >
+                    ${
+                      telefoneWhatsapp
+                        ? `
+                          <a
+                            href="https://wa.me/${telefoneWhatsapp}"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                          >
+                            WhatsApp
+                          </a>
+                        `
+                        : ""
+                    }
+
+                    <button
+                      type="button"
+                      class="${
+                        retorno.contatoRealizado
+                          ? ""
+                          : "principal"
+                      }"
+                      onclick="
+                        alternarContatoRetorno(
+                          '${retorno.comandaItemId}'
+                        )
+                      "
+                    >
+                      ${
+                        retorno.contatoRealizado
+                          ? "Desfazer contato"
+                          : "Marcar contato"
+                      }
+                    </button>
+                  </div>
+                </div>
+              </div>
+            `;
+
+          }
+        ).join("");
+
+
+  abrirModal(`
+    <h2 style="margin-top:0;">
+      ${titulo}
+    </h2>
+
+    <p>
+      ${descricao}
+    </p>
+
+    <div
+      style="
+        max-height:65vh;
+        overflow-y:auto;
+        margin-top:18px;
+      "
+    >
+      ${linhas}
+    </div>
+
+    <button
+      type="button"
+      style="
+        width:100%;
+        margin-top:15px;
+      "
+      onclick="fecharModal()"
+    >
+      Fechar
+    </button>
+  `);
+
+}
 async function carregarDashboard(){
 
   const area = document.getElementById("areaDashboard");
