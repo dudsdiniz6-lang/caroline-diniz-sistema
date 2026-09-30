@@ -12047,7 +12047,9 @@ async function alternarContatoRetorno(
   }
 
 
-  await carregarDashboard();
+fecharModal();
+
+await carregarDashboard();
 
 }
 function abrirListaRetornosDashboard(
@@ -12508,7 +12510,11 @@ function porcentagemMeta(valor, meta){
     retorno =>
       retorno.contatoRealizado !== true
   ).length;
-
+const retornosRealizados =
+  retornosProximos.filter(
+    retorno =>
+      retorno.contatoRealizado === true
+  ).length;
 
 const htmlRetornosDashboard =
   erroRetornosDashboard
@@ -12858,16 +12864,44 @@ const htmlRetornosDashboard =
   <h3>Clientes em risco</h3>
   <strong>${clientesRisco}</strong>
 </div>
-<div class="dashboard-card">
-  <h3>Retornos para contato</h3>
+<div
+  class="dashboard-card"
+  style="cursor:pointer;"
+  onclick="
+    abrirListaRetornosDashboard(
+      'pendentes'
+    )
+  "
+>
+  <h3>Retornos próximos</h3>
 
   <strong>
     ${retornosPendentes}
   </strong>
 
   <small>
-    ${retornosProximos.length}
-    retorno(s) próximo(s)
+    Clique para visualizar
+  </small>
+</div>
+
+
+<div
+  class="dashboard-card"
+  style="cursor:pointer;"
+  onclick="
+    abrirListaRetornosDashboard(
+      'realizados'
+    )
+  "
+>
+  <h3>Contatos realizados</h3>
+
+  <strong>
+    ${retornosRealizados}
+  </strong>
+
+  <small>
+    Clique para visualizar
   </small>
 </div>
 
@@ -12904,8 +12938,6 @@ const htmlRetornosDashboard =
 </div>
 
 </div>
-
-${htmlRetornosDashboard}
 
 <div class="dashboard-ranking">
 
