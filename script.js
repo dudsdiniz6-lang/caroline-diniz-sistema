@@ -2115,7 +2115,98 @@ async function abrirModalServico(id = null){
   `).join("")}
 
 </select>
+<div
+  style="
+    margin-top:16px;
+    padding:14px;
+    border:1px solid #e5e5e5;
+    border-radius:10px;
+    background:#fafafa;
+  "
+>
+  <label
+    style="
+      display:flex;
+      align-items:center;
+      gap:8px;
+      margin:0;
+      cursor:pointer;
+    "
+  >
+    <input
+      id="servicoRetornoAtivo"
+      type="checkbox"
+      ${servico?.retorno_ativo === true ? "checked" : ""}
+      onchange="
+        document.getElementById(
+          'camposRetornoServico'
+        ).style.display =
+          this.checked ? 'grid' : 'none'
+      "
+    >
 
+    <strong>
+      Este serviço possui retorno
+    </strong>
+  </label>
+
+  <div
+    id="camposRetornoServico"
+    style="
+      display:${
+        servico?.retorno_ativo === true
+          ? "grid"
+          : "none"
+      };
+      grid-template-columns:
+        repeat(auto-fit, minmax(180px, 1fr));
+      gap:12px;
+      margin-top:14px;
+    "
+  >
+    <div>
+      <label>Retorno recomendado em</label>
+
+      <div
+        style="
+          display:flex;
+          align-items:center;
+          gap:8px;
+        "
+      >
+        <input
+          id="servicoRetornoDias"
+          type="number"
+          min="1"
+          value="${servico?.retorno_dias || 30}"
+        >
+
+        <span>dias</span>
+      </div>
+    </div>
+
+    <div>
+      <label>Avisar com antecedência</label>
+
+      <div
+        style="
+          display:flex;
+          align-items:center;
+          gap:8px;
+        "
+      >
+        <input
+          id="servicoRetornoAvisoDias"
+          type="number"
+          min="0"
+          value="${servico?.retorno_aviso_dias ?? 5}"
+        >
+
+        <span>dias</span>
+      </div>
+    </div>
+  </div>
+</div>
 <button class="principal" onclick="salvarServico()">
       Salvar
     </button>
