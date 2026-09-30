@@ -11693,15 +11693,182 @@ async function buscarRetornosProximosDashboard(){
   });
 
 
-  const retornos =
-    Array.from(
-      ultimoAtendimento.values()
+ let retornos =
+  Array.from(
+    ultimoAtendimento.values()
+  );
+
+
+if(retornos.length === 0){
+  return [];
+}
+
+
+/*
+==========================================
+AGENDAMENTOS FUTUROS JÁ MARCADOS
+==========================================
+*/
+
+const clientesRetornoIds =
+  [
+    ...new Set(
+      retornos.map(
+        retorno =>
+          retorno.clienteId
+      )
+    )
+  ];
+
+
+const servicosRetornoIds =
+  [
+    ...new Set(
+      retornos.map(
+        retorno =>
+          retorno.servicoId
+      )
+    )
+  ];
+
+
+const agendamentosFuturos = [];
+
+let inicioAgendamentos = 0;
+
+
+while(true){
+
+  const {
+    data: paginaAgendamentos,
+    error: erroAgendamentosFuturos
+  } =
+    await supabaseClient
+      .from("agendamentos")
+      .select(`
+        id,
+        cliente_id,
+        servico_id,
+        data,
+        status
+      `)
+      .in(
+        "cliente_id",
+        clientesRetornoIds
+      )
+      .in(
+        "servico_id",
+        servicosRetornoIds
+      )
+      .gte(
+        "data",
+        hoje
+      )
+      .order(
+        "data",
+        {
+          ascending:true
+        }
+      )
+      .range(
+        inicioAgendamentos,
+        inicioAgendamentos +
+          TAMANHO_PAGINA -
+          1
+      );
+
+
+  if(erroAgendamentosFuturos){
+    throw erroAgendamentosFuturos;
+  }
+
+
+  const registrosAgendamentos =
+    paginaAgendamentos || [];
+
+
+  agendamentosFuturos.push(
+    ...registrosAgendamentos
+  );
+
+
+  if(
+    registrosAgendamentos.length <
+    TAMANHO_PAGINA
+  ){
+    break;
+  }
+
+
+  inicioAgendamentos +=
+    TAMANHO_PAGINA;
+
+}
+
+
+/*
+Somente um agendamento futuro válido
+impede o aviso de retorno.
+*/
+
+const retornosJaAgendados =
+  new Set();
+
+
+agendamentosFuturos.forEach(
+  agendamento => {
+
+    const status =
+      String(
+        agendamento.status || ""
+      )
+        .trim()
+        .toLowerCase();
+
+
+    const invalido =
+      [
+        "cancelado",
+        "cancelada",
+        "faltou",
+        "reagendado",
+        "reagendada"
+      ].includes(status);
+
+
+    if(invalido){
+      return;
+    }
+
+
+    retornosJaAgendados.add(
+      `${
+        agendamento.cliente_id
+      }:${
+        agendamento.servico_id
+      }`
     );
 
-
-  if(retornos.length === 0){
-    return [];
   }
+);
+
+
+retornos =
+  retornos.filter(
+    retorno =>
+      !retornosJaAgendados.has(
+        `${
+          retorno.clienteId
+        }:${
+          retorno.servicoId
+        }`
+      )
+  );
+
+
+if(retornos.length === 0){
+  return [];
+}
 
 
   /*
