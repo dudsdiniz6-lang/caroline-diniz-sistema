@@ -12237,6 +12237,311 @@ function porcentagemMeta(valor, meta){
     return dias >= 60;
 
   }).length;
+  const retornosPendentes =
+  retornosProximos.filter(
+    retorno =>
+      retorno.contatoRealizado !== true
+  ).length;
+
+
+const htmlRetornosDashboard =
+  erroRetornosDashboard
+
+    ? `
+      <div
+        class="card"
+        style="
+          margin-top:20px;
+          border-left:4px solid #b42318;
+        "
+      >
+        Não foi possível carregar os retornos.
+      </div>
+    `
+
+    : retornosProximos.length === 0
+
+      ? `
+        <div
+          class="card"
+          style="margin-top:20px;"
+        >
+          <h2 style="margin-top:0;">
+            Retornos próximos
+          </h2>
+
+          <p style="margin-bottom:0;">
+            Nenhuma cliente precisa ser contatada no momento.
+          </p>
+        </div>
+      `
+
+      : `
+        <div
+          class="card"
+          style="margin-top:20px;"
+        >
+          <div
+            style="
+              display:flex;
+              justify-content:space-between;
+              align-items:center;
+              gap:12px;
+              flex-wrap:wrap;
+              margin-bottom:15px;
+            "
+          >
+            <div>
+              <h2 style="margin:0;">
+                Retornos próximos
+              </h2>
+
+              <p style="margin:5px 0 0;">
+                Clientes no período ideal para novo agendamento.
+              </p>
+            </div>
+
+            <strong>
+              ${retornosPendentes}
+              pendente(s) de contato
+            </strong>
+          </div>
+
+          <div style="overflow-x:auto;">
+
+            <table
+              style="
+                width:100%;
+                border-collapse:collapse;
+                min-width:980px;
+              "
+            >
+              <thead>
+                <tr>
+                  <th style="padding:10px;text-align:left;">
+                    Retorno
+                  </th>
+
+                  <th style="padding:10px;text-align:left;">
+                    Cliente
+                  </th>
+
+                  <th style="padding:10px;text-align:left;">
+                    Serviço
+                  </th>
+
+                  <th style="padding:10px;text-align:left;">
+                    Profissional
+                  </th>
+
+                  <th style="padding:10px;text-align:left;">
+                    Telefone
+                  </th>
+
+                  <th style="padding:10px;text-align:center;">
+                    Situação
+                  </th>
+
+                  <th style="padding:10px;text-align:right;">
+                    Ações
+                  </th>
+                </tr>
+              </thead>
+
+              <tbody>
+
+                ${
+                  retornosProximos.map(
+                    retorno => {
+
+                      const dataRetornoFormatada =
+                        new Date(
+                          `${
+                            retorno.dataRetorno
+                          }T12:00:00`
+                        ).toLocaleDateString(
+                          "pt-BR"
+                        );
+
+
+                      const vencido =
+                        retorno.dataRetorno <
+                        hoje;
+
+
+                      const telefoneNumeros =
+                        String(
+                          retorno.telefone || ""
+                        ).replace(
+                          /\D/g,
+                          ""
+                        );
+
+
+                      const telefoneWhatsapp =
+                        telefoneNumeros
+                          ? (
+                              telefoneNumeros
+                                .startsWith("55")
+                                ? telefoneNumeros
+                                : `55${telefoneNumeros}`
+                            )
+                          : "";
+
+
+                      const dataContato =
+                        retorno.contatoEm
+                          ? new Date(
+                              retorno.contatoEm
+                            ).toLocaleString(
+                              "pt-BR"
+                            )
+                          : "";
+
+
+                      return `
+                        <tr
+                          style="
+                            border-top:1px solid #e5e5e5;
+                            ${
+                              retorno.contatoRealizado
+                                ? "opacity:0.65;"
+                                : ""
+                            }
+                          "
+                        >
+                          <td style="padding:12px;">
+                            <strong
+                              style="
+                                ${
+                                  vencido
+                                    ? "color:#b42318;"
+                                    : ""
+                                }
+                              "
+                            >
+                              ${dataRetornoFormatada}
+                            </strong>
+
+                            ${
+                              vencido
+                                ? `
+                                  <small
+                                    style="
+                                      display:block;
+                                      color:#b42318;
+                                    "
+                                  >
+                                    Retorno vencido
+                                  </small>
+                                `
+                                : ""
+                            }
+                          </td>
+
+                          <td style="padding:12px;">
+                            <strong>
+                              ${retorno.clienteNome}
+                            </strong>
+                          </td>
+
+                          <td style="padding:12px;">
+                            ${retorno.servicoNome}
+                          </td>
+
+                          <td style="padding:12px;">
+                            ${retorno.profissionalNome}
+                          </td>
+
+                          <td style="padding:12px;">
+                            ${retorno.telefone || "-"}
+                          </td>
+
+                          <td
+                            style="
+                              padding:12px;
+                              text-align:center;
+                            "
+                          >
+                            ${
+                              retorno.contatoRealizado
+
+                                ? `
+                                  <strong style="color:#15803d;">
+                                    Contato realizado
+                                  </strong>
+
+                                  <small style="display:block;">
+                                    ${dataContato}
+                                    ${
+                                      retorno.contatoPorNome
+                                        ? ` por ${retorno.contatoPorNome}`
+                                        : ""
+                                    }
+                                  </small>
+                                `
+
+                                : `
+                                  <strong style="color:#b45309;">
+                                    Pendente
+                                  </strong>
+                                `
+                            }
+                          </td>
+
+                          <td
+                            style="
+                              padding:12px;
+                              text-align:right;
+                              white-space:nowrap;
+                            "
+                          >
+                            ${
+                              telefoneWhatsapp
+                                ? `
+                                  <a
+                                    href="https://wa.me/${telefoneWhatsapp}"
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    style="
+                                      display:inline-block;
+                                      margin-right:6px;
+                                    "
+                                  >
+                                    WhatsApp
+                                  </a>
+                                `
+                                : ""
+                            }
+
+                            <button
+                              type="button"
+                              onclick="
+                                alternarContatoRetorno(
+                                  '${retorno.comandaItemId}'
+                                )
+                              "
+                            >
+                              ${
+                                retorno.contatoRealizado
+                                  ? "Desfazer contato"
+                                  : "Marcar contato"
+                              }
+                            </button>
+                          </td>
+                        </tr>
+                      `;
+
+                    }
+                  ).join("")
+                }
+
+              </tbody>
+            </table>
+
+          </div>
+        </div>
+      `;
 
   area.innerHTML = `
 
@@ -12287,6 +12592,18 @@ function porcentagemMeta(valor, meta){
   <h3>Clientes em risco</h3>
   <strong>${clientesRisco}</strong>
 </div>
+<div class="dashboard-card">
+  <h3>Retornos para contato</h3>
+
+  <strong>
+    ${retornosPendentes}
+  </strong>
+
+  <small>
+    ${retornosProximos.length}
+    retorno(s) próximo(s)
+  </small>
+</div>
 
 <div class="dashboard-card">
   <h3>Meta diária</h3>
@@ -12321,6 +12638,8 @@ function porcentagemMeta(valor, meta){
 </div>
 
 </div>
+
+${htmlRetornosDashboard}
 
 <div class="dashboard-ranking">
 
