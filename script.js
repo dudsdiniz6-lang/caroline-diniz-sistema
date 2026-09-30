@@ -11951,6 +11951,105 @@ if(retornos.length === 0){
   );
 
 }
+async function alternarContatoRetorno(
+  comandaItemId
+){
+
+  const retorno =
+    window.retornosDashboardCache?.[
+      String(comandaItemId)
+    ];
+
+
+  if(!retorno){
+
+    alert(
+      "Não foi possível localizar este retorno."
+    );
+
+    return;
+
+  }
+
+
+  const novoEstado =
+    retorno.contatoRealizado !== true;
+
+
+  const dadosContato = {
+
+    comanda_item_id:
+      retorno.comandaItemId,
+
+    cliente_id:
+      retorno.clienteId,
+
+    servico_id:
+      retorno.servicoId,
+
+    contato_realizado:
+      novoEstado,
+
+    contato_em:
+      novoEstado
+        ? new Date().toISOString()
+        : null,
+
+    contato_por_id:
+      novoEstado
+        ? String(
+            usuarioLogado?.id || ""
+          )
+        : null,
+
+    contato_por_nome:
+      novoEstado
+        ? (
+            usuarioLogado?.nome ||
+            usuarioLogado?.usuario ||
+            "Usuário"
+          )
+        : null,
+
+    atualizado_em:
+      new Date().toISOString()
+
+  };
+
+
+  const {
+    error
+  } =
+    await supabaseClient
+      .from("retornos_contatos")
+      .upsert(
+        dadosContato,
+        {
+          onConflict:
+            "comanda_item_id"
+        }
+      );
+
+
+  if(error){
+
+    console.error(
+      "Erro ao registrar contato:",
+      error
+    );
+
+    alert(
+      "Não foi possível atualizar o contato."
+    );
+
+    return;
+
+  }
+
+
+  await carregarDashboard();
+
+}
 async function carregarDashboard(){
 
   const area = document.getElementById("areaDashboard");
@@ -11979,6 +12078,19 @@ try{
   erroRetornosDashboard = erro;
 
 }
+  window.retornosDashboardCache = {};
+
+retornosProximos.forEach(
+  retorno => {
+
+    window.retornosDashboardCache[
+      String(
+        retorno.comandaItemId
+      )
+    ] = retorno;
+
+  }
+);
 
  const comandasResp = await supabaseClient
   .from("comandas")
