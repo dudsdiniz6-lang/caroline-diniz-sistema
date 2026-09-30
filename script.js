@@ -11379,6 +11379,411 @@ async function registrarHistoricoOperacao(
     }]);
 
 }
+function somarDiasRetorno(dataISO, quantidadeDias){
+
+  if(!dataISO){
+    return null;
+  }
+
+  const data =
+    new Date(
+      `${dataISO}T12:00:00`
+    );
+
+  data.setDate(
+    data.getDate() +
+    Number(quantidadeDias || 0)
+  );
+
+  return formatarDataISO(data);
+
+}
+
+
+async function buscarRetornosProximosDashboard(){
+
+  const hoje =
+    formatarDataISO(
+      new Date()
+    );
+
+
+  /*
+  ==========================================
+  SERVIÇOS QUE POSSUEM RETORNO
+  ==========================================
+  */
+
+  const {
+    data: servicosRetorno,
+    error: erroServicosRetorno
+  } =
+    await supabaseClient
+      .from("servicos")
+      .select(`
+        id,
+        nome,
+        retorno_dias,
+        retorno_aviso_dias
+      `)
+      .eq("ativo", true)
+      .eq("retorno_ativo", true);
+
+
+  if(erroServicosRetorno){
+    throw erroServicosRetorno;
+  }
+
+
+  const servicosValidos =
+    (servicosRetorno || [])
+      .filter(
+        servico =>
+          Number(servico.retorno_dias || 0) > 0
+      );
+
+
+  if(servicosValidos.length === 0){
+    return [];
+  }
+
+
+  const servicosPorId =
+    new Map(
+      servicosValidos.map(
+        servico => [
+          String(servico.id),
+          servico
+        ]
+      )
+    );
+
+
+  const maiorPrazoRetorno =
+    Math.max(
+      ...servicosValidos.map(
+        servico =>
+          Number(
+            servico.retorno_dias || 0
+          )
+      )
+    );
+
+
+  /*
+  Busca atendimentos suficientes para alcançar
+  o maior prazo de retorno, mais 90 dias vencidos.
+  */
+
+  const dataInicial = new Date();
+
+  dataInicial.setDate(
+    dataInicial.getDate() -
+    maiorPrazoRetorno -
+    90
+  );
+
+  const dataInicialISO =
+    formatarDataISO(
+      dataInicial
+    );
+
+
+  /*
+  ==========================================
+  TODAS AS COMANDAS DO PERÍODO
+  ==========================================
+  */
+
+  const comandas = [];
+
+  const TAMANHO_PAGINA = 500;
+
+  let inicio = 0;
+
+
+  while(true){
+
+    const {
+      data: pagina,
+      error: erroComandasRetorno
+    } =
+      await supabaseClient
+        .from("comandas")
+        .select(`
+          id,
+          data,
+          cliente_id,
+          profissional_id,
+          cancelada,
+          clientes(
+            id,
+            nome,
+            telefone
+          ),
+          profissionais(
+            nome
+          ),
+          comanda_itens(
+            id,
+            servico_id,
+            profissional_id,
+            servicos(
+              id,
+              nome,
+              retorno_ativo,
+              retorno_dias,
+              retorno_aviso_dias
+            ),
+            profissional_item:profissionais(
+              nome
+            )
+          )
+        `)
+        .gte(
+          "data",
+          dataInicialISO
+        )
+        .lte(
+          "data",
+          hoje
+        )
+        .or(
+          "cancelada.eq.false,cancelada.is.null"
+        )
+        .order(
+          "data",
+          {
+            ascending:false
+          }
+        )
+        .order(
+          "id",
+          {
+            ascending:false
+          }
+        )
+        .range(
+          inicio,
+          inicio + TAMANHO_PAGINA - 1
+        );
+
+
+    if(erroComandasRetorno){
+      throw erroComandasRetorno;
+    }
+
+
+    const registros =
+      pagina || [];
+
+
+    comandas.push(
+      ...registros
+    );
+
+
+    if(
+      registros.length <
+      TAMANHO_PAGINA
+    ){
+      break;
+    }
+
+
+    inicio += TAMANHO_PAGINA;
+
+  }
+
+
+  /*
+  Mantém somente o atendimento mais recente
+  de cada cliente para cada serviço.
+  */
+
+  const ultimoAtendimento =
+    new Map();
+
+
+  comandas.forEach(comanda => {
+
+    (comanda.comanda_itens || [])
+      .forEach(item => {
+
+        const servico =
+          servicosPorId.get(
+            String(item.servico_id)
+          );
+
+        if(
+          !servico ||
+          !comanda.cliente_id
+        ){
+          return;
+        }
+
+
+        const chave =
+          `${comanda.cliente_id}:${item.servico_id}`;
+
+
+        if(
+          ultimoAtendimento.has(chave)
+        ){
+          return;
+        }
+
+
+        const dataRetorno =
+          somarDiasRetorno(
+            comanda.data,
+            servico.retorno_dias
+          );
+
+
+        const dataAviso =
+          somarDiasRetorno(
+            dataRetorno,
+            -Number(
+              servico.retorno_aviso_dias || 0
+            )
+          );
+
+
+        if(
+          !dataRetorno ||
+          !dataAviso ||
+          hoje < dataAviso
+        ){
+          return;
+        }
+
+
+        ultimoAtendimento.set(
+          chave,
+          {
+            comandaItemId: item.id,
+            clienteId: comanda.cliente_id,
+            clienteNome:
+              comanda.clientes?.nome ||
+              "Cliente não informada",
+            telefone:
+              comanda.clientes?.telefone ||
+              "",
+            servicoId: item.servico_id,
+            servicoNome:
+              servico.nome ||
+              item.servicos?.nome ||
+              "Serviço",
+            profissionalNome:
+              item.profissional_item?.nome ||
+              comanda.profissionais?.nome ||
+              "Não informada",
+            dataServico: comanda.data,
+            dataRetorno,
+            dataAviso,
+            contatoRealizado: false,
+            contatoEm: null,
+            contatoPorNome: null
+          }
+        );
+
+      });
+
+  });
+
+
+  const retornos =
+    Array.from(
+      ultimoAtendimento.values()
+    );
+
+
+  if(retornos.length === 0){
+    return [];
+  }
+
+
+  /*
+  ==========================================
+  CONTATOS JÁ REGISTRADOS
+  ==========================================
+  */
+
+  const idsItens =
+    retornos.map(
+      retorno =>
+        retorno.comandaItemId
+    );
+
+
+  const {
+    data: contatos,
+    error: erroContatos
+  } =
+    await supabaseClient
+      .from("retornos_contatos")
+      .select(`
+        comanda_item_id,
+        contato_realizado,
+        contato_em,
+        contato_por_nome
+      `)
+      .in(
+        "comanda_item_id",
+        idsItens
+      );
+
+
+  if(erroContatos){
+    throw erroContatos;
+  }
+
+
+  const contatosPorItem =
+    new Map(
+      (contatos || []).map(
+        contato => [
+          String(
+            contato.comanda_item_id
+          ),
+          contato
+        ]
+      )
+    );
+
+
+  retornos.forEach(retorno => {
+
+    const contato =
+      contatosPorItem.get(
+        String(
+          retorno.comandaItemId
+        )
+      );
+
+
+    retorno.contatoRealizado =
+      contato?.contato_realizado === true;
+
+    retorno.contatoEm =
+      contato?.contato_em || null;
+
+    retorno.contatoPorNome =
+      contato?.contato_por_nome || null;
+
+  });
+
+
+  return retornos.sort(
+    (a, b) =>
+      String(a.dataRetorno)
+        .localeCompare(
+          String(b.dataRetorno)
+        )
+  );
+
+}
 async function carregarDashboard(){
 
   const area = document.getElementById("areaDashboard");
