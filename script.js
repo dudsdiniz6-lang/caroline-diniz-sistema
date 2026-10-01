@@ -5191,6 +5191,7 @@ async function verificarPacoteDisponivel(){
     </div>
   `;
 }
+
 async function confirmarVendaPacote(pacoteId){
 
   const clienteId = Number(
@@ -5290,7 +5291,18 @@ async function confirmarVendaPacote(pacoteId){
     return;
   }
 
-  const valorPacote = Number(pacote.valor || 0);
+  const valorPacote =
+    Number(pacote.valor || 0);
+
+  const valorComissaoVenda =
+    vendedorId
+      ? Number(
+          (
+            valorPacote *
+            (percentualComissaoVenda / 100)
+          ).toFixed(2)
+        )
+      : 0;
 
 
   // =========================
