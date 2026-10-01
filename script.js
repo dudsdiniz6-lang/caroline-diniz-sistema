@@ -17175,7 +17175,6 @@ function instalarModuloFinanceiroProfissionais(){
 
 }
 
-}
 async function carregarFinanceiroProfissionais(){
 
   const area =
