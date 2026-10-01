@@ -10113,34 +10113,58 @@ const itensFuturos = removerDuplicadosFaturamento(
           ${item.usar_pacote ? " • Pacote" : ""}
         </small>
 
-        <div style="margin-top:8px;">
-          <small style="display:block;margin-bottom:4px;">
-            Vendido por
-          </small>
+                <div
+          style="
+            display:grid;
+            grid-template-columns:1fr 110px;
+            gap:8px;
+            margin-top:8px;
+          "
+        >
+          <div>
+            <small style="display:block;margin-bottom:4px;">
+              Vendido por
+            </small>
 
-          <select
-            class="vendedorItemFaturamento"
-            data-agendamento-id="${item.id}"
-            onclick="event.stopPropagation()"
-            style="
-              width:100%;
-              max-width:260px;
-            "
-          >
-            <option value="">
-              Sem comissão de venda
-            </option>
+            <select
+              class="vendedorItemFaturamento"
+              data-agendamento-id="${item.id}"
+              onclick="event.stopPropagation()"
+              style="width:100%;"
+            >
+              <option value="">
+                Sem comissão de venda
+              </option>
 
-            ${
-              (window.vendedoresComissaoVenda || [])
-                .map(vendedor => `
-                  <option value="${vendedor.id}">
-                    ${financeiroEscaparHTML(vendedor.nome)}
-                  </option>
-                `)
-                .join("")
-            }
-          </select>
+              ${
+                (window.vendedoresComissaoVenda || [])
+                  .map(vendedor => `
+                    <option value="${vendedor.id}">
+                      ${financeiroEscaparHTML(vendedor.nome)}
+                    </option>
+                  `)
+                  .join("")
+              }
+            </select>
+          </div>
+
+          <div>
+            <small style="display:block;margin-bottom:4px;">
+              Comissão (%)
+            </small>
+
+            <input
+              class="percentualVendaItemFaturamento"
+              data-agendamento-id="${item.id}"
+              type="number"
+              min="0"
+              max="100"
+              step="0.1"
+              placeholder="0"
+              onclick="event.stopPropagation()"
+              style="width:100%;"
+            >
+          </div>
         </div>
       </span>
 
@@ -10328,20 +10352,35 @@ if(!caixa){
       )
       .map(item => {
 
-        const campoVendedor =
+              const campoVendedor =
           document.querySelector(
             `.vendedorItemFaturamento[data-agendamento-id="${item.id}"]`
           );
+
+        const campoPercentualVenda =
+          document.querySelector(
+            `.percentualVendaItemFaturamento[data-agendamento-id="${item.id}"]`
+          );
+
+        const vendedorId =
+          campoVendedor?.value
+            ? Number(campoVendedor.value)
+            : null;
+
+        const percentualVenda =
+          vendedorId
+            ? Number(campoPercentualVenda?.value || 0)
+            : 0;
 
         return {
           ...item,
 
           vendedor_id:
-            campoVendedor?.value
-              ? Number(campoVendedor.value)
-              : null
-        };
+            vendedorId,
 
+          comissao_venda_percentual:
+            percentualVenda
+        };
       });
 
   const totalReceber = itensSelecionados.reduce((soma, item)=>{
