@@ -4775,11 +4775,13 @@ async function venderPacote(pacoteId){
 >
       <option value="">Selecione</option>
 
-      ${(clientes || []).map(c => `
+          ${(clientes || []).map(c => `
         <option value="${c.id}">
-          ${c.nome}
+          ${financeiroEscaparHTML(c.nome)}
         </option>
-       </select>
+      `).join("")}
+
+    </select>
 
     <div
       style="
