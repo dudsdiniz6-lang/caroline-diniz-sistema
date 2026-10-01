@@ -10382,7 +10382,21 @@ if(!caixa){
             percentualVenda
         };
       });
+  const itemComComissaoInvalida =
+    itensSelecionados.find(item =>
+      item.vendedor_id &&
+      (
+        Number(item.comissao_venda_percentual || 0) <= 0 ||
+        Number(item.comissao_venda_percentual || 0) > 100
+      )
+    );
 
+  if(itemComComissaoInvalida){
+    alert(
+      "Informe uma comissão de venda maior que 0% e menor ou igual a 100%."
+    );
+    return;
+  }
   const totalReceber = itensSelecionados.reduce((soma, item)=>{
     return soma + (item.usar_pacote ? 0 : Number(item.total || 0));
   }, 0);
