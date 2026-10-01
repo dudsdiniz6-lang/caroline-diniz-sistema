@@ -4779,8 +4779,45 @@ async function venderPacote(pacoteId){
         <option value="${c.id}">
           ${c.nome}
         </option>
-      `).join("")}
-    </select>
+       </select>
+
+    <div
+      style="
+        display:grid;
+        grid-template-columns:1fr 120px;
+        gap:10px;
+        margin-top:12px;
+      "
+    >
+      <div>
+        <label>Vendido por</label>
+
+        <select id="vendaPacoteVendedor">
+          <option value="">
+            Sem comissão de venda
+          </option>
+
+          ${(vendedores || []).map(vendedor => `
+            <option value="${vendedor.id}">
+              ${financeiroEscaparHTML(vendedor.nome)}
+            </option>
+          `).join("")}
+        </select>
+      </div>
+
+      <div>
+        <label>Comissão (%)</label>
+
+        <input
+          id="vendaPacoteComissaoPercentual"
+          type="number"
+          min="0"
+          max="100"
+          step="0.1"
+          placeholder="0"
+        >
+      </div>
+    </div>
 
     <label>Tipo de recebimento</label>
 
@@ -5160,8 +5197,45 @@ async function confirmarVendaPacote(pacoteId){
     document.getElementById("vendaPacoteCliente")?.value || 0
   );
 
-  const tipoRecebimento =
-    document.getElementById("vendaPacoteTipoRecebimento")?.value;
+   const tipoRecebimento =
+    document.getElementById(
+      "vendaPacoteTipoRecebimento"
+    )?.value;
+
+  const vendedorId = Number(
+    document.getElementById(
+      "vendaPacoteVendedor"
+    )?.value || 0
+  );
+
+  const percentualComissaoVenda = Number(
+    document.getElementById(
+      "vendaPacoteComissaoPercentual"
+    )?.value || 0
+  );
+
+  if(
+    vendedorId &&
+    (
+      percentualComissaoVenda <= 0 ||
+      percentualComissaoVenda > 100
+    )
+  ){
+    alert(
+      "Informe uma comissão de venda maior que 0% e menor ou igual a 100%."
+    );
+    return;
+  }
+
+  if(
+    !vendedorId &&
+    percentualComissaoVenda > 0
+  ){
+    alert(
+      "Selecione quem realizou a venda do pacote."
+    );
+    return;
+  }
 
   if(!clienteId){
     alert("Selecione a cliente.");
