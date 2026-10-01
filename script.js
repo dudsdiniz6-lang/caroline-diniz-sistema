@@ -9943,7 +9943,27 @@ async function abrirFaturamentoClienteDia(agendamentoId){
     alert("Erro ao carregar os agendamentos da cliente.");
     return;
   }
+  const {
+    data: vendedoresDisponiveis,
+    error: erroVendedores
+  } = await supabaseClient
+    .from("profissionais")
+    .select("id, nome")
+    .eq("ativo", true)
+    .order("nome");
 
+  if(erroVendedores){
+    console.error(
+      "Erro ao carregar vendedores:",
+      erroVendedores
+    );
+
+    alert("Erro ao carregar a lista de vendedores.");
+    return;
+  }
+
+  window.vendedoresComissaoVenda =
+    vendedoresDisponiveis || [];
   let itens = agendamentosCliente || [];
   console.table(itens);
 
