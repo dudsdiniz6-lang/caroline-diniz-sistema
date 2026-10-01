@@ -1545,7 +1545,8 @@ comandasValidas.forEach(comanda => {
     // ITENS DAS COMANDAS
     // ==========================================
 
-   let itensPendentes = [];
+let itensPendentes = [];
+let todosItensComandas = [];
 
 if(idsComandas.length > 0){
 
@@ -1570,14 +1571,17 @@ if(idsComandas.length > 0){
       error: erroItens
     } =
       await supabaseClient
-        .from("comanda_itens")
+               .from("comanda_itens")
         .select(`
           id,
           comanda_id,
           profissional_id,
+          vendedor_id,
           descricao,
           valor,
-          comissao_percentual
+          comissao_percentual,
+          comissao_venda_percentual,
+          comissao_venda_valor
         `)
         .in(
           "comanda_id",
@@ -1592,6 +1596,8 @@ if(idsComandas.length > 0){
       ...(itensLote || [])
     );
   }
+    todosItensComandas =
+    todosItens;
 
   itensPendentes =
     todosItens.filter(
