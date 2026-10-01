@@ -10099,7 +10099,7 @@ const itensFuturos = removerDuplicadosFaturamento(
 
         <br>
 
-        <small>
+               <small>
           ${
             futuro
               ? `${formatarDataComanda(item.data)} • `
@@ -10112,6 +10112,36 @@ const itensFuturos = removerDuplicadosFaturamento(
 
           ${item.usar_pacote ? " • Pacote" : ""}
         </small>
+
+        <div style="margin-top:8px;">
+          <small style="display:block;margin-bottom:4px;">
+            Vendido por
+          </small>
+
+          <select
+            class="vendedorItemFaturamento"
+            data-agendamento-id="${item.id}"
+            onclick="event.stopPropagation()"
+            style="
+              width:100%;
+              max-width:260px;
+            "
+          >
+            <option value="">
+              Sem comissão de venda
+            </option>
+
+            ${
+              (window.vendedoresComissaoVenda || [])
+                .map(vendedor => `
+                  <option value="${vendedor.id}">
+                    ${financeiroEscaparHTML(vendedor.nome)}
+                  </option>
+                `)
+                .join("")
+            }
+          </select>
+        </div>
       </span>
 
       <strong>
