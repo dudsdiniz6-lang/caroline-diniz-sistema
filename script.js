@@ -10321,8 +10321,28 @@ if(!caixa){
   return;
 }
 
-  const itensSelecionados = (window.itensFaturamentoClienteCache || [])
-    .filter(item => selecionados.includes(Number(item.id)));
+  const itensSelecionados =
+    (window.itensFaturamentoClienteCache || [])
+      .filter(item =>
+        selecionados.includes(Number(item.id))
+      )
+      .map(item => {
+
+        const campoVendedor =
+          document.querySelector(
+            `.vendedorItemFaturamento[data-agendamento-id="${item.id}"]`
+          );
+
+        return {
+          ...item,
+
+          vendedor_id:
+            campoVendedor?.value
+              ? Number(campoVendedor.value)
+              : null
+        };
+
+      });
 
   const totalReceber = itensSelecionados.reduce((soma, item)=>{
     return soma + (item.usar_pacote ? 0 : Number(item.total || 0));
