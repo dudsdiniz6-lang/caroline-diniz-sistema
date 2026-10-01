@@ -1700,7 +1700,129 @@ itensPendentesPorProfissional[profissionalId].push({
       }
 
     });
+    // ==========================================
+    // COMISSÕES PELA VENDA DE SERVIÇOS
+    // ==========================================
 
+    const vendasBloqueadas =
+      await obterComissoesVendaBloqueadas();
+
+    const vendasServicosPorProfissional = {};
+    const vendasServicosPendentesPorProfissional = {};
+
+    todosItensComandas.forEach(item => {
+
+      const comanda =
+        mapaComandas[item.comanda_id];
+
+      if(!comanda){
+        return;
+      }
+
+      const vendedorId =
+        item.vendedor_id;
+
+      const percentualVenda =
+        Number(
+          item.comissao_venda_percentual || 0
+        );
+
+      if(
+        !vendedorId ||
+        percentualVenda <= 0 ||
+        vendasBloqueadas.servicos.has(
+          String(item.id)
+        )
+      ){
+        return;
+      }
+
+      const valorCliente =
+        Number(item.valor || 0);
+
+      const valorComissaoVenda =
+        Number(item.comissao_venda_valor || 0) > 0
+          ? Number(item.comissao_venda_valor)
+          : Number(
+              (
+                valorCliente *
+                percentualVenda /
+                100
+              ).toFixed(2)
+            );
+
+      if(
+        !vendasServicosPorProfissional[
+          vendedorId
+        ]
+      ){
+        vendasServicosPorProfissional[
+          vendedorId
+        ] = {
+          valor: 0,
+          quantidade: 0,
+          itens: [],
+          primeiraData: null
+        };
+      }
+
+      const dadosVenda =
+        vendasServicosPorProfissional[
+          vendedorId
+        ];
+
+      const itemVenda = {
+        origemTipo: "SERVICO",
+        origemId: item.id,
+        comandaItemId: item.id,
+        pacoteClienteId: null,
+        data: comanda.data,
+        cliente_id: comanda.cliente_id,
+        descricao:
+          item.descricao || "Serviço",
+        valorCliente,
+        percentual:
+          percentualVenda,
+        valorComissao:
+          valorComissaoVenda
+      };
+
+      dadosVenda.valor +=
+        valorComissaoVenda;
+
+      dadosVenda.quantidade += 1;
+
+      dadosVenda.itens.push(
+        itemVenda
+      );
+
+      if(
+        comanda.data &&
+        (
+          !dadosVenda.primeiraData ||
+          comanda.data <
+            dadosVenda.primeiraData
+        )
+      ){
+        dadosVenda.primeiraData =
+          comanda.data;
+      }
+
+      if(
+        !vendasServicosPendentesPorProfissional[
+          vendedorId
+        ]
+      ){
+        vendasServicosPendentesPorProfissional[
+          vendedorId
+        ] = [];
+      }
+
+      vendasServicosPendentesPorProfissional[
+        vendedorId
+      ].push(itemVenda);
+
+    });
 
     // ==========================================
     // VALES AINDA NÃO DESCONTADOS
