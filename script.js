@@ -16868,12 +16868,19 @@ function instalarModuloFinanceiroProfissionais(){
   botao.onclick = () =>
     mostrarTela("financeiroProfissionais");
 
-  document
-    .getElementById("menu-comissoes")
-    .insertAdjacentElement(
-      "afterend",
-      botao
-    );
+  const menuComissoes =
+    document.getElementById("menu-comissoes");
+
+  menuComissoes.insertAdjacentElement(
+    "afterend",
+    botao
+  );
+
+  // Esconde somente a antiga aba Comissões.
+  // Os cálculos continuam funcionando normalmente.
+  menuComissoes.style.display = "none";
+
+}
 
 }
 async function carregarFinanceiroProfissionais(){
