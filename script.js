@@ -4687,6 +4687,25 @@ async function venderPacote(pacoteId){
   const clientes = await obterClientes();
   const formas = await obterFormasPagamento();
 
+  const {
+    data: vendedores,
+    error: erroVendedores
+  } = await supabaseClient
+    .from("profissionais")
+    .select("id, nome")
+    .eq("ativo", true)
+    .order("nome");
+
+  if(erroVendedores){
+    console.error(
+      "Erro ao carregar vendedores:",
+      erroVendedores
+    );
+
+    alert("Erro ao carregar a lista de vendedores.");
+    return;
+  }
+
   const pacoteResp = await supabaseClient
     .from("pacotes")
     .select("*")
