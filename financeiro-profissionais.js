@@ -3578,7 +3578,113 @@ itensHistoricos.forEach(item => {
 return idsPagos;
 
 }
+async function obterComissoesVendaBloqueadas(){
 
+  const resultado = {
+    servicos: new Set(),
+    pacotes: new Set()
+  };
+
+  const {
+    data: pagamentos,
+    error: erroPagamentos
+  } = await supabaseClient
+    .from("comissoes_pagamentos")
+    .select("id, status");
+
+  if(erroPagamentos){
+    throw erroPagamentos;
+  }
+
+  const pagamentosAtivos =
+    (pagamentos || []).filter(pagamento => {
+
+      const status =
+        financeiroNormalizarStatus(
+          pagamento.status
+        );
+
+      return ![
+        "cancelado",
+        "cancelada"
+      ].includes(status);
+
+    });
+
+  if(pagamentosAtivos.length === 0){
+    return resultado;
+  }
+
+  const pagamentosIds =
+    pagamentosAtivos.map(
+      pagamento => pagamento.id
+    );
+
+  const TAMANHO_PAGINA = 500;
+  let inicio = 0;
+
+  while(true){
+
+    const {
+      data: vinculos,
+      error: erroVinculos
+    } = await supabaseClient
+      .from(
+        "comissoes_vendas_pagamentos_itens"
+      )
+      .select(`
+        pagamento_id,
+        origem_tipo,
+        comanda_item_id,
+        pacote_cliente_id
+      `)
+      .in(
+        "pagamento_id",
+        pagamentosIds
+      )
+      .range(
+        inicio,
+        inicio + TAMANHO_PAGINA - 1
+      );
+
+    if(erroVinculos){
+      throw erroVinculos;
+    }
+
+    const pagina =
+      vinculos || [];
+
+    pagina.forEach(vinculo => {
+
+      if(
+        vinculo.origem_tipo === "SERVICO" &&
+        vinculo.comanda_item_id != null
+      ){
+        resultado.servicos.add(
+          String(vinculo.comanda_item_id)
+        );
+      }
+
+      if(
+        vinculo.origem_tipo === "PACOTE" &&
+        vinculo.pacote_cliente_id != null
+      ){
+        resultado.pacotes.add(
+          String(vinculo.pacote_cliente_id)
+        );
+      }
+
+    });
+
+    if(pagina.length < TAMANHO_PAGINA){
+      break;
+    }
+
+    inicio += TAMANHO_PAGINA;
+  }
+
+  return resultado;
+}
 function garantirModalPagamentoComissao(){
 
   let modal =
