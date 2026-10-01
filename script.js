@@ -10757,14 +10757,53 @@ async function salvarFaturamentoClienteDiaPago(){
           item.servicos?.comissao_padrao || 0
         );
 
+            const vendedorId =
+        item.vendedor_id
+          ? Number(item.vendedor_id)
+          : null;
+
+      const percentualVenda =
+        vendedorId
+          ? Number(
+              item.comissao_venda_percentual || 0
+            )
+          : 0;
+
+      const valorComissaoVenda =
+        vendedorId
+          ? Number(
+              (
+                Number(item.total || 0) *
+                (percentualVenda / 100)
+              ).toFixed(2)
+            )
+          : 0;
+
       return {
         comanda_id: comanda.id,
         servico_id: item.servico_id,
         agendamento_id: item.id,
-        profissional_id: item.profissional_id,
-        descricao: item.servicos?.nome || "Serviço",
-        valor: item.total,
-        comissao_percentual: percentualComissao
+
+        profissional_id:
+          item.profissional_id,
+
+        vendedor_id:
+          vendedorId,
+
+        descricao:
+          item.servicos?.nome || "Serviço",
+
+        valor:
+          item.total,
+
+        comissao_percentual:
+          percentualComissao,
+
+        comissao_venda_percentual:
+          percentualVenda,
+
+        comissao_venda_valor:
+          valorComissaoVenda
       };
 
     })
