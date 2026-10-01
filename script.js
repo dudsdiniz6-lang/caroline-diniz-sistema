@@ -5447,14 +5447,38 @@ async function confirmarVendaPacote(pacoteId){
 
   const pacoteClienteResp =
     await supabaseClient
-      .from("pacotes_clientes")
+            .from("pacotes_clientes")
       .insert([{
-        cliente_id: clienteId,
-        pacote_id: pacoteId,
-        data_compra: formatarDataISO(new Date()),
-        validade: formatarDataISO(validade),
-        ativo: true,
-        status: "Ativo"
+        cliente_id:
+          clienteId,
+
+        pacote_id:
+          pacoteId,
+
+        data_compra:
+          formatarDataISO(new Date()),
+
+        validade:
+          formatarDataISO(validade),
+
+        vendedor_id:
+          vendedorId || null,
+
+        comissao_venda_percentual:
+          vendedorId
+            ? percentualComissaoVenda
+            : 0,
+
+        comissao_venda_valor:
+          vendedorId
+            ? valorComissaoVenda
+            : 0,
+
+        ativo:
+          true,
+
+        status:
+          "Ativo"
       }])
       .select()
       .single();
