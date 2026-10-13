@@ -18251,6 +18251,231 @@ function instalarModuloFinanceiroProfissionais(){
   menuComissoes.style.display = "none";
 
 }
+async function carregarProdutosEstoque(){
+
+  const area =
+    document.getElementById(
+      "listaProdutosEstoque"
+    );
+
+  if(!area) return;
+
+
+  area.innerHTML = `
+    <p>Carregando produtos...</p>
+  `;
+
+
+  const { data: produtos, error } =
+    await supabaseClient
+      .from("produtos")
+      .select(`
+        id,
+        nome,
+        categoria,
+        marca,
+        codigo,
+        preco_custo,
+        preco_venda,
+        estoque_atual,
+        estoque_minimo,
+        comissao_venda_percentual,
+        ativo
+      `)
+      .eq(
+        "unidade_id",
+        unidadeAtualId
+      )
+      .order(
+        "nome",
+        {
+          ascending:true
+        }
+      );
+
+
+  if(error){
+
+    console.error(
+      "Erro ao carregar produtos:",
+      error
+    );
+
+    area.innerHTML = `
+      <p>Não foi possível carregar os produtos.</p>
+    `;
+
+    return;
+  }
+
+
+  if(!produtos || produtos.length === 0){
+
+    area.innerHTML = `
+      <div class="card">
+        <p>Nenhum produto cadastrado nesta unidade.</p>
+
+        <button
+          type="button"
+          class="principal"
+          onclick="abrirCadastroProdutoAgenda()"
+        >
+          Cadastrar primeiro produto
+        </button>
+      </div>
+    `;
+
+    return;
+  }
+
+
+  area.innerHTML = produtos.map(produto => {
+
+    const estoqueAtual =
+      Number(produto.estoque_atual || 0);
+
+    const estoqueMinimo =
+      Number(produto.estoque_minimo || 0);
+
+    const estoqueBaixo =
+      estoqueAtual <= estoqueMinimo;
+
+    return `
+      <div
+        class="card"
+        style="
+          opacity:${produto.ativo ? "1" : "0.65"};
+          border-left:4px solid ${
+            estoqueBaixo
+              ? "#c0392b"
+              : "#2e8b57"
+          };
+        "
+      >
+        <div
+          style="
+            display:flex;
+            justify-content:space-between;
+            align-items:flex-start;
+            gap:15px;
+            flex-wrap:wrap;
+          "
+        >
+          <div>
+            <h3 style="margin:0;">
+              ${financeiroEscaparHTML(produto.nome)}
+            </h3>
+
+            <small>
+              ${financeiroEscaparHTML(
+                produto.marca || "Sem marca"
+              )}
+
+              ${produto.categoria
+                ? ` • ${financeiroEscaparHTML(
+                    produto.categoria
+                  )}`
+                : ""
+              }
+            </small>
+          </div>
+
+          <strong
+            style="
+              color:${
+                estoqueBaixo
+                  ? "#c0392b"
+                  : "#2e8b57"
+              };
+            "
+          >
+            Estoque: ${estoqueAtual}
+          </strong>
+        </div>
+
+        <div
+          style="
+            display:grid;
+            grid-template-columns:
+              repeat(auto-fit, minmax(140px, 1fr));
+            gap:10px;
+            margin-top:15px;
+          "
+        >
+          <div>
+            <small>Preço de custo</small><br>
+            <strong>
+              ${dinheiro(produto.preco_custo || 0)}
+            </strong>
+          </div>
+
+          <div>
+            <small>Preço de venda</small><br>
+            <strong>
+              ${dinheiro(produto.preco_venda || 0)}
+            </strong>
+          </div>
+
+          <div>
+            <small>Estoque mínimo</small><br>
+            <strong>${estoqueMinimo}</strong>
+          </div>
+
+          <div>
+            <small>Comissão de venda</small><br>
+            <strong>
+              ${Number(
+                produto.comissao_venda_percentual || 0
+              ).toFixed(2)}%
+            </strong>
+          </div>
+        </div>
+
+        <div
+          style="
+            display:flex;
+            gap:8px;
+            flex-wrap:wrap;
+            margin-top:15px;
+          "
+        >
+          <button
+            type="button"
+            onclick="abrirEditarProduto(${produto.id})"
+          >
+            Editar
+          </button>
+
+          <button
+            type="button"
+            onclick="abrirMovimentarEstoqueProduto(${produto.id})"
+          >
+            Movimentar estoque
+          </button>
+
+          <button
+            type="button"
+            onclick="abrirHistoricoEstoqueProduto(${produto.id})"
+          >
+            Histórico
+          </button>
+
+          <button
+            type="button"
+            onclick="alterarStatusProduto(
+              ${produto.id},
+              ${produto.ativo ? "false" : "true"}
+            )"
+          >
+            ${produto.ativo ? "Desativar" : "Ativar"}
+          </button>
+        </div>
+      </div>
+    `;
+
+  }).join("");
+
+}
 
 async function carregarFinanceiroProfissionais(){
 
