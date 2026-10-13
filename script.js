@@ -3935,13 +3935,56 @@ async function buscarPercentualComissao(
 
   return Number(padrao || 0);
 }
+function abrirAbaPacotes(
+  tipo = "ativos"
+){
+
+  window.pacotesAbaAtual =
+    tipo;
+
+  carregarPacotes();
+
+}
 async function carregarPacotes(){
 
   const lista = document.getElementById("listaPacotes");
 
   if(!lista) return;
 
-  lista.innerHTML = "";
+lista.innerHTML = `
+  <div
+    style="
+      display:flex;
+      gap:10px;
+      margin-bottom:20px;
+      flex-wrap:wrap;
+    "
+  >
+    <button
+      type="button"
+      class="${
+        window.pacotesAbaAtual === "desativados"
+          ? ""
+          : "principal"
+      }"
+      onclick="abrirAbaPacotes('ativos')"
+    >
+      Pacotes ativos
+    </button>
+
+    <button
+      type="button"
+      class="${
+        window.pacotesAbaAtual === "desativados"
+          ? "principal"
+          : ""
+      }"
+      onclick="abrirAbaPacotes('desativados')"
+    >
+      Pacotes desativados
+    </button>
+  </div>
+`;
 
   const { data, error } = await supabaseClient
     .from("pacotes")
