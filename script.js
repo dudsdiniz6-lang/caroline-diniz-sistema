@@ -12027,35 +12027,100 @@ async function abrirFaturamentoClienteDia(agendamentoId){
 
   if(idsAgendamentos.length > 0){
 
-    const { data: comandasExistentes, error: erroComandas } =
-      await supabaseClient
-        .from("comandas")
-        .select("agendamento_id, cancelada")
-        .in("agendamento_id", idsAgendamentos);
+  const [
+  comandasResposta,
+  itensComandaResposta
+] = await Promise.all([
 
-    if(erroComandas){
-      console.error(
-        "Erro ao verificar comandas existentes:",
-        erroComandas
+  supabaseClient
+    .from("comandas")
+    .select(`
+      agendamento_id,
+      cancelada
+    `)
+    .in(
+      "agendamento_id",
+      idsAgendamentos
+    ),
+
+  supabaseClient
+    .from("comanda_itens")
+    .select(`
+      agendamento_id,
+      comandas!inner(
+        cancelada
+      )
+    `)
+    .in(
+      "agendamento_id",
+      idsAgendamentos
+    )
+
+]);
+
+
+if(
+  comandasResposta.error ||
+  itensComandaResposta.error
+){
+
+  console.error(
+    "Erro ao verificar comandas existentes:",
+    comandasResposta.error ||
+    itensComandaResposta.error
+  );
+
+  alert(
+    "Erro ao verificar os serviços já faturados."
+  );
+
+  return;
+}
+
+
+const idsJaFaturados =
+  new Set();
+
+
+(comandasResposta.data || [])
+  .filter(comanda =>
+    comanda.cancelada !== true
+  )
+  .forEach(comanda => {
+
+    if(comanda.agendamento_id){
+
+      idsJaFaturados.add(
+        Number(comanda.agendamento_id)
       );
 
-      alert("Erro ao verificar os serviços já faturados.");
-      return;
     }
 
-    const idsJaFaturados =
-      (comandasExistentes || [])
-        .filter(comanda =>
-          comanda.cancelada !== true
-        )
-        .map(comanda =>
-          Number(comanda.agendamento_id)
-        );
+  });
 
-    itens = itens.filter(item =>
-      !idsJaFaturados.includes(Number(item.id))
-    );
-  }
+
+(itensComandaResposta.data || [])
+  .filter(item =>
+    item.comandas?.cancelada !== true
+  )
+  .forEach(item => {
+
+    if(item.agendamento_id){
+
+      idsJaFaturados.add(
+        Number(item.agendamento_id)
+      );
+
+    }
+
+  });
+
+
+itens = itens.filter(item =>
+  !idsJaFaturados.has(
+    Number(item.id)
+  )
+);
 
 function removerDuplicadosFaturamento(lista){
 
