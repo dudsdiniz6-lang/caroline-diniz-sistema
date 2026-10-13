@@ -3282,6 +3282,10 @@ async function abrirModalAgendamento(id = null, profissionalPre = "", horarioPre
 
     agendamento = resposta.data;
   }
+  const agendamentoFaturado =
+  id
+    ? await agendamentoJaFoiFaturado(id)
+    : false;
 
   const clienteAlertaId =
     agendamento?.cliente_id || null;
@@ -3488,12 +3492,16 @@ ${(!id && pode("agenda_criar")) || (id && pode("agenda_editar")) ? `
   </button>
 ` : ""}
 
-${id && pode("agenda_faturar") ? `
-  <button onclick="faturarAgendamento(${id})">
-    Faturar
-  </button>
-` : ""}
-
+${id &&
+  pode("agenda_faturar") &&
+  !agendamentoFaturado
+    ? `
+      <button onclick="faturarAgendamento(${id})">
+        Faturar
+      </button>
+    `
+    : ""
+}
 ${id && pode("agenda_cancelar") ? `
   <button onclick="excluirAgendamento(${id})">
     Excluir
