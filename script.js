@@ -18277,6 +18277,19 @@ async function carregarPermissoesSistemaV2(){
   `;
 }
 function aplicarPermissoesMenu(){
+    /*
+  ==========================================
+  REMOVE O MÓDULO RELATÓRIOS
+  ==========================================
+  */
+
+  document
+    .getElementById("menu-relatorios")
+    ?.remove();
+
+  document
+    .getElementById("tela-relatorios")
+    ?.remove();
 
   if(!pode("dashboard_visualizar")){
     document.getElementById("menu-dashboard")?.remove();
