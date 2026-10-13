@@ -10678,13 +10678,10 @@ async function alterarStatusProduto(
   const { error } =
     await supabaseClient
       .from("produtos")
-      .update({
-        ativo:
-          novoStatus,
-
-        atualizado_em:
-          new Date().toISOString()
-      })
+     .update({
+  ativo:
+    novoStatus
+})
       .eq("id", produtoId)
       .eq("unidade_id", unidadeAtualId);
 
