@@ -9561,6 +9561,180 @@ async function abrirCadastroProdutoAgenda(
     </div>
   `);
 }
+async function salvarCadastroProdutoAgenda(){
+
+  const nome =
+    document.getElementById(
+      "cadastroProdutoNome"
+    )?.value.trim();
+
+  const categoria =
+    document.getElementById(
+      "cadastroProdutoCategoria"
+    )?.value.trim() || "";
+
+  const marca =
+    document.getElementById(
+      "cadastroProdutoMarca"
+    )?.value.trim() || "";
+
+  const codigo =
+    document.getElementById(
+      "cadastroProdutoCodigo"
+    )?.value.trim() || "";
+
+  const precoCusto =
+    Number(
+      document.getElementById(
+        "cadastroProdutoPrecoCusto"
+      )?.value || 0
+    );
+
+  const precoVenda =
+    Number(
+      document.getElementById(
+        "cadastroProdutoPrecoVenda"
+      )?.value || 0
+    );
+
+  const estoqueInicial =
+    Number(
+      document.getElementById(
+        "cadastroProdutoEstoqueInicial"
+      )?.value || 0
+    );
+
+  const estoqueMinimo =
+    Number(
+      document.getElementById(
+        "cadastroProdutoEstoqueMinimo"
+      )?.value || 0
+    );
+
+  const comissao =
+    Number(
+      document.getElementById(
+        "cadastroProdutoComissao"
+      )?.value || 0
+    );
+
+
+  if(!nome){
+    alert("Informe o nome do produto.");
+    return;
+  }
+
+
+  if(precoVenda <= 0){
+    alert("Informe um preço de venda válido.");
+    return;
+  }
+
+
+  if(
+    precoCusto < 0 ||
+    estoqueInicial < 0 ||
+    estoqueMinimo < 0 ||
+    comissao < 0 ||
+    comissao > 100
+  ){
+    alert("Confira os valores informados.");
+    return;
+  }
+
+
+  const botao =
+    document.querySelector(
+      `button[onclick="salvarCadastroProdutoAgenda()"]`
+    );
+
+  if(botao){
+    botao.disabled = true;
+    botao.textContent = "Salvando...";
+  }
+
+
+  try {
+
+    const { error } =
+      await supabaseClient.rpc(
+        "cadastrar_produto_com_estoque",
+        {
+          p_unidade_id:
+            Number(unidadeAtualId),
+
+          p_nome:
+            nome,
+
+          p_categoria:
+            categoria,
+
+          p_marca:
+            marca,
+
+          p_codigo:
+            codigo,
+
+          p_preco_custo:
+            precoCusto,
+
+          p_preco_venda:
+            precoVenda,
+
+          p_estoque_inicial:
+            estoqueInicial,
+
+          p_estoque_minimo:
+            estoqueMinimo,
+
+          p_comissao_percentual:
+            comissao,
+
+          p_registrado_por:
+            usuarioLogado?.id || null
+        }
+      );
+
+
+    if(error){
+      throw error;
+    }
+
+
+    const contexto =
+      window.produtoCadastroAgendaContexto || {};
+
+
+    alert("Produto cadastrado com sucesso.");
+
+
+    await abrirVendaProdutoAgenda(
+      contexto.profissionalPre || "",
+      contexto.horario || ""
+    );
+
+
+  } catch(error){
+
+    console.error(
+      "Erro ao cadastrar produto:",
+      error
+    );
+
+    alert(
+      error?.message ||
+      "Não foi possível cadastrar o produto."
+    );
+
+
+    if(botao){
+      botao.disabled = false;
+      botao.textContent = "Salvar produto";
+    }
+
+  }
+
+}
 async function abrirVendaProdutoAgenda(
   profissionalPre = "",
   horario = ""
@@ -9592,12 +9766,15 @@ async function abrirVendaProdutoAgenda(
     return;
   }
 
-  if(!produtos || produtos.length === 0){
-    alert(
-      "Nenhum produto foi cadastrado nesta unidade."
-    );
-    return;
-  }
+ if(!produtos || produtos.length === 0){
+
+  abrirCadastroProdutoAgenda(
+    profissionalPre,
+    horario
+  );
+
+  return;
+}
 
   window.produtosVendaAgendaCache =
     produtos || [];
