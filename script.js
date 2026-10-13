@@ -10564,6 +10564,68 @@ async function abrirHistoricoEstoqueProduto(produtoId){
   `);
 
 }
+async function alterarStatusProduto(
+  produtoId,
+  novoStatus
+){
+
+  const acao =
+    novoStatus
+      ? "ativar"
+      : "desativar";
+
+
+  const confirmado =
+    confirm(
+      `Deseja realmente ${acao} este produto?`
+    );
+
+
+  if(!confirmado){
+    return;
+  }
+
+
+  const { error } =
+    await supabaseClient
+      .from("produtos")
+      .update({
+        ativo:
+          novoStatus,
+
+        atualizado_em:
+          new Date().toISOString()
+      })
+      .eq("id", produtoId)
+      .eq("unidade_id", unidadeAtualId);
+
+
+  if(error){
+
+    console.error(
+      "Erro ao alterar status do produto:",
+      error
+    );
+
+    alert(
+      error.message ||
+      "Não foi possível alterar o produto."
+    );
+
+    return;
+  }
+
+
+  await carregarProdutosEstoque();
+
+
+  alert(
+    novoStatus
+      ? "Produto ativado com sucesso."
+      : "Produto desativado com sucesso."
+  );
+
+}
 async function abrirVendaProdutoAgenda(
   profissionalPre = "",
   horario = ""
