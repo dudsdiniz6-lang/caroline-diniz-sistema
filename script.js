@@ -12211,6 +12211,7 @@ itens = itens.filter(item =>
   )
 );
 
+}
 function removerDuplicadosFaturamento(lista){
 
   const itensUnicos = new Map();
