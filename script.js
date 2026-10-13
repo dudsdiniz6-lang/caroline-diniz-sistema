@@ -19593,16 +19593,21 @@ async function carregarProdutosEstoque(){
           >
             Movimentar estoque
           </button>
+<button
+  type="button"
+  onclick="abrirHistoricoEstoqueProduto(${produto.id})"
+>
+  Histórico
+</button>
 
-          <button
-            type="button"
-            onclick="abrirHistoricoEstoqueProduto(${produto.id})"
-          >
-            Histórico
-          </button>
+<button
+  type="button"
+  onclick="alterarStatusProduto(${produto.id}, ${produto.ativo ? false : true})"
+>
+  ${produto.ativo ? "Desativar" : "Ativar"}
+</button>
 
-            onclick="alterarStatusProduto(
-        </div>
+</div>
       </div>
     `;
 
