@@ -9408,6 +9408,159 @@ function abrirOpcoesHorarioAgenda(profissionalId, horario){
     </button>
   `);
 }
+async function abrirCadastroProdutoAgenda(
+  profissionalPre = "",
+  horario = ""
+){
+
+  window.produtoCadastroAgendaContexto = {
+    profissionalPre,
+    horario
+  };
+
+  abrirModal(`
+    <h2>Cadastrar produto</h2>
+
+    <label>Nome do produto *</label>
+    <input
+      id="cadastroProdutoNome"
+      type="text"
+      placeholder="Ex.: Shampoo hidratante"
+    >
+
+    <div
+      style="
+        display:grid;
+        grid-template-columns:1fr 1fr;
+        gap:10px;
+        margin-top:12px;
+      "
+    >
+      <div>
+        <label>Categoria</label>
+        <input
+          id="cadastroProdutoCategoria"
+          type="text"
+          placeholder="Ex.: Cabelos"
+        >
+      </div>
+
+      <div>
+        <label>Marca</label>
+        <input
+          id="cadastroProdutoMarca"
+          type="text"
+        >
+      </div>
+    </div>
+
+    <label style="display:block; margin-top:12px;">
+      Código
+    </label>
+    <input
+      id="cadastroProdutoCodigo"
+      type="text"
+      placeholder="Código interno ou código de barras"
+    >
+
+    <div
+      style="
+        display:grid;
+        grid-template-columns:1fr 1fr;
+        gap:10px;
+        margin-top:12px;
+      "
+    >
+      <div>
+        <label>Preço de custo</label>
+        <input
+          id="cadastroProdutoPrecoCusto"
+          type="number"
+          min="0"
+          step="0.01"
+          value="0"
+        >
+      </div>
+
+      <div>
+        <label>Preço de venda *</label>
+        <input
+          id="cadastroProdutoPrecoVenda"
+          type="number"
+          min="0"
+          step="0.01"
+        >
+      </div>
+    </div>
+
+    <div
+      style="
+        display:grid;
+        grid-template-columns:1fr 1fr;
+        gap:10px;
+        margin-top:12px;
+      "
+    >
+      <div>
+        <label>Estoque inicial</label>
+        <input
+          id="cadastroProdutoEstoqueInicial"
+          type="number"
+          min="0"
+          step="1"
+          value="0"
+        >
+      </div>
+
+      <div>
+        <label>Estoque mínimo</label>
+        <input
+          id="cadastroProdutoEstoqueMinimo"
+          type="number"
+          min="0"
+          step="1"
+          value="0"
+        >
+      </div>
+    </div>
+
+    <label style="display:block; margin-top:12px;">
+      Comissão pela venda (%)
+    </label>
+    <input
+      id="cadastroProdutoComissao"
+      type="number"
+      min="0"
+      max="100"
+      step="0.01"
+      value="0"
+    >
+
+    <div
+      style="
+        display:flex;
+        justify-content:flex-end;
+        gap:10px;
+        margin-top:20px;
+      "
+    >
+      <button
+        type="button"
+        onclick="fecharModal()"
+      >
+        Cancelar
+      </button>
+
+      <button
+        type="button"
+        class="principal"
+        onclick="salvarCadastroProdutoAgenda()"
+      >
+        Salvar produto
+      </button>
+    </div>
+  `);
+}
 async function abrirVendaProdutoAgenda(
   profissionalPre = "",
   horario = ""
