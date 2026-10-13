@@ -759,6 +759,66 @@ carregarAgenda();
 
 alert("Cliente salvo com sucesso.");
 }
+async function alterarStatusCliente(
+  clienteId,
+  novoStatus
+){
+
+  const acao =
+    novoStatus
+      ? "ativar"
+      : "desativar";
+
+
+  const confirmado =
+    confirm(
+      `Deseja realmente ${acao} esta cliente?`
+    );
+
+
+  if(!confirmado){
+    return;
+  }
+
+
+  const { error } =
+    await supabaseClient
+      .from("clientes")
+      .update({
+        ativo:
+          novoStatus
+      })
+      .eq("id", clienteId);
+
+
+  if(error){
+
+    console.error(
+      "Erro ao alterar cliente:",
+      error
+    );
+
+    alert(
+      error.message ||
+      "Não foi possível alterar a cliente."
+    );
+
+    return;
+  }
+
+
+  limparCache("clientes");
+
+  await carregarClientes();
+
+
+  alert(
+    novoStatus
+      ? "Cliente ativada com sucesso."
+      : "Cliente desativada com sucesso."
+  );
+
+}
 function abrirAbaClientes(
   tipo = "ativos"
 ){
