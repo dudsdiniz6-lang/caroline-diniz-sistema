@@ -19351,15 +19351,7 @@ async function carregarProdutosEstoque(){
             Histórico
           </button>
 
-          <button
-            type="button"
             onclick="alterarStatusProduto(
-              ${produto.id},
-              ${produto.ativo ? "false" : "true"}
-            )"
-          >
-            ${produto.ativo ? "Desativar" : "Ativar"}
-          </button>
         </div>
       </div>
     `;
