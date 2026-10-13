@@ -9926,6 +9926,160 @@ async function abrirEditarProduto(produtoId){
   `);
 
 }
+async function salvarEdicaoProduto(){
+
+  const produtoId =
+    Number(
+      document.getElementById(
+        "editarProdutoId"
+      )?.value
+    );
+
+  const nome =
+    document.getElementById(
+      "editarProdutoNome"
+    )?.value.trim();
+
+  const categoria =
+    document.getElementById(
+      "editarProdutoCategoria"
+    )?.value.trim() || null;
+
+  const marca =
+    document.getElementById(
+      "editarProdutoMarca"
+    )?.value.trim() || null;
+
+  const codigo =
+    document.getElementById(
+      "editarProdutoCodigo"
+    )?.value.trim() || null;
+
+  const precoCusto =
+    Number(
+      document.getElementById(
+        "editarProdutoPrecoCusto"
+      )?.value || 0
+    );
+
+  const precoVenda =
+    Number(
+      document.getElementById(
+        "editarProdutoPrecoVenda"
+      )?.value || 0
+    );
+
+  const estoqueMinimo =
+    Number(
+      document.getElementById(
+        "editarProdutoEstoqueMinimo"
+      )?.value || 0
+    );
+
+  const comissao =
+    Number(
+      document.getElementById(
+        "editarProdutoComissao"
+      )?.value || 0
+    );
+
+
+  if(!produtoId){
+    alert("Produto inválido.");
+    return;
+  }
+
+
+  if(!nome){
+    alert("Informe o nome do produto.");
+    return;
+  }
+
+
+  if(precoCusto < 0 || precoVenda <= 0){
+
+    alert("Confira os preços informados.");
+    return;
+
+  }
+
+
+  if(
+    estoqueMinimo < 0 ||
+    comissao < 0 ||
+    comissao > 100
+  ){
+
+    alert("Confira o estoque mínimo e a comissão.");
+    return;
+
+  }
+
+
+  const botao =
+    document.querySelector(
+      `button[onclick="salvarEdicaoProduto()"]`
+    );
+
+
+  if(botao){
+
+    botao.disabled = true;
+    botao.textContent = "Salvando...";
+
+  }
+
+
+  const { error } =
+    await supabaseClient
+      .from("produtos")
+      .update({
+        nome,
+        categoria,
+        marca,
+        codigo,
+        preco_custo: precoCusto,
+        preco_venda: precoVenda,
+        estoque_minimo: estoqueMinimo,
+        comissao_venda_percentual: comissao,
+        atualizado_em:
+          new Date().toISOString()
+      })
+      .eq("id", produtoId)
+      .eq("unidade_id", unidadeAtualId);
+
+
+  if(error){
+
+    console.error(
+      "Erro ao editar produto:",
+      error
+    );
+
+    alert(
+      error.message ||
+      "Não foi possível salvar as alterações."
+    );
+
+
+    if(botao){
+
+      botao.disabled = false;
+      botao.textContent = "Salvar alterações";
+
+    }
+
+    return;
+  }
+
+
+  fecharModal();
+
+  await carregarProdutosEstoque();
+
+  alert("Produto atualizado com sucesso.");
+
+}
 async function abrirVendaProdutoAgenda(
   profissionalPre = "",
   horario = ""
