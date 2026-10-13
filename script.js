@@ -10198,6 +10198,151 @@ async function abrirMovimentarEstoqueProduto(produtoId){
   `);
 
 }
+async function confirmarMovimentacaoEstoqueProduto(){
+
+  const produtoId =
+    Number(
+      document.getElementById(
+        "movimentarEstoqueProdutoId"
+      )?.value
+    );
+
+  const tipo =
+    document.getElementById(
+      "movimentarEstoqueTipo"
+    )?.value;
+
+  const quantidade =
+    Number(
+      document.getElementById(
+        "movimentarEstoqueQuantidade"
+      )?.value
+    );
+
+  const observacao =
+    document.getElementById(
+      "movimentarEstoqueObservacao"
+    )?.value.trim() || "";
+
+
+  if(!produtoId){
+
+    alert("Produto inválido.");
+    return;
+
+  }
+
+
+  if(
+    !Number.isInteger(quantidade) ||
+    quantidade <= 0
+  ){
+
+    alert("Informe uma quantidade inteira maior que zero.");
+    return;
+
+  }
+
+
+  if(
+    ![
+      "ENTRADA",
+      "AJUSTE_ENTRADA",
+      "AJUSTE_SAIDA"
+    ].includes(tipo)
+  ){
+
+    alert("Selecione um tipo de movimentação válido.");
+    return;
+
+  }
+
+
+  if(
+    tipo !== "ENTRADA" &&
+    !observacao
+  ){
+
+    alert("Informe o motivo do ajuste de estoque.");
+    return;
+
+  }
+
+
+  const botao =
+    document.querySelector(
+      `button[onclick="confirmarMovimentacaoEstoqueProduto()"]`
+    );
+
+
+  if(botao){
+
+    botao.disabled = true;
+    botao.textContent = "Salvando...";
+
+  }
+
+
+  const { data: novoEstoque, error } =
+    await supabaseClient.rpc(
+      "movimentar_estoque_produto",
+      {
+        p_produto_id:
+          produtoId,
+
+        p_unidade_id:
+          Number(unidadeAtualId),
+
+        p_tipo:
+          tipo,
+
+        p_quantidade:
+          quantidade,
+
+        p_observacao:
+          observacao,
+
+        p_registrado_por:
+          usuarioLogado?.id || null
+      }
+    );
+
+
+  if(error){
+
+    console.error(
+      "Erro ao movimentar estoque:",
+      error
+    );
+
+    alert(
+      error.message ||
+      "Não foi possível movimentar o estoque."
+    );
+
+
+    if(botao){
+
+      botao.disabled = false;
+      botao.textContent = "Confirmar movimentação";
+
+    }
+
+    return;
+  }
+
+
+  fecharModal();
+
+  await carregarProdutosEstoque();
+
+  alert(
+    `Estoque atualizado. Quantidade atual: ${
+      Number(novoEstoque || 0)
+    }.`
+  );
+
+}
 async function abrirVendaProdutoAgenda(
   profissionalPre = "",
   horario = ""
