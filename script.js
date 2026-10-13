@@ -9408,6 +9408,682 @@ function abrirOpcoesHorarioAgenda(profissionalId, horario){
     </button>
   `);
 }
+async function abrirVendaProdutoAgenda(
+  profissionalPre = "",
+  horario = ""
+){
+
+  const [
+    clientes,
+    profissionais,
+    formasPagamento
+  ] = await Promise.all([
+    obterClientes(),
+    obterProfissionais(),
+    obterFormasPagamento()
+  ]);
+
+  const {
+    data: produtos,
+    error: erroProdutos
+  } = await supabaseClient
+    .from("produtos")
+    .select("*")
+    .eq("ativo", true)
+    .eq("unidade_id", unidadeAtualId)
+    .order("nome");
+
+  if(erroProdutos){
+    console.error(erroProdutos);
+    alert("Erro ao carregar os produtos.");
+    return;
+  }
+
+  if(!produtos || produtos.length === 0){
+    alert(
+      "Nenhum produto foi cadastrado nesta unidade."
+    );
+    return;
+  }
+
+  window.produtosVendaAgendaCache =
+    produtos || [];
+
+  abrirModal(`
+    <h2>Vender produto</h2>
+
+    <div
+      style="
+        display:grid;
+        grid-template-columns:1fr 140px;
+        gap:12px;
+      "
+    >
+      <div>
+        <label>Data da venda</label>
+
+        <input
+          id="vendaProdutoData"
+          type="date"
+          value="${formatarDataISO(dataAgenda)}"
+          readonly
+        >
+      </div>
+
+      <div>
+        <label>Horário</label>
+
+        <input
+          id="vendaProdutoHorario"
+          type="time"
+          value="${horario}"
+          readonly
+        >
+      </div>
+    </div>
+
+    <label>Cliente</label>
+
+    <select id="vendaProdutoCliente">
+      <option value="">Selecione a cliente</option>
+
+      ${(clientes || []).map(cliente => `
+        <option value="${cliente.id}">
+          ${cliente.nome}
+        </option>
+      `).join("")}
+    </select>
+
+    <label>Vendido por</label>
+
+    <select id="vendaProdutoVendedor">
+      <option value="">Selecione o vendedor</option>
+
+      ${(profissionais || []).map(profissional => `
+        <option
+          value="${profissional.id}"
+          ${
+            String(profissional.id) ===
+            String(profissionalPre)
+              ? "selected"
+              : ""
+          }
+        >
+          ${profissional.nome}
+        </option>
+      `).join("")}
+    </select>
+
+    <hr style="margin:20px 0;">
+
+    <h3>Produto</h3>
+
+    <label>Selecione o produto</label>
+
+    <select
+      id="vendaProdutoProduto"
+      onchange="atualizarProdutoSelecionadoAgenda()"
+    >
+      <option value="">Selecione</option>
+
+      ${(produtos || []).map(produto => `
+        <option value="${produto.id}">
+          ${produto.nome}
+          — Estoque: ${produto.estoque_atual}
+        </option>
+      `).join("")}
+    </select>
+
+    <div
+      style="
+        display:grid;
+        grid-template-columns:100px 1fr 1fr;
+        gap:10px;
+        margin-top:12px;
+      "
+    >
+      <div>
+        <label>Quantidade</label>
+
+        <input
+          id="vendaProdutoQuantidade"
+          type="number"
+          min="1"
+          step="1"
+          value="1"
+          oninput="calcularVendaProdutoAgenda()"
+        >
+      </div>
+
+      <div>
+        <label>Valor unitário</label>
+
+        <input
+          id="vendaProdutoValorUnitario"
+          type="number"
+          min="0"
+          step="0.01"
+          value="0"
+          oninput="calcularVendaProdutoAgenda()"
+        >
+      </div>
+
+      <div>
+        <label>Desconto</label>
+
+        <input
+          id="vendaProdutoDesconto"
+          type="number"
+          min="0"
+          step="0.01"
+          value="0"
+          oninput="calcularVendaProdutoAgenda()"
+        >
+      </div>
+    </div>
+
+    <div
+      style="
+        display:grid;
+        grid-template-columns:1fr 1fr;
+        gap:10px;
+        margin-top:12px;
+      "
+    >
+      <div>
+        <label>Comissão (%)</label>
+
+        <input
+          id="vendaProdutoComissaoPercentual"
+          type="number"
+          min="0"
+          max="100"
+          step="0.1"
+          value="0"
+          oninput="calcularVendaProdutoAgenda()"
+        >
+      </div>
+
+      <div>
+        <label>Comissão do vendedor</label>
+
+        <input
+          id="vendaProdutoComissaoValor"
+          type="text"
+          value="R$ 0,00"
+          readonly
+        >
+      </div>
+    </div>
+
+    <div
+      class="card"
+      style="
+        margin-top:18px;
+        padding:15px;
+      "
+    >
+      <small>Total da venda</small>
+
+      <div
+        id="vendaProdutoTotal"
+        style="
+          font-size:24px;
+          font-weight:700;
+          margin-top:4px;
+        "
+      >
+        R$ 0,00
+      </div>
+    </div>
+
+    <label>Forma de pagamento</label>
+
+    <select id="vendaProdutoFormaPagamento">
+      <option value="">Selecione</option>
+
+      ${(formasPagamento || []).map(forma => `
+        <option value="${forma.id}">
+          ${forma.nome}
+        </option>
+      `).join("")}
+    </select>
+
+    <label>Tipo de recebimento</label>
+
+    <select id="vendaProdutoTipoRecebimento">
+      <option value="RECEBER_AGORA">
+        Receber agora
+      </option>
+
+      <option value="A_RECEBER">
+        Deixar em aberto
+      </option>
+    </select>
+
+    <div
+      style="
+        display:flex;
+        justify-content:flex-end;
+        gap:10px;
+        margin-top:22px;
+      "
+    >
+      <button
+        type="button"
+        onclick="fecharModal()"
+      >
+        Cancelar
+      </button>
+
+      <button
+        type="button"
+        class="principal"
+        onclick="confirmarVendaProdutoAgenda()"
+      >
+        Confirmar venda
+      </button>
+    </div>
+  `);
+}
+function atualizarProdutoSelecionadoAgenda(){
+
+  const produtoId =
+    document.getElementById(
+      "vendaProdutoProduto"
+    )?.value;
+
+  const produto =
+    (
+      window.produtosVendaAgendaCache ||
+      []
+    ).find(item =>
+      String(item.id) ===
+      String(produtoId)
+    );
+
+  const campoQuantidade =
+    document.getElementById(
+      "vendaProdutoQuantidade"
+    );
+
+  const campoValor =
+    document.getElementById(
+      "vendaProdutoValorUnitario"
+    );
+
+  const campoComissao =
+    document.getElementById(
+      "vendaProdutoComissaoPercentual"
+    );
+
+  if(!produto){
+
+    if(campoValor){
+      campoValor.value = "0";
+    }
+
+    if(campoComissao){
+      campoComissao.value = "0";
+    }
+
+    calcularVendaProdutoAgenda();
+    return;
+  }
+
+  if(campoQuantidade){
+
+    campoQuantidade.value = "1";
+
+    campoQuantidade.max =
+      Number(
+        produto.estoque_atual || 0
+      );
+
+  }
+
+  if(campoValor){
+
+    campoValor.value =
+      Number(
+        produto.preco_venda || 0
+      ).toFixed(2);
+
+  }
+
+  if(campoComissao){
+
+    campoComissao.value =
+      Number(
+        produto.comissao_venda_percentual || 0
+      );
+
+  }
+
+  calcularVendaProdutoAgenda();
+}
+
+
+function calcularVendaProdutoAgenda(){
+
+  const quantidade =
+    Number(
+      document.getElementById(
+        "vendaProdutoQuantidade"
+      )?.value || 0
+    );
+
+  const valorUnitario =
+    Number(
+      document.getElementById(
+        "vendaProdutoValorUnitario"
+      )?.value || 0
+    );
+
+  const desconto =
+    Number(
+      document.getElementById(
+        "vendaProdutoDesconto"
+      )?.value || 0
+    );
+
+  const percentualComissao =
+    Number(
+      document.getElementById(
+        "vendaProdutoComissaoPercentual"
+      )?.value || 0
+    );
+
+  const subtotal =
+    quantidade * valorUnitario;
+
+  const total =
+    Math.max(
+      0,
+      subtotal - desconto
+    );
+
+  const comissao =
+    total *
+    percentualComissao /
+    100;
+
+  const areaTotal =
+    document.getElementById(
+      "vendaProdutoTotal"
+    );
+
+  const campoComissaoValor =
+    document.getElementById(
+      "vendaProdutoComissaoValor"
+    );
+
+  if(areaTotal){
+
+    areaTotal.textContent =
+      dinheiro(total);
+
+  }
+
+  if(campoComissaoValor){
+
+    campoComissaoValor.value =
+      dinheiro(comissao);
+
+  }
+
+  return {
+    quantidade,
+    valorUnitario,
+    desconto,
+    subtotal,
+    total,
+    percentualComissao,
+    comissao
+  };
+}
+async function confirmarVendaProdutoAgenda(){
+
+  const clienteId =
+    Number(
+      document.getElementById(
+        "vendaProdutoCliente"
+      )?.value || 0
+    );
+
+  const vendedorId =
+    Number(
+      document.getElementById(
+        "vendaProdutoVendedor"
+      )?.value || 0
+    );
+
+  const produtoId =
+    Number(
+      document.getElementById(
+        "vendaProdutoProduto"
+      )?.value || 0
+    );
+
+  const dataVenda =
+    document.getElementById(
+      "vendaProdutoData"
+    )?.value;
+
+  const horario =
+    document.getElementById(
+      "vendaProdutoHorario"
+    )?.value;
+
+  const tipoRecebimento =
+    document.getElementById(
+      "vendaProdutoTipoRecebimento"
+    )?.value;
+
+  const formaPagamentoId =
+    Number(
+      document.getElementById(
+        "vendaProdutoFormaPagamento"
+      )?.value || 0
+    );
+
+  const valores =
+    calcularVendaProdutoAgenda();
+
+  const produto =
+    (
+      window.produtosVendaAgendaCache ||
+      []
+    ).find(item =>
+      String(item.id) ===
+      String(produtoId)
+    );
+
+  if(!clienteId){
+    alert("Selecione a cliente.");
+    return;
+  }
+
+  if(!vendedorId){
+    alert("Selecione quem realizou a venda.");
+    return;
+  }
+
+  if(!produto){
+    alert("Selecione o produto.");
+    return;
+  }
+
+  if(
+    !Number.isInteger(valores.quantidade) ||
+    valores.quantidade <= 0
+  ){
+    alert("Informe uma quantidade válida.");
+    return;
+  }
+
+  if(
+    valores.quantidade >
+    Number(produto.estoque_atual || 0)
+  ){
+    alert(
+      `Estoque insuficiente. Disponível: ${
+        produto.estoque_atual || 0
+      }.`
+    );
+    return;
+  }
+
+  if(
+    !Number.isFinite(valores.valorUnitario) ||
+    valores.valorUnitario < 0
+  ){
+    alert("Informe um valor unitário válido.");
+    return;
+  }
+
+  if(
+    valores.desconto < 0 ||
+    valores.desconto > valores.subtotal
+  ){
+    alert(
+      "O desconto não pode ser maior que o subtotal."
+    );
+    return;
+  }
+
+  if(
+    valores.percentualComissao < 0 ||
+    valores.percentualComissao > 100
+  ){
+    alert(
+      "Informe uma comissão entre 0% e 100%."
+    );
+    return;
+  }
+
+  if(
+    tipoRecebimento === "RECEBER_AGORA" &&
+    !formaPagamentoId
+  ){
+    alert("Selecione a forma de pagamento.");
+    return;
+  }
+
+  if(
+    !confirm(
+      `Confirmar venda de ${valores.quantidade} unidade(s) de ${produto.nome} por ${dinheiro(valores.total)}?`
+    )
+  ){
+    return;
+  }
+
+  const botao =
+    document.querySelector(
+      'button[onclick="confirmarVendaProdutoAgenda()"]'
+    );
+
+  if(botao){
+    botao.disabled = true;
+    botao.textContent = "Finalizando...";
+  }
+
+  try{
+
+    const {
+      data: vendaId,
+      error
+    } = await supabaseClient.rpc(
+      "finalizar_venda_produto",
+      {
+        p_unidade_id:
+          unidadeAtualId,
+
+        p_cliente_id:
+          clienteId,
+
+        p_vendedor_id:
+          vendedorId,
+
+        p_produto_id:
+          produtoId,
+
+        p_quantidade:
+          valores.quantidade,
+
+        p_valor_unitario:
+          valores.valorUnitario,
+
+        p_desconto:
+          valores.desconto,
+
+        p_comissao_percentual:
+          valores.percentualComissao,
+
+        p_data_venda:
+          dataVenda,
+
+        p_horario:
+          horario || null,
+
+        p_tipo_recebimento:
+          tipoRecebimento,
+
+        p_forma_pagamento_id:
+          tipoRecebimento ===
+            "RECEBER_AGORA"
+              ? formaPagamentoId
+              : null,
+
+        p_registrado_por:
+          usuarioLogado?.id || null
+      }
+    );
+
+    if(error){
+      throw error;
+    }
+
+    fecharModal();
+
+    if(
+      typeof carregarCaixas ===
+      "function"
+    ){
+      carregarCaixas();
+    }
+
+    if(
+      typeof carregarPendenciasFinanceiras ===
+      "function"
+    ){
+      carregarPendenciasFinanceiras();
+    }
+
+    alert(
+      `Venda de produto concluída com sucesso. Código da venda: ${vendaId}.`
+    );
+
+  }catch(erro){
+
+    console.error(
+      "Erro ao vender produto:",
+      erro
+    );
+
+    alert(
+      erro?.message ||
+      "Não foi possível concluir a venda."
+    );
+
+    if(botao){
+      botao.disabled = false;
+      botao.textContent = "Confirmar venda";
+    }
+
+  }
+
+}
 async function abrirModalBloqueioAgenda(id = null, profissionalPre = "", horarioPre = ""){
 
   let bloqueio = null;
