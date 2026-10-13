@@ -18184,7 +18184,68 @@ function instalarModuloFinanceiroProfissionais(){
     "afterend",
     botao
   );
+  /*
+  ==========================================
+  MÓDULO DE PRODUTOS
+  ==========================================
+  */
 
+  if(!document.getElementById("tela-produtos")){
+
+    const telaProdutos =
+      document.createElement("section");
+
+    telaProdutos.id = "tela-produtos";
+    telaProdutos.className = "tela";
+
+    telaProdutos.innerHTML = `
+      <div class="topo">
+        <h1>Produtos e Estoque</h1>
+
+        <button
+          type="button"
+          class="principal"
+          onclick="abrirCadastroProdutoAgenda()"
+        >
+          Cadastrar produto
+        </button>
+      </div>
+
+      <div id="listaProdutosEstoque"></div>
+    `;
+
+    novaTela.insertAdjacentElement(
+      "afterend",
+      telaProdutos
+    );
+
+
+    const botaoProdutos =
+      document.createElement("button");
+
+    botaoProdutos.id =
+      "menu-produtos";
+
+    botaoProdutos.textContent =
+      "Produtos";
+
+    botaoProdutos.className =
+      botao.className;
+
+    botaoProdutos.onclick = () => {
+
+      mostrarTela("produtos");
+      carregarProdutosEstoque();
+
+    };
+
+
+    botao.insertAdjacentElement(
+      "afterend",
+      botaoProdutos
+    );
+
+  }
   // Esconde somente a antiga aba Comissões.
   // Os cálculos continuam funcionando normalmente.
   menuComissoes.style.display = "none";
