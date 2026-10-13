@@ -10820,7 +10820,6 @@ async function alterarStatusProduto(
     return;
   }
 
-
 await carregarProdutosEstoque(
   window.produtosEstoqueAbaAtual ||
   "ativos"
@@ -10832,12 +10831,10 @@ abrirAbaProdutosEstoque(
 );
 
 alert(
-
-  alert(
-    novoStatus
-      ? "Produto ativado com sucesso."
-      : "Produto desativado com sucesso."
-  );
+  novoStatus
+    ? "Produto ativado com sucesso."
+    : "Produto desativado com sucesso."
+);
 
 }
 async function abrirVendaProdutoAgenda(
