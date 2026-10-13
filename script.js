@@ -3184,6 +3184,87 @@ function normalizarClasse(texto){
     .replaceAll(" ", "-");
 
 }
+async function agendamentoJaFoiFaturado(
+  agendamentoId
+){
+
+  if(!agendamentoId){
+    return false;
+  }
+
+
+  const [
+    comandaResposta,
+    itemResposta
+  ] = await Promise.all([
+
+    supabaseClient
+      .from("comandas")
+      .select(`
+        id,
+        cancelada
+      `)
+      .eq(
+        "agendamento_id",
+        agendamentoId
+      ),
+
+    supabaseClient
+      .from("comanda_itens")
+      .select(`
+        id,
+        comandas!inner(
+          cancelada
+        )
+      `)
+      .eq(
+        "agendamento_id",
+        agendamentoId
+      )
+
+  ]);
+
+
+  if(
+    comandaResposta.error ||
+    itemResposta.error
+  ){
+
+    console.error(
+      "Erro ao verificar faturamento:",
+      comandaResposta.error ||
+      itemResposta.error
+    );
+
+    /*
+      Por segurança, se não for possível conferir,
+      consideramos faturado e escondemos o botão.
+    */
+
+    return true;
+  }
+
+
+  const existeNaComanda =
+    (comandaResposta.data || [])
+      .some(comanda =>
+        comanda.cancelada !== true
+      );
+
+
+  const existeNosItens =
+    (itemResposta.data || [])
+      .some(item =>
+        item.comandas?.cancelada !== true
+      );
+
+
+  return (
+    existeNaComanda ||
+    existeNosItens
+  );
+
+}
 async function abrirModalAgendamento(id = null, profissionalPre = "", horarioPre = ""){
 
   const clientes = await obterClientes();
