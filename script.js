@@ -12747,21 +12747,103 @@ async function salvarFaturamentoClienteDiaPago(){
 
   const idsAgendamentos = itensPagos.map(item => item.id);
 
-  const jaFaturadosResp = await supabaseClient
-    .from("comandas")
-    .select("id")
-    .in("agendamento_id", idsAgendamentos)
-    .neq("cancelada", true);
+ const [
+  comandasJaFaturadasResposta,
+  itensJaFaturadosResposta
+] = await Promise.all([
 
-  if((jaFaturadosResp.data || []).length > 0){
-    alert("Um ou mais serviços selecionados já foram faturados. Atualize a agenda e tente novamente.");
-    if(botaoConfirmar){
-      botaoConfirmar.dataset.salvando = "false";
-      botaoConfirmar.disabled = false;
-      botaoConfirmar.innerText = "Confirmar faturamento";
-    }
-    return;
+  supabaseClient
+    .from("comandas")
+    .select(`
+      id,
+      agendamento_id,
+      cancelada
+    `)
+    .in(
+      "agendamento_id",
+      idsAgendamentos
+    ),
+
+  supabaseClient
+    .from("comanda_itens")
+    .select(`
+      id,
+      agendamento_id,
+      comandas!inner(
+        id,
+        cancelada
+      )
+    `)
+    .in(
+      "agendamento_id",
+      idsAgendamentos
+    )
+
+]);
+
+
+if(
+  comandasJaFaturadasResposta.error ||
+  itensJaFaturadosResposta.error
+){
+
+  console.error(
+    "Erro ao conferir duplicidade:",
+    comandasJaFaturadasResposta.error ||
+    itensJaFaturadosResposta.error
+  );
+
+  alert(
+    "Não foi possível conferir se os serviços já foram faturados."
+  );
+
+  if(botaoConfirmar){
+
+    botaoConfirmar.dataset.salvando = "false";
+    botaoConfirmar.disabled = false;
+    botaoConfirmar.innerText =
+      "Confirmar faturamento";
+
   }
+
+  return;
+}
+
+
+const existeFaturamentoDuplicado =
+
+  (comandasJaFaturadasResposta.data || [])
+    .some(comanda =>
+      comanda.cancelada !== true
+    )
+
+  ||
+
+  (itensJaFaturadosResposta.data || [])
+    .some(item =>
+      item.comandas?.cancelada !== true
+    );
+
+
+if(existeFaturamentoDuplicado){
+
+  alert(
+    "Um ou mais serviços selecionados já foram faturados. A operação foi bloqueada para evitar cobrança duplicada."
+  );
+
+  if(botaoConfirmar){
+
+    botaoConfirmar.dataset.salvando = "false";
+    botaoConfirmar.disabled = false;
+    botaoConfirmar.innerText =
+      "Confirmar faturamento";
+
+  }
+
+  await carregarAgenda();
+
+  return;
+}
 
   const pagamentosInformados = Array.from(
     document.querySelectorAll(".linha-pagamento")
