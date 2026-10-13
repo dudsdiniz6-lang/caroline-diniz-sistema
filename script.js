@@ -19456,7 +19456,9 @@ function abrirAbaProdutosEstoque(
   carregarProdutosEstoque(tipo);
 
 }
-async function carregarProdutosEstoque(){
+async function carregarProdutosEstoque(
+  tipo = "ativos"
+){
 
   const area =
     document.getElementById(
@@ -19471,32 +19473,42 @@ async function carregarProdutosEstoque(){
   `;
 
 
-  const { data: produtos, error } =
-    await supabaseClient
-      .from("produtos")
-      .select(`
-        id,
-        nome,
-        categoria,
-        marca,
-        codigo,
-        preco_custo,
-        preco_venda,
-        estoque_atual,
-        estoque_minimo,
-        comissao_venda_percentual,
-        ativo
-      `)
-      .eq(
-        "unidade_id",
-        unidadeAtualId
-      )
-      .order(
-        "nome",
-        {
-          ascending:true
-        }
-      );
+  let consultaProdutos =
+  supabaseClient
+    .from("produtos")
+    .select(`
+      id,
+      nome,
+      categoria,
+      marca,
+      codigo,
+      preco_custo,
+      preco_venda,
+      estoque_atual,
+      estoque_minimo,
+      comissao_venda_percentual,
+      ativo
+    `)
+    .eq(
+      "unidade_id",
+      unidadeAtualId
+    )
+    .eq(
+      "ativo",
+      tipo !== "desativados"
+    )
+    .order(
+      "nome",
+      {
+        ascending:true
+      }
+    );
+
+
+const {
+  data: produtos,
+  error
+} = await consultaProdutos;
 
 
   if(error){
