@@ -19348,8 +19348,33 @@ function instalarModuloFinanceiroProfissionais(){
           Cadastrar produto
         </button>
       </div>
+<div
+  style="
+    display:flex;
+    gap:10px;
+    margin-bottom:20px;
+    flex-wrap:wrap;
+  "
+>
+  <button
+    id="abaProdutosAtivos"
+    type="button"
+    class="principal"
+    onclick="abrirAbaProdutosEstoque('ativos')"
+  >
+    Produtos ativos
+  </button>
 
-      <div id="listaProdutosEstoque"></div>
+  <button
+    id="abaProdutosDesativados"
+    type="button"
+    onclick="abrirAbaProdutosEstoque('desativados')"
+  >
+    Produtos desativados
+  </button>
+</div>
+
+<div id="listaProdutosEstoque"></div>
     `;
 
     novaTela.insertAdjacentElement(
