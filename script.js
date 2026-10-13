@@ -9735,6 +9735,197 @@ async function salvarCadastroProdutoAgenda(){
   }
 
 }
+async function abrirEditarProduto(produtoId){
+
+  const { data: produto, error } =
+    await supabaseClient
+      .from("produtos")
+      .select("*")
+      .eq("id", produtoId)
+      .eq("unidade_id", unidadeAtualId)
+      .single();
+
+
+  if(error || !produto){
+
+    console.error(
+      "Erro ao buscar produto:",
+      error
+    );
+
+    alert("Não foi possível localizar o produto.");
+    return;
+  }
+
+
+  abrirModal(`
+    <h2>Editar produto</h2>
+
+    <input
+      id="editarProdutoId"
+      type="hidden"
+      value="${produto.id}"
+    >
+
+    <label>Nome do produto *</label>
+    <input
+      id="editarProdutoNome"
+      type="text"
+      value="${financeiroEscaparHTML(produto.nome || "")}"
+    >
+
+    <div
+      style="
+        display:grid;
+        grid-template-columns:1fr 1fr;
+        gap:10px;
+        margin-top:12px;
+      "
+    >
+      <div>
+        <label>Categoria</label>
+
+        <input
+          id="editarProdutoCategoria"
+          type="text"
+          value="${financeiroEscaparHTML(
+            produto.categoria || ""
+          )}"
+        >
+      </div>
+
+      <div>
+        <label>Marca</label>
+
+        <input
+          id="editarProdutoMarca"
+          type="text"
+          value="${financeiroEscaparHTML(
+            produto.marca || ""
+          )}"
+        >
+      </div>
+    </div>
+
+    <label style="display:block; margin-top:12px;">
+      Código
+    </label>
+
+    <input
+      id="editarProdutoCodigo"
+      type="text"
+      value="${financeiroEscaparHTML(
+        produto.codigo || ""
+      )}"
+    >
+
+    <div
+      style="
+        display:grid;
+        grid-template-columns:1fr 1fr;
+        gap:10px;
+        margin-top:12px;
+      "
+    >
+      <div>
+        <label>Preço de custo</label>
+
+        <input
+          id="editarProdutoPrecoCusto"
+          type="number"
+          min="0"
+          step="0.01"
+          value="${Number(produto.preco_custo || 0)}"
+        >
+      </div>
+
+      <div>
+        <label>Preço de venda *</label>
+
+        <input
+          id="editarProdutoPrecoVenda"
+          type="number"
+          min="0"
+          step="0.01"
+          value="${Number(produto.preco_venda || 0)}"
+        >
+      </div>
+    </div>
+
+    <div
+      style="
+        display:grid;
+        grid-template-columns:1fr 1fr;
+        gap:10px;
+        margin-top:12px;
+      "
+    >
+      <div>
+        <label>Estoque mínimo</label>
+
+        <input
+          id="editarProdutoEstoqueMinimo"
+          type="number"
+          min="0"
+          step="1"
+          value="${Number(produto.estoque_minimo || 0)}"
+        >
+      </div>
+
+      <div>
+        <label>Comissão pela venda (%)</label>
+
+        <input
+          id="editarProdutoComissao"
+          type="number"
+          min="0"
+          max="100"
+          step="0.01"
+          value="${Number(
+            produto.comissao_venda_percentual || 0
+          )}"
+        >
+      </div>
+    </div>
+
+    <p style="margin-top:15px;">
+      Estoque atual:
+      <strong>
+        ${Number(produto.estoque_atual || 0)}
+      </strong>
+    </p>
+
+    <small>
+      Para alterar a quantidade, use o botão
+      “Movimentar estoque”. Assim o histórico não vira bagunça.
+    </small>
+
+    <div
+      style="
+        display:flex;
+        justify-content:flex-end;
+        gap:10px;
+        margin-top:20px;
+      "
+    >
+      <button
+        type="button"
+        onclick="fecharModal()"
+      >
+        Cancelar
+      </button>
+
+      <button
+        type="button"
+        class="principal"
+        onclick="salvarEdicaoProduto()"
+      >
+        Salvar alterações
+      </button>
+    </div>
+  `);
+
+}
 async function abrirVendaProdutoAgenda(
   profissionalPre = "",
   horario = ""
