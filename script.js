@@ -19414,6 +19414,48 @@ function instalarModuloFinanceiroProfissionais(){
   menuComissoes.style.display = "none";
 
 }
+function abrirAbaProdutosEstoque(
+  tipo = "ativos"
+){
+
+  const botaoAtivos =
+    document.getElementById(
+      "abaProdutosAtivos"
+    );
+
+  const botaoDesativados =
+    document.getElementById(
+      "abaProdutosDesativados"
+    );
+
+
+  botaoAtivos?.classList.remove(
+    "principal"
+  );
+
+  botaoDesativados?.classList.remove(
+    "principal"
+  );
+
+
+  if(tipo === "desativados"){
+
+    botaoDesativados?.classList.add(
+      "principal"
+    );
+
+  }else{
+
+    botaoAtivos?.classList.add(
+      "principal"
+    );
+
+  }
+
+
+  carregarProdutosEstoque(tipo);
+
+}
 async function carregarProdutosEstoque(){
 
   const area =
