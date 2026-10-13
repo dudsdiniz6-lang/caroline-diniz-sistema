@@ -10080,6 +10080,124 @@ async function salvarEdicaoProduto(){
   alert("Produto atualizado com sucesso.");
 
 }
+async function abrirMovimentarEstoqueProduto(produtoId){
+
+  const { data: produto, error } =
+    await supabaseClient
+      .from("produtos")
+      .select(`
+        id,
+        nome,
+        estoque_atual
+      `)
+      .eq("id", produtoId)
+      .eq("unidade_id", unidadeAtualId)
+      .single();
+
+
+  if(error || !produto){
+
+    console.error(
+      "Erro ao localizar produto:",
+      error
+    );
+
+    alert("Não foi possível localizar o produto.");
+    return;
+  }
+
+
+  abrirModal(`
+    <h2>Movimentar estoque</h2>
+
+    <p>
+      Produto:
+      <strong>
+        ${financeiroEscaparHTML(produto.nome)}
+      </strong>
+    </p>
+
+    <p>
+      Estoque atual:
+      <strong>
+        ${Number(produto.estoque_atual || 0)}
+      </strong>
+    </p>
+
+    <input
+      id="movimentarEstoqueProdutoId"
+      type="hidden"
+      value="${produto.id}"
+    >
+
+    <label>Tipo de movimentação</label>
+
+    <select id="movimentarEstoqueTipo">
+      <option value="ENTRADA">
+        Entrada de mercadoria
+      </option>
+
+      <option value="AJUSTE_ENTRADA">
+        Correção para aumentar o estoque
+      </option>
+
+      <option value="AJUSTE_SAIDA">
+        Correção para diminuir o estoque
+      </option>
+    </select>
+
+    <label style="display:block; margin-top:12px;">
+      Quantidade
+    </label>
+
+    <input
+      id="movimentarEstoqueQuantidade"
+      type="number"
+      min="1"
+      step="1"
+      value="1"
+    >
+
+    <label style="display:block; margin-top:12px;">
+      Motivo ou observação
+    </label>
+
+    <textarea
+      id="movimentarEstoqueObservacao"
+      rows="3"
+      placeholder="Ex.: Compra de fornecedor, produto danificado ou correção de contagem"
+      style="
+        width:100%;
+        resize:vertical;
+      "
+    ></textarea>
+
+    <div
+      style="
+        display:flex;
+        justify-content:flex-end;
+        gap:10px;
+        margin-top:20px;
+      "
+    >
+      <button
+        type="button"
+        onclick="fecharModal()"
+      >
+        Cancelar
+      </button>
+
+      <button
+        type="button"
+        class="principal"
+        onclick="confirmarMovimentacaoEstoqueProduto()"
+      >
+        Confirmar movimentação
+      </button>
+    </div>
+  `);
+
+}
 async function abrirVendaProdutoAgenda(
   profissionalPre = "",
   horario = ""
