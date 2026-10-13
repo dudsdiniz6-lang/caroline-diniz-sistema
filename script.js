@@ -3989,7 +3989,11 @@ lista.innerHTML = `
   const { data, error } = await supabaseClient
     .from("pacotes")
     .select("*")
-    .eq("ativo", true)
+.eq(
+  "ativo",
+  window.pacotesAbaAtual !==
+    "desativados"
+)
     .order("nome");
 
   if(error){
@@ -4012,14 +4016,32 @@ lista.innerHTML = `
 
         <br><br>
 
-        <button class="principal" onclick="abrirModalPacote(${pacote.id})">
-          Editar
-        </button>
-        <button onclick="venderPacote(${pacote.id})">
-  Vender
+        <button
+  class="principal"
+  onclick="abrirModalPacote(${pacote.id})"
+>
+  Editar
 </button>
+
+${
+  pacote.ativo
+    ? `
+      <button onclick="venderPacote(${pacote.id})">
+        Vender
+      </button>
+    `
+    : ""
+}
+
 <button onclick="abrirCancelamentoPacote()">
   Cancelar créditos
+</button>
+
+<button
+  type="button"
+  onclick="alterarStatusPacote(${pacote.id}, ${pacote.ativo ? false : true})"
+>
+  ${pacote.ativo ? "Desativar" : "Ativar"}
 </button>
       </div>
     `;
