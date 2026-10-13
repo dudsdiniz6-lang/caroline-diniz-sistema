@@ -9358,6 +9358,7 @@ function abrirPaginaDetalheComissao(profissional){
     </div>
   `;
 }
+
 function abrirOpcoesHorarioAgenda(profissionalId, horario){
 
   abrirModal(`
@@ -9365,31 +9366,40 @@ function abrirOpcoesHorarioAgenda(profissionalId, horario){
 
     <p>Horário selecionado: <strong>${horario}</strong></p>
 
-    <button class="principal" onclick="abrirModalAgendamento(null, '${profissionalId}', '${horario}')">
+        <button
+      class="principal"
+      onclick="
+        abrirModalAgendamento(
+          null,
+          '${profissionalId}',
+          '${horario}'
+        )
+      "
+    >
       Novo agendamento
     </button>
 
-    <button onclick="abrirModalBloqueioAgenda(null, '${profissionalId}', '${horario}')">
-      Bloquear horário
+    <button
+      type="button"
+      onclick="
+        abrirVendaProdutoAgenda(
+          '${profissionalId}',
+          '${horario}'
+        )
+      "
+    >
+      Vender produto
     </button>
 
-    <button onclick="fecharModal()">
-      Cancelar
-    </button>
-  `);
-}
-function abrirOpcoesHorarioAgenda(profissionalId, horario){
-
-  abrirModal(`
-    <h2>O que deseja fazer?</h2>
-
-    <p>Horário selecionado: <strong>${horario}</strong></p>
-
-    <button class="principal" onclick="abrirModalAgendamento(null, '${profissionalId}', '${horario}')">
-      Novo agendamento
-    </button>
-
-    <button onclick="abrirModalBloqueioAgenda(null, '${profissionalId}', '${horario}')">
+    <button
+      onclick="
+        abrirModalBloqueioAgenda(
+          null,
+          '${profissionalId}',
+          '${horario}'
+        )
+      "
+    >
       Bloquear horário
     </button>
 
