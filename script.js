@@ -3935,6 +3935,68 @@ async function buscarPercentualComissao(
 
   return Number(padrao || 0);
 }
+async function alterarStatusPacote(
+  pacoteId,
+  novoStatus
+){
+
+  const acao =
+    novoStatus
+      ? "ativar"
+      : "desativar";
+
+
+  const confirmado =
+    confirm(
+      `Deseja realmente ${acao} este pacote?`
+    );
+
+
+  if(!confirmado){
+    return;
+  }
+
+
+  const { error } =
+    await supabaseClient
+      .from("pacotes")
+      .update({
+        ativo:
+          novoStatus
+      })
+      .eq("id", pacoteId)
+      .eq(
+        "unidade_id",
+        unidadeAtualId
+      );
+
+
+  if(error){
+
+    console.error(
+      "Erro ao alterar pacote:",
+      error
+    );
+
+    alert(
+      error.message ||
+      "Não foi possível alterar o pacote."
+    );
+
+    return;
+  }
+
+
+  await carregarPacotes();
+
+
+  alert(
+    novoStatus
+      ? "Pacote ativado com sucesso."
+      : "Pacote desativado com sucesso."
+  );
+
+}
 function abrirAbaPacotes(
   tipo = "ativos"
 ){
