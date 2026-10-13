@@ -759,13 +759,58 @@ carregarAgenda();
 
 alert("Cliente salvo com sucesso.");
 }
+function abrirAbaClientes(
+  tipo = "ativos"
+){
+
+  window.clientesAbaAtual =
+    tipo;
+
+  carregarClientes();
+
+}
 async function carregarClientes(){
 
   const lista = document.getElementById("listaClientes");
 
   if(!lista) return;
 
-  lista.innerHTML = "";
+lista.innerHTML = `
+  <div
+    style="
+      display:flex;
+      gap:10px;
+      margin-bottom:20px;
+      flex-wrap:wrap;
+    "
+  >
+    <button
+      id="abaClientesAtivos"
+      type="button"
+      class="${
+        window.clientesAbaAtual === "desativados"
+          ? ""
+          : "principal"
+      }"
+      onclick="abrirAbaClientes('ativos')"
+    >
+      Clientes ativos
+    </button>
+
+    <button
+      id="abaClientesDesativados"
+      type="button"
+      class="${
+        window.clientesAbaAtual === "desativados"
+          ? "principal"
+          : ""
+      }"
+      onclick="abrirAbaClientes('desativados')"
+    >
+      Clientes desativados
+    </button>
+  </div>
+`;
 
   const busca =
     document.getElementById("buscaCliente")
@@ -776,7 +821,11 @@ async function carregarClientes(){
   const { data, error } = await supabaseClient
     .from("clientes")
     .select("*")
-    .eq("ativo", true)
+ .eq(
+  "ativo",
+  window.clientesAbaAtual !==
+    "desativados"
+)
     .order("nome");
 
   if(error){
@@ -818,6 +867,16 @@ async function carregarClientes(){
 
 <button onclick="abrirVendaCreditoCliente(${cliente.id})">
   Vender crédito
+</button>
+
+<button
+  type="button"
+  onclick="alterarStatusCliente(
+    ${cliente.id},
+    ${cliente.ativo ? false : true}
+  )"
+>
+  ${cliente.ativo ? "Desativar" : "Ativar"}
 </button>
       </div>
     `;
@@ -10702,8 +10761,17 @@ async function alterarStatusProduto(
   }
 
 
-  await carregarProdutosEstoque();
+await carregarProdutosEstoque(
+  window.produtosEstoqueAbaAtual ||
+  "ativos"
+);
 
+abrirAbaProdutosEstoque(
+  window.produtosEstoqueAbaAtual ||
+  "ativos"
+);
+
+alert(
 
   alert(
     novoStatus
@@ -19417,6 +19485,8 @@ function instalarModuloFinanceiroProfissionais(){
 function abrirAbaProdutosEstoque(
   tipo = "ativos"
 ){
+    window.produtosEstoqueAbaAtual =
+    tipo;
 
   const botaoAtivos =
     document.getElementById(
