@@ -10343,6 +10343,227 @@ async function confirmarMovimentacaoEstoqueProduto(){
   );
 
 }
+async function abrirHistoricoEstoqueProduto(produtoId){
+
+  const [
+    produtoResposta,
+    movimentacoesResposta
+  ] = await Promise.all([
+
+    supabaseClient
+      .from("produtos")
+      .select("id,nome,estoque_atual")
+      .eq("id", produtoId)
+      .eq("unidade_id", unidadeAtualId)
+      .single(),
+
+    supabaseClient
+      .from("produtos_estoque_movimentacoes")
+      .select(`
+        id,
+        tipo,
+        quantidade,
+        estoque_anterior,
+        estoque_novo,
+        origem_tipo,
+        observacao,
+        criado_em
+      `)
+      .eq("produto_id", produtoId)
+      .eq("unidade_id", unidadeAtualId)
+      .order("criado_em", {
+        ascending:false
+      })
+
+  ]);
+
+
+  const produto =
+    produtoResposta.data;
+
+  const movimentacoes =
+    movimentacoesResposta.data || [];
+
+
+  if(
+    produtoResposta.error ||
+    !produto
+  ){
+
+    console.error(
+      "Erro ao localizar produto:",
+      produtoResposta.error
+    );
+
+    alert("Não foi possível localizar o produto.");
+    return;
+  }
+
+
+  if(movimentacoesResposta.error){
+
+    console.error(
+      "Erro ao carregar histórico:",
+      movimentacoesResposta.error
+    );
+
+    alert("Não foi possível carregar o histórico.");
+    return;
+  }
+
+
+  const nomesTipos = {
+
+    ENTRADA:
+      "Entrada de mercadoria",
+
+    SAIDA:
+      "Venda do produto",
+
+    AJUSTE_ENTRADA:
+      "Ajuste de entrada",
+
+    AJUSTE_SAIDA:
+      "Ajuste de saída",
+
+    ESTORNO:
+      "Estorno"
+
+  };
+
+
+  abrirModal(`
+    <h2>Histórico de estoque</h2>
+
+    <p>
+      Produto:
+      <strong>
+        ${financeiroEscaparHTML(produto.nome)}
+      </strong>
+    </p>
+
+    <p>
+      Estoque atual:
+      <strong>
+        ${Number(produto.estoque_atual || 0)}
+      </strong>
+    </p>
+
+    <hr>
+
+    ${
+      movimentacoes.length === 0
+        ? `
+          <p>
+            Nenhuma movimentação registrada.
+          </p>
+        `
+        : movimentacoes.map(movimento => {
+
+            const entrada =
+              [
+                "ENTRADA",
+                "AJUSTE_ENTRADA",
+                "ESTORNO"
+              ].includes(movimento.tipo);
+
+            const dataHora =
+              movimento.criado_em
+                ? new Date(
+                    movimento.criado_em
+                  ).toLocaleString(
+                    "pt-BR"
+                  )
+                : "-";
+
+            return `
+              <div
+                class="card"
+                style="
+                  border-left:4px solid ${
+                    entrada
+                      ? "#2e8b57"
+                      : "#c0392b"
+                  };
+                  margin-bottom:10px;
+                "
+              >
+                <div
+                  style="
+                    display:flex;
+                    justify-content:space-between;
+                    gap:10px;
+                  "
+                >
+                  <strong>
+                    ${
+                      nomesTipos[movimento.tipo] ||
+                      movimento.tipo
+                    }
+                  </strong>
+
+                  <strong
+                    style="
+                      color:${
+                        entrada
+                          ? "#2e8b57"
+                          : "#c0392b"
+                      };
+                    "
+                  >
+                    ${entrada ? "+" : "-"}${
+                      Number(movimento.quantidade || 0)
+                    }
+                  </strong>
+                </div>
+
+                <p style="margin:8px 0;">
+                  Estoque:
+                  ${Number(
+                    movimento.estoque_anterior || 0
+                  )}
+                  →
+                  ${Number(
+                    movimento.estoque_novo || 0
+                  )}
+                </p>
+
+                <small>${dataHora}</small>
+
+                ${
+                  movimento.observacao
+                    ? `
+                      <p style="margin-bottom:0;">
+                        ${financeiroEscaparHTML(
+                          movimento.observacao
+                        )}
+                      </p>
+                    `
+                    : ""
+                }
+              </div>
+            `;
+
+          }).join("")
+    }
+
+    <div
+      style="
+        display:flex;
+        justify-content:flex-end;
+        margin-top:15px;
+      "
+    >
+      <button
+        type="button"
+        onclick="fecharModal()"
+      >
+        Fechar
+      </button>
+    </div>
+  `);
+
+}
 async function abrirVendaProdutoAgenda(
   profissionalPre = "",
   horario = ""
