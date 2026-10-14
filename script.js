@@ -14219,16 +14219,13 @@ const servicosValidos =
             id,
             servico_id,
             profissional_id,
-            servicos(
-              id,
-              nome,
-              retorno_ativo,
-              retorno_dias,
-              retorno_aviso_dias
-            ),
-            profissional_item:profissionais(
-              nome
-            )
+           servicos(
+  id,
+  nome,
+  retorno_ativo,
+  retorno_dias,
+  retorno_aviso_dias
+)
           )
         `)
         .gte(
