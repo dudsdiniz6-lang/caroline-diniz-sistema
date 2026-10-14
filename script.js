@@ -14281,7 +14281,29 @@ async function buscarRetornosProximosDashboard(){
 
   }
 
+const comandaTeste =
+  comandas.find(
+    comanda =>
+      String(comanda.id) === "2278"
+  );
 
+const itemTeste =
+  comandaTeste?.comanda_itens?.find(
+    item =>
+      String(item.id) === "2700"
+  );
+
+alert(
+  [
+    "TESTE DO RETORNO",
+    `Hoje: ${hoje}`,
+    `Data inicial: ${dataInicialISO}`,
+    `Serviço 32 encontrado: ${servicosPorId.has("32")}`,
+    `Comanda 2278 encontrada: ${Boolean(comandaTeste)}`,
+    `Item 2700 encontrado: ${Boolean(itemTeste)}`,
+    `Serviço do item: ${itemTeste?.servico_id || "não encontrado"}`
+  ].join("\n")
+);
   /*
   Mantém somente o atendimento mais recente
   de cada cliente para cada serviço.
