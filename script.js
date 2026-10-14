@@ -14117,11 +14117,16 @@ async function buscarRetornosProximosDashboard(){
 
 
   if(erroServicosRetorno){
-    throw erroServicosRetorno;
-  }
+  throw erroServicosRetorno;
+}
 
+alert(
+  `Serviços com retorno encontrados: ${
+    (servicosRetorno || []).length
+  }`
+);
 
-  const servicosValidos =
+const servicosValidos =
     (servicosRetorno || [])
       .filter(
         servico =>
