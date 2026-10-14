@@ -14261,8 +14261,19 @@ const servicosValidos =
 
 
     if(erroComandasRetorno){
-      throw erroComandasRetorno;
-    }
+
+  alert(
+    "ERRO AO BUSCAR COMANDAS:\n" +
+    (
+      erroComandasRetorno.message ||
+      JSON.stringify(
+        erroComandasRetorno
+      )
+    )
+  );
+
+  throw erroComandasRetorno;
+}
 
 
     const registros =
