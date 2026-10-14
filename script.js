@@ -14768,9 +14768,13 @@ async function alternarContatoRetorno(
   }
 
 
-fecharModal();
-
 await carregarDashboard();
+
+abrirListaRetornosDashboard(
+  novoEstado
+    ? "pendentes"
+    : "realizados"
+);
 
 }
 function abrirListaRetornosDashboard(
