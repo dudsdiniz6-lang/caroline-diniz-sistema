@@ -381,7 +381,10 @@ async function mostrarTela(nome){
   alert("Você não tem permissão para acessar agenda.");
   return;
 }
-  if(nome === "confirmacoes" && !pode("agenda_visualizar")){
+ if(
+  nome === "confirmacoes" &&
+  !pode("confirmacoes_visualizar")
+){
   alert("Você não tem permissão para acessar confirmações.");
   return;
 }
@@ -415,11 +418,20 @@ if(nome === "comissoes" && !pode("comissoes_visualizar")){
   alert("Você não tem permissão para acessar comissões.");
   return;
 }
-  if(nome === "financeiroProfissionais" && !pode("comissoes_visualizar")){
+  if(
+  nome === "financeiroProfissionais" &&
+  !pode("financeiro_profissionais_visualizar")
+){
   alert("Você não tem permissão para acessar o financeiro dos profissionais.");
   return;
 }
-
+if(
+  nome === "produtos" &&
+  !pode("produtos_visualizar")
+){
+  alert("Você não tem permissão para acessar produtos.");
+  return;
+}
   if(nome === "caixa" && !pode("caixa_visualizar")){
     alert("Você não tem permissão para acessar caixa.");
     return;
@@ -19628,7 +19640,10 @@ function instalarModuloFinanceiroProfissionais(){
   botao.textContent = "Financeiro dos Profissionais";
   botao.className =
     document.getElementById("menu-comissoes").className;
-
+botao.style.display =
+  pode("financeiro_profissionais_visualizar")
+    ? ""
+    : "none";
   botao.onclick = () =>
     mostrarTela("financeiroProfissionais");
 
