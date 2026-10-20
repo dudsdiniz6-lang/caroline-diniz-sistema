@@ -19904,24 +19904,26 @@ const {
   }
 
 
-  if(!produtos || produtos.length === 0){
+ if(!produtos || produtos.length === 0){
 
-    area.innerHTML = `
-      <div class="card">
-        <p>Nenhum produto cadastrado nesta unidade.</p>
+  area.innerHTML = `
+    <div class="card">
+      <p>Nenhum produto cadastrado nesta unidade.</p>
 
-        ${pode("produtos_criar") ? `
-  <button
-    type="button"
-    class="principal"
-    onclick="abrirCadastroProdutoAgenda()"
-  >
-    Cadastrar primeiro produto
-  </button>
-` : ""}
+      ${pode("produtos_criar") ? `
+        <button
+          type="button"
+          class="principal"
+          onclick="abrirCadastroProdutoAgenda()"
+        >
+          Cadastrar primeiro produto
+        </button>
+      ` : ""}
+    </div>
+  `;
 
-    return;
-  }
+  return;
+}
 
 
   area.innerHTML = produtos.map(produto => {
