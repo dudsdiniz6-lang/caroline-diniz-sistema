@@ -18665,9 +18665,12 @@ function aplicarPermissoesMenu(){
     document.getElementById("menu-caixa")?.remove();
   }
 
-  if(!pode("comissoes_visualizar")){
-    document.getElementById("menu-comissoes")?.remove();
-  }
+const menuComissoes =
+  document.getElementById("menu-comissoes");
+
+if(menuComissoes){
+  menuComissoes.style.display = "none";
+}
 
   if(!pode("auditoria_visualizar")){
     document.getElementById("menu-auditoria")?.remove();
@@ -19726,6 +19729,10 @@ botao.style.display =
 
     botaoProdutos.className =
       botao.className;
+    botaoProdutos.style.display =
+  pode("produtos_visualizar")
+    ? ""
+    : "none";
 
     botaoProdutos.onclick = () => {
 
