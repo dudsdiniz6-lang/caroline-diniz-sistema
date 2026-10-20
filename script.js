@@ -10436,6 +10436,10 @@ async function salvarEdicaoProduto(){
 
 }
 async function abrirMovimentarEstoqueProduto(produtoId){
+  if(!pode("produtos_estoque")){
+  alert("Você não tem permissão para movimentar o estoque.");
+  return;
+}
 
   const { data: produto, error } =
     await supabaseClient
@@ -10699,6 +10703,10 @@ async function confirmarMovimentacaoEstoqueProduto(){
 
 }
 async function abrirHistoricoEstoqueProduto(produtoId){
+  if(!pode("produtos_estoque")){
+  alert("Você não tem permissão para visualizar o histórico do estoque.");
+  return;
+}
 
   const [
     produtoResposta,
@@ -10923,6 +10931,13 @@ async function alterarStatusProduto(
   produtoId,
   novoStatus
 ){
+
+  if(!pode("produtos_status")){
+    alert(
+      "Você não tem permissão para ativar ou desativar produtos."
+    );
+    return;
+  }
 
   const acao =
     novoStatus
