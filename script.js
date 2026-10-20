@@ -10087,6 +10087,10 @@ async function salvarCadastroProdutoAgenda(){
 
 }
 async function abrirEditarProduto(produtoId){
+  if(!pode("produtos_editar")){
+  alert("Você não tem permissão para editar produtos.");
+  return;
+}
 
   const { data: produto, error } =
     await supabaseClient
@@ -19886,15 +19890,15 @@ const {
       <div class="card">
         <p>Nenhum produto cadastrado nesta unidade.</p>
 
-        <button
-          type="button"
-          class="principal"
-          onclick="abrirCadastroProdutoAgenda()"
-        >
-          Cadastrar primeiro produto
-        </button>
-      </div>
-    `;
+        ${pode("produtos_criar") ? `
+  <button
+    type="button"
+    class="principal"
+    onclick="abrirCadastroProdutoAgenda()"
+  >
+    Cadastrar primeiro produto
+  </button>
+` : ""}
 
     return;
   }
@@ -20010,32 +20014,43 @@ const {
             margin-top:15px;
           "
         >
-          <button
-            type="button"
-            onclick="abrirEditarProduto(${produto.id})"
-          >
-            Editar
-          </button>
+          ${pode("produtos_editar") ? `
+  <button
+    type="button"
+    onclick="abrirEditarProduto(${produto.id})"
+  >
+    Editar
+  </button>
+` : ""}
 
-          <button
-            type="button"
-            onclick="abrirMovimentarEstoqueProduto(${produto.id})"
-          >
-            Movimentar estoque
-          </button>
-<button
-  type="button"
-  onclick="abrirHistoricoEstoqueProduto(${produto.id})"
->
-  Histórico
-</button>
+       ${pode("produtos_estoque") ? `
+  <button
+    type="button"
+    onclick="abrirMovimentarEstoqueProduto(${produto.id})"
+  >
+    Movimentar estoque
+  </button>
+` : ""}
+${pode("produtos_estoque") ? `
+  <button
+    type="button"
+    onclick="abrirHistoricoEstoqueProduto(${produto.id})"
+  >
+    Histórico
+  </button>
+` : ""}
 
-<button
-  type="button"
-  onclick="alterarStatusProduto(${produto.id}, ${produto.ativo ? false : true})"
->
-  ${produto.ativo ? "Desativar" : "Ativar"}
-</button>
+${pode("produtos_status") ? `
+  <button
+    type="button"
+    onclick="alterarStatusProduto(
+      ${produto.id},
+      ${produto.ativo ? false : true}
+    )"
+  >
+    ${produto.ativo ? "Desativar" : "Ativar"}
+  </button>
+` : ""}
 
 </div>
       </div>
