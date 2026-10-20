@@ -11003,6 +11003,10 @@ async function abrirVendaProdutoAgenda(
   profissionalPre = "",
   horario = ""
 ){
+  if(!pode("produtos_vender")){
+  alert("Você não tem permissão para vender produtos.");
+  return;
+}
 
   const [
     clientes,
@@ -18203,7 +18207,6 @@ async function editarPerfilSistema(perfilId){
   ]
 },
 
-{
   {
   titulo:"CONFIRMAÇÕES",
   itens:[
@@ -18259,6 +18262,8 @@ async function editarPerfilSistema(perfilId){
     ["financeiro_clientes_cancelar","Cancelar pendências"]
   ]
 },
+
+{
   titulo:"COMANDAS",
   itens:[
     ["comandas_visualizar","Visualizar comandas"],
