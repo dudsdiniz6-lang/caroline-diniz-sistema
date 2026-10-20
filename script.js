@@ -18169,6 +18169,61 @@ async function editarPerfilSistema(perfilId){
 },
 
 {
+  {
+  titulo:"CONFIRMAÇÕES",
+  itens:[
+    ["confirmacoes_visualizar","Visualizar confirmações"],
+    ["confirmacoes_enviar","Enviar confirmação"],
+    ["confirmacoes_cancelar","Cancelar horários"],
+    ["confirmacoes_envio_massa","Enviar confirmações em massa"]
+  ]
+},
+
+{
+  titulo:"RETORNOS DE CLIENTES",
+  itens:[
+    ["retornos_visualizar","Visualizar retornos próximos"],
+    ["retornos_contatos_realizados","Visualizar contatos realizados"],
+    ["retornos_marcar_contato","Marcar contato como realizado"]
+  ]
+},
+
+{
+  titulo:"PRODUTOS",
+  itens:[
+    ["produtos_visualizar","Visualizar produtos"],
+    ["produtos_criar","Cadastrar produto"],
+    ["produtos_editar","Editar produto"],
+    ["produtos_status","Ativar ou desativar produto"],
+    ["produtos_estoque","Movimentar estoque"],
+    ["produtos_vender","Vender produto"],
+    ["produtos_comissao","Definir comissão da venda"]
+  ]
+},
+
+{
+  titulo:"FINANCEIRO DOS PROFISSIONAIS",
+  itens:[
+    ["financeiro_profissionais_visualizar","Visualizar módulo"],
+    ["financeiro_profissionais_resumo","Visualizar resumo"],
+    ["financeiro_profissionais_conferir","Conferir pagamento"],
+    ["financeiro_profissionais_pagar","Pagar comissão"],
+    ["financeiro_profissionais_fechamentos","Visualizar fechamentos"],
+    ["financeiro_profissionais_vales","Visualizar e lançar vales"],
+    ["financeiro_profissionais_extrato","Visualizar extrato"]
+  ]
+},
+
+{
+  titulo:"FINANCEIRO DE CLIENTES",
+  itens:[
+    ["financeiro_clientes_visualizar","Visualizar financeiro de clientes"],
+    ["financeiro_clientes_creditos","Visualizar e lançar créditos"],
+    ["financeiro_clientes_pendencias","Visualizar pendências"],
+    ["financeiro_clientes_receber","Receber pendências"],
+    ["financeiro_clientes_cancelar","Cancelar pendências"]
+  ]
+},
   titulo:"COMANDAS",
   itens:[
     ["comandas_visualizar","Visualizar comandas"],
