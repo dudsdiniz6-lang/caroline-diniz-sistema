@@ -9759,6 +9759,10 @@ async function abrirCadastroProdutoAgenda(
   profissionalPre = "",
   horario = ""
 ){
+  if(!pode("produtos_criar")){
+  alert("Você não tem permissão para cadastrar produtos.");
+  return;
+}
 
   window.produtoCadastroAgendaContexto = {
     profissionalPre,
@@ -18671,7 +18675,14 @@ const menuComissoes =
 if(menuComissoes){
   menuComissoes.style.display = "none";
 }
+if(!pode("confirmacoes_visualizar")){
+  const menuConfirmacoes =
+    document.getElementById("menu-confirmacoes");
 
+  if(menuConfirmacoes){
+    menuConfirmacoes.style.display = "none";
+  }
+}
   if(!pode("auditoria_visualizar")){
     document.getElementById("menu-auditoria")?.remove();
   }
@@ -19675,13 +19686,15 @@ botao.style.display =
       <div class="topo">
         <h1>Produtos e Estoque</h1>
 
-        <button
-          type="button"
-          class="principal"
-          onclick="abrirCadastroProdutoAgenda()"
-        >
-          Cadastrar produto
-        </button>
+   ${pode("produtos_criar") ? `
+  <button
+    type="button"
+    class="principal"
+    onclick="abrirCadastroProdutoAgenda()"
+  >
+    Cadastrar produto
+  </button>
+` : ""}
       </div>
 <div
   style="
