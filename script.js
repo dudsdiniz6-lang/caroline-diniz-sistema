@@ -11441,6 +11441,11 @@ function calcularVendaProdutoAgenda(){
   };
 }
 async function confirmarVendaProdutoAgenda(){
+  if(!pode("produtos_vender")){
+  alert("Você não tem permissão para vender produtos.");
+  return;
+}
+  
 
   const clienteId =
     Number(
