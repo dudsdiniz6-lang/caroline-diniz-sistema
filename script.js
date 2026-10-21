@@ -18368,10 +18368,6 @@ async function editarPerfilSistema(perfilId){
   ]
 },
 
-{
-
-
-{
 
 {
   titulo:"CONFIGURAÇÕES",
