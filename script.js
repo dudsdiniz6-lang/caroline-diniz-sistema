@@ -8335,6 +8335,39 @@ async function carregarConfiguracoes(){
   abrirAbaConfiguracao("geral");
 }
 async function abrirAbaFinanceiro(aba){
+  const abaFinanceiroCliente =
+  aba === "pendencias" ||
+  aba === "creditos";
+
+if(
+  abaFinanceiroCliente &&
+  !pode("financeiro_clientes_visualizar")
+){
+  alert(
+    "Você não tem permissão para acessar o financeiro de clientes."
+  );
+  return;
+}
+
+if(
+  aba === "pendencias" &&
+  !pode("financeiro_clientes_pendencias")
+){
+  alert(
+    "Você não tem permissão para visualizar pendências."
+  );
+  return;
+}
+
+if(
+  aba === "creditos" &&
+  !pode("financeiro_clientes_creditos")
+){
+  alert(
+    "Você não tem permissão para visualizar créditos."
+  );
+  return;
+}
 
   const area = document.getElementById("conteudoFinanceiro");
 
@@ -8391,9 +8424,14 @@ if(aba === "creditos"){
 
     <br><br>
 
-    <button class="principal" onclick="abrirNovoCreditoCliente()">
-      Adicionar crédito
-    </button>
+   ${pode("financeiro_clientes_creditos") ? `
+  <button
+    class="principal"
+    onclick="abrirNovoCreditoCliente()"
+  >
+    Adicionar crédito
+  </button>
+` : ""}
 
     <div id="listaCreditosClientes" class="cards">
       Carregando...
@@ -14131,6 +14169,9 @@ function somarDiasRetorno(dataISO, quantidadeDias){
 
 
 async function buscarRetornosProximosDashboard(){
+  if(!pode("retornos_visualizar")){
+  return [];
+}
 
   const hoje =
     formatarDataISO(
@@ -14690,6 +14731,12 @@ if(retornos.length === 0){
 async function alternarContatoRetorno(
   comandaItemId
 ){
+  if(!pode("retornos_marcar_contato")){
+  alert(
+    "Você não tem permissão para alterar o contato desta cliente."
+  );
+  return;
+}
 
   const retorno =
     window.retornosDashboardCache?.[
@@ -14795,6 +14842,22 @@ abrirListaRetornosDashboard(
 function abrirListaRetornosDashboard(
   tipo = "pendentes"
 ){
+  if(!pode("retornos_visualizar")){
+  alert(
+    "Você não tem permissão para visualizar os retornos."
+  );
+  return;
+}
+
+if(
+  tipo === "realizados" &&
+  !pode("retornos_contatos_realizados")
+){
+  alert(
+    "Você não tem permissão para visualizar os contatos realizados."
+  );
+  return;
+}
 
   const todosRetornos =
     Object.values(
@@ -14998,25 +15061,27 @@ function abrirListaRetornosDashboard(
                         : ""
                     }
 
-                    <button
-                      type="button"
-                      class="${
-                        retorno.contatoRealizado
-                          ? ""
-                          : "principal"
-                      }"
-                      onclick="
-                        alternarContatoRetorno(
-                          '${retorno.comandaItemId}'
-                        )
-                      "
-                    >
-                      ${
-                        retorno.contatoRealizado
-                          ? "Desfazer contato"
-                          : "Marcar contato"
-                      }
-                    </button>
+                  ${pode("retornos_marcar_contato") ? `
+  <button
+    type="button"
+    class="${
+      retorno.contatoRealizado
+        ? ""
+        : "principal"
+    }"
+    onclick="
+      alternarContatoRetorno(
+        '${retorno.comandaItemId}'
+      )
+    "
+  >
+    ${
+      retorno.contatoRealizado
+        ? "Desfazer contato"
+        : "Marcar contato"
+    }
+  </button>
+` : ""}
                   </div>
                 </div>
               </div>
@@ -15526,20 +15591,22 @@ const htmlRetornosDashboard =
                                 : ""
                             }
 
-                            <button
-                              type="button"
-                              onclick="
-                                alternarContatoRetorno(
-                                  '${retorno.comandaItemId}'
-                                )
-                              "
-                            >
-                              ${
-                                retorno.contatoRealizado
-                                  ? "Desfazer contato"
-                                  : "Marcar contato"
-                              }
-                            </button>
+                            ${pode("retornos_marcar_contato") ? `
+  <button
+    type="button"
+    onclick="
+      alternarContatoRetorno(
+        '${retorno.comandaItemId}'
+      )
+    "
+  >
+    ${
+      retorno.contatoRealizado
+        ? "Desfazer contato"
+        : "Marcar contato"
+    }
+  </button>
+` : ""}
                           </td>
                         </tr>
                       `;
@@ -15604,44 +15671,53 @@ const htmlRetornosDashboard =
   <h3>Clientes em risco</h3>
   <strong>${clientesRisco}</strong>
 </div>
-<div
-  class="dashboard-card"
-  style="cursor:pointer;"
-  onclick="
-    abrirListaRetornosDashboard(
-      'pendentes'
-    )
-  "
->
-  <h3>Retornos próximos</h3>
+${pode("retornos_visualizar") ? `
+  <div
+    class="dashboard-card"
+    style="cursor:pointer;"
+    onclick="
+      abrirListaRetornosDashboard(
+        'pendentes'
+      )
+    "
+  >
+    <h3>Retornos próximos</h3>
 
-  <strong>
-    ${retornosPendentes}
-  </strong>
+    <strong>
+      ${retornosPendentes}
+    </strong>
 
-  <small>
-    Clique para visualizar
+    <small>
+      Clique para visualizar
+    </small>
+  </div>
+` : ""}
   </small>
 </div>
 
 
-<div
-  class="dashboard-card"
-  style="cursor:pointer;"
-  onclick="
-    abrirListaRetornosDashboard(
-      'realizados'
-    )
-  "
->
-  <h3>Contatos realizados</h3>
+${pode("retornos_visualizar") &&
+pode("retornos_contatos_realizados") ? `
+  <div
+    class="dashboard-card"
+    style="cursor:pointer;"
+    onclick="
+      abrirListaRetornosDashboard(
+        'realizados'
+      )
+    "
+  >
+    <h3>Contatos realizados</h3>
 
-  <strong>
-    ${retornosRealizados}
-  </strong>
+    <strong>
+      ${retornosRealizados}
+    </strong>
 
-  <small>
-    Clique para visualizar
+    <small>
+      Clique para visualizar
+    </small>
+  </div>
+` : ""}
   </small>
 </div>
 
@@ -18293,27 +18369,9 @@ async function editarPerfilSistema(perfilId){
 },
 
 {
-  titulo:"COMISSÕES",
-  itens:[
-    ["comissoes_visualizar","Visualizar comissões"],
 
-    ["comissoes_ver_propria","Ver própria comissão"],
-    ["comissoes_ver_todas","Ver comissão de todos"],
-
-    ["comissoes_gerar","Gerar comissão"],
-    ["comissoes_editar","Editar comissão"],
-    ["comissoes_pagar","Marcar paga"]
-  ]
-},
 
 {
-  titulo:"RELATÓRIOS",
-  itens:[
-    ["relatorios_visualizar","Visualizar relatórios"],
-    ["relatorios_exportar","Exportar relatórios"],
-    ["relatorios_financeiros","Relatórios financeiros"]
-  ]
-},
 
 {
   titulo:"CONFIGURAÇÕES",
@@ -18718,7 +18776,12 @@ if(!pode("confirmacoes_visualizar")){
 
 }
 async function carregarPendenciasFinanceiras(){
-
+if(
+  !pode("financeiro_clientes_visualizar") ||
+  !pode("financeiro_clientes_pendencias")
+){
+  return;
+}
   const lista = document.getElementById("listaPendencias");
   if(!lista) return;
 
@@ -18830,24 +18893,34 @@ async function carregarPendenciasFinanceiras(){
           ${grupo.itens.length}
         </p>
 
-        <button
-          class="principal"
-          onclick="abrirReceberPendenciasCliente(${clienteId})"
-        >
-          Receber
-        </button>
+        ${pode("financeiro_clientes_receber") ? `
+  <button
+    class="principal"
+    onclick="abrirReceberPendenciasCliente(${clienteId})"
+  >
+    Receber
+  </button>
+` : ""}
 
-        <button
-          onclick="abrirCancelarPendenciasCliente(${clienteId})"
-        >
-          Cancelar pendência
-        </button>
+       ${pode("financeiro_clientes_cancelar") ? `
+  <button
+    onclick="abrirCancelarPendenciasCliente(${clienteId})"
+  >
+    Cancelar pendência
+  </button>
+` : ""}
 
       </div>
     `;
   });
 }
 window.abrirReceberPendenciasCliente = async function(clienteId){
+  if(!pode("financeiro_clientes_receber")){
+  alert(
+    "Você não tem permissão para receber pendências."
+  );
+  return;
+}
 
   const { data: cliente, error: erroCliente } = await supabaseClient
     .from("clientes")
@@ -18946,7 +19019,12 @@ window.abrirReceberPendenciasCliente = async function(clienteId){
     </button>
   `);
 };
-async function abrirCancelarPendenciasCliente(clienteId){
+async function abrirCancelarPendenciasCliente(clienteId){if(!pode("financeiro_clientes_cancelar")){
+  alert(
+    "Você não tem permissão para cancelar pendências."
+  );
+  return;
+}
 
   const { data: cliente } = await supabaseClient
     .from("clientes")
@@ -19024,7 +19102,12 @@ async function confirmarCancelamentoPendencia(
   lancamentoId,
   clienteId
 ){
-
+if(!pode("financeiro_clientes_cancelar")){
+  alert(
+    "Você não tem permissão para cancelar pendências."
+  );
+  return;
+}
   const confirmar = confirm(
     "Tem certeza que deseja cancelar esta pendência financeira?"
   );
@@ -19185,6 +19268,12 @@ window.abrirReceberPendenciasCliente = async function(clienteId){
   `);
 };
 async function confirmarRecebimentoPendenciasCliente(clienteId){
+  if(!pode("financeiro_clientes_receber")){
+  alert(
+    "Você não tem permissão para confirmar recebimentos."
+  );
+  return;
+}
 
   const formaPagamentoId = Number(document.getElementById("pendenciaFormaPagamento").value);
   let valorPago = Number(document.getElementById("pendenciaValorPago").value || 0);
@@ -19293,6 +19382,12 @@ async function confirmarRecebimentoPendenciasCliente(clienteId){
 }
 
 async function carregarCreditosClientes(){
+  if(
+  !pode("financeiro_clientes_visualizar") ||
+  !pode("financeiro_clientes_creditos")
+){
+  return;
+}
 
     const area = document.getElementById("listaCreditosClientes");
 
@@ -19360,6 +19455,12 @@ async function carregarCreditosClientes(){
 
 }
 async function abrirNovoCreditoCliente(){
+  if(!pode("financeiro_clientes_creditos")){
+  alert(
+    "Você não tem permissão para adicionar créditos."
+  );
+  return;
+}
 
   const clientesResp = await supabaseClient
     .from("clientes")
@@ -19428,6 +19529,12 @@ async function abrirNovoCreditoCliente(){
   `);
 }
 async function salvarNovoCredito(){
+  if(!pode("financeiro_clientes_creditos")){
+  alert(
+    "Você não tem permissão para salvar créditos."
+  );
+  return;
+}
 
   const clienteId = Number(document.getElementById("creditoCliente").value);
   const tipo = document.getElementById("creditoTipo").value;
@@ -20476,6 +20583,12 @@ async function listarValesProfissionais(){
   `;
 }
 async function cancelarValeProfissional(valeId){
+  if(!pode("financeiro_profissionais_vales")){
+  alert(
+    "Você não tem permissão para cancelar vales."
+  );
+  return;
+}
 
   const confirmar = confirm(
     "Deseja realmente cancelar este vale?\n\n" +
@@ -20570,6 +20683,12 @@ function formatarDataValeProfissional(data){
 
 
 async function abrirModalNovoValeProfissional(){
+  if(!pode("financeiro_profissionais_vales")){
+  alert(
+    "Você não tem permissão para registrar vales."
+  );
+  return;
+}
 
   let modal =
     document.getElementById(
@@ -21005,6 +21124,12 @@ function limparAssinaturaVale(){
 
 
 async function salvarValeProfissional(){
+  if(!pode("financeiro_profissionais_vales")){
+  alert(
+    "Você não tem permissão para salvar vales."
+  );
+  return;
+}
 
   const profissionalId =
     document.getElementById(
@@ -21719,53 +21844,61 @@ async function carregarConfirmacoes(){
                 >
 
 
-                  <button
-                    type="button"
-                    onclick="
-                      enviarConfirmacaoWhatsAppCliente(
-                        ${indice}
-                      )
-                    "
-                  >
-                    Gerar mensagem
-                  </button>
+                 ${pode("confirmacoes_enviar") ? `
+  <button
+    type="button"
+    onclick="
+      enviarConfirmacaoWhatsAppCliente(
+        ${indice}
+      )
+    "
+  >
+    Gerar mensagem
+  </button>
+` : ""}
 
 
-                  <button
-                    type="button"
-                    onclick="
-                      marcarMensagemEnviadaCliente(
-                        ${indice}
-                      )
-                    "
-                  >
-                    Marcar como enviada
-                  </button>
+                  ${pode("confirmacoes_enviar") ? `
+  <button
+    type="button"
+    onclick="
+      marcarMensagemEnviadaCliente(
+        ${indice}
+      )
+    "
+  >
+    Marcar como enviada
+  </button>
+` : ""}
 
 
-                  <button
-                    type="button"
-                    class="principal"
-                    onclick="
-                      confirmarClienteDia(
-                        ${indice}
-                      )
-                    "
-                  >
-                    Confirmar
-                  </button>
+                 ${pode("confirmacoes_enviar") ? `
+  <button
+    type="button"
+    class="principal"
+    onclick="
+      confirmarClienteDia(
+        ${indice}
+      )
+    "
+  >
+    Confirmar
+  </button>
+` : ""}
 
 
-                  <button
-                    type="button"
-                    onclick="
-                      cancelarConfirmacaoClienteDia(
-                        ${indice}
-                      )
-                    "
-                  >
-                    Cancelar
-                  </button>
+                  ${pode("confirmacoes_cancelar") ? `
+  <button
+    type="button"
+    onclick="
+      cancelarConfirmacaoClienteDia(
+        ${indice}
+      )
+    "
+  >
+    Cancelar
+  </button>
+` : ""}
 
 
                 </div>
@@ -21977,6 +22110,12 @@ Podemos confirmar seus horários?`
 ========================================================= */
 
 async function enviarConfirmacaoWhatsAppCliente(indice){
+  if(!pode("confirmacoes_enviar")){
+  alert(
+    "Você não tem permissão para enviar confirmações."
+  );
+  return;
+}
 
   const grupo =
     window.confirmacoesClientesCache?.[
@@ -22175,6 +22314,12 @@ async function marcarMensagemEnviadaCliente(indice){
 }
 
 async function confirmarClienteDia(indice){
+  if(!pode("confirmacoes_enviar")){
+  alert(
+    "Você não tem permissão para confirmar clientes."
+  );
+  return;
+}
 
   const grupo =
     window.confirmacoesClientesCache?.[
@@ -22270,6 +22415,12 @@ async function confirmarClienteDia(indice){
 ========================================================= */
 
 async function cancelarConfirmacaoClienteDia(indice){
+  if(!pode("confirmacoes_cancelar")){
+  alert(
+    "Você não tem permissão para cancelar horários."
+  );
+  return;
+}
 
   const grupo =
     window.confirmacoesClientesCache?.[
@@ -22352,6 +22503,12 @@ async function cancelarConfirmacaoClienteDia(indice){
 ========================================================= */
 
 function enviarConfirmacoesDia(){
+  if(!pode("confirmacoes_envio_massa")){
+  alert(
+    "Você não tem permissão para enviar confirmações em massa."
+  );
+  return;
+}
 
   alert(
     "O envio de todas as confirmações será configurado depois."
