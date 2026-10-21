@@ -18364,9 +18364,9 @@ async function editarPerfilSistema(perfilId){
     ["caixa_fechar","Fechar caixa"],
     ["caixa_sangria","Sangria"],
     ["caixa_reforco","Reforço"],
-    ["caixa_reabrir","Reabrir caixa"]
+["caixa_reabrir","Reabrir caixa"]
+  ]
 },
-
 {
   titulo:"CONFIGURAÇÕES",
   itens:[
