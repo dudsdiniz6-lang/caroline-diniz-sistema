@@ -18701,6 +18701,37 @@ function aplicarPermissoesMenu(){
   document
     .getElementById("tela-relatorios")
     ?.remove();
+  instalarModuloFinanceiroProfissionais();
+
+const menuFinanceiroProfissionais =
+  document.getElementById(
+    "menu-financeiro-profissionais"
+  );
+
+if(menuFinanceiroProfissionais){
+
+  menuFinanceiroProfissionais.style.display =
+    pode(
+      "financeiro_profissionais_visualizar"
+    )
+      ? ""
+      : "none";
+
+}
+
+const menuProdutos =
+  document.getElementById(
+    "menu-produtos"
+  );
+
+if(menuProdutos){
+
+  menuProdutos.style.display =
+    pode("produtos_visualizar")
+      ? ""
+      : "none";
+
+}
 
   if(!pode("dashboard_visualizar")){
     document.getElementById("menu-dashboard")?.remove();
