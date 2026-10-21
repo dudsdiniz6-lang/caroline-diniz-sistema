@@ -18365,9 +18365,7 @@ async function editarPerfilSistema(perfilId){
     ["caixa_sangria","Sangria"],
     ["caixa_reforco","Reforço"],
     ["caixa_reabrir","Reabrir caixa"]
-  ]
 },
-
 
 {
   titulo:"CONFIGURAÇÕES",
