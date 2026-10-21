@@ -2282,19 +2282,21 @@ const ultimoPagamentoPorProfissional = {};
                 </div>
 
 
-                <button
-                  type="button"
-                  class="principal"
-                  onclick="
-                    FinanceiroProfissionais
-                      .abrirPagamentoAutomatico(
-                        '${profissional.id}',
-                        '${dataFim}'
-                      )
-                  "
-                >
-                  Conferir pagamento
-                </button>
+                ${pode("financeiro_profissionais_conferir") ? `
+  <button
+    type="button"
+    class="principal"
+    onclick="
+      FinanceiroProfissionais
+        .abrirPagamentoAutomatico(
+          '${profissional.id}',
+          '${dataFim}'
+        )
+    "
+  >
+    Conferir pagamento
+  </button>
+` : ""}
 
               </div>
 
@@ -2919,7 +2921,7 @@ const totalPagarDetalhes =
     </p>
 
   </div>
-
+${pode("financeiro_profissionais_pagar") ? `
   <button
     type="button"
     class="principal"
@@ -2934,6 +2936,7 @@ const totalPagarDetalhes =
   >
     Pagar comissão
   </button>
+` : ""}
 
 </div>
 
@@ -4069,6 +4072,12 @@ async function abrirPagamentoComissaoAutomatico(
   profissionalId,
   dataFim
 ){
+  if(!pode("financeiro_profissionais_conferir")){
+  alert(
+    "Você não tem permissão para conferir pagamentos."
+  );
+  return;
+}
 
   if(!profissionalId || !dataFim){
     alert("Dados do pagamento inválidos.");
@@ -4296,6 +4305,12 @@ async function abrirPagamentoComissaoPeriodo(
   dataInicio,
   dataFim
 ){
+  if(!pode("financeiro_profissionais_pagar")){
+  alert(
+    "Você não tem permissão para pagar comissões."
+  );
+  return;
+}
 
   const modal =
     garantirModalPagamentoComissao();
@@ -4956,6 +4971,12 @@ const totalDevido =
 
 
 async function confirmarPagamentoComissaoPeriodo(){
+  if(!pode("financeiro_profissionais_pagar")){
+  alert(
+    "Você não tem permissão para finalizar pagamentos de comissão."
+  );
+  return;
+}
 
   if(!pagamentoComissaoAtual){
 
@@ -7458,13 +7479,15 @@ async function carregarValesProfissionaisNovo(){
           </p>
         </div>
 
-        <button
-          type="button"
-          class="principal"
-          onclick="abrirModalNovoValeProfissional()"
-        >
-          Registrar novo vale
-        </button>
+        ${pode("financeiro_profissionais_vales") ? `
+  <button
+    type="button"
+    class="principal"
+    onclick="abrirModalNovoValeProfissional()"
+  >
+    Registrar novo vale
+  </button>
+` : ""}
 
       </div>
 
