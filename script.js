@@ -20099,34 +20099,41 @@ async function carregarFinanceiroProfissionais(){
   area.innerHTML = `
     <div class="abas-financeiro-profissionais">
 
-      <button
-        id="abaFinanceiroProfissionaisResumo"
-        class="principal"
-        onclick="abrirAbaFinanceiroProfissionais('resumo')"
-      >
-        Resumo
-      </button>
+     ${pode("financeiro_profissionais_resumo") ? `
+  <button
+    id="abaFinanceiroProfissionaisResumo"
+    class="principal"
+    onclick="abrirAbaFinanceiroProfissionais('resumo')"
+  >
+    Resumo
+  </button>
+` : ""}
 
-      <button
-        id="abaFinanceiroProfissionaisFechamentos"
-        onclick="abrirAbaFinanceiroProfissionais('fechamentos')"
-      >
-        Fechamentos
-      </button>
+      ${pode("financeiro_profissionais_fechamentos") ? `
+  <button
+    id="abaFinanceiroProfissionaisFechamentos"
+    onclick="abrirAbaFinanceiroProfissionais('fechamentos')"
+  >
+    Fechamentos
+  </button>
+` : ""}
 
-      <button
-        id="abaFinanceiroProfissionaisVales"
-        onclick="abrirAbaFinanceiroProfissionais('vales')"
-      >
-        Vales
-      </button>
-
-      <button
-        id="abaFinanceiroProfissionaisExtrato"
-        onclick="abrirAbaFinanceiroProfissionais('extrato')"
-      >
-        Extrato
-      </button>
+      ${pode("financeiro_profissionais_vales") ? `
+  <button
+    id="abaFinanceiroProfissionaisVales"
+    onclick="abrirAbaFinanceiroProfissionais('vales')"
+  >
+    Vales
+  </button>
+` : ""}
+${pode("financeiro_profissionais_extrato") ? `
+  <button
+    id="abaFinanceiroProfissionaisExtrato"
+    onclick="abrirAbaFinanceiroProfissionais('extrato')"
+  >
+    Extrato
+  </button>
+` : ""}
 
     </div>
 
@@ -20136,11 +20143,69 @@ async function carregarFinanceiroProfissionais(){
     ></div>
   `;
 
-  abrirAbaFinanceiroProfissionais("resumo");
+ const primeiraAbaPermitida =
+  pode("financeiro_profissionais_resumo")
+    ? "resumo"
+    : pode("financeiro_profissionais_fechamentos")
+      ? "fechamentos"
+      : pode("financeiro_profissionais_vales")
+        ? "vales"
+        : pode("financeiro_profissionais_extrato")
+          ? "extrato"
+          : null;
+
+if(primeiraAbaPermitida){
+
+  abrirAbaFinanceiroProfissionais(
+    primeiraAbaPermitida
+  );
+
+}else{
+
+  const conteudo =
+    document.getElementById(
+      "conteudoFinanceiroProfissionais"
+    );
+
+  if(conteudo){
+    conteudo.innerHTML = `
+      <div class="card">
+        Você não possui acesso às áreas deste módulo.
+      </div>
+    `;
+  }
+
+}
 }
 
 
 function abrirAbaFinanceiroProfissionais(aba){
+  const permissoesAbas = {
+  resumo:
+    "financeiro_profissionais_resumo",
+
+  fechamentos:
+    "financeiro_profissionais_fechamentos",
+
+  vales:
+    "financeiro_profissionais_vales",
+
+  extrato:
+    "financeiro_profissionais_extrato"
+};
+
+const permissaoNecessaria =
+  permissoesAbas[aba];
+
+if(
+  permissaoNecessaria &&
+  !pode(permissaoNecessaria)
+){
+  alert(
+    "Você não tem permissão para acessar esta área."
+  );
+  return;
+}
 
   const botoes = {
 
