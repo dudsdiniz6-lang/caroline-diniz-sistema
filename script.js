@@ -9996,17 +9996,24 @@ async function abrirCadastroProdutoAgenda(
       </div>
     </div>
 
-    <label style="display:block; margin-top:12px;">
-      Comissão pela venda (%)
-    </label>
-    <input
-      id="cadastroProdutoComissao"
-      type="number"
-      min="0"
-      max="100"
-      step="0.01"
-      value="0"
-    >
+   ${pode("produtos_comissao") ? `
+  <label style="display:block; margin-top:12px;">
+    Comissão pela venda (%)
+  </label>
+
+  <input
+    id="cadastroProdutoComissao"
+    type="number"
+    min="0"
+    max="100"
+    step="0.01"
+    value="0"
+  >
+
+  <small style="display:block;margin-top:4px;">
+    Use 0% para não pagar comissão pela venda.
+  </small>
+` : ""}
 
     <div
       style="
@@ -10348,20 +10355,28 @@ async function abrirEditarProduto(produtoId){
         >
       </div>
 
-      <div>
-        <label>Comissão pela venda (%)</label>
+     ${pode("produtos_comissao") ? `
+  <div>
+    <label>Comissão pela venda (%)</label>
 
-        <input
-          id="editarProdutoComissao"
-          type="number"
-          min="0"
-          max="100"
-          step="0.01"
-          value="${Number(
-            produto.comissao_venda_percentual || 0
-          )}"
-        >
-      </div>
+    <input
+      id="editarProdutoComissao"
+      type="number"
+      min="0"
+      max="100"
+      step="0.01"
+      value="${
+        Number(
+          produto.comissao_venda_percentual || 0
+        )
+      }"
+    >
+
+    <small style="display:block;margin-top:4px;">
+      Use 0% para retirar a comissão.
+    </small>
+  </div>
+` : ""}
     </div>
 
     <p style="margin-top:15px;">
@@ -10452,12 +10467,14 @@ async function salvarEdicaoProduto(){
       )?.value || 0
     );
 
-  const comissao =
-    Number(
-      document.getElementById(
-        "editarProdutoComissao"
-      )?.value || 0
-    );
+ const comissao =
+  pode("produtos_comissao")
+    ? Number(
+        document.getElementById(
+          "editarProdutoComissao"
+        )?.value || 0
+      )
+    : null;
 
 
   if(!produtoId){
@@ -10517,7 +10534,12 @@ async function salvarEdicaoProduto(){
         preco_custo: precoCusto,
         preco_venda: precoVenda,
         estoque_minimo: estoqueMinimo,
-        comissao_venda_percentual: comissao,
+        ...(pode("produtos_comissao")
+  ? {
+      comissao_venda_percentual:
+        comissao
+    }
+  : {}),
         atualizado_em:
           new Date().toISOString()
       })
@@ -11752,8 +11774,8 @@ if(
         p_cliente_id:
           clienteId,
 
-        p_vendedor_id:
-          vendedorId,
+       p_vendedor_id:
+  vendedorId || null,
 
         p_produto_id:
           produtoId,
