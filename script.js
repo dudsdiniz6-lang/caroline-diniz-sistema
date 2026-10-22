@@ -2227,6 +2227,26 @@ async function abrirModalServico(id = null){
   type="number"
   value="${servico?.comissao_padrao || 40}"
 >
+${pode("servicos_comissao") ? `
+  <label>Comissão pela venda do serviço (%)</label>
+
+  <input
+    id="servicoComissaoVenda"
+    type="number"
+    min="0"
+    max="100"
+    step="0.1"
+    value="${
+      Number(
+        servico?.comissao_venda_percentual || 0
+      )
+    }"
+  >
+
+  <small style="display:block;margin-top:4px;">
+    Use 0% para não pagar comissão pela venda.
+  </small>
+` : ""}
 
 <label>Sala utilizada</label>
 
@@ -2626,6 +2646,16 @@ const retornoAvisoDias =
       "servicoComissao"
     ).value || 0
   ),
+    comissao_venda_percentual:
+  pode("servicos_comissao")
+    ? Number(
+        document.getElementById(
+          "servicoComissaoVenda"
+        )?.value || 0
+      )
+    : Number(
+        servicoAntes?.comissao_venda_percentual || 0
+      ),
 
 retorno_ativo:
   retornoAtivo,
@@ -4924,6 +4954,26 @@ let itensPacote = [];
 
     <label>Validade em dias</label>
     <input id="pacoteValidade" type="number" value="${pacote?.validade_dias || 90}">
+    ${pode("pacotes_comissao") ? `
+  <label>Comissão pela venda do pacote (%)</label>
+
+  <input
+    id="pacoteComissaoVenda"
+    type="number"
+    min="0"
+    max="100"
+    step="0.1"
+    value="${
+      Number(
+        pacote?.comissao_venda_percentual || 0
+      )
+    }"
+  >
+
+  <small style="display:block;margin-top:4px;">
+    Use 0% para não pagar comissão pela venda.
+  </small>
+` : ""}
 
     <button class="principal" onclick="salvarPacote()">
       Salvar pacote
@@ -18284,7 +18334,8 @@ async function editarPerfilSistema(perfilId){
     ["pacotes_editar","Editar pacote"],
     ["pacotes_vender","Vender pacote"],
     ["pacotes_consumir","Consumir saldo"],
-    ["pacotes_cancelar","Cancelar pacote"]
+   ["pacotes_cancelar","Cancelar pacote"],
+["pacotes_comissao","Definir comissão pela venda"]
   ]
 },
 
