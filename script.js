@@ -11315,10 +11315,6 @@ async function abrirVendaProdutoAgenda(
     `).join("")}
   </select>
 </div>
-          ${profissional.nome}
-        </option>
-      `).join("")}
-    </select>
 
     <hr style="margin:20px 0;">
 
