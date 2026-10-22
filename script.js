@@ -7406,12 +7406,66 @@ async function abrirComanda(comandaId){
     <h3>Itens</h3>
 
     ${(comanda.comanda_itens || []).map(item=>`
-      <div class="card">
-        <strong>${item.descricao || "Item"}</strong>
-        <p>Valor: ${dinheiro(item.valor)}</p>
-        <small>Comissão: ${item.comissao_percentual || 0}%</small>
-      </div>
-    `).join("") || "<p>Nenhum item lançado.</p>"}
+  <div class="card">
+
+    <small
+      style="
+        display:block;
+        margin-bottom:5px;
+        font-weight:700;
+        color:${
+          item.tipo_item === "PRODUTO"
+            ? "#d65a1f"
+            : "#555"
+        };
+      "
+    >
+      ${
+        item.tipo_item === "PRODUTO"
+          ? "PRODUTO"
+          : "SERVIÇO"
+      }
+    </small>
+
+    <strong>
+      ${item.descricao || "Item"}
+    </strong>
+
+    <p>
+      Valor: ${dinheiro(item.valor)}
+    </p>
+
+    ${
+      item.tipo_item === "PRODUTO" &&
+      Number(
+        item.comissao_venda_percentual || 0
+      ) > 0
+        ? `
+          <small>
+            Comissão de venda:
+            ${
+              Number(
+                item.comissao_venda_percentual || 0
+              )
+            }%
+          </small>
+        `
+        : item.tipo_item !== "PRODUTO"
+          ? `
+            <small>
+              Comissão do serviço:
+              ${
+                Number(
+                  item.comissao_percentual || 0
+                )
+              }%
+            </small>
+          `
+          : ""
+    }
+
+  </div>
+`).join("") || "<p>Nenhum item lançado.</p>"}
 
     <br>
 
@@ -11235,23 +11289,32 @@ async function abrirVendaProdutoAgenda(
       `).join("")}
     </select>
 
-<div id="areaVendedorVendaProduto" style="display:none;">
-    <label>Vendido por</label>
+<div
+  id="areaVendedorVendaProduto"
+  style="display:none;"
+>
+  <label>Vendido por</label>
 
-    <select id="vendaProdutoVendedor">
-    </div>
-      <option value="">Selecione o vendedor</option>
+  <select id="vendaProdutoVendedor">
+    <option value="">
+      Selecione o vendedor
+    </option>
 
-      ${(profissionais || []).map(profissional => `
-        <option
-          value="${profissional.id}"
-          ${
-            String(profissional.id) ===
-            String(profissionalPre)
-              ? "selected"
-              : ""
-          }
-        >
+    ${(profissionais || []).map(profissional => `
+      <option
+        value="${profissional.id}"
+        ${
+          String(profissional.id) ===
+          String(profissionalPre)
+            ? "selected"
+            : ""
+        }
+      >
+        ${profissional.nome}
+      </option>
+    `).join("")}
+  </select>
+</div>
           ${profissional.nome}
         </option>
       `).join("")}
@@ -11325,8 +11388,7 @@ async function abrirVendaProdutoAgenda(
       </div>
     </div>
 
-    <div
-      <input
+<input
   id="vendaProdutoComissaoPercentual"
   type="hidden"
   value="0"
@@ -11337,15 +11399,6 @@ async function abrirVendaProdutoAgenda(
   type="hidden"
   value="0"
 >
-
-        <input
-          id="vendaProdutoComissaoValor"
-          type="text"
-          value="R$ 0,00"
-          readonly
-        >
-      </div>
-    </div>
 
     <div
       class="card"
@@ -11368,30 +11421,19 @@ async function abrirVendaProdutoAgenda(
       </div>
     </div>
 
-    <label>Forma de pagamento</label>
+   <div
+  class="card"
+  style="
+    margin-top:16px;
+    padding:14px;
+  "
+>
+  <strong>Pagamento pela comanda</strong>
 
-    <select id="vendaProdutoFormaPagamento">
-      <option value="">Selecione</option>
-
-      ${(formasPagamento || []).map(forma => `
-        <option value="${forma.id}">
-          ${forma.nome}
-        </option>
-      `).join("")}
-    </select>
-
-    <label>Tipo de recebimento</label>
-
-    <select id="vendaProdutoTipoRecebimento">
-      <option value="RECEBER_AGORA">
-        Receber agora
-      </option>
-
-      <option value="A_RECEBER">
-        Deixar em aberto
-      </option>
-    </select>
-
+  <p style="margin:6px 0 0;">
+    O produto será adicionado à comanda aberta da cliente e cobrado junto com os serviços.
+  </p>
+</div>
     <div
       style="
         display:flex;
@@ -11412,7 +11454,7 @@ async function abrirVendaProdutoAgenda(
         class="principal"
         onclick="confirmarVendaProdutoAgenda()"
       >
-        Confirmar venda
+        Adicionar à comanda
       </button>
     </div>
   `);
@@ -11734,13 +11776,7 @@ if(
     return;
   }
 
-  if(
-    tipoRecebimento === "RECEBER_AGORA" &&
-    !formaPagamentoId
-  ){
-    alert("Selecione a forma de pagamento.");
-    return;
-  }
+ 
 
   if(
     !confirm(
@@ -11762,55 +11798,37 @@ if(
 
   try{
 
-    const {
-      data: vendaId,
-      error
-    } = await supabaseClient.rpc(
-      "finalizar_venda_produto",
-      {
-        p_unidade_id:
-          unidadeAtualId,
+const {
+  data: comandaId,
+  error
+} = await supabaseClient.rpc(
+  "lancar_produto_na_comanda",
+  {
+    p_unidade_id:
+      Number(unidadeAtualId),
 
-        p_cliente_id:
-          clienteId,
+    p_cliente_id:
+      clienteId,
 
-       p_vendedor_id:
-  vendedorId || null,
+    p_produto_id:
+      produtoId,
 
-        p_produto_id:
-          produtoId,
+    p_vendedor_id:
+      vendedorId || null,
 
-        p_quantidade:
-          valores.quantidade,
+    p_quantidade:
+      valores.quantidade,
 
-        p_valor_unitario:
-          valores.valorUnitario,
+    p_valor_unitario:
+      valores.valorUnitario,
 
-        p_desconto:
-          valores.desconto,
+    p_desconto:
+      valores.desconto,
 
-        p_comissao_percentual:
-          valores.percentualComissao,
-
-        p_data_venda:
-          dataVenda,
-
-        p_horario:
-          horario || null,
-
-        p_tipo_recebimento:
-          tipoRecebimento,
-
-        p_forma_pagamento_id:
-          tipoRecebimento ===
-            "RECEBER_AGORA"
-              ? formaPagamentoId
-              : null,
-
-        p_registrado_por:
-          usuarioLogado?.id || null
-      }
-    );
+    p_data:
+      dataVenda
+  }
+);
 
     if(error){
       throw error;
@@ -11818,23 +11836,26 @@ if(
 
     fecharModal();
 
-    if(
-      typeof carregarCaixas ===
-      "function"
-    ){
-      carregarCaixas();
-    }
+  if(
+  typeof carregarComandas ===
+  "function"
+){
+  carregarComandas();
+}
 
-    if(
-      typeof carregarPendenciasFinanceiras ===
-      "function"
-    ){
-      carregarPendenciasFinanceiras();
-    }
+if(
+  typeof carregarProdutosEstoque ===
+  "function"
+){
+  carregarProdutosEstoque(
+    window.produtosEstoqueAbaAtual ||
+    "ativos"
+  );
+}
 
-    alert(
-      `Venda de produto concluída com sucesso. Código da venda: ${vendaId}.`
-    );
+alert(
+  `Produto adicionado à comanda #${comandaId}.`
+);
 
   }catch(erro){
 
