@@ -20024,7 +20024,38 @@ botao.style.display =
 >
   Cadastrar novo produto
 </button>
-      </div>
+
+</div>
+
+<div style="margin-bottom:16px;">
+  <label
+    for="buscaProdutosEstoque"
+    style="
+      display:block;
+      margin-bottom:6px;
+      font-weight:600;
+    "
+  >
+    Pesquisar produto
+  </label>
+
+  <input
+    id="buscaProdutosEstoque"
+    type="search"
+    placeholder="Digite o nome, marca, categoria ou código..."
+    oninput="
+      carregarProdutosEstoque(
+        window.produtosEstoqueAbaAtual ||
+        'ativos'
+      )
+    "
+    style="
+      width:100%;
+      max-width:600px;
+    "
+  >
+</div>
+
 <div
   style="
     display:flex;
@@ -20192,6 +20223,37 @@ const {
   data: produtos,
   error
 } = await consultaProdutos;
+  const buscaProdutos =
+  document
+    .getElementById(
+      "buscaProdutosEstoque"
+    )
+    ?.value
+    ?.trim()
+    ?.toLowerCase() || "";
+
+const produtosFiltrados =
+  (produtos || []).filter(produto => {
+
+    if(!buscaProdutos){
+      return true;
+    }
+
+    const textoProduto = [
+      produto.nome,
+      produto.marca,
+      produto.categoria,
+      produto.codigo
+    ]
+      .filter(Boolean)
+      .join(" ")
+      .toLowerCase();
+
+    return textoProduto.includes(
+      buscaProdutos
+    );
+
+  });
 
 
   if(error){
@@ -20209,7 +20271,7 @@ const {
   }
 
 
- if(!produtos || produtos.length === 0){
+if(produtosFiltrados.length === 0){
 
   area.innerHTML = `
     <div class="card">
@@ -20231,7 +20293,7 @@ const {
 }
 
 
-  area.innerHTML = produtos.map(produto => {
+ area.innerHTML = produtosFiltrados.map(produto => {
 
     const estoqueAtual =
       Number(produto.estoque_atual || 0);
