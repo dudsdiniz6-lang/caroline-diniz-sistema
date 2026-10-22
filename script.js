@@ -5015,13 +5015,24 @@ async function salvarPacote(){
     return;
   }
 
-  const dadosPacote = {
-    unidade_id: unidadeAtualId,
-    nome,
-    valor,
-    validade_dias: validade,
-    ativo: true
-  };
+ const dadosPacote = {
+  unidade_id: unidadeAtualId,
+  nome,
+  valor,
+  validade_dias: validade,
+  ativo: true,
+
+  ...(pode("pacotes_comissao")
+    ? {
+        comissao_venda_percentual:
+          Number(
+            document.getElementById(
+              "pacoteComissaoVenda"
+            )?.value || 0
+          )
+      }
+    : {})
+};
 
   let pacoteId = id;
 
@@ -5188,34 +5199,56 @@ async function venderPacote(pacoteId){
         margin-top:12px;
       "
     >
+     ${
+  Number(
+    pacote.comissao_venda_percentual || 0
+  ) > 0
+    ? `
       <div>
         <label>Vendido por</label>
 
         <select id="vendaPacoteVendedor">
           <option value="">
-            Sem comissão de venda
+            Selecione quem realizou a venda
           </option>
 
           ${(vendedores || []).map(vendedor => `
             <option value="${vendedor.id}">
-              ${financeiroEscaparHTML(vendedor.nome)}
+              ${financeiroEscaparHTML(
+                vendedor.nome
+              )}
             </option>
           `).join("")}
         </select>
-      </div>
 
-      <div>
-        <label>Comissão (%)</label>
-
-        <input
-          id="vendaPacoteComissaoPercentual"
-          type="number"
-          min="0"
-          max="100"
-          step="0.1"
-          placeholder="0"
-        >
+        <small style="display:block;margin-top:4px;color:#666;">
+          Comissão configurada:
+          ${
+            Number(
+              pacote.comissao_venda_percentual || 0
+            )
+          }%
+        </small>
       </div>
+    `
+    : `
+      <input
+        id="vendaPacoteVendedor"
+        type="hidden"
+        value=""
+      >
+    `
+}
+
+      <input
+  id="vendaPacoteComissaoPercentual"
+  type="hidden"
+  value="${
+    Number(
+      pacote.comissao_venda_percentual || 0
+    )
+  }"
+>
     </div>
 
     <label>Tipo de recebimento</label>
@@ -11180,9 +11213,11 @@ async function abrirVendaProdutoAgenda(
       `).join("")}
     </select>
 
+<div id="areaVendedorVendaProduto" style="display:none;">
     <label>Vendido por</label>
 
     <select id="vendaProdutoVendedor">
+    </div>
       <option value="">Selecione o vendedor</option>
 
       ${(profissionais || []).map(profissional => `
@@ -11269,29 +11304,17 @@ async function abrirVendaProdutoAgenda(
     </div>
 
     <div
-      style="
-        display:grid;
-        grid-template-columns:1fr 1fr;
-        gap:10px;
-        margin-top:12px;
-      "
-    >
-      <div>
-        <label>Comissão (%)</label>
+      <input
+  id="vendaProdutoComissaoPercentual"
+  type="hidden"
+  value="0"
+>
 
-        <input
-          id="vendaProdutoComissaoPercentual"
-          type="number"
-          min="0"
-          max="100"
-          step="0.1"
-          value="0"
-          oninput="calcularVendaProdutoAgenda()"
-        >
-      </div>
-
-      <div>
-        <label>Comissão do vendedor</label>
+<input
+  id="vendaProdutoComissaoValor"
+  type="hidden"
+  value="0"
+>
 
         <input
           id="vendaProdutoComissaoValor"
@@ -11402,6 +11425,15 @@ function atualizarProdutoSelecionadoAgenda(){
     document.getElementById(
       "vendaProdutoComissaoPercentual"
     );
+  const areaVendedor =
+  document.getElementById(
+    "areaVendedorVendaProduto"
+  );
+
+const campoVendedor =
+  document.getElementById(
+    "vendaProdutoVendedor"
+  );
 
   if(!produto){
 
@@ -11412,6 +11444,13 @@ function atualizarProdutoSelecionadoAgenda(){
     if(campoComissao){
       campoComissao.value = "0";
     }
+    if(areaVendedor){
+  areaVendedor.style.display = "none";
+}
+
+if(campoVendedor){
+  campoVendedor.value = "";
+}
 
     calcularVendaProdutoAgenda();
     return;
@@ -11445,6 +11484,24 @@ function atualizarProdutoSelecionadoAgenda(){
       );
 
   }
+  const possuiComissaoVenda =
+  Number(
+    produto.comissao_venda_percentual || 0
+  ) > 0;
+
+if(areaVendedor){
+  areaVendedor.style.display =
+    possuiComissaoVenda
+      ? "block"
+      : "none";
+}
+
+if(
+  !possuiComissaoVenda &&
+  campoVendedor
+){
+  campoVendedor.value = "";
+}
 
   calcularVendaProdutoAgenda();
 }
@@ -11595,11 +11652,13 @@ async function confirmarVendaProdutoAgenda(){
     return;
   }
 
-  if(!vendedorId){
-    alert("Selecione quem realizou a venda.");
-    return;
-  }
-
+if(
+  valores.percentualComissao > 0 &&
+  !vendedorId
+){
+  alert("Selecione quem realizou a venda.");
+  return;
+}
   if(!produto){
     alert("Selecione o produto.");
     return;
@@ -12437,7 +12496,11 @@ async function abrirFaturamentoClienteDia(agendamentoId){
       .from("agendamentos")
       .select(`
         *,
-        servicos(nome, comissao_padrao),
+       servicos(
+  nome,
+  comissao_padrao,
+  comissao_venda_percentual
+),
         profissionais(nome)
       `)
       .eq("cliente_id", agendamentoBase.cliente_id);
@@ -12695,50 +12758,70 @@ const itensFuturos = removerDuplicadosFaturamento(
             margin-top:8px;
           "
         >
-          <div>
-            <small style="display:block;margin-bottom:4px;">
-              Vendido por
-            </small>
+        ${
+  Number(
+    item.servicos?.comissao_venda_percentual || 0
+  ) > 0
+    ? `
+      <div>
+        <small style="display:block;margin-bottom:4px;">
+          Vendido por
+        </small>
 
-            <select
-              class="vendedorItemFaturamento"
-              data-agendamento-id="${item.id}"
-              onclick="event.stopPropagation()"
-              style="width:100%;"
-            >
-              <option value="">
-                Sem comissão de venda
-              </option>
+        <select
+          class="vendedorItemFaturamento"
+          data-agendamento-id="${item.id}"
+          onclick="event.stopPropagation()"
+          style="width:100%;"
+        >
+          <option value="">
+            Selecione quem realizou a venda
+          </option>
 
-              ${
-                (window.vendedoresComissaoVenda || [])
-                  .map(vendedor => `
-                    <option value="${vendedor.id}">
-                      ${financeiroEscaparHTML(vendedor.nome)}
-                    </option>
-                  `)
-                  .join("")
-              }
-            </select>
-          </div>
+          ${
+            (window.vendedoresComissaoVenda || [])
+              .map(vendedor => `
+                <option value="${vendedor.id}">
+                  ${financeiroEscaparHTML(
+                    vendedor.nome
+                  )}
+                </option>
+              `)
+              .join("")
+          }
+        </select>
 
-          <div>
-            <small style="display:block;margin-bottom:4px;">
-              Comissão (%)
-            </small>
+        <small style="display:block;margin-top:4px;color:#666;">
+          Comissão configurada:
+          ${
+            Number(
+              item.servicos
+                ?.comissao_venda_percentual || 0
+            )
+          }%
+        </small>
+      </div>
+    `
+    : `
+      <input
+        type="hidden"
+        class="vendedorItemFaturamento"
+        data-agendamento-id="${item.id}"
+        value=""
+      >
+    `
+}
 
-            <input
-              class="percentualVendaItemFaturamento"
-              data-agendamento-id="${item.id}"
-              type="number"
-              min="0"
-              max="100"
-              step="0.1"
-              placeholder="0"
-              onclick="event.stopPropagation()"
-              style="width:100%;"
-            >
-          </div>
+         <input
+  class="percentualVendaItemFaturamento"
+  data-agendamento-id="${item.id}"
+  type="hidden"
+  value="${
+    Number(
+      item.servicos?.comissao_venda_percentual || 0
+    )
+  }"
+>
         </div>
       </span>
 
