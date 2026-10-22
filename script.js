@@ -18888,6 +18888,19 @@ if(menuProdutos){
       : "none";
 
 }
+  const botaoCadastrarProduto =
+  document.getElementById(
+    "botaoCadastrarProduto"
+  );
+
+if(botaoCadastrarProduto){
+
+  botaoCadastrarProduto.style.display =
+    pode("produtos_criar")
+      ? ""
+      : "none";
+
+}
 
   if(!pode("dashboard_visualizar")){
     document.getElementById("menu-dashboard")?.remove();
@@ -20003,15 +20016,14 @@ botao.style.display =
       <div class="topo">
         <h1>Produtos e Estoque</h1>
 
-   ${pode("produtos_criar") ? `
-  <button
-    type="button"
-    class="principal"
-    onclick="abrirCadastroProdutoAgenda()"
-  >
-    Cadastrar produto
-  </button>
-` : ""}
+ <button
+  id="botaoCadastrarProduto"
+  type="button"
+  class="principal"
+  onclick="abrirCadastroProdutoAgenda()"
+>
+  Cadastrar novo produto
+</button>
       </div>
 <div
   style="
