@@ -4154,7 +4154,233 @@ ${
 
 }
 
+async function carregarComandasAbertasCaixa(){
 
+  const area =
+    document.getElementById(
+      "listaComandasAbertasCaixa"
+    );
+
+  if(!area) return;
+
+  area.innerHTML =
+    "Carregando comandas abertas...";
+
+  const {
+    data: comandas,
+    error
+  } = await supabaseClient
+    .from("comandas")
+    .select(`
+      id,
+      cliente_id,
+      data,
+      subtotal,
+      desconto,
+      total,
+      status,
+      cancelada,
+      clientes(
+        nome,
+        telefone
+      ),
+      comanda_itens(
+        id,
+        tipo_item,
+        descricao,
+        quantidade,
+        valor
+      )
+    `)
+    .eq(
+      "unidade_id",
+      unidadeAtualId
+    )
+  .in(
+  "status",
+  [
+    "Aberta",
+    "Parcial"
+  ]
+)
+    .or(
+      "cancelada.eq.false,cancelada.is.null"
+    )
+    .order(
+      "data",
+      {
+        ascending:true
+      }
+    )
+    .order(
+      "id",
+      {
+        ascending:true
+      }
+    );
+
+  if(error){
+
+    console.error(
+      "Erro ao carregar comandas abertas:",
+      error
+    );
+
+    area.innerHTML = `
+      <div class="card">
+        Não foi possível carregar as comandas abertas.
+      </div>
+    `;
+
+    return;
+  }
+
+  if(!comandas || comandas.length === 0){
+
+    area.innerHTML = `
+      <div
+        class="card"
+        style="
+          border-left:4px solid #2e8b57;
+        "
+      >
+        Nenhuma comanda aberta.
+      </div>
+    `;
+
+    return;
+  }
+
+  area.innerHTML =
+    comandas.map(comanda => {
+
+      const itens =
+        (comanda.comanda_itens || [])
+          .map(item => {
+
+            const tipo =
+              item.tipo_item === "PRODUTO"
+                ? "Produto"
+                : "Serviço";
+
+            return `
+              <div
+                style="
+                  padding:7px 0;
+                  border-bottom:1px solid #eee;
+                "
+              >
+                <strong>
+                  ${tipo}:
+                </strong>
+
+                ${
+                  financeiroEscaparHTML(
+                    item.descricao || "Item"
+                  )
+                }
+
+                <span style="float:right;">
+                  ${dinheiro(item.valor || 0)}
+                </span>
+              </div>
+            `;
+
+          })
+          .join("");
+
+      return `
+        <div
+          class="card"
+          style="
+            border-left:4px solid #e36b2c;
+          "
+        >
+          <h3 style="margin-top:0;">
+            ${
+              financeiroEscaparHTML(
+                comanda.clientes?.nome ||
+                "Cliente não informada"
+              )
+            }
+          </h3>
+
+          <p>
+            Comanda:
+            <strong>#${comanda.id}</strong>
+          </p>
+
+          <p>
+            Data:
+            <strong>
+              ${formatarDataComanda(comanda.data)}
+            </strong>
+          </p>
+
+          <div style="margin:12px 0;">
+            ${itens || "Nenhum item encontrado."}
+          </div>
+
+          <p
+            style="
+              font-size:18px;
+              margin-top:14px;
+            "
+          >
+            Total:
+            <strong>
+              ${dinheiro(comanda.total || 0)}
+            </strong>
+          </p>
+
+          <div
+            style="
+              display:flex;
+              gap:8px;
+              flex-wrap:wrap;
+              margin-top:14px;
+            "
+          >
+            <button
+              type="button"
+              class="principal"
+              onclick="
+                abrirRecebimentoAgora(
+                  ${comanda.id}
+                )
+              "
+            >
+              Receber agora
+            </button>
+
+            <button
+              type="button"
+              onclick="
+                lancarComandaAReceber(
+                  ${comanda.id}
+                )
+              "
+            >
+              Anotar para pagar depois
+            </button>
+
+            <button
+              type="button"
+              onclick="
+                abrirComanda(
+                  ${comanda.id}
+                )
+              "
+            >
+              Ver detalhes
+            </button>
+          </div>
+        </div>
+      `;
+
+    }).join("");
+
+}
 async function carregarCaixas(){
 
   const lista = document.getElementById("listaCaixas");
@@ -8139,11 +8365,13 @@ async function lancarComandaAReceber(comandaId){
     })
     .eq("id", comanda.id);
 
-  fecharModal();
-  carregarComandas();
-  carregarPendenciasFinanceiras();
+fecharModal();
 
-  alert("Comanda lançada como A Receber.");
+carregarComandas();
+carregarPendenciasFinanceiras();
+carregarComandasAbertasCaixa();
+
+alert("Comanda lançada como A Receber.");
 }
 async function confirmarRecebimentoComanda(comandaId){
 
@@ -8230,16 +8458,24 @@ async function confirmarRecebimentoComanda(comandaId){
     ? "Fechada"
     : "Parcial";
 
-  await supabaseClient
-    .from("comandas")
-    .update({
-      status: novoStatus
-    })
-    .eq("id", comandaId);
+await supabaseClient
+  .from("comandas")
+  .update({
+    status: novoStatus
+  })
+  .eq("id", comandaId);
 
-  alert("Pagamento adicionado.");
+carregarComandas();
+carregarComandasAbertasCaixa();
+carregarCaixas();
 
+alert("Pagamento adicionado.");
+
+if(novoStatus === "Fechada"){
+  fecharModal();
+}else{
   abrirReceberComanda(comandaId);
+}
 }
 function adicionarLinhaPagamentoFaturamento(){
 
@@ -8513,16 +8749,44 @@ if(
   if(aba === "caixa"){
 
     area.innerHTML = `
-      <div class="topo">
-        <button class="principal" onclick="abrirCaixa()">
-          Abrir Caixa
-        </button>
-      </div>
+  <div class="topo">
+    <button class="principal" onclick="abrirCaixa()">
+      Abrir Caixa
+    </button>
+  </div>
 
-      <div id="listaCaixas" class="cards"></div>
-    `;
+  <div
+    style="
+      margin-bottom:25px;
+      padding:18px;
+      border:2px solid #e36b2c;
+      border-radius:12px;
+      background:#fffaf7;
+    "
+  >
+    <h2 style="margin-top:0;">
+      Comandas abertas
+    </h2>
+
+    <p>
+      Estas comandas precisam ser recebidas ou anotadas para pagamento posterior antes do fechamento do caixa.
+    </p>
+
+    <div
+      id="listaComandasAbertasCaixa"
+      class="cards"
+    >
+      Carregando comandas abertas...
+    </div>
+  </div>
+
+  <h2>Histórico de caixas</h2>
+
+  <div id="listaCaixas" class="cards"></div>
+`;
 
     carregarCaixas();
+    carregarComandasAbertasCaixa();
     return;
   }
 
@@ -13856,7 +14120,13 @@ async function existemComandasAbertasNoDia(dataCaixa){
     .from("comandas")
     .select("id, clientes(nome)")
     .eq("data", dataCaixa)
-    .eq("status", "Aberta")
+ .in(
+  "status",
+  [
+    "Aberta",
+    "Parcial"
+  ]
+)
     .neq("cancelada", true);
 
   if(error){
