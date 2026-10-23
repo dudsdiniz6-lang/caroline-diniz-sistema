@@ -13357,9 +13357,94 @@ if(!caixa){
     );
     return;
   }
-  const totalReceber = itensSelecionados.reduce((soma, item)=>{
-    return soma + (item.usar_pacote ? 0 : Number(item.total || 0));
-  }, 0);
+const itemReferencia =
+  itensSelecionados[0];
+
+const {
+  data: comandasAbertasCliente,
+  error: erroComandaProdutos
+} = await supabaseClient
+  .from("comandas")
+ .select(`
+  id,
+  subtotal,
+  desconto,
+  total,
+  comanda_itens(
+    tipo_item
+  )
+`)
+  .eq(
+    "unidade_id",
+    unidadeAtualId
+  )
+  .eq(
+    "cliente_id",
+    itemReferencia.cliente_id
+  )
+  .eq(
+    "data",
+    itemReferencia.data
+  )
+  .eq(
+    "status",
+    "Aberta"
+  )
+  .or(
+    "cancelada.eq.false,cancelada.is.null"
+  )
+  .order(
+    "id",
+    {
+      ascending:false
+    }
+  );
+
+if(erroComandaProdutos){
+  console.error(
+    "Erro ao buscar comanda de produtos:",
+    erroComandaProdutos
+  );
+
+  alert(
+    "Não foi possível verificar os produtos lançados para esta cliente."
+  );
+
+  return;
+}
+
+const comandaProdutoAberta =
+  (comandasAbertasCliente || [])
+    .find(comanda =>
+      (comanda.comanda_itens || [])
+        .some(item =>
+          item.tipo_item === "PRODUTO"
+        )
+    ) || null;
+
+const totalServicosReceber =
+  itensSelecionados.reduce(
+    (soma, item) =>
+      soma +
+      (
+        item.usar_pacote
+          ? 0
+          : Number(item.total || 0)
+      ),
+    0
+  );
+
+const totalProdutosAbertos =
+  Number(
+    comandaProdutoAberta?.total || 0
+  );
+
+const totalReceber =
+  totalServicosReceber +
+  totalProdutosAbertos;
+
+window.comandaProdutoAbertaFaturamento =
+  comandaProdutoAberta;
 
   const itensPacote = itensSelecionados.filter(item => item.usar_pacote);
   const itensPagos = itensSelecionados.filter(item => !item.usar_pacote);
