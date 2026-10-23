@@ -4250,9 +4250,122 @@ async function carregarComandasAbertasCaixa(){
 
     return;
   }
+  const clientesComandaIds =
+  [
+    ...new Set(
+      comandas
+        .map(comanda => comanda.cliente_id)
+        .filter(Boolean)
+    )
+  ];
+
+const datasComandas =
+  [
+    ...new Set(
+      comandas
+        .map(comanda => comanda.data)
+        .filter(Boolean)
+    )
+  ];
+
+const {
+  data: agendamentosPendentes,
+  error: erroAgendamentosPendentes
+} = await supabaseClient
+  .from("agendamentos")
+  .select(`
+    id,
+    cliente_id,
+    data,
+    status
+  `)
+  .in(
+    "cliente_id",
+    clientesComandaIds
+  )
+  .in(
+    "data",
+    datasComandas
+  );
+
+if(erroAgendamentosPendentes){
+
+  console.error(
+    "Erro ao verificar serviços agendados:",
+    erroAgendamentosPendentes
+  );
+
+  area.innerHTML = `
+    <div class="card">
+      Não foi possível verificar os serviços agendados.
+    </div>
+  `;
+
+  return;
+}
+
+const chavesComServicoPendente =
+  new Set(
+    (agendamentosPendentes || [])
+      .filter(agendamento => {
+
+        const status =
+          String(
+            agendamento.status || ""
+          )
+            .trim()
+            .toLowerCase();
+
+        return ![
+          "cancelado",
+          "cancelada",
+          "faltou",
+          "reagendado",
+          "reagendada",
+          "finalizado",
+          "finalizada"
+        ].includes(status);
+
+      })
+      .map(agendamento =>
+        `${
+          agendamento.cliente_id
+        }:${
+          agendamento.data
+        }`
+      )
+  );
+
+const comandasParaReceber =
+  comandas.filter(comanda =>
+    !chavesComServicoPendente.has(
+      `${
+        comanda.cliente_id
+      }:${
+        comanda.data
+      }`
+    )
+  );
+
+if(comandasParaReceber.length === 0){
+
+  area.innerHTML = `
+    <div
+      class="card"
+      style="
+        border-left:4px solid #2e8b57;
+      "
+    >
+      Nenhuma comanda precisa ser recebida separadamente.
+      As comandas abertas estão vinculadas a serviços agendados.
+    </div>
+  `;
+
+  return;
+}
 
   area.innerHTML =
-    comandas.map(comanda => {
+  comandasParaReceber.map(comanda => {
 
       const itens =
         (comanda.comanda_itens || [])
@@ -13848,31 +13961,128 @@ if(existeFaturamentoDuplicado){
   const profissionalPrincipal =
     profissionaisUnicos.length === 1 ? profissionaisUnicos[0] : null;
 
-  const comandaResp = await supabaseClient
+const comandaProdutoExistente =
+  window.comandaProdutoAbertaFaturamento ||
+  null;
+
+const subtotalServicos =
+  itensPagos.reduce(
+    (soma, item) =>
+      soma + Number(item.valor || 0),
+    0
+  );
+
+const descontoServicos =
+  itensPagos.reduce(
+    (soma, item) =>
+      soma + Number(item.desconto || 0),
+    0
+  );
+
+let comandaResp;
+
+if(comandaProdutoExistente?.id){
+
+  comandaResp = await supabaseClient
+    .from("comandas")
+    .update({
+      faturamento_grupo_id:
+        grupo.id,
+
+      agendamento_id:
+        primeiroItem.id,
+
+      profissional_id:
+        profissionalPrincipal,
+
+      subtotal:
+        Number(
+          comandaProdutoExistente.subtotal || 0
+        ) +
+        subtotalServicos,
+
+      desconto:
+        Number(
+          comandaProdutoExistente.desconto || 0
+        ) +
+        descontoServicos,
+
+      total:
+        totalReceber,
+
+      status:
+        tipoRecebimento === "receber_agora"
+          ? "Fechada"
+          : "A Receber"
+    })
+    .eq(
+      "id",
+      comandaProdutoExistente.id
+    )
+    .eq(
+      "status",
+      "Aberta"
+    )
+    .select()
+    .single();
+
+}else{
+
+  comandaResp = await supabaseClient
     .from("comandas")
     .insert([{
-      unidade_id: unidadeAtualId,
-      faturamento_grupo_id: grupo.id,
-      agendamento_id: primeiroItem.id,
-      cliente_id: primeiroItem.cliente_id,
-      profissional_id: profissionalPrincipal,
-      data: primeiroItem.data,
-      subtotal: itensPagos.reduce((soma, item)=> soma + Number(item.valor || 0), 0),
-      desconto: itensPagos.reduce((soma, item)=> soma + Number(item.desconto || 0), 0),
-      total: totalReceber,
-      status: tipoRecebimento === "receber_agora" ? "Fechada" : "A Receber",
-      cancelada: false
+      unidade_id:
+        unidadeAtualId,
+
+      faturamento_grupo_id:
+        grupo.id,
+
+      agendamento_id:
+        primeiroItem.id,
+
+      cliente_id:
+        primeiroItem.cliente_id,
+
+      profissional_id:
+        profissionalPrincipal,
+
+      data:
+        primeiroItem.data,
+
+      subtotal:
+        subtotalServicos,
+
+      desconto:
+        descontoServicos,
+
+      total:
+        totalReceber,
+
+      status:
+        tipoRecebimento === "receber_agora"
+          ? "Fechada"
+          : "A Receber",
+
+      cancelada:
+        false
     }])
     .select()
     .single();
 
-  if(comandaResp.error){
-    alert("Erro ao criar comanda: " + comandaResp.error.message);
-    return;
-  }
+}
 
-  const comanda = comandaResp.data;
+if(comandaResp.error){
 
+  alert(
+    "Erro ao preparar a comanda: " +
+    comandaResp.error.message
+  );
+
+  return;
+}
+
+const comanda =
+  comandaResp.data;
  const itensComanda =
   await Promise.all(
     itensPagos.map(async item => {
