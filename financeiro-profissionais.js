@@ -3569,9 +3569,6 @@ ${pode("financeiro_profissionais_pagar") ? `
       </div>
     `;
 
-  }catch(erro){iv>
-    `;
-
   }catch(erro){
 
     console.error(
