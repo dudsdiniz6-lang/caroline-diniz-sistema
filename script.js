@@ -11668,7 +11668,7 @@ async function abrirVendaProdutoAgenda(
 
 <div
   id="areaVendedorVendaProduto"
-  style="display:none;"
+  style="display:block;"
 >
   <label>Vendido por</label>
 
