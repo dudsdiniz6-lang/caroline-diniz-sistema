@@ -2598,8 +2598,6 @@ comandasValidas.forEach(comanda => {
 ========================= */
 
 let itens = [];
-
-let itens = [];
 let itensProdutos = [];
 
 // Serviços de execução já pagos.
