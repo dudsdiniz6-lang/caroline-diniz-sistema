@@ -11871,6 +11871,15 @@ const campoVendedor =
   document.getElementById(
     "vendaProdutoVendedor"
   );
+  const areaVendedor =
+  document.getElementById(
+    "areaVendedorVendaProduto"
+  );
+
+const campoVendedor =
+  document.getElementById(
+    "vendaProdutoVendedor"
+  );
 
   if(!produto){
 
@@ -11889,6 +11898,13 @@ if(campoVendedor){
   campoVendedor.value = "";
 }
 
+    if(areaVendedor){
+  areaVendedor.style.display = "none";
+}
+
+if(campoVendedor){
+  campoVendedor.value = "";
+}
     calcularVendaProdutoAgenda();
     return;
   }
@@ -11942,7 +11958,26 @@ if(
 
   calcularVendaProdutoAgenda();
 }
+const percentualComissao =
+  Number(
+    produto.comissao_venda_percentual || 0
+  );
 
+if(areaVendedor){
+
+  areaVendedor.style.display =
+    percentualComissao > 0
+      ? "block"
+      : "none";
+
+}
+
+if(
+  campoVendedor &&
+  percentualComissao <= 0
+){
+  campoVendedor.value = "";
+}
 
 function calcularVendaProdutoAgenda(){
 
