@@ -9887,6 +9887,41 @@ if(servicosCancelados.length > 0){
 
   await supabaseClient
     .from("caixa_movimentacoes")
+    /*
+==========================================
+DEVOLVE AO ESTOQUE OS PRODUTOS CANCELADOS
+==========================================
+*/
+
+const errosDevolucaoEstoque = [];
+
+for(const idComandaCancelar of idsComandas){
+
+  const {
+    error: erroDevolucaoEstoque
+  } = await supabaseClient.rpc(
+    "devolver_produtos_comanda",
+    {
+      p_comanda_id:
+        Number(idComandaCancelar)
+    }
+  );
+
+  if(erroDevolucaoEstoque){
+
+    console.error(
+      "Erro ao devolver produtos da comanda:",
+      idComandaCancelar,
+      erroDevolucaoEstoque
+    );
+
+    errosDevolucaoEstoque.push(
+      idComandaCancelar
+    );
+
+  }
+
+}
     .update({
       cancelada: true,
       cancelada_em: agora,
@@ -9928,12 +9963,37 @@ await registrarHistoricoOperacao(
     motivo: motivo
   }
 );
- fecharModal();
+fecharModal();
+
 carregarAgenda();
 carregarComandas();
 carregarPendenciasFinanceiras();
 
-  alert("Faturamento cancelado com histórico. Comissões, caixa e relatórios financeiros serão desconsiderados.");
+if(
+  typeof carregarProdutosEstoque ===
+  "function"
+){
+  carregarProdutosEstoque(
+    window.produtosEstoqueAbaAtual ||
+    "ativos"
+  );
+}
+
+if(errosDevolucaoEstoque.length > 0){
+
+  alert(
+    "O faturamento foi cancelado, mas ocorreu um erro ao devolver produtos ao estoque nas comandas: " +
+    errosDevolucaoEstoque.join(", ") +
+    ". Confira o estoque antes de continuar."
+  );
+
+}else{
+
+  alert(
+    "Faturamento cancelado. Os produtos voltaram ao estoque e as comissões, o caixa e os relatórios financeiros foram atualizados."
+  );
+
+}
 }
 
 async function carregarComissoes(){
