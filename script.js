@@ -11832,7 +11832,88 @@ async function abrirVendaProdutoAgenda(
     </div>
   `);
 }
+function atualizarProdutoSelecionadoAgenda(){
 
+  const produtoId =
+    document.getElementById(
+      "vendaProdutoProduto"
+    )?.value;
+
+  const produto =
+    (
+      window.produtosVendaAgendaCache ||
+      []
+    ).find(item =>
+      String(item.id) ===
+      String(produtoId)
+    );
+
+  const campoQuantidade =
+    document.getElementById(
+      "vendaProdutoQuantidade"
+    );
+
+  const campoValor =
+    document.getElementById(
+      "vendaProdutoValorUnitario"
+    );
+
+  const campoComissao =
+    document.getElementById(
+      "vendaProdutoComissaoPercentual"
+    );
+
+
+  if(!produto){
+
+    if(campoValor){
+      campoValor.value = "0";
+    }
+
+    if(campoComissao){
+      campoComissao.value = "0";
+    }
+
+    calcularVendaProdutoAgenda();
+    return;
+  }
+
+
+  if(campoQuantidade){
+
+    campoQuantidade.value = "1";
+
+    campoQuantidade.max =
+      Number(
+        produto.estoque_atual || 0
+      );
+
+  }
+
+
+  if(campoValor){
+
+    campoValor.value =
+      Number(
+        produto.preco_venda || 0
+      ).toFixed(2);
+
+  }
+
+
+  if(campoComissao){
+
+    campoComissao.value =
+      Number(
+        produto.comissao_venda_percentual || 0
+      );
+
+  }
+
+
+  calcularVendaProdutoAgenda();
+
+}
 function calcularVendaProdutoAgenda(){
 
   const quantidade =
