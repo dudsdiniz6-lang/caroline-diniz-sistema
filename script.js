@@ -9886,8 +9886,7 @@ if(servicosCancelados.length > 0){
     .in("id", idsComandas);
 
   await supabaseClient
-    .from("caixa_movimentacoes")
-    /*
+/*
 ==========================================
 DEVOLVE AO ESTOQUE OS PRODUTOS CANCELADOS
 ==========================================
@@ -9922,12 +9921,26 @@ for(const idComandaCancelar of idsComandas){
   }
 
 }
-    .update({
-      cancelada: true,
-      cancelada_em: agora,
-      motivo_cancelamento: motivo
-    })
-    .in("comanda_id", idsComandas);
+
+
+/*
+==========================================
+CANCELA AS MOVIMENTAÇÕES DO CAIXA
+==========================================
+*/
+
+await supabaseClient
+  .from("caixa_movimentacoes")
+  .update({
+    cancelada: true,
+    cancelada_em: agora,
+    motivo_cancelamento: motivo
+  })
+  .in(
+    "comanda_id",
+    idsComandas
+  );
+
   const { error: erroCancelarPendencias } = await supabaseClient
   .from("financeiro_lancamentos")
   .update({
@@ -12936,6 +12949,88 @@ async function abrirFaturamentoClienteDia(agendamentoId){
   }
 
  const dataHoje = agendamentoBase.data;
+  /*
+==========================================
+PRODUTOS JÁ LANÇADOS NA COMANDA DA CLIENTE
+==========================================
+*/
+
+const {
+  data: comandasProdutosAbertas,
+  error: erroProdutosAbertos
+} = await supabaseClient
+  .from("comandas")
+  .select(`
+    id,
+    total,
+    comanda_itens(
+      id,
+      tipo_item,
+      descricao,
+      quantidade,
+      valor
+    )
+  `)
+  .eq(
+    "unidade_id",
+    unidadeAtualId
+  )
+  .eq(
+    "cliente_id",
+    agendamentoBase.cliente_id
+  )
+  .eq(
+    "data",
+    dataHoje
+  )
+  .eq(
+    "status",
+    "Aberta"
+  )
+  .or(
+    "cancelada.eq.false,cancelada.is.null"
+  );
+
+
+if(erroProdutosAbertos){
+
+  console.error(
+    "Erro ao buscar produtos da comanda:",
+    erroProdutosAbertos
+  );
+
+  alert(
+    "Não foi possível verificar os produtos lançados para esta cliente."
+  );
+
+  return;
+}
+
+
+const produtosAbertosFaturamento =
+  (comandasProdutosAbertas || [])
+    .flatMap(comanda =>
+      (comanda.comanda_itens || [])
+        .filter(item =>
+          String(item.tipo_item || "")
+            .toUpperCase() === "PRODUTO"
+        )
+    );
+
+
+const totalProdutosAbertosFaturamento =
+  produtosAbertosFaturamento.reduce(
+    (total, item) =>
+      total + Number(item.valor || 0),
+    0
+  );
+
+
+window.produtosAbertosFaturamento =
+  produtosAbertosFaturamento;
+
+window.totalProdutosAbertosFaturamento =
+  totalProdutosAbertosFaturamento;
 
   const { data: agendamentosCliente, error: erroAgendamentos } =
     await supabaseClient
@@ -13309,7 +13404,70 @@ const itensFuturos = removerDuplicadosFaturamento(
           : "<p>Nenhum serviço pendente para hoje.</p>"
       }
     </div>
+${
+  produtosAbertosFaturamento.length > 0
+    ? `
+      <div
+        style="
+          margin-top:22px;
+          padding-top:18px;
+          border-top:1px solid #ddd;
+        "
+      >
 
+        <h3 style="margin:0 0 8px;">
+          Produtos lançados na comanda
+        </h3>
+
+        ${
+          produtosAbertosFaturamento
+            .map(item => `
+              <div
+                style="
+                  display:grid;
+                  grid-template-columns:1fr 100px;
+                  gap:10px;
+                  align-items:center;
+                  border-bottom:1px solid #eee;
+                  padding:10px 0;
+                "
+              >
+
+                <span>
+                  <strong>
+                    ${
+                      financeiroEscaparHTML(
+                        item.descricao ||
+                        "Produto"
+                      )
+                    }
+                  </strong>
+
+                  <br>
+
+                  <small>
+                    Quantidade:
+                    ${Number(item.quantidade || 1)}
+                  </small>
+                </span>
+
+                <strong style="text-align:right;">
+                  ${
+                    dinheiro(
+                      Number(item.valor || 0)
+                    )
+                  }
+                </strong>
+
+              </div>
+            `)
+            .join("")
+        }
+
+      </div>
+    `
+    : ""
+}
     ${
       itensFuturos.length
         ? `
@@ -13419,7 +13577,10 @@ function alternarAgendamentosFuturosFaturamento(){
 }
 function calcularTotalFaturamentoCliente(){
 
-  let total = 0;
+let total =
+  Number(
+    window.totalProdutosAbertosFaturamento || 0
+  );
 
   document.querySelectorAll(".itemFaturamentoCliente:checked").forEach(item=>{
     total += Number(item.dataset.total || 0);
