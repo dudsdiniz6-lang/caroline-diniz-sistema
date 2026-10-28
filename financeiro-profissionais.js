@@ -2599,10 +2599,16 @@ comandasValidas.forEach(comanda => {
 
 let itens = [];
 
-// Busca uma única vez todos os itens
-// que já foram vinculados a pagamentos.
+let itens = [];
+let itensProdutos = [];
+
+// Serviços de execução já pagos.
 const idsBloqueados =
   await obterIdsItensComissaoBloqueados();
+
+// Comissões de vendas já pagas.
+const vendasBloqueadas =
+  await obterComissoesVendaBloqueadas();
 
 if(idsComandas.length > 0){
 
@@ -2627,15 +2633,21 @@ if(idsComandas.length > 0){
       error: erroItens
     } =
       await supabaseClient
-        .from("comanda_itens")
-        .select(`
-          id,
-          comanda_id,
-          profissional_id,
-          descricao,
-          valor,
-          comissao_percentual
-        `)
+      .from("comanda_itens")
+.select(`
+  id,
+  comanda_id,
+  profissional_id,
+  vendedor_id,
+  tipo_item,
+  produto_id,
+  quantidade,
+  descricao,
+  valor,
+  comissao_percentual,
+  comissao_venda_percentual,
+  comissao_venda_valor
+`)
         .in(
           "comanda_id",
           loteIdsComandas
@@ -2650,32 +2662,80 @@ if(idsComandas.length > 0){
     );
   }
 
-  itens =
-    todosItens.filter(item => {
+// Serviços executados pelo profissional.
+itens =
+  todosItens.filter(item => {
 
-      const comanda =
-        mapaComandas[item.comanda_id];
+    const tipoItem =
+      String(item.tipo_item || "")
+        .trim()
+        .toUpperCase();
 
-      const profissionalItem =
-        item.profissional_id ??
-        comanda?.profissional_id;
+    // Produto não pode entrar como serviço executado.
+    if(tipoItem === "PRODUTO"){
+      return false;
+    }
 
-      const pertenceAoProfissional =
-        profissionalItem != null &&
-        String(profissionalItem).trim() ===
-          String(profissionalId).trim();
+    const comanda =
+      mapaComandas[item.comanda_id];
 
-      const jaFoiPago =
-        idsBloqueados.has(
-          String(item.id)
-        );
+    const profissionalItem =
+      item.profissional_id ??
+      comanda?.profissional_id;
 
-      return (
-        pertenceAoProfissional &&
-        !jaFoiPago
+    const pertenceAoProfissional =
+      profissionalItem != null &&
+      String(profissionalItem).trim() ===
+        String(profissionalId).trim();
+
+    const jaFoiPago =
+      idsBloqueados.has(
+        String(item.id)
       );
 
-    });
+    return (
+      pertenceAoProfissional &&
+      !jaFoiPago
+    );
+
+  });
+
+
+// Produtos vendidos pelo profissional.
+itensProdutos =
+  todosItens.filter(item => {
+
+    const tipoItem =
+      String(item.tipo_item || "")
+        .trim()
+        .toUpperCase();
+
+    const vendedorCorreto =
+      item.vendedor_id != null &&
+      String(item.vendedor_id).trim() ===
+        String(profissionalId).trim();
+
+    const possuiComissao =
+      Number(
+        item.comissao_venda_percentual || 0
+      ) > 0 ||
+      Number(
+        item.comissao_venda_valor || 0
+      ) > 0;
+
+    const comissaoJaPaga =
+      vendasBloqueadas.servicos.has(
+        String(item.id)
+      );
+
+    return (
+      tipoItem === "PRODUTO" &&
+      vendedorCorreto &&
+      possuiComissao &&
+      !comissaoJaPaga
+    );
+
+  });
 
 }
 
@@ -2785,6 +2845,128 @@ if(idsComandas.length > 0){
         `;
 
       }).join("");
+    let totalVendasProdutos = 0;
+let totalComissaoProdutos = 0;
+
+
+const linhasProdutos =
+  itensProdutos.map(item => {
+
+    const comanda =
+      mapaComandas[item.comanda_id];
+
+    const nomeCliente =
+      mapaClientes[
+        comanda?.cliente_id
+      ] || "Cliente não informado";
+
+    const valorVenda =
+      Number(item.valor || 0);
+
+    const percentual =
+      Number(
+        item.comissao_venda_percentual || 0
+      );
+
+    const valorComissao =
+      Number(item.comissao_venda_valor || 0) > 0
+        ? Number(item.comissao_venda_valor)
+        : Number(
+            (
+              valorVenda *
+              percentual /
+              100
+            ).toFixed(2)
+          );
+
+    totalVendasProdutos +=
+      valorVenda;
+
+    totalComissaoProdutos +=
+      valorComissao;
+
+
+    return `
+      <tr
+        style="
+          border-top:1px solid #e5e5e5;
+        "
+      >
+
+        <td style="padding:12px;">
+          ${
+            financeiroFormatarData(
+              comanda?.data
+            )
+          }
+        </td>
+
+        <td style="padding:12px;">
+          ${
+            financeiroEscaparHTML(
+              nomeCliente
+            )
+          }
+        </td>
+
+        <td style="padding:12px;">
+          ${
+            financeiroEscaparHTML(
+              item.descricao ||
+              "Produto"
+            )
+          }
+        </td>
+
+        <td
+          style="
+            padding:12px;
+            text-align:right;
+          "
+        >
+          ${
+            financeiroFormatarMoeda(
+              valorVenda
+            )
+          }
+        </td>
+
+        <td
+          style="
+            padding:12px;
+            text-align:center;
+          "
+        >
+          ${
+            percentual.toLocaleString(
+              "pt-BR"
+            )
+          }%
+        </td>
+
+        <td
+          style="
+            padding:12px;
+            text-align:right;
+            font-weight:700;
+          "
+        >
+          ${
+            financeiroFormatarMoeda(
+              valorComissao
+            )
+          }
+        </td>
+
+      </tr>
+    `;
+
+  }).join("");
+
+
+const totalComissaoPeriodo =
+  totalComissao +
+  totalComissaoProdutos;
 // =====================================
 // SALDO ANTERIOR DO PROFISSIONAL
 // =====================================
@@ -2874,7 +3056,7 @@ const totalValesDetalhes =
 // =====================================
 
 const totalPagarDetalhes =
-  totalComissao +
+  totalComissaoPeriodo +
   saldoAnteriorDetalhes -
   totalValesDetalhes;
 
@@ -3053,9 +3235,9 @@ ${pode("financeiro_profissionais_pagar") ? `
             "
           >
             ${
-              financeiroFormatarMoeda(
-                totalComissao
-              )
+             financeiroFormatarMoeda(
+  totalComissaoPeriodo
+)
             }
           </div>
         </div>
@@ -3063,15 +3245,24 @@ ${pode("financeiro_profissionais_pagar") ? `
       </div>
 
 
-      <div
-        style="
-          overflow-x:auto;
-          margin-top:20px;
-        "
-      >
+    <div
+  style="
+    overflow-x:auto;
+    margin-top:20px;
+  "
+>
 
-        ${
-          itens.length === 0
+  <h3
+    style="
+      margin:0 0 12px;
+      font-size:18px;
+    "
+  >
+    Serviços realizados
+  </h3>
+
+  ${
+    itens.length === 0
 
             ? `
               <div
@@ -3218,9 +3409,167 @@ ${pode("financeiro_profissionais_pagar") ? `
 
               </table>
             `
+            }
+
+
+        <h3
+          style="
+            margin:32px 0 12px;
+            padding-top:22px;
+            border-top:1px solid #ddd;
+            font-size:18px;
+          "
+        >
+          Comissão de produtos
+        </h3>
+
+
+        ${
+          itensProdutos.length === 0
+
+            ? `
+              <div
+                style="
+                  padding:25px;
+                  text-align:center;
+                  border:1px solid #ddd;
+                  border-radius:8px;
+                "
+              >
+                Nenhuma comissão de produto encontrada neste período.
+              </div>
+            `
+
+            : `
+              <table
+                style="
+                  width:100%;
+                  border-collapse:collapse;
+                "
+              >
+
+                <thead>
+                  <tr>
+
+                    <th
+                      style="
+                        padding:12px;
+                        text-align:left;
+                      "
+                    >
+                      Data
+                    </th>
+
+                    <th
+                      style="
+                        padding:12px;
+                        text-align:left;
+                      "
+                    >
+                      Cliente
+                    </th>
+
+                    <th
+                      style="
+                        padding:12px;
+                        text-align:left;
+                      "
+                    >
+                      Produto
+                    </th>
+
+                    <th
+                      style="
+                        padding:12px;
+                        text-align:right;
+                      "
+                    >
+                      Valor da venda
+                    </th>
+
+                    <th
+                      style="
+                        padding:12px;
+                        text-align:center;
+                      "
+                    >
+                      Comissão
+                    </th>
+
+                    <th
+                      style="
+                        padding:12px;
+                        text-align:right;
+                      "
+                    >
+                      Valor da comissão
+                    </th>
+
+                  </tr>
+                </thead>
+
+                <tbody>
+                  ${linhasProdutos}
+                </tbody>
+
+                <tfoot>
+                  <tr
+                    style="
+                      border-top:2px solid #222;
+                    "
+                  >
+
+                    <td
+                      colspan="3"
+                      style="
+                        padding:14px 12px;
+                        font-weight:700;
+                      "
+                    >
+                      Total
+                    </td>
+
+                    <td
+                      style="
+                        padding:14px 12px;
+                        text-align:right;
+                        font-weight:700;
+                      "
+                    >
+                      ${
+                        financeiroFormatarMoeda(
+                          totalVendasProdutos
+                        )
+                      }
+                    </td>
+
+                    <td></td>
+
+                    <td
+                      style="
+                        padding:14px 12px;
+                        text-align:right;
+                        font-weight:700;
+                      "
+                    >
+                      ${
+                        financeiroFormatarMoeda(
+                          totalComissaoProdutos
+                        )
+                      }
+                    </td>
+
+                  </tr>
+                </tfoot>
+
+              </table>
+            `
         }
 
       </div>
+    `;
+
+  }catch(erro){iv>
     `;
 
   }catch(erro){
