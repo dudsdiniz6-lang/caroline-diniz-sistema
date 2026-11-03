@@ -8805,6 +8805,9 @@ async function carregarConfiguracoes(){
         <button onclick="abrirAbaConfiguracao('formas')">
           Formas de pagamento
         </button>
+        <button onclick="abrirAbaConfiguracao('salas')">
+  Salas
+</button>
 
         <button onclick="abrirAbaConfiguracao('politicas')">
           Políticas do Sistema
@@ -9133,7 +9136,9 @@ async function salvarPoliticaTexto(id, valor){
 }
 async function abrirAbaConfiguracao(aba){
 
-  const conteudo = document.getElementById("conteudoConfiguracoes");
+  const conteudo =
+    document.getElementById("conteudoConfiguracoes");
+
   if(!conteudo) return;
 
   if(aba === "geral"){
@@ -9146,6 +9151,10 @@ async function abrirAbaConfiguracao(aba){
 
   if(aba === "politicas"){
     await carregarPoliticasSistemaTela();
+  }
+
+  if(aba === "salas"){
+    abrirConfiguracoesSalas();
   }
 }
 async function carregarConfiguracoesGerais(){
@@ -12610,24 +12619,24 @@ function abrirConfiguracoes(){
 function abrirConfiguracoesSalas(){
 
   const container =
-    document.getElementById("configuracoes-container");
+    document.getElementById("conteudoConfiguracoes");
+
+  if(!container) return;
 
   container.innerHTML = `
-    <button onclick="abrirConfiguracoes()">
-      ← Voltar
-    </button>
-
-    <h2 style="margin:22px 0;">
+    <h2 style="margin:0 0 22px;">
       Salas
     </h2>
 
     <div class="cliente-card">
-
-      <label>Nome da sala</label>
+      <label for="novaSalaNome">
+        Nome da sala
+      </label>
 
       <input
         id="novaSalaNome"
-        placeholder="Ex: Sala Facial"
+        type="text"
+        placeholder="Ex: Sala de Massagem"
       >
 
       <button
@@ -12636,7 +12645,6 @@ function abrirConfiguracoesSalas(){
       >
         Adicionar sala
       </button>
-
     </div>
 
     <div id="lista-configuracoes-salas"></div>
