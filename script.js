@@ -11673,168 +11673,188 @@ async function abrirVendaProdutoAgenda(
   horario = ""
 ){
   if(!pode("produtos_vender")){
-  alert("Você não tem permissão para vender produtos.");
-  return;
-}
+    alert("Você não tem permissão para vender produtos.");
+    return;
+  }
 
-  const [
-    clientes,
-    profissionais,
-    formasPagamento
-  ] = await Promise.all([
+  const [clientes, profissionais] = await Promise.all([
     obterClientes(),
-    obterProfissionais(),
-    obterFormasPagamento()
+    obterProfissionais()
   ]);
 
-  const {
-    data: produtos,
-    error: erroProdutos
-  } = await supabaseClient
+  const { data: produtos, error } = await supabaseClient
     .from("produtos")
     .select("*")
     .eq("ativo", true)
     .eq("unidade_id", unidadeAtualId)
     .order("nome");
 
-  if(erroProdutos){
-    console.error(erroProdutos);
+  if(error){
+    console.error(error);
     alert("Erro ao carregar os produtos.");
     return;
   }
 
- if(!produtos || produtos.length === 0){
+  if(!produtos?.length){
+    abrirCadastroProdutoAgenda(profissionalPre, horario);
+    return;
+  }
 
-  abrirCadastroProdutoAgenda(
-    profissionalPre,
-    horario
-  );
-
-  return;
-}
-
-  window.produtosVendaAgendaCache =
-    produtos || [];
+  window.produtosVendaAgendaCache = produtos;
   window.clientesVendaProdutoCache = clientes || [];
+  window.salvandoVendaProdutos = false;
 
   abrirModal(`
-    <h2>Vender produto</h2>
+    <h2>Vender produtos</h2>
 
-    <div
-      style="
-        display:grid;
-        grid-template-columns:1fr 140px;
-        gap:12px;
-      "
+    <fieldset
+      id="vendaProdutosFormulario"
+      style="border:0;padding:0;margin:0;min-width:0;"
     >
-      <div>
-        <label>Data da venda</label>
-
-        <input
-          id="vendaProdutoData"
-          type="date"
-          value="${formatarDataISO(dataAgenda)}"
-          readonly
-        >
-      </div>
-
-      <div>
-        <label>Horário</label>
-
-        <input
-          id="vendaProdutoHorario"
-          type="time"
-          value="${horario}"
-          readonly
-        >
-      </div>
-    </div>
-
- <label>Cliente</label>
-
-<input
-  id="vendaProdutoCliente"
-  type="hidden"
-  value=""
->
-
-<input
-  id="vendaProdutoClienteBusca"
-  type="text"
-  placeholder="Digite o nome da cliente"
-  autocomplete="off"
-  oninput="buscarClienteVendaProduto()"
->
-
-<div
-  id="vendaProdutoClienteResultados"
-  style="
-    max-height:220px;
-    overflow-y:auto;
-    margin-bottom:12px;
-  "
-></div>
-
-<div
-  id="areaVendedorVendaProduto"
-  style="display:block;"
->
-  <label>Vendido por</label>
-
-  <select id="vendaProdutoVendedor">
-    <option value="">
-      Selecione o vendedor
-    </option>
-
-    ${(profissionais || []).map(profissional => `
-      <option
-        value="${profissional.id}"
-        ${
-          String(profissional.id) ===
-          String(profissionalPre)
-            ? "selected"
-            : ""
-        }
+      <label>Data da venda</label>
+      <input
+        id="vendaProdutoData"
+        type="date"
+        value="${formatarDataISO(dataAgenda)}"
+        readonly
       >
-        ${profissional.nome}
-      </option>
-    `).join("")}
-  </select>
-</div>
 
-    <hr style="margin:20px 0;">
+      <label>Cliente</label>
+      <input id="vendaProdutoCliente" type="hidden" value="">
 
-    <h3>Produto</h3>
+      <input
+        id="vendaProdutoClienteBusca"
+        type="text"
+        placeholder="Digite o nome da cliente"
+        autocomplete="off"
+        oninput="buscarClienteVendaProduto()"
+      >
 
-    <label>Selecione o produto</label>
+      <div
+        id="vendaProdutoClienteResultados"
+        style="max-height:220px;overflow-y:auto;"
+      ></div>
+
+      <label>Vendido por</label>
+      <select id="vendaProdutoVendedor">
+        <option value="">Selecione o vendedor</option>
+
+        ${(profissionais || []).map(profissional => `
+          <option
+            value="${Number(profissional.id)}"
+            ${
+              String(profissional.id) === String(profissionalPre)
+                ? "selected"
+                : ""
+            }
+          >
+            ${escaparTextoVendaProduto(profissional.nome)}
+          </option>
+        `).join("")}
+      </select>
+
+      <hr style="margin:20px 0;">
+
+      <div id="vendaProdutosItens"></div>
+
+      <button
+        type="button"
+        onclick="adicionarItemVendaProduto()"
+        style="margin:12px 0;"
+      >
+        Deseja adicionar mais algum produto?
+      </button>
+
+      <div class="card" style="margin-top:16px;padding:15px;">
+        <small>Total da venda</small>
+
+        <div
+          id="vendaProdutoTotal"
+          style="font-size:24px;font-weight:700;margin-top:4px;"
+        >
+          R$ 0,00
+        </div>
+      </div>
+
+      <div class="card" style="margin-top:16px;padding:14px;">
+        <strong>Pagamento pela comanda</strong>
+        <p style="margin:6px 0 0;">
+          Os produtos serão adicionados à comanda aberta
+          da cliente e cobrados junto com os serviços.
+        </p>
+      </div>
+
+      <div style="
+        display:flex;
+        justify-content:flex-end;
+        gap:10px;
+        margin-top:22px;
+      ">
+        <button type="button" onclick="fecharModal()">
+          Cancelar
+        </button>
+
+        <button
+          id="botaoConfirmarVendaProdutos"
+          type="button"
+          class="principal"
+          onclick="confirmarVendaProdutoAgenda()"
+        >
+          Adicionar à comanda
+        </button>
+      </div>
+    </fieldset>
+  `);
+
+  adicionarItemVendaProduto();
+}
+
+function escaparTextoVendaProduto(valor){
+  return String(valor ?? "")
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+}
+
+function adicionarItemVendaProduto(){
+
+  const lista = document.getElementById("vendaProdutosItens");
+  if(!lista || window.salvandoVendaProdutos) return;
+
+  const linha = document.createElement("div");
+
+  linha.className = "card item-venda-produto";
+  linha.style.cssText = "margin-bottom:12px;padding:14px;";
+
+  linha.innerHTML = `
+    <label>Produto</label>
 
     <select
-      id="vendaProdutoProduto"
-      onchange="atualizarProdutoSelecionadoAgenda()"
+      data-campo="produto"
+      onchange="atualizarProdutoSelecionadoAgenda(this)"
     >
-      <option value="">Selecione</option>
+      <option value="">Selecione o produto</option>
 
-      ${(produtos || []).map(produto => `
-        <option value="${produto.id}">
-          ${produto.nome}
-          — Estoque: ${produto.estoque_atual}
+      ${(window.produtosVendaAgendaCache || []).map(produto => `
+        <option value="${Number(produto.id)}">
+          ${escaparTextoVendaProduto(produto.nome)}
+          — Estoque: ${Number(produto.estoque_atual || 0)}
         </option>
       `).join("")}
     </select>
 
-    <div
-      style="
-        display:grid;
-        grid-template-columns:100px 1fr 1fr;
-        gap:10px;
-        margin-top:12px;
-      "
-    >
+    <div style="
+      display:grid;
+      grid-template-columns:repeat(auto-fit,minmax(100px,1fr));
+      gap:10px;
+      margin-top:12px;
+    ">
       <div>
         <label>Quantidade</label>
-
         <input
-          id="vendaProdutoQuantidade"
+          data-campo="quantidade"
           type="number"
           min="1"
           step="1"
@@ -11845,9 +11865,8 @@ async function abrirVendaProdutoAgenda(
 
       <div>
         <label>Valor unitário</label>
-
         <input
-          id="vendaProdutoValorUnitario"
+          data-campo="valor"
           type="number"
           min="0"
           step="0.01"
@@ -11857,10 +11876,9 @@ async function abrirVendaProdutoAgenda(
       </div>
 
       <div>
-        <label>Desconto</label>
-
+        <label>Desconto deste produto</label>
         <input
-          id="vendaProdutoDesconto"
+          data-campo="desconto"
           type="number"
           min="0"
           step="0.01"
@@ -11870,465 +11888,313 @@ async function abrirVendaProdutoAgenda(
       </div>
     </div>
 
-<input
-  id="vendaProdutoComissaoPercentual"
-  type="hidden"
-  value="0"
->
-
-<input
-  id="vendaProdutoComissaoValor"
-  type="hidden"
-  value="0"
->
-
-    <div
-      class="card"
-      style="
-        margin-top:18px;
-        padding:15px;
-      "
-    >
-      <small>Total da venda</small>
-
-      <div
-        id="vendaProdutoTotal"
-        style="
-          font-size:24px;
-          font-weight:700;
-          margin-top:4px;
-        "
-      >
-        R$ 0,00
-      </div>
-    </div>
-
-   <div
-  class="card"
-  style="
-    margin-top:16px;
-    padding:14px;
-  "
->
-  <strong>Pagamento pela comanda</strong>
-
-  <p style="margin:6px 0 0;">
-    O produto será adicionado à comanda aberta da cliente e cobrado junto com os serviços.
-  </p>
-</div>
-    <div
-      style="
-        display:flex;
-        justify-content:flex-end;
-        gap:10px;
-        margin-top:22px;
-      "
-    >
-      <button
-        type="button"
-        onclick="fecharModal()"
-      >
-        Cancelar
-      </button>
+    <div style="
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      gap:10px;
+      margin-top:12px;
+    ">
+      <strong data-campo="total">R$ 0,00</strong>
 
       <button
         type="button"
-        class="principal"
-        onclick="confirmarVendaProdutoAgenda()"
+        onclick="removerItemVendaProduto(this)"
       >
-        Adicionar à comanda
+        Remover produto
       </button>
     </div>
-  `);
+  `;
+
+  lista.appendChild(linha);
+  calcularVendaProdutoAgenda();
 }
-function atualizarProdutoSelecionadoAgenda(){
 
-  const produtoId =
-    document.getElementById(
-      "vendaProdutoProduto"
-    )?.value;
+function removerItemVendaProduto(botao){
 
-  const produto =
-    (
-      window.produtosVendaAgendaCache ||
-      []
-    ).find(item =>
-      String(item.id) ===
-      String(produtoId)
-    );
+  if(window.salvandoVendaProdutos) return;
 
-  const campoQuantidade =
-    document.getElementById(
-      "vendaProdutoQuantidade"
-    );
+  const linhas = document.querySelectorAll(
+    "#vendaProdutosItens .item-venda-produto"
+  );
 
-  const campoValor =
-    document.getElementById(
-      "vendaProdutoValorUnitario"
-    );
-
-  const campoComissao =
-    document.getElementById(
-      "vendaProdutoComissaoPercentual"
-    );
-
-
-  if(!produto){
-
-    if(campoValor){
-      campoValor.value = "0";
-    }
-
-    if(campoComissao){
-      campoComissao.value = "0";
-    }
-
-    calcularVendaProdutoAgenda();
+  if(linhas.length <= 1){
+    alert("Mantenha pelo menos um produto na venda.");
     return;
   }
 
+  botao.closest(".item-venda-produto")?.remove();
+  calcularVendaProdutoAgenda();
+}
 
-  if(campoQuantidade){
+function atualizarProdutoSelecionadoAgenda(campo){
 
-    campoQuantidade.value = "1";
+  const linha = campo?.closest(".item-venda-produto");
+  if(!linha) return;
 
-    campoQuantidade.max =
-      Number(
-        produto.estoque_atual || 0
-      );
+  const produto = (window.produtosVendaAgendaCache || [])
+    .find(item => String(item.id) === String(campo.value));
 
+  const quantidade = linha.querySelector(
+    '[data-campo="quantidade"]'
+  );
+
+  quantidade.value = "1";
+
+  if(produto){
+    quantidade.max = Number(produto.estoque_atual || 0);
+  }else{
+    quantidade.removeAttribute("max");
   }
 
+  linha.querySelector('[data-campo="valor"]').value =
+    Number(produto?.preco_venda || 0).toFixed(2);
 
-  if(campoValor){
-
-    campoValor.value =
-      Number(
-        produto.preco_venda || 0
-      ).toFixed(2);
-
-  }
-
-
-  if(campoComissao){
-
-    campoComissao.value =
-      Number(
-        produto.comissao_venda_percentual || 0
-      );
-
-  }
-
+  linha.querySelector('[data-campo="desconto"]').value = "0";
 
   calcularVendaProdutoAgenda();
-
 }
+
 function calcularVendaProdutoAgenda(){
 
-  const quantidade =
-    Number(
-      document.getElementById(
-        "vendaProdutoQuantidade"
-      )?.value || 0
-    );
+  const arredondar = valor =>
+    Math.round((valor + Number.EPSILON) * 100) / 100;
 
-  const valorUnitario =
-    Number(
-      document.getElementById(
-        "vendaProdutoValorUnitario"
-      )?.value || 0
-    );
+  const linhas = document.querySelectorAll(
+    "#vendaProdutosItens .item-venda-produto"
+  );
 
-  const desconto =
-    Number(
-      document.getElementById(
-        "vendaProdutoDesconto"
-      )?.value || 0
-    );
+  const itens = Array.from(linhas).map(linha => {
 
-  const percentualComissao =
-    Number(
-      document.getElementById(
-        "vendaProdutoComissaoPercentual"
-      )?.value || 0
-    );
+    const ler = campo =>
+      linha.querySelector(`[data-campo="${campo}"]`).value;
 
-  const subtotal =
-    quantidade * valorUnitario;
+    const produtoId = Number(ler("produto"));
+    const quantidade = Number(ler("quantidade"));
+    const valorUnitario = Number(ler("valor"));
+    const desconto = Number(ler("desconto"));
 
-  const total =
-    Math.max(
+    const produto = (window.produtosVendaAgendaCache || [])
+      .find(item => String(item.id) === String(produtoId));
+
+    const subtotal = arredondar(quantidade * valorUnitario);
+
+    const total = Math.max(
       0,
-      subtotal - desconto
+      arredondar(subtotal - desconto)
     );
 
-  const comissao =
-    total *
-    percentualComissao /
-    100;
+    linha.querySelector('[data-campo="total"]').textContent =
+      Number.isFinite(total) ? dinheiro(total) : "Valor inválido";
 
-  const areaTotal =
-    document.getElementById(
-      "vendaProdutoTotal"
-    );
+    return {
+      produto,
+      produtoId,
+      quantidade,
+      valorUnitario,
+      desconto,
+      subtotal,
+      total,
+      percentualComissao: Number(
+        produto?.comissao_venda_percentual || 0
+      )
+    };
+  });
 
-  const campoComissaoValor =
-    document.getElementById(
-      "vendaProdutoComissaoValor"
-    );
+  const total = arredondar(
+    itens.reduce((soma, item) =>
+      soma + (Number.isFinite(item.total) ? item.total : 0),
+      0
+    )
+  );
+
+  const areaTotal = document.getElementById("vendaProdutoTotal");
 
   if(areaTotal){
-
-    areaTotal.textContent =
-      dinheiro(total);
-
+    areaTotal.textContent = dinheiro(total);
   }
 
-  if(campoComissaoValor){
-
-    campoComissaoValor.value =
-      dinheiro(comissao);
-
-  }
-
-  return {
-    quantidade,
-    valorUnitario,
-    desconto,
-    subtotal,
-    total,
-    percentualComissao,
-    comissao
-  };
+  return { itens, total };
 }
+
 async function confirmarVendaProdutoAgenda(){
+
+  if(window.salvandoVendaProdutos) return;
+
   if(!pode("produtos_vender")){
-  alert("Você não tem permissão para vender produtos.");
-  return;
-}
-  
+    alert("Você não tem permissão para vender produtos.");
+    return;
+  }
 
-  const clienteId =
-    Number(
-      document.getElementById(
-        "vendaProdutoCliente"
-      )?.value || 0
-    );
+  const clienteId = Number(
+    document.getElementById("vendaProdutoCliente")?.value || 0
+  );
 
-  const vendedorId =
-    Number(
-      document.getElementById(
-        "vendaProdutoVendedor"
-      )?.value || 0
-    );
-
-  const produtoId =
-    Number(
-      document.getElementById(
-        "vendaProdutoProduto"
-      )?.value || 0
-    );
+  const vendedorId = Number(
+    document.getElementById("vendaProdutoVendedor")?.value || 0
+  );
 
   const dataVenda =
-    document.getElementById(
-      "vendaProdutoData"
-    )?.value;
+    document.getElementById("vendaProdutoData")?.value;
 
-  const horario =
-    document.getElementById(
-      "vendaProdutoHorario"
-    )?.value;
-
-  const tipoRecebimento =
-    document.getElementById(
-      "vendaProdutoTipoRecebimento"
-    )?.value;
-
-  const formaPagamentoId =
-    Number(
-      document.getElementById(
-        "vendaProdutoFormaPagamento"
-      )?.value || 0
-    );
-
-  const valores =
-    calcularVendaProdutoAgenda();
-
-  const produto =
-    (
-      window.produtosVendaAgendaCache ||
-      []
-    ).find(item =>
-      String(item.id) ===
-      String(produtoId)
-    );
+  const { itens, total } = calcularVendaProdutoAgenda();
 
   if(!clienteId){
-    alert("Selecione a cliente.");
+    alert("Digite o nome e selecione a cliente nas opções.");
     return;
   }
 
-if(
-  valores.percentualComissao > 0 &&
-  !vendedorId
-){
-  alert("Selecione quem realizou a venda.");
-  return;
-}
-  if(!produto){
-    alert("Selecione o produto.");
+  if(!dataVenda){
+    alert("Informe a data da venda.");
     return;
   }
 
-  if(
-    !Number.isInteger(valores.quantidade) ||
-    valores.quantidade <= 0
-  ){
-    alert("Informe uma quantidade válida.");
+  if(!itens.length){
+    alert("Adicione pelo menos um produto.");
     return;
   }
 
-  if(
-    valores.quantidade >
-    Number(produto.estoque_atual || 0)
-  ){
-    alert(
-      `Estoque insuficiente. Disponível: ${
-        produto.estoque_atual || 0
-      }.`
-    );
+  const quantidades = new Map();
+
+  for(const [indice, item] of itens.entries()){
+
+    if(!item.produto){
+      alert(`Selecione o produto no item ${indice + 1}.`);
+      return;
+    }
+
+    if(!Number.isInteger(item.quantidade) || item.quantidade <= 0){
+      alert(`Informe uma quantidade válida para ${item.produto.nome}.`);
+      return;
+    }
+
+    if(
+      !Number.isFinite(item.valorUnitario) ||
+      item.valorUnitario < 0 ||
+      !Number.isFinite(item.subtotal)
+    ){
+      alert(`Informe um valor válido para ${item.produto.nome}.`);
+      return;
+    }
+
+    if(
+      !Number.isFinite(item.desconto) ||
+      item.desconto < 0 ||
+      item.desconto > item.subtotal
+    ){
+      alert(`Confira o desconto de ${item.produto.nome}.`);
+      return;
+    }
+
+    if(
+      !Number.isFinite(item.percentualComissao) ||
+      item.percentualComissao < 0 ||
+      item.percentualComissao > 100
+    ){
+      alert(`Confira a comissão cadastrada em ${item.produto.nome}.`);
+      return;
+    }
+
+    if(item.percentualComissao > 0 && !vendedorId){
+      alert("Selecione quem realizou a venda.");
+      return;
+    }
+
+    // Soma também produtos repetidos em linhas diferentes.
+    const quantidadeTotal =
+      (quantidades.get(item.produtoId) || 0) + item.quantidade;
+
+    quantidades.set(item.produtoId, quantidadeTotal);
+
+    if(quantidadeTotal > Number(item.produto.estoque_atual || 0)){
+      alert(
+        `Estoque insuficiente de ${item.produto.nome}. ` +
+        `Disponível: ${item.produto.estoque_atual || 0}.`
+      );
+      return;
+    }
+  }
+
+  const resumo = itens.map(item =>
+    `${item.quantidade}x ${item.produto.nome}: ${dinheiro(item.total)}`
+  ).join("\n");
+
+  if(!confirm(
+    `Adicionar à comanda?\n\n${resumo}\n\nTotal: ${dinheiro(total)}`
+  )){
     return;
   }
 
-  if(
-    !Number.isFinite(valores.valorUnitario) ||
-    valores.valorUnitario < 0
-  ){
-    alert("Informe um valor unitário válido.");
-    return;
-  }
-
-  if(
-    valores.desconto < 0 ||
-    valores.desconto > valores.subtotal
-  ){
-    alert(
-      "O desconto não pode ser maior que o subtotal."
-    );
-    return;
-  }
-
-  if(
-    valores.percentualComissao < 0 ||
-    valores.percentualComissao > 100
-  ){
-    alert(
-      "Informe uma comissão entre 0% e 100%."
-    );
-    return;
-  }
-
- 
-
-  if(
-    !confirm(
-      `Confirmar venda de ${valores.quantidade} unidade(s) de ${produto.nome} por ${dinheiro(valores.total)}?`
-    )
-  ){
-    return;
-  }
+  const formulario =
+    document.getElementById("vendaProdutosFormulario");
 
   const botao =
-    document.querySelector(
-      'button[onclick="confirmarVendaProdutoAgenda()"]'
-    );
+    document.getElementById("botaoConfirmarVendaProdutos");
 
-  if(botao){
-    botao.disabled = true;
-    botao.textContent = "Finalizando...";
-  }
+  window.salvandoVendaProdutos = true;
+
+  if(formulario) formulario.disabled = true;
+  if(botao) botao.textContent = "Adicionando...";
 
   try{
 
-const {
-  data: comandaId,
-  error
-} = await supabaseClient.rpc(
-  "lancar_produto_na_comanda",
-  {
-    p_unidade_id:
-      Number(unidadeAtualId),
+    const { data: comandaId, error } =
+      await supabaseClient.rpc(
+        "lancar_produtos_na_comanda",
+        {
+          p_unidade_id: Number(unidadeAtualId),
+          p_cliente_id: clienteId,
+          p_vendedor_id: vendedorId || null,
+          p_data: dataVenda,
 
-    p_cliente_id:
-      clienteId,
+          p_itens: itens.map(item => ({
+            produto_id: item.produtoId,
+            quantidade: item.quantidade,
+            valor_unitario: item.valorUnitario,
+            desconto: item.desconto
+          }))
+        }
+      );
 
-    p_produto_id:
-      produtoId,
-
-    p_vendedor_id:
-      vendedorId || null,
-
-    p_quantidade:
-      valores.quantidade,
-
-    p_valor_unitario:
-      valores.valorUnitario,
-
-    p_desconto:
-      valores.desconto,
-
-    p_data:
-      dataVenda
-  }
-);
-
-    if(error){
-      throw error;
-    }
+    if(error) throw error;
 
     fecharModal();
 
-  if(
-  typeof carregarComandas ===
-  "function"
-){
-  carregarComandas();
-}
+    alert(`Produtos adicionados à comanda #${comandaId}.`);
 
-if(
-  typeof carregarProdutosEstoque ===
-  "function"
-){
-  carregarProdutosEstoque(
-    window.produtosEstoqueAbaAtual ||
-    "ativos"
-  );
-}
+    // Falhas ao atualizar a tela não são falhas na venda.
+    try{
+      if(typeof carregarComandas === "function"){
+        await carregarComandas();
+      }
 
-alert(
-  `Produto adicionado à comanda #${comandaId}.`
-);
+      if(typeof carregarProdutosEstoque === "function"){
+        await carregarProdutosEstoque(
+          window.produtosEstoqueAbaAtual || "ativos"
+        );
+      }
+    }catch(erroAtualizacao){
+      console.error("Erro ao atualizar a tela:", erroAtualizacao);
+    }
 
   }catch(erro){
 
-    console.error(
-      "Erro ao vender produto:",
-      erro
-    );
+    console.error("Erro ao vender produtos:", erro);
 
     alert(
-      erro?.message ||
-      "Não foi possível concluir a venda."
+      "Nenhum produto desta tentativa foi adicionado.\n\n" +
+      (erro?.message || "Não foi possível concluir a venda.")
     );
 
-    if(botao){
-      botao.disabled = false;
-      botao.textContent = "Confirmar venda";
-    }
+  }finally{
 
+    window.salvandoVendaProdutos = false;
+
+    if(formulario) formulario.disabled = false;
+    if(botao) botao.textContent = "Adicionar à comanda";
   }
-
 }
+
 async function abrirModalBloqueioAgenda(id = null, profissionalPre = "", horarioPre = ""){
 
   let bloqueio = null;
