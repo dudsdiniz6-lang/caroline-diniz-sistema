@@ -841,120 +841,198 @@ function abrirAbaClientes(
   carregarClientes();
 
 }
-async function carregarClientes(){
+async function carregarClientes(pagina = 0){
 
   const lista = document.getElementById("listaClientes");
-
   if(!lista) return;
 
-lista.innerHTML = `
-  <div
-    style="
+  const requisicao =
+    (window.clientesRequisicaoAtual || 0) + 1;
+
+  window.clientesRequisicaoAtual = requisicao;
+
+  // Aguarda uma pequena pausa na digitação.
+  await new Promise(resolve => setTimeout(resolve, 250));
+
+  if(requisicao !== window.clientesRequisicaoAtual) return;
+
+  const porPagina = 50;
+  pagina = Math.max(0, Number(pagina) || 0);
+
+  const ativo = window.clientesAbaAtual !== "desativados";
+
+  const busca = (
+    document.getElementById("buscaCliente")?.value || ""
+  ).trim();
+
+  // Remove caracteres especiais da expressão de busca.
+  const termo = busca
+    .replace(/[%_\\(),."']/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+
+  const escapar = valor => String(valor ?? "")
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+
+  const abas = `
+    <div style="
       display:flex;
       gap:10px;
       margin-bottom:20px;
       flex-wrap:wrap;
-    "
-  >
-    <button
-      id="abaClientesAtivos"
-      type="button"
-      class="${
-        window.clientesAbaAtual === "desativados"
-          ? ""
-          : "principal"
-      }"
-      onclick="abrirAbaClientes('ativos')"
-    >
-      Clientes ativos
-    </button>
+    ">
+      <button
+        type="button"
+        class="${ativo ? "principal" : ""}"
+        onclick="abrirAbaClientes('ativos')"
+      >
+        Clientes ativos
+      </button>
 
-    <button
-      id="abaClientesDesativados"
-      type="button"
-      class="${
-        window.clientesAbaAtual === "desativados"
-          ? "principal"
-          : ""
-      }"
-      onclick="abrirAbaClientes('desativados')"
-    >
-      Clientes desativados
-    </button>
-  </div>
-`;
+      <button
+        type="button"
+        class="${ativo ? "" : "principal"}"
+        onclick="abrirAbaClientes('desativados')"
+      >
+        Clientes desativados
+      </button>
+    </div>
+  `;
 
-  const busca =
-    document.getElementById("buscaCliente")
-      ?.value
-      ?.toLowerCase()
-      .trim() || "";
+  lista.innerHTML = abas + `
+    <div class="card">Carregando clientes...</div>
+  `;
 
-  const { data, error } = await supabaseClient
-    .from("clientes")
-    .select("*")
- .eq(
-  "ativo",
-  window.clientesAbaAtual !==
-    "desativados"
-)
-    .order("nome");
+  try{
 
-  if(error){
-    lista.innerHTML = "<div class='card'>Erro ao carregar clientes.</div>";
-    return;
-  }
+    let consulta = supabaseClient
+      .from("clientes")
+      .select("id, nome, telefone, observacoes, vip, ativo")
+      .eq("ativo", ativo)
+      .order("nome")
+      .order("id");
 
-  const clientes = (data || []).filter(cliente =>
-    !busca ||
-    cliente.nome?.toLowerCase().includes(busca) ||
-    String(cliente.telefone || "").includes(busca)
-  );
+    if(termo){
+      consulta = consulta.or(
+        `nome.ilike.%${termo}%,telefone.ilike.%${termo}%`
+      );
+    }
 
-  if(clientes.length === 0){
-    lista.innerHTML = "<div class='card'>Nenhum cliente encontrado.</div>";
-    return;
-  }
+    // Busca um registro extra para saber se há próxima página.
+    const inicio = pagina * porPagina;
 
-  clientes.forEach((cliente)=>{
+    const { data, error } = await consulta.range(
+      inicio,
+      inicio + porPagina
+    );
 
-    lista.innerHTML += `
+    // Ignora respostas de pesquisas anteriores.
+    if(requisicao !== window.clientesRequisicaoAtual) return;
+
+    if(error) throw error;
+
+    const temProxima = (data || []).length > porPagina;
+    const clientes = (data || []).slice(0, porPagina);
+
+    const cartoes = clientes.map(cliente => `
       <div class="card">
         <h3>
-  ${cliente.vip ? "⭐ " : ""}
-  ${cliente.nome}
-</h3>
-        <p>${cliente.telefone || "Sem telefone"}</p>
-        <small>${cliente.observacoes || ""}</small>
+          ${cliente.vip ? "⭐ " : ""}
+          ${escapar(cliente.nome)}
+        </h3>
+
+        <p>
+          ${escapar(cliente.telefone || "Sem telefone")}
+        </p>
+
+        <small>${escapar(cliente.observacoes)}</small>
 
         <br><br>
 
-      <button class="principal" onclick="abrirModalCliente(${cliente.id})">
-  Editar
-</button>
+        <button
+          class="principal"
+          onclick="abrirModalCliente(${Number(cliente.id)})"
+        >
+          Editar
+        </button>
 
-<button onclick="abrirHistoricoCliente(${cliente.id})">
-  Histórico
-</button>
+        <button
+          onclick="abrirHistoricoCliente(${Number(cliente.id)})"
+        >
+          Histórico
+        </button>
 
-<button onclick="abrirVendaCreditoCliente(${cliente.id})">
-  Vender crédito
-</button>
+        <button
+          onclick="abrirVendaCreditoCliente(${Number(cliente.id)})"
+        >
+          Vender crédito
+        </button>
 
-<button
-  type="button"
-  onclick="alterarStatusCliente(
-    ${cliente.id},
-    ${cliente.ativo ? false : true}
-  )"
->
-  ${cliente.ativo ? "Desativar" : "Ativar"}
-</button>
+        <button
+          type="button"
+          onclick="alterarStatusCliente(
+            ${Number(cliente.id)},
+            ${!cliente.ativo}
+          )"
+        >
+          ${cliente.ativo ? "Desativar" : "Ativar"}
+        </button>
+      </div>
+    `).join("");
+
+    const navegacao = `
+      <div style="
+        display:flex;
+        align-items:center;
+        gap:12px;
+        margin:20px 0;
+        flex-wrap:wrap;
+      ">
+        <button
+          type="button"
+          ${pagina === 0 ? "disabled" : ""}
+          onclick="carregarClientes(${pagina - 1})"
+        >
+          Anterior
+        </button>
+
+        <span>Página ${pagina + 1}</span>
+
+        <button
+          type="button"
+          ${temProxima ? "" : "disabled"}
+          onclick="carregarClientes(${pagina + 1})"
+        >
+          Próxima
+        </button>
       </div>
     `;
 
-  });
+    lista.innerHTML = abas
+      + (cartoes || `
+          <div class="card">Nenhum cliente encontrado.</div>
+        `)
+      + navegacao;
 
+  }catch(error){
+
+    if(requisicao !== window.clientesRequisicaoAtual) return;
+
+    console.error("Erro ao carregar clientes:", error);
+
+    lista.innerHTML = abas + `
+      <div class="card">
+        Não foi possível carregar os clientes.
+        <button type="button" onclick="carregarClientes()">
+          Tentar novamente
+        </button>
+      </div>
+    `;
+  }
 }
 async function abrirVendaCreditoCliente(clienteId){
 
