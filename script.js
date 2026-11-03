@@ -11715,6 +11715,7 @@ async function abrirVendaProdutoAgenda(
 
   window.produtosVendaAgendaCache =
     produtos || [];
+  window.clientesVendaProdutoCache = clientes || [];
 
   abrirModal(`
     <h2>Vender produto</h2>
@@ -11749,17 +11750,30 @@ async function abrirVendaProdutoAgenda(
       </div>
     </div>
 
-    <label>Cliente</label>
+ <label>Cliente</label>
 
-    <select id="vendaProdutoCliente">
-      <option value="">Selecione a cliente</option>
+<input
+  id="vendaProdutoCliente"
+  type="hidden"
+  value=""
+>
 
-      ${(clientes || []).map(cliente => `
-        <option value="${cliente.id}">
-          ${cliente.nome}
-        </option>
-      `).join("")}
-    </select>
+<input
+  id="vendaProdutoClienteBusca"
+  type="text"
+  placeholder="Digite o nome da cliente"
+  autocomplete="off"
+  oninput="buscarClienteVendaProduto()"
+>
+
+<div
+  id="vendaProdutoClienteResultados"
+  style="
+    max-height:220px;
+    overflow-y:auto;
+    margin-bottom:12px;
+  "
+></div>
 
 <div
   id="areaVendedorVendaProduto"
@@ -23563,4 +23577,89 @@ function enviarConfirmacoesDia(){
     "O envio de todas as confirmações será configurado depois."
   );
 
+}
+function buscarClienteVendaProduto(){
+
+  const campo =
+    document.getElementById("vendaProdutoClienteBusca");
+
+  const campoId =
+    document.getElementById("vendaProdutoCliente");
+
+  const resultados =
+    document.getElementById("vendaProdutoClienteResultados");
+
+  if(!campo || !campoId || !resultados) return;
+
+  // Se o nome for alterado, exige uma nova seleção.
+  campoId.value = "";
+  resultados.replaceChildren();
+
+  const normalizar = valor => String(valor || "")
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .trim();
+
+  const busca = normalizar(campo.value);
+
+  // Não mostra nomes enquanto o campo estiver vazio.
+  if(!busca) return;
+
+  const clientes = (
+    window.clientesVendaProdutoCache || []
+  ).filter(cliente =>
+    normalizar(cliente.nome).includes(busca)
+  ).slice(0, 15);
+
+  if(!clientes.length){
+    resultados.textContent = "Nenhuma cliente encontrada.";
+    return;
+  }
+
+  clientes.forEach(cliente => {
+
+    const botao = document.createElement("button");
+
+    botao.type = "button";
+
+    botao.style.cssText = `
+      display:block;
+      width:100%;
+      text-align:left;
+      padding:10px;
+      margin-top:4px;
+    `;
+
+    botao.textContent = cliente.nome
+      + (cliente.telefone ? ` — ${cliente.telefone}` : "");
+
+    botao.onclick = () =>
+      selecionarClienteVendaProduto(cliente.id);
+
+    resultados.appendChild(botao);
+  });
+}
+
+function selecionarClienteVendaProduto(clienteId){
+
+  const cliente = (
+    window.clientesVendaProdutoCache || []
+  ).find(item =>
+    String(item.id) === String(clienteId)
+  );
+
+  if(!cliente) return;
+
+  document.getElementById(
+    "vendaProdutoCliente"
+  ).value = cliente.id;
+
+  document.getElementById(
+    "vendaProdutoClienteBusca"
+  ).value = cliente.nome;
+
+  document.getElementById(
+    "vendaProdutoClienteResultados"
+  ).replaceChildren();
 }
