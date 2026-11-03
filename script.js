@@ -3654,6 +3654,23 @@ async function abrirModalAgendamento(id = null, profissionalPre = "", horarioPre
   </div>
 
 </div>
+    ${!id ? `
+  <div id="agServicosExtras"></div>
+
+  <button
+    type="button"
+    onclick="adicionarServicoSequencia()"
+    style="margin:14px 0;"
+  >
+    + Adicionar mais um serviço
+  </button>
+
+  <div
+    id="agResumoSequencia"
+    class="card"
+    style="display:none;"
+  ></div>
+` : ""}
     <textarea
   id="agObservacoes"
   rows="2"
@@ -3754,6 +3771,34 @@ ${id && pode("agenda_cancelar") ? `
 carregarServicosParaBuscaAgendamento(servicos);
 calcularTotalAgendamento();
 carregarClientesParaBuscaAgendamento();
+
+if(!id){
+
+  [
+    "agHorario",
+    "agDuracao",
+    "agValor",
+    "agDesconto",
+    "agTipoDesconto"
+  ].forEach(campoId => {
+
+    const campo =
+      document.getElementById(campoId);
+
+    if(!campo) return;
+
+    campo.addEventListener(
+      "input",
+      atualizarResumoServicosSequencia
+    );
+
+    campo.addEventListener(
+      "change",
+      atualizarResumoServicosSequencia
+    );
+  });
+}
+
 }
 async function faturarAgendamento(id){
 
@@ -5952,16 +5997,33 @@ function alterarTipoRecebimentoPacote(){
       ? "block"
       : "none";
 }
-async function verificarPacoteDisponivel(){
+async function verificarPacoteDisponivel(contexto = null){
 
-  const clienteId = Number(document.getElementById("agCliente")?.value || 0);
-  const servicoId = Number(document.getElementById("agServico")?.value || 0);
+  const clienteId = Number(
+    document.getElementById("agCliente")?.value || 0
+  );
 
-  const area = document.getElementById("areaPacoteAgendamento");
+  const obterServicoId = () => Number(
+    contexto
+      ? contexto.querySelector('[data-seq="servico"]').value
+      : document.getElementById("agServico")?.value || 0
+  );
+
+  const servicoId = obterServicoId();
+
+  const area = contexto
+    ? contexto.querySelector('[data-seq="pacote"]')
+    : document.getElementById("areaPacoteAgendamento");
 
   if(!area) return;
 
-  area.innerHTML = "";
+  // Identifica esta consulta para ignorar respostas antigas.
+  const consulta = String(
+    (Number(area.dataset.consulta) || 0) + 1
+  );
+
+  area.dataset.consulta = consulta;
+  area.replaceChildren();
 
   if(!clienteId || !servicoId) return;
 
@@ -5984,12 +6046,21 @@ async function verificarPacoteDisponivel(){
 
   if(error || !data) return;
 
+  if(
+    !area.isConnected ||
+    area.dataset.consulta !== consulta ||
+    Number(document.getElementById("agCliente")?.value) !== clienteId ||
+    obterServicoId() !== servicoId
+  ){
+    return;
+  }
+
+  let pacoteEncontrado = null;
   let saldoEncontrado = null;
-  let pacoteClienteEncontrado = null;
 
-  data.forEach((pacoteCliente)=>{
+  data.forEach(pacote => {
 
-    (pacoteCliente.pacotes_saldos || []).forEach((saldo)=>{
+    (pacote.pacotes_saldos || []).forEach(saldo => {
 
       const restante =
         Number(saldo.quantidade_total || 0) -
@@ -6000,12 +6071,10 @@ async function verificarPacoteDisponivel(){
         restante > 0 &&
         saldo.cancelado !== true
       ){
+        pacoteEncontrado = pacote;
         saldoEncontrado = saldo;
-        pacoteClienteEncontrado = pacoteCliente;
       }
-
     });
-
   });
 
   if(!saldoEncontrado) return;
@@ -6014,31 +6083,68 @@ async function verificarPacoteDisponivel(){
     Number(saldoEncontrado.quantidade_total || 0) -
     Number(saldoEncontrado.quantidade_usada || 0);
 
-  area.innerHTML = `
-    <div class="card" style="margin-bottom:15px;">
-      <h3>Pacote disponível</h3>
+  const card = document.createElement("div");
 
-      <p>
-        ${pacoteClienteEncontrado.pacotes?.nome || "Pacote"}
-      </p>
+  card.className = "card";
+  card.style.marginBottom = "15px";
 
-      <small>
-        Saldo restante: ${restante} sessão(ões)
-      </small>
+  const titulo = document.createElement("h3");
+  titulo.textContent = "Pacote disponível";
 
-      <label style="display:flex;gap:10px;align-items:center;margin-top:12px;">
-        <input
-          id="agUsarPacote"
-          type="checkbox"
-          onchange="alternarUsoPacoteAgenda()"
-          data-pacote-cliente-id="${pacoteClienteEncontrado.id}"
-          data-pacote-saldo-id="${saldoEncontrado.id}"
-          style="width:auto;height:auto;margin:0;"
-        >
-        Usar pacote neste atendimento
-      </label>
-    </div>
+  const nome = document.createElement("p");
+  nome.textContent =
+    pacoteEncontrado.pacotes?.nome || "Pacote";
+
+  const informacao = document.createElement("small");
+  informacao.textContent =
+    `Saldo restante: ${restante} sessão(ões)`;
+
+  const label = document.createElement("label");
+
+  label.style.cssText = `
+    display:flex;
+    gap:10px;
+    align-items:center;
+    margin-top:12px;
   `;
+
+  const checkbox = document.createElement("input");
+
+  checkbox.type = "checkbox";
+
+  checkbox.id = contexto
+    ? "agUsarPacoteExtra" + contexto.dataset.indice
+    : "agUsarPacote";
+
+  checkbox.style.cssText =
+    "width:auto;height:auto;margin:0;";
+
+  checkbox.dataset.clienteId = String(clienteId);
+  checkbox.dataset.servicoId = String(servicoId);
+
+  checkbox.dataset.pacoteClienteId =
+    String(pacoteEncontrado.id);
+
+  checkbox.dataset.pacoteSaldoId =
+    String(saldoEncontrado.id);
+
+  checkbox.onchange = () => {
+
+    if(contexto){
+      alternarPacoteServicoSequencia(checkbox);
+    }else{
+      alternarUsoPacoteAgenda();
+      atualizarResumoServicosSequencia();
+    }
+  };
+
+  label.append(
+    checkbox,
+    document.createTextNode("Usar pacote neste atendimento")
+  );
+
+  card.append(titulo, nome, informacao, label);
+  area.appendChild(card);
 }
 
 async function confirmarVendaPacote(pacoteId){
@@ -6716,6 +6822,7 @@ function calcularTotalAgendamento(){
   const total = Math.max(valor - descontoFinal, 0);
 
   document.getElementById("agTotal").value = total.toFixed(2);
+  atualizarResumoServicosSequencia();
 }
 function horarioParaMinutos(horario){
   const [h, m] = horario.split(":").map(Number);
@@ -23528,4 +23635,446 @@ function selecionarClienteVendaProduto(clienteId){
   document.getElementById(
     "vendaProdutoClienteResultados"
   ).replaceChildren();
+}
+function adicionarServicoSequencia(){
+
+  const area =
+    document.getElementById("agServicosExtras");
+
+  if(!area) return;
+
+  if(document.getElementById("agendamentoId")?.value){
+    return;
+  }
+
+  const linha = document.createElement("div");
+
+  linha.className = "card ag-servico-extra";
+
+  window.indiceServicoSequencia =
+    (window.indiceServicoSequencia || 0) + 1;
+
+  linha.dataset.indice =
+    String(window.indiceServicoSequencia);
+
+  linha.style.cssText =
+    "padding:14px;margin-top:14px;";
+
+  linha.innerHTML = `
+    <strong data-seq="horario">
+      Próximo serviço
+    </strong>
+
+    <label>Serviço</label>
+
+    <input
+      data-seq="busca"
+      placeholder="Digite para buscar o serviço..."
+      autocomplete="off"
+      oninput="buscarServicoSequencia(this)"
+    >
+
+    <input
+      data-seq="servico"
+      type="hidden"
+    >
+
+    <div
+      data-seq="resultados"
+      class="resultado-busca"
+    ></div>
+
+    <div data-seq="pacote"></div>
+
+    <div class="form-grid-2">
+
+      <div>
+        <label>Duração em minutos</label>
+
+        <input
+          data-seq="duracao"
+          type="number"
+          min="1"
+          step="1"
+          value="30"
+          oninput="atualizarResumoServicosSequencia()"
+        >
+      </div>
+
+      <div>
+        <label>Valor</label>
+
+        <input
+          data-seq="valor"
+          type="number"
+          min="0"
+          step="0.01"
+          value="0"
+          oninput="atualizarResumoServicosSequencia()"
+        >
+      </div>
+
+      <div>
+        <label>Desconto</label>
+
+        <input
+          data-seq="desconto"
+          type="number"
+          min="0"
+          step="0.01"
+          value="0"
+          oninput="atualizarResumoServicosSequencia()"
+        >
+      </div>
+
+      <div>
+        <label>Tipo de desconto</label>
+
+        <select
+          data-seq="tipo"
+          onchange="atualizarResumoServicosSequencia()"
+        >
+          <option value="valor">R$</option>
+          <option value="porcentagem">%</option>
+        </select>
+      </div>
+
+    </div>
+
+    <p>
+      Total deste serviço:
+      <strong data-seq="total">R$ 0,00</strong>
+    </p>
+
+    <button
+      type="button"
+      onclick="
+        this.closest('.ag-servico-extra').remove();
+        atualizarResumoServicosSequencia();
+      "
+    >
+      Remover serviço
+    </button>
+  `;
+
+  area.appendChild(linha);
+
+  atualizarResumoServicosSequencia();
+}
+function buscarServicoSequencia(campo){
+
+  const linha =
+    campo.closest(".ag-servico-extra");
+
+  if(!linha) return;
+
+  const campoServico =
+    linha.querySelector('[data-seq="servico"]');
+
+  const resultados =
+    linha.querySelector('[data-seq="resultados"]');
+
+  const areaPacote =
+    linha.querySelector('[data-seq="pacote"]');
+
+  // Ao editar o nome, exige selecionar o serviço novamente.
+  campoServico.value = "";
+
+  const pacoteMarcado =
+    areaPacote.querySelector("input:checked");
+
+  if(pacoteMarcado){
+    pacoteMarcado.checked = false;
+    alternarPacoteServicoSequencia(pacoteMarcado);
+  }
+
+  areaPacote.replaceChildren();
+  resultados.replaceChildren();
+
+  const normalizar = valor =>
+    String(valor || "")
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "")
+      .toLowerCase()
+      .trim();
+
+  const termo = normalizar(campo.value);
+
+  if(!termo){
+    atualizarResumoServicosSequencia();
+    return;
+  }
+
+  const encontrados = servicosAgendamentoCache
+    .filter(servico =>
+      normalizar(servico.nome).includes(termo)
+    )
+    .slice(0, 10);
+
+  if(!encontrados.length){
+    resultados.textContent =
+      "Nenhum serviço encontrado.";
+  }
+
+  encontrados.forEach(servico => {
+
+    const botao = document.createElement("button");
+
+    botao.type = "button";
+
+    botao.style.cssText = `
+      display:block;
+      width:100%;
+      text-align:left;
+      margin-top:4px;
+      padding:10px;
+    `;
+
+    botao.textContent =
+      `${servico.nome} — ${dinheiro(servico.valor)}`
+      + ` • ${servico.duracao || 30} min`;
+
+    botao.onclick = () => {
+
+      campoServico.value = servico.id;
+      campo.value = servico.nome;
+
+      resultados.replaceChildren();
+
+      linha.querySelector(
+        '[data-seq="duracao"]'
+      ).value = servico.duracao || 30;
+
+      linha.querySelector(
+        '[data-seq="valor"]'
+      ).value = Number(servico.valor || 0).toFixed(2);
+
+      linha.querySelector(
+        '[data-seq="desconto"]'
+      ).value = "0";
+
+      atualizarResumoServicosSequencia();
+
+      verificarPacoteDisponivel(linha);
+    };
+
+    resultados.appendChild(botao);
+  });
+
+  atualizarResumoServicosSequencia();
+}
+function lerServicosSequencia(){
+
+  const valor = id =>
+    document.getElementById(id)?.value;
+
+  const primeiro = {
+    servico_id: Number(valor("agServico")),
+    nome: valor("agServicoBusca") || "Primeiro serviço",
+    duracao: Number(valor("agDuracao")),
+    valor: Number(valor("agValor")),
+    desconto: Number(valor("agDesconto")),
+    tipo_desconto: valor("agTipoDesconto") || "valor",
+    checkboxPacote:
+      document.getElementById("agUsarPacote")
+  };
+
+  const extras = Array.from(
+    document.querySelectorAll(
+      "#agServicosExtras .ag-servico-extra"
+    )
+  ).map(linha => {
+
+    const ler = campo =>
+      linha.querySelector(
+        `[data-seq="${campo}"]`
+      ).value;
+
+    return {
+      linha,
+      servico_id: Number(ler("servico")),
+      nome: ler("busca") || "Selecione o serviço",
+      duracao: Number(ler("duracao")),
+      valor: Number(ler("valor")),
+      desconto: Number(ler("desconto")),
+      tipo_desconto: ler("tipo"),
+
+      checkboxPacote: linha.querySelector(
+        '[data-seq="pacote"] input[type="checkbox"]'
+      )
+    };
+  });
+
+  return [primeiro, ...extras].map(item => {
+
+    const descontoReal =
+      item.tipo_desconto === "porcentagem"
+        ? item.valor * item.desconto / 100
+        : item.desconto;
+
+    const total = Math.round(
+      (
+        Math.max(0, item.valor - descontoReal)
+        + Number.EPSILON
+      ) * 100
+    ) / 100;
+
+    return { ...item, total };
+  });
+}
+
+function montarHorariosSequencia(horario, servicos){
+
+  if(!/^\d{2}:\d{2}(:\d{2})?$/.test(horario || "")){
+    throw new Error("Informe o horário inicial.");
+  }
+
+  const [hora, minuto] =
+    horario.split(":").map(Number);
+
+  if(hora > 23 || minuto > 59){
+    throw new Error("Horário inicial inválido.");
+  }
+
+  let inicio = hora * 60 + minuto;
+
+  const formatar = minutos => {
+    const horas = Math.floor(minutos / 60);
+    const minutosRestantes = minutos % 60;
+
+    return String(horas).padStart(2, "0")
+      + ":"
+      + String(minutosRestantes).padStart(2, "0");
+  };
+
+  return servicos.map(item => {
+
+    if(
+      !Number.isInteger(item.duracao) ||
+      item.duracao <= 0
+    ){
+      throw new Error(
+        "Informe uma duração inteira e maior que zero em cada serviço."
+      );
+    }
+
+    const fim = inicio + item.duracao;
+
+    if(inicio >= 1440 || fim > 1440){
+      throw new Error(
+        "A sequência ultrapassa a meia-noite. Ajuste os horários ou as durações."
+      );
+    }
+
+    const resultado = {
+      ...item,
+      horario: formatar(inicio),
+      termino: formatar(fim)
+    };
+
+    inicio = fim;
+
+    return resultado;
+  });
+}
+
+function atualizarResumoServicosSequencia(){
+
+  const area =
+    document.getElementById("agResumoSequencia");
+
+  if(!area) return;
+
+  const itens = lerServicosSequencia();
+
+  area.style.display =
+    itens.length > 1 ? "block" : "none";
+
+  area.replaceChildren();
+
+  if(itens.length <= 1) return;
+
+  try{
+
+    const horarios = montarHorariosSequencia(
+      document.getElementById("agHorario")?.value,
+      itens
+    );
+
+    const titulo = document.createElement("strong");
+
+    titulo.textContent = "Resumo dos atendimentos";
+    area.appendChild(titulo);
+
+    horarios.forEach(item => {
+
+      if(item.linha){
+
+        item.linha.querySelector(
+          '[data-seq="horario"]'
+        ).textContent =
+          `${item.horario} às ${item.termino}`;
+
+        item.linha.querySelector(
+          '[data-seq="total"]'
+        ).textContent = Number.isFinite(item.total)
+          ? dinheiro(item.total)
+          : "Valor inválido";
+      }
+
+      const descricao = document.createElement("p");
+
+      descricao.textContent =
+        `${item.horario} às ${item.termino}`
+        + ` — ${item.nome} · ${dinheiro(item.total)}`;
+
+      area.appendChild(descricao);
+    });
+
+    const total = horarios.reduce(
+      (soma, item) => soma + item.total,
+      0
+    );
+
+    const rodape = document.createElement("strong");
+
+    rodape.textContent = `Total: ${dinheiro(total)}`;
+
+    area.appendChild(rodape);
+
+  }catch(erro){
+
+    area.textContent = erro.message;
+  }
+}
+function alternarPacoteServicoSequencia(checkbox){
+
+  const linha =
+    checkbox.closest(".ag-servico-extra");
+
+  if(!linha) return;
+
+  ["valor", "desconto"].forEach(nome => {
+
+    const campo = linha.querySelector(
+      `[data-seq="${nome}"]`
+    );
+
+    if(checkbox.checked){
+
+      campo.dataset.valorAntesPacote =
+        campo.value;
+
+      campo.value = "0";
+
+    }else{
+
+      campo.value =
+        campo.dataset.valorAntesPacote || "0";
+    }
+
+    campo.readOnly = checkbox.checked;
+  });
+
+  atualizarResumoServicosSequencia();
 }
