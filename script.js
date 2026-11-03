@@ -6880,134 +6880,69 @@ async function salvarAgendamento(){
   ==================================================
   */
 
-  let erroAtualizacao = null;
+const alteracoesSerie = [];
 
+for(const agendamentoFuturo of agendamentosFuturos){
 
-  for(
-    const agendamentoFuturo
-    of agendamentosFuturos
-  ){
+  const dataAntiga = new Date(
+    agendamentoFuturo.data + "T00:00:00"
+  );
 
-    const dataAntiga =
-      new Date(
-        agendamentoFuturo.data +
-        "T00:00:00"
-      );
+  dataAntiga.setDate(
+    dataAntiga.getDate() + diferencaDias
+  );
 
+  alteracoesSerie.push({
+    id: agendamentoFuturo.id,
 
-    dataAntiga.setDate(
-      dataAntiga.getDate() +
-      diferencaDias
-    );
+    dados: {
+      unidade_id: dados.unidade_id,
+      cliente_id: dados.cliente_id,
+      profissional_id: dados.profissional_id,
+      servico_id: dados.servico_id,
 
+      data: formatarDataISO(dataAntiga),
+      horario: dados.horario,
+      duracao: dados.duracao,
 
-    const novaDataOcorrencia =
-      formatarDataISO(
-        dataAntiga
-      );
+      valor: dados.valor,
+      desconto: dados.desconto,
+      tipo_desconto: dados.tipo_desconto,
+      total: dados.total,
 
+      status: dados.status,
+      observacoes: dados.observacoes,
 
-    /*
-    Dados que podem ser alterados para toda
-    a série futura.
-    */
-
-    const dadosAtualizados = {
-
-      unidade_id:
-        dados.unidade_id,
-
-      cliente_id:
-        dados.cliente_id,
-
-      profissional_id:
-        dados.profissional_id,
-
-      servico_id:
-        dados.servico_id,
-
-      horario:
-        dados.horario,
-
-      duracao:
-        dados.duracao,
-
-      valor:
-        dados.valor,
-
-      desconto:
-        dados.desconto,
-
-      tipo_desconto:
-        dados.tipo_desconto,
-
-      total:
-        dados.total,
-
-      status:
-        dados.status,
-
-      observacoes:
-        dados.observacoes,
-
-      usar_pacote:
-        dados.usar_pacote,
-
-      pacote_cliente_id:
-        dados.pacote_cliente_id,
-
-      pacote_saldo_id:
-        dados.pacote_saldo_id,
-
-      /*
-      Cada ocorrência recebe sua própria data.
-      */
-
-      data:
-        novaDataOcorrencia
-
-    };
-
-
-    const {
-      error: erroUpdate
-    } =
-      await supabaseClient
-        .from("agendamentos")
-        .update(
-          dadosAtualizados
-        )
-        .eq(
-          "id",
-          agendamentoFuturo.id
-        );
-
-
-    if(erroUpdate){
-
-      erroAtualizacao =
-        erroUpdate;
-
-      break;
+      usar_pacote: dados.usar_pacote,
+      pacote_cliente_id: dados.pacote_cliente_id,
+      pacote_saldo_id: dados.pacote_saldo_id
     }
+  });
+}
 
-  }
+const { error: erroAtualizacao } =
+  await supabaseClient.rpc(
+    "atualizar_serie_agendamentos",
+    {
+      p_alteracoes: alteracoesSerie
+    }
+  );
 
+if(erroAtualizacao){
 
-  if(erroAtualizacao){
+  console.error(erroAtualizacao);
 
-    alert(
-      "Erro ao alterar a recorrência: " +
-      erroAtualizacao.message
-    );
+  alert(
+    "Nenhum agendamento da série foi alterado.\n\n" +
+    erroAtualizacao.message
+  );
 
-    return;
-  }
+  return;
+}
 
-
-  resposta = {
-    error: null
-  };
+resposta = {
+  error: null
+};
 
 
 }else{
