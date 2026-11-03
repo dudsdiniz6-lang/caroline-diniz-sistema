@@ -6869,6 +6869,14 @@ async function existeConflitoAgendamento(dados, idIgnorar = null){
   });
 }
 async function salvarAgendamento(){
+    if(
+    !document.getElementById("agendamentoId")?.value &&
+    document.querySelector(
+      "#agServicosExtras .ag-servico-extra"
+    )
+  ){
+    return salvarAgendamentosEmSequencia();
+  }
 
   const id = document.getElementById("agendamentoId").value;
 
@@ -7598,13 +7606,39 @@ function filtrarClientesAgendamento(){
 function selecionarClienteAgendamento(id, nome){
 
   document.getElementById("agCliente").value = id;
+
   document.getElementById("agClienteBusca").value = nome;
 
-  document.getElementById("resultadoBuscaClientesAgendamento").innerHTML = "";
+  document.getElementById(
+    "resultadoBuscaClientesAgendamento"
+  ).innerHTML = "";
 
+  // Atualiza o pacote do primeiro serviço.
   verificarPacoteDisponivel();
-}
 
+  // Atualiza os pacotes dos serviços adicionais.
+  document.querySelectorAll(
+    "#agServicosExtras .ag-servico-extra"
+  ).forEach(linha => {
+
+    const pacoteMarcado = linha.querySelector(
+      '[data-seq="pacote"] input:checked'
+    );
+
+    if(pacoteMarcado){
+
+      pacoteMarcado.checked = false;
+
+      alternarPacoteServicoSequencia(
+        pacoteMarcado
+      );
+    }
+
+    verificarPacoteDisponivel(linha);
+  });
+
+  atualizarResumoServicosSequencia();
+}
 function limparClienteAgendamento(){
 
   document.getElementById("agCliente").value = "";
@@ -24077,4 +24111,327 @@ function alternarPacoteServicoSequencia(checkbox){
   });
 
   atualizarResumoServicosSequencia();
+}
+async function salvarAgendamentosEmSequencia(){
+
+  if(window.salvandoSequenciaAgendamento) return;
+
+  if(!pode("agenda_criar")){
+    alert("Você não tem permissão para criar agendamentos.");
+    return;
+  }
+
+  const ler = id =>
+    document.getElementById(id)?.value;
+
+  if(ler("agendamentoId")){
+    alert("Edite os atendimentos já salvos individualmente.");
+    return;
+  }
+
+  let controles = [];
+  let gravado = false;
+
+  try{
+
+    const clienteId = Number(ler("agCliente"));
+    const profissionalId = Number(ler("agProfissional"));
+    const dataInicial = ler("agData");
+
+    if(!clienteId || !profissionalId || !dataInicial){
+      throw new Error(
+        "Selecione a cliente, a profissional e a data."
+      );
+    }
+
+    const itens = montarHorariosSequencia(
+      ler("agHorario"),
+      lerServicosSequencia()
+    );
+
+    for(const item of itens){
+
+      const servicoExiste = servicosAgendamentoCache.some(
+        servico =>
+          String(servico.id) === String(item.servico_id)
+      );
+
+      if(!item.servico_id || !servicoExiste){
+        throw new Error(
+          "Selecione cada serviço nas opções de busca."
+        );
+      }
+
+      if(
+        !Number.isFinite(item.valor) ||
+        item.valor < 0 ||
+        !Number.isFinite(item.desconto) ||
+        item.desconto < 0
+      ){
+        throw new Error(
+          `Confira o valor e o desconto de ${item.nome}.`
+        );
+      }
+
+      const limiteDesconto =
+        item.tipo_desconto === "porcentagem"
+          ? 100
+          : item.valor;
+
+      if(item.desconto > limiteDesconto){
+        throw new Error(
+          `O desconto de ${item.nome} ultrapassa o permitido.`
+        );
+      }
+
+      const pacote = item.checkboxPacote;
+
+      if(pacote?.checked){
+
+        const pacoteValido =
+          Number(pacote.dataset.clienteId) === clienteId &&
+          Number(pacote.dataset.servicoId) === item.servico_id &&
+          Number(pacote.dataset.pacoteClienteId) > 0 &&
+          Number(pacote.dataset.pacoteSaldoId) > 0;
+
+        if(!pacoteValido){
+          throw new Error(
+            "A cliente ou o serviço mudou. Selecione novamente o pacote correspondente."
+          );
+        }
+      }
+    }
+
+    const repetir = Boolean(
+      document.getElementById("agRepetir")?.checked
+    );
+
+    const repetirAte = ler("agRepetirAte");
+
+    const intervalo = Number(
+      ler("agIntervaloRepeticao") || 7
+    );
+
+    const inicio = new Date(
+      dataInicial + "T00:00:00"
+    );
+
+    if(Number.isNaN(inicio.getTime())){
+      throw new Error("Data inicial inválida.");
+    }
+
+    const fim = repetir
+      ? new Date(repetirAte + "T00:00:00")
+      : new Date(inicio);
+
+    if(repetir){
+
+      if(!pode("agenda_recorrencia")){
+        throw new Error(
+          "Você não tem permissão para repetir agendamentos."
+        );
+      }
+
+      if(
+        !repetirAte ||
+        !Number.isInteger(intervalo) ||
+        intervalo <= 0 ||
+        Number.isNaN(fim.getTime()) ||
+        fim <= inicio
+      ){
+        throw new Error(
+          "Confira o intervalo e a data final da repetição."
+        );
+      }
+    }
+
+    const recorrencias = itens.map(() =>
+      repetir ? gerarIdRecorrencia() : null
+    );
+
+    const registros = [];
+
+    for(
+      let dia = new Date(inicio);
+      dia <= fim;
+      dia.setDate(
+        dia.getDate() + (repetir ? intervalo : 1)
+      )
+    ){
+
+      itens.forEach((item, indice) => {
+
+        const pacote = item.checkboxPacote;
+        const usarPacote = Boolean(pacote?.checked);
+
+        const registro = {
+          unidade_id: unidadeAtualId,
+          cliente_id: clienteId,
+          profissional_id: profissionalId,
+
+          data: formatarDataISO(dia),
+          horario: item.horario,
+          servico_id: item.servico_id,
+          duracao: item.duracao,
+
+          valor: item.valor,
+          desconto: item.desconto,
+          tipo_desconto: item.tipo_desconto,
+          total: item.total,
+
+          status: repetir
+            ? "Agendado"
+            : ler("agStatus"),
+
+          observacoes:
+            (ler("agObservacoes") || "").trim(),
+
+          usar_pacote: usarPacote,
+
+          pacote_cliente_id: usarPacote
+            ? Number(pacote.dataset.pacoteClienteId)
+            : null,
+
+          pacote_saldo_id: usarPacote
+            ? Number(pacote.dataset.pacoteSaldoId)
+            : null
+        };
+
+        if(repetir){
+
+          Object.assign(registro, {
+            recorrencia_id: recorrencias[indice],
+            recorrencia_ativa: true,
+            recorrencia_frequencia: "personalizada",
+            recorrencia_intervalo_dias: intervalo,
+            recorrencia_ate: repetirAte
+          });
+        }
+
+        registros.push(registro);
+      });
+    }
+
+    const nomeCliente =
+      ler("agClienteBusca") || "Cliente";
+
+    const botaoSalvar = document.querySelector(
+      'button[onclick="salvarAgendamento()"]'
+    );
+
+    const container = botaoSalvar?.parentElement;
+
+    controles = Array.from(
+      container?.querySelectorAll(
+        "input, select, textarea, button"
+      ) || []
+    ).map(elemento => ({
+      elemento,
+      disabled: elemento.disabled
+    }));
+
+    window.salvandoSequenciaAgendamento = true;
+
+    controles.forEach(({ elemento }) => {
+      elemento.disabled = true;
+    });
+
+    if(
+      politica(
+        "agenda.bloquear_conflito_profissional",
+        true
+      )
+    ){
+
+      for(const registro of registros){
+
+        if(registro.status === "Cancelado") continue;
+
+        const conflito =
+          await existeConflitoAgendamento(registro);
+
+        if(conflito){
+          throw new Error(
+            "Horário indisponível para a profissional em " +
+            formatarDataComanda(registro.data) +
+            " às " + registro.horario +
+            ". Nenhum atendimento foi criado."
+          );
+        }
+      }
+    }
+
+    // Todos os serviços são enviados juntos.
+    // Se o bloqueio de sala rejeitar um, o lote é revertido.
+    const { error } = await supabaseClient
+      .from("agendamentos")
+      .insert(registros);
+
+    if(error) throw error;
+
+    gravado = true;
+
+    dataAgenda = new Date(
+      dataInicial + "T00:00:00"
+    );
+
+    fecharModal();
+
+    alert(
+      `${registros.length} agendamento(s) salvo(s) em sequência.`
+    );
+
+    try{
+
+      atualizarTextoDataAgenda();
+      await carregarAgenda();
+
+      await registrarHistoricoOperacao(
+        "criacao_agendamentos_sequenciais",
+        String(clienteId),
+        `Agendamentos em sequência - ${nomeCliente}`,
+        {
+          cliente_id: clienteId,
+          profissional_id: profissionalId,
+          quantidade: registros.length,
+          agendamentos: registros,
+          recorrente: repetir,
+          repetir_ate: repetir ? repetirAte : null
+        }
+      );
+
+    }catch(erroAtualizacao){
+
+      console.error(
+        "Agendamentos salvos; erro ao atualizar a tela ou o histórico:",
+        erroAtualizacao
+      );
+
+      alert(
+        "Os agendamentos foram salvos. Atualize a agenda para conferir."
+      );
+    }
+
+  }catch(erro){
+
+    console.error(
+      "Erro na sequência de agendamentos:",
+      erro
+    );
+
+    if(!gravado){
+      alert(
+        erro?.message ||
+        "Não foi possível salvar os agendamentos."
+      );
+    }
+
+  }finally{
+
+    window.salvandoSequenciaAgendamento = false;
+
+    controles.forEach(({ elemento, disabled }) => {
+      elemento.disabled = disabled;
+    });
+  }
 }
