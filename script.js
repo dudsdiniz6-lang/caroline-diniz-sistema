@@ -672,6 +672,48 @@ function atualizarTextoDataAgenda(){
     calendario.value = formatarDataISO(dataAgenda);
   }
 }
+if(
+  dados.cpf &&
+  !validarCpfCliente(dados.cpf)
+){
+  alert("Informe um CPF válido.");
+  return;
+}
+
+
+if(
+  !id &&
+  !dados.como_conheceu
+){
+  alert(
+    "Informe como a cliente conheceu o salão."
+  );
+  return;
+}
+
+
+if(
+  dados.como_conheceu ===
+    "INDICACAO" &&
+  !dados.indicacao_cliente_id
+){
+  alert(
+    "Selecione quem indicou a cliente."
+  );
+  return;
+}
+
+
+if(
+  dados.como_conheceu ===
+    "OUTRO" &&
+  !dados.origem_outro
+){
+  alert(
+    "Informe como a cliente conheceu o salão."
+  );
+  return;
+}
 async function salvarCliente(){
 
   const id = document.getElementById("clienteId").value;
@@ -698,15 +740,132 @@ async function salvarCliente(){
     clienteAntes = antesResp.data || null;
   }
 
-  const dados = {
-    unidade_id: unidadeAtualId,
-    nome: document.getElementById("clienteNome").value.trim(),
-    telefone: document.getElementById("clienteTelefone").value.trim(),
-    aniversario: document.getElementById("clienteAniversario").value || null,
-    observacoes: document.getElementById("clienteObservacoes").value.trim(),
-    vip: document.getElementById("clienteVip").checked,
-    ativo: true
-  };
+const comoConheceu =
+  document.getElementById(
+    "clienteComoConheceu"
+  )?.value || "";
+
+
+const cpf =
+  String(
+    document.getElementById(
+      "clienteCpf"
+    )?.value || ""
+  )
+    .replace(/\D/g, "");
+
+
+const cep =
+  String(
+    document.getElementById(
+      "clienteCep"
+    )?.value || ""
+  )
+    .replace(/\D/g, "");
+
+
+const dados = {
+
+  unidade_id:
+    unidadeAtualId,
+
+  nome:
+    document
+      .getElementById("clienteNome")
+      .value
+      .trim(),
+
+  telefone:
+    document
+      .getElementById("clienteTelefone")
+      .value
+      .trim(),
+
+  cpf:
+    cpf || null,
+
+  aniversario:
+    document
+      .getElementById("clienteAniversario")
+      .value || null,
+
+  cep:
+    cep || null,
+
+  logradouro:
+    document
+      .getElementById("clienteLogradouro")
+      .value
+      .trim(),
+
+  numero:
+    document
+      .getElementById("clienteNumero")
+      .value
+      .trim(),
+
+  complemento:
+    document
+      .getElementById("clienteComplemento")
+      .value
+      .trim(),
+
+  bairro:
+    document
+      .getElementById("clienteBairro")
+      .value
+      .trim(),
+
+  cidade:
+    document
+      .getElementById("clienteCidade")
+      .value
+      .trim(),
+
+  estado:
+    document
+      .getElementById("clienteEstado")
+      .value
+      .trim()
+      .toUpperCase(),
+
+  como_conheceu:
+    comoConheceu || null,
+
+  indicacao_cliente_id:
+    comoConheceu === "INDICACAO"
+      ? Number(
+          document.getElementById(
+            "clienteIndicacaoId"
+          )?.value || 0
+        ) || null
+      : null,
+
+  origem_outro:
+    comoConheceu === "OUTRO"
+      ? document
+          .getElementById(
+            "clienteOrigemOutro"
+          )
+          .value
+          .trim() || null
+      : null,
+
+  observacoes:
+    document
+      .getElementById("clienteObservacoes")
+      .value
+      .trim(),
+
+  vip:
+    document
+      .getElementById("clienteVip")
+      .checked,
+
+  ativo:
+    true
+
+};
 
   if(!dados.nome){
     alert("Digite o nome da cliente.");
@@ -733,7 +892,32 @@ async function salvarCliente(){
   }
 
 if(resposta.error){
-  alert("Erro ao salvar cliente: " + resposta.error.message);
+
+  console.error(
+    "Erro ao salvar cliente:",
+    resposta.error
+  );
+
+
+  const erroDuplicado =
+    resposta.error.code === "23505";
+
+
+  if(erroDuplicado){
+
+    alert(
+      "Já existe uma cliente cadastrada com este CPF nesta unidade."
+    );
+
+  }else{
+
+    alert(
+      "Erro ao salvar cliente: " +
+      resposta.error.message
+    );
+
+  }
+
   return;
 }
 
@@ -14835,6 +15019,202 @@ async function excluirCaixa(caixaId){
 
   alert("Caixa excluído.");
 }
+function formatarCpfCliente(campo){
+
+  const numeros =
+    String(campo.value || "")
+      .replace(/\D/g, "")
+      .slice(0, 11);
+
+  campo.value =
+    numeros
+      .replace(
+        /(\d{3})(\d)/,
+        "$1.$2"
+      )
+      .replace(
+        /(\d{3})(\d)/,
+        "$1.$2"
+      )
+      .replace(
+        /(\d{3})(\d{1,2})$/,
+        "$1-$2"
+      );
+
+}
+
+
+function formatarCepCliente(campo){
+
+  const numeros =
+    String(campo.value || "")
+      .replace(/\D/g, "")
+      .slice(0, 8);
+
+  campo.value =
+    numeros.replace(
+      /(\d{5})(\d)/,
+      "$1-$2"
+    );
+
+}
+
+
+function alternarCamposOrigemCliente(){
+
+  const origem =
+    document.getElementById(
+      "clienteComoConheceu"
+    )?.value || "";
+
+  const areaIndicacao =
+    document.getElementById(
+      "areaIndicacaoCliente"
+    );
+
+  const areaOutro =
+    document.getElementById(
+      "areaOrigemOutroCliente"
+    );
+
+
+  if(areaIndicacao){
+
+    areaIndicacao.style.display =
+      origem === "INDICACAO"
+        ? "block"
+        : "none";
+
+  }
+
+
+  if(areaOutro){
+
+    areaOutro.style.display =
+      origem === "OUTRO"
+        ? "block"
+        : "none";
+
+  }
+
+}
+
+
+async function buscarEnderecoClientePorCep(){
+
+  const campoCep =
+    document.getElementById(
+      "clienteCep"
+    );
+
+  const cep =
+    String(campoCep?.value || "")
+      .replace(/\D/g, "");
+
+
+  if(!cep){
+    return;
+  }
+
+
+  if(cep.length !== 8){
+
+    alert(
+      "Informe um CEP com 8 números."
+    );
+
+    return;
+  }
+
+
+  try{
+
+    const resposta =
+      await fetch(
+        `https://viacep.com.br/ws/${cep}/json/`
+      );
+
+
+    if(!resposta.ok){
+      throw new Error(
+        "Não foi possível consultar o CEP."
+      );
+    }
+
+
+    const endereco =
+      await resposta.json();
+
+
+    if(endereco.erro){
+
+      alert("CEP não encontrado.");
+      return;
+
+    }
+
+
+    const campoLogradouro =
+      document.getElementById(
+        "clienteLogradouro"
+      );
+
+    const campoBairro =
+      document.getElementById(
+        "clienteBairro"
+      );
+
+    const campoCidade =
+      document.getElementById(
+        "clienteCidade"
+      );
+
+    const campoEstado =
+      document.getElementById(
+        "clienteEstado"
+      );
+
+
+    if(campoLogradouro){
+      campoLogradouro.value =
+        endereco.logradouro || "";
+    }
+
+    if(campoBairro){
+      campoBairro.value =
+        endereco.bairro || "";
+    }
+
+    if(campoCidade){
+      campoCidade.value =
+        endereco.localidade || "";
+    }
+
+    if(campoEstado){
+      campoEstado.value =
+        endereco.uf || "";
+    }
+
+
+    document
+      .getElementById("clienteNumero")
+      ?.focus();
+
+
+  }catch(erro){
+
+    console.error(
+      "Erro ao consultar CEP:",
+      erro
+    );
+
+    alert(
+      "Não foi possível consultar o CEP. Você ainda pode preencher o endereço manualmente."
+    );
+
+  }
+
+}
 async function abrirModalCliente(id = null){
 
   let cliente = null;
@@ -14856,6 +15236,19 @@ if(id){
   creditoCliente =
     await buscarCreditoDisponivelCliente(id);
 }
+  const clientesParaIndicacao =
+  (await obterClientes())
+    .filter(item =>
+      !id ||
+      String(item.id) !== String(id)
+    )
+    .sort((a, b) =>
+      String(a.nome || "")
+        .localeCompare(
+          String(b.nome || ""),
+          "pt-BR"
+        )
+    );
 
   abrirModal(`
     <h2>${id ? "Editar cliente" : "Novo cliente"}</h2>
@@ -14891,14 +15284,408 @@ if(id){
 
     <input id="clienteId" type="hidden" value="${cliente?.id || ""}">
 
-    <label>Nome</label>
-    <input id="clienteNome" value="${cliente?.nome || ""}" placeholder="Nome da cliente">
+  <h3 style="margin:10px 0 12px;">
+  Dados pessoais
+</h3>
 
+<label>Nome</label>
+
+<input
+  id="clienteNome"
+  value="${
+    financeiroEscaparHTML(
+      cliente?.nome || ""
+    )
+  }"
+  placeholder="Nome da cliente"
+>
+
+
+<div
+  style="
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:12px;
+  "
+>
+
+  <div>
     <label>Telefone</label>
-    <input id="clienteTelefone" value="${cliente?.telefone || ""}" placeholder="Telefone">
 
-    <label>Aniversário</label>
-    <input id="clienteAniversario" type="date" value="${cliente?.aniversario || ""}">
+    <input
+      id="clienteTelefone"
+      value="${
+        financeiroEscaparHTML(
+          cliente?.telefone || ""
+        )
+      }"
+      placeholder="Telefone"
+    >
+  </div>
+
+
+  <div>
+    <label>CPF</label>
+
+    <input
+      id="clienteCpf"
+      value="${
+        financeiroEscaparHTML(
+          cliente?.cpf || ""
+        )
+      }"
+      placeholder="000.000.000-00"
+      maxlength="14"
+      oninput="formatarCpfCliente(this)"
+    >
+  </div>
+
+</div>
+
+
+<label>Aniversário</label>
+
+<input
+  id="clienteAniversario"
+  type="date"
+  value="${cliente?.aniversario || ""}"
+>
+
+
+<h3 style="margin:22px 0 12px;">
+  Endereço
+</h3>
+
+
+<div
+  style="
+    display:grid;
+    grid-template-columns:160px 1fr;
+    gap:12px;
+  "
+>
+
+  <div>
+    <label>CEP</label>
+
+    <input
+      id="clienteCep"
+      value="${
+        financeiroEscaparHTML(
+          cliente?.cep || ""
+        )
+      }"
+      placeholder="00000-000"
+      maxlength="9"
+      oninput="formatarCepCliente(this)"
+      onblur="buscarEnderecoClientePorCep()"
+    >
+  </div>
+
+
+  <div>
+    <label>Rua</label>
+
+    <input
+      id="clienteLogradouro"
+      value="${
+        financeiroEscaparHTML(
+          cliente?.logradouro || ""
+        )
+      }"
+      placeholder="Rua ou avenida"
+    >
+  </div>
+
+</div>
+
+
+<div
+  style="
+    display:grid;
+    grid-template-columns:140px 1fr;
+    gap:12px;
+  "
+>
+
+  <div>
+    <label>Número</label>
+
+    <input
+      id="clienteNumero"
+      value="${
+        financeiroEscaparHTML(
+          cliente?.numero || ""
+        )
+      }"
+      placeholder="Número"
+    >
+  </div>
+
+
+  <div>
+    <label>Complemento</label>
+
+    <input
+      id="clienteComplemento"
+      value="${
+        financeiroEscaparHTML(
+          cliente?.complemento || ""
+        )
+      }"
+      placeholder="Apartamento, sala, referência..."
+    >
+  </div>
+
+</div>
+
+
+<div
+  style="
+    display:grid;
+    grid-template-columns:1fr 1fr 90px;
+    gap:12px;
+  "
+>
+
+  <div>
+    <label>Bairro</label>
+
+    <input
+      id="clienteBairro"
+      value="${
+        financeiroEscaparHTML(
+          cliente?.bairro || ""
+        )
+      }"
+      placeholder="Bairro"
+    >
+  </div>
+
+
+  <div>
+    <label>Cidade</label>
+
+    <input
+      id="clienteCidade"
+      value="${
+        financeiroEscaparHTML(
+          cliente?.cidade || ""
+        )
+      }"
+      placeholder="Cidade"
+    >
+  </div>
+
+
+  <div>
+    <label>Estado</label>
+
+    <input
+      id="clienteEstado"
+      value="${
+        financeiroEscaparHTML(
+          cliente?.estado || ""
+        )
+      }"
+      placeholder="UF"
+      maxlength="2"
+      style="text-transform:uppercase;"
+    >
+  </div>
+
+</div>
+
+
+<h3 style="margin:22px 0 12px;">
+  Origem da cliente
+</h3>
+
+<label>Como conheceu o salão?</label>
+
+<select
+  id="clienteComoConheceu"
+  onchange="alternarCamposOrigemCliente()"
+>
+
+  <option value="">
+    Selecione
+  </option>
+
+  <option
+    value="INSTAGRAM"
+    ${
+      cliente?.como_conheceu ===
+      "INSTAGRAM"
+        ? "selected"
+        : ""
+    }
+  >
+    Instagram
+  </option>
+
+  <option
+    value="INDICACAO"
+    ${
+      cliente?.como_conheceu ===
+      "INDICACAO"
+        ? "selected"
+        : ""
+    }
+  >
+    Indicação de cliente
+  </option>
+
+  <option
+    value="GOOGLE"
+    ${
+      cliente?.como_conheceu ===
+      "GOOGLE"
+        ? "selected"
+        : ""
+    }
+  >
+    Google
+  </option>
+
+  <option
+    value="WHATSAPP"
+    ${
+      cliente?.como_conheceu ===
+      "WHATSAPP"
+        ? "selected"
+        : ""
+    }
+  >
+    WhatsApp
+  </option>
+
+  <option
+    value="FACHADA"
+    ${
+      cliente?.como_conheceu ===
+      "FACHADA"
+        ? "selected"
+        : ""
+    }
+  >
+    Passou em frente
+  </option>
+
+  <option
+    value="EVENTO_PARCERIA"
+    ${
+      cliente?.como_conheceu ===
+      "EVENTO_PARCERIA"
+        ? "selected"
+        : ""
+    }
+  >
+    Evento ou parceria
+  </option>
+
+  <option
+    value="CLIENTE_ANTIGA"
+    ${
+      cliente?.como_conheceu ===
+      "CLIENTE_ANTIGA"
+        ? "selected"
+        : ""
+    }
+  >
+    Já era cliente
+  </option>
+
+  <option
+    value="OUTRO"
+    ${
+      cliente?.como_conheceu ===
+      "OUTRO"
+        ? "selected"
+        : ""
+    }
+  >
+    Outro
+  </option>
+
+</select>
+
+
+<div
+  id="areaIndicacaoCliente"
+  style="
+    display:${
+      cliente?.como_conheceu ===
+      "INDICACAO"
+        ? "block"
+        : "none"
+    };
+  "
+>
+
+  <label>Quem indicou?</label>
+
+  <select id="clienteIndicacaoId">
+
+    <option value="">
+      Selecione a cliente
+    </option>
+
+    ${
+      clientesParaIndicacao
+        .map(item => `
+          <option
+            value="${item.id}"
+            ${
+              String(
+                cliente
+                  ?.indicacao_cliente_id ||
+                ""
+              ) === String(item.id)
+                ? "selected"
+                : ""
+            }
+          >
+            ${
+              financeiroEscaparHTML(
+                item.nome || "Cliente"
+              )
+            }
+          </option>
+        `)
+        .join("")
+    }
+
+  </select>
+
+</div>
+
+
+<div
+  id="areaOrigemOutroCliente"
+  style="
+    display:${
+      cliente?.como_conheceu ===
+      "OUTRO"
+        ? "block"
+        : "none"
+    };
+  "
+>
+
+  <label>Informe como conheceu</label>
+
+  <input
+    id="clienteOrigemOutro"
+    value="${
+      financeiroEscaparHTML(
+        cliente?.origem_outro || ""
+      )
+    }"
+    placeholder="Descreva a origem da cliente"
+  >
+
+</div>
 
     <label>Observações</label>
     <textarea id="clienteObservacoes">${cliente?.observacoes || ""}</textarea>
@@ -14927,6 +15714,26 @@ ${id ? `
   Cancelar
 </button>
   `);
+  const campoCpf =
+  document.getElementById(
+    "clienteCpf"
+  );
+
+const campoCep =
+  document.getElementById(
+    "clienteCep"
+  );
+
+
+if(campoCpf){
+  formatarCpfCliente(campoCpf);
+}
+
+if(campoCep){
+  formatarCepCliente(campoCep);
+}
+
+alternarCamposOrigemCliente();
 }
 function alternarDetalheCaixa(caixaId){
 
