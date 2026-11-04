@@ -672,47 +672,77 @@ function atualizarTextoDataAgenda(){
     calendario.value = formatarDataISO(dataAgenda);
   }
 }
-if(
-  dados.cpf &&
-  !validarCpfCliente(dados.cpf)
-){
-  alert("Informe um CPF válido.");
-  return;
-}
+function validarCpfCliente(cpf){
+
+  const numeros =
+    String(cpf || "")
+      .replace(/\D/g, "");
 
 
-if(
-  !id &&
-  !dados.como_conheceu
-){
-  alert(
-    "Informe como a cliente conheceu o salão."
+  if(!numeros){
+    return true;
+  }
+
+
+  if(
+    numeros.length !== 11 ||
+    /^(\d)\1{10}$/.test(numeros)
+  ){
+    return false;
+  }
+
+
+  let soma = 0;
+
+  for(let i = 0; i < 9; i++){
+
+    soma +=
+      Number(numeros[i]) *
+      (10 - i);
+
+  }
+
+
+  let digito =
+    11 - (soma % 11);
+
+  if(digito >= 10){
+    digito = 0;
+  }
+
+
+  if(
+    digito !==
+    Number(numeros[9])
+  ){
+    return false;
+  }
+
+
+  soma = 0;
+
+  for(let i = 0; i < 10; i++){
+
+    soma +=
+      Number(numeros[i]) *
+      (11 - i);
+
+  }
+
+
+  digito =
+    11 - (soma % 11);
+
+  if(digito >= 10){
+    digito = 0;
+  }
+
+
+  return (
+    digito ===
+    Number(numeros[10])
   );
-  return;
-}
 
-
-if(
-  dados.como_conheceu ===
-    "INDICACAO" &&
-  !dados.indicacao_cliente_id
-){
-  alert(
-    "Selecione quem indicou a cliente."
-  );
-  return;
-}
-
-
-if(
-  dados.como_conheceu ===
-    "OUTRO" &&
-  !dados.origem_outro
-){
-  alert(
-    "Informe como a cliente conheceu o salão."
-  );
-  return;
 }
 async function salvarCliente(){
 
