@@ -901,6 +901,48 @@ const dados = {
     alert("Digite o nome da cliente.");
     return;
   }
+  if(
+  dados.cpf &&
+  !validarCpfCliente(dados.cpf)
+){
+  alert("Informe um CPF válido.");
+  return;
+}
+
+
+if(
+  !id &&
+  !dados.como_conheceu
+){
+  alert(
+    "Informe como a cliente conheceu o salão."
+  );
+  return;
+}
+
+
+if(
+  dados.como_conheceu ===
+    "INDICACAO" &&
+  !dados.indicacao_cliente_id
+){
+  alert(
+    "Selecione quem indicou a cliente."
+  );
+  return;
+}
+
+
+if(
+  dados.como_conheceu ===
+    "OUTRO" &&
+  !dados.origem_outro
+){
+  alert(
+    "Informe como a cliente conheceu o salão."
+  );
+  return;
+}
 
   let resposta;
 
