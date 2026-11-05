@@ -12681,7 +12681,16 @@ async function abrirModalBloqueioAgenda(id = null, profissionalPre = "", horario
   `);
 }
 
-async function salvarBloqueioAgenda(){
+async function salvarBloqueioAgenda(){if(!pode("agenda_bloqueio")){
+
+  alert(
+    "Você não tem permissão para criar ou editar bloqueios na agenda."
+  );
+
+  fecharModal();
+  return;
+
+}
 
   const id = document.getElementById("bloqueioId").value;
 
