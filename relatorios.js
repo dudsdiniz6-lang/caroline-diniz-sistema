@@ -130,7 +130,11 @@
       </div>
 
 
-      <div id="relatoriosMensagem"></div>
+  <div id="relatoriosMensagem">
+  <div class="card">
+    Escolha o período e clique em Aplicar filtros.
+  </div>
+</div>   <div id="relatoriosMensagem"></div>
 
       <div
         id="relatoriosIndicadores"
@@ -143,8 +147,6 @@
       ></div>
     `;
 
-
-    await carregarPanoramaRelatorios();
 
   }
 
