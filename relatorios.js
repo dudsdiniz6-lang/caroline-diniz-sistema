@@ -228,79 +228,277 @@ async function instalarPanoramaRelatorios(){
 
 }
 
-   window.carregarPanoramaRelatorios =
-    async function(){
+  window.carregarPanoramaRelatorios =
+  async function(){
 
-      const mensagem =
-        document.getElementById(
-          "relatoriosMensagem"
-        );
+    const mensagem =
+      document.getElementById(
+        "relatoriosMensagem"
+      );
 
-      const indicadores =
-        document.getElementById(
-          "relatoriosIndicadores"
-        );
+    const indicadores =
+      document.getElementById(
+        "relatoriosIndicadores"
+      );
 
-      const conteudo =
-        document.getElementById(
-          "relatoriosConteudo"
-        );
+    const conteudo =
+      document.getElementById(
+        "relatoriosConteudo"
+      );
+
+    const botao =
+      document.querySelector(
+        '.relatorios-filtro-botao button'
+      );
 
 
-      if(
-        !mensagem ||
-        !indicadores ||
-        !conteudo
-      ){
-        return;
+    if(
+      !mensagem ||
+      !indicadores ||
+      !conteudo
+    ){
+      return;
+    }
+
+
+    const dataInicial =
+      document.getElementById(
+        "relatorioDataInicial"
+      )?.value;
+
+    const dataFinal =
+      document.getElementById(
+        "relatorioDataFinal"
+      )?.value;
+
+    const categoriaId =
+      document.getElementById(
+        "relatorioCategoria"
+      )?.value || "";
+
+    const profissionalId =
+      document.getElementById(
+        "relatorioProfissional"
+      )?.value || "";
+
+
+    if(!dataInicial || !dataFinal){
+
+      alert(
+        "Informe a data inicial e a data final."
+      );
+
+      return;
+
+    }
+
+
+    if(dataInicial > dataFinal){
+
+      alert(
+        "A data inicial não pode ser maior que a data final."
+      );
+
+      return;
+
+    }
+
+
+    mensagem.innerHTML = `
+      <div class="card">
+        Preparando o relatório...
+      </div>
+    `;
+
+    indicadores.innerHTML = "";
+    conteudo.innerHTML = "";
+
+
+    if(botao){
+
+      botao.disabled = true;
+      botao.textContent = "Carregando...";
+
+    }
+
+
+    try{
+
+      const {
+        data,
+        error
+      } = await supabaseClient.rpc(
+        "panorama_geral_relatorios",
+        {
+          p_unidade_id:
+            Number(unidadeAtualId),
+
+          p_data_inicial:
+            dataInicial,
+
+          p_data_final:
+            dataFinal,
+
+          p_categoria_id:
+            categoriaId
+              ? Number(categoriaId)
+              : null,
+
+          p_profissional_id:
+            profissionalId
+              ? Number(profissionalId)
+              : null
+        }
+      );
+
+
+      if(error){
+        throw error;
       }
 
 
-      const dataInicial =
-        document.getElementById(
-          "relatorioDataInicial"
-        )?.value;
-
-      const dataFinal =
-        document.getElementById(
-          "relatorioDataFinal"
-        )?.value;
+      const resultado =
+        data || {};
 
 
-      if(!dataInicial || !dataFinal){
-
-        alert(
-          "Informe a data inicial e a data final."
-        );
-
-        return;
-
-      }
+      mensagem.innerHTML = "";
 
 
-      if(dataInicial > dataFinal){
+      indicadores.innerHTML = `
 
-        alert(
-          "A data inicial não pode ser maior que a data final."
-        );
+        <div class="relatorio-indicador destaque">
 
-        return;
+          <small>
+            Clientes cadastrados
+          </small>
 
-      }
+          <strong>
+            ${Number(
+              resultado.clientes_cadastrados || 0
+            )}
+          </strong>
+
+        </div>
+
+
+        <div class="relatorio-indicador">
+
+          <small>
+            Clientes atendidos
+          </small>
+
+          <strong>
+            ${Number(
+              resultado.clientes_atendidos || 0
+            )}
+          </strong>
+
+        </div>
+
+
+        <div class="relatorio-indicador">
+
+          <small>
+            Visitas realizadas
+          </small>
+
+          <strong>
+            ${Number(
+              resultado.visitas_realizadas || 0
+            )}
+          </strong>
+
+        </div>
+
+
+        <div class="relatorio-indicador">
+
+          <small>
+            Procedimentos realizados
+          </small>
+
+          <strong>
+            ${Number(
+              resultado.procedimentos_realizados || 0
+            )}
+          </strong>
+
+        </div>
+
+
+        <div class="relatorio-indicador destaque">
+
+          <small>
+            Valor faturado em procedimentos
+          </small>
+
+          <strong>
+            ${dinheiro(
+              Number(
+                resultado.valor_faturado || 0
+              )
+            )}
+          </strong>
+
+        </div>
+
+      `;
+
+
+      conteudo.innerHTML = `
+        <div class="relatorio-bloco">
+
+          <div class="relatorio-bloco-cabecalho">
+
+            <h2>Panorama do período</h2>
+
+            <small>
+              De ${dataInicial.split("-").reverse().join("/")}
+              até ${dataFinal.split("-").reverse().join("/")}
+            </small>
+
+          </div>
+
+          <div class="relatorio-vazio">
+            Indicadores carregados com sucesso.
+          </div>
+
+        </div>
+      `;
+
+
+    }catch(erro){
+
+      console.error(
+        "Erro ao carregar o relatório:",
+        erro
+      );
 
 
       mensagem.innerHTML = `
         <div class="card">
-          Preparando o relatório...
+          Não foi possível carregar o relatório:
+          <strong>
+            ${
+              erro?.message ||
+              "erro desconhecido"
+            }
+          </strong>
         </div>
       `;
 
-      indicadores.innerHTML = "";
-      conteudo.innerHTML = "";
+    }finally{
 
-    };
+      if(botao){
 
+        botao.disabled = false;
+        botao.textContent = "Aplicar filtros";
 
+      }
+
+    }
+
+  };
   window.instalarPanoramaRelatorios =
     instalarPanoramaRelatorios;
 
