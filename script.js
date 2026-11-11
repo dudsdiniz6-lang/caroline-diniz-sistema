@@ -20553,10 +20553,6 @@ function aplicarPermissoesMenu(){
   ==========================================
   */
 
-
-  document
-    .getElementById("tela-relatorios")
-    ?.remove();
   instalarModuloFinanceiroProfissionais();
 
 const menuFinanceiroProfissionais =
