@@ -20226,8 +20226,8 @@ async function editarPerfilSistema(perfilId){
 ["caixa_reabrir","Reabrir caixa"]
   ]
 },
+
 {
-  {
   titulo:"RELATÓRIOS",
   itens:[
     [
@@ -20240,10 +20240,18 @@ async function editarPerfilSistema(perfilId){
     ]
   ]
 },
+
+{
   titulo:"CONFIGURAÇÕES",
   itens:[
-    ["configuracoes_visualizar","Visualizar configurações"],
-    ["configuracoes_editar","Editar configurações"]
+    [
+      "configuracoes_visualizar",
+      "Visualizar configurações"
+    ],
+    [
+      "configuracoes_editar",
+      "Editar configurações"
+    ]
   ]
 },
 
@@ -20567,6 +20575,19 @@ function aplicarPermissoesMenu(){
   */
 
   instalarModuloFinanceiroProfissionais();
+  const menuRelatorios =
+  document.getElementById(
+    "menu-relatorios"
+  );
+
+if(menuRelatorios){
+
+  menuRelatorios.style.display =
+    pode("relatorios_visualizar")
+      ? ""
+      : "none";
+
+}
 
 const menuFinanceiroProfissionais =
   document.getElementById(
