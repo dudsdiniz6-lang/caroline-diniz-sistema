@@ -20227,6 +20227,19 @@ async function editarPerfilSistema(perfilId){
   ]
 },
 {
+  {
+  titulo:"RELATÓRIOS",
+  itens:[
+    [
+      "relatorios_visualizar",
+      "Visualizar módulo de relatórios"
+    ],
+    [
+      "relatorios_panorama",
+      "Visualizar panorama geral"
+    ]
+  ]
+},
   titulo:"CONFIGURAÇÕES",
   itens:[
     ["configuracoes_visualizar","Visualizar configurações"],
