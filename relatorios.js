@@ -227,7 +227,761 @@ async function instalarPanoramaRelatorios(){
   }
 
 }
+function relatorioEscaparHTML(valor){
 
+  return String(valor ?? "")
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#039;");
+
+}
+
+
+function relatorioListaVazia(
+  quantidadeColunas,
+  mensagem
+){
+
+  return `
+    <tr>
+      <td
+        colspan="${quantidadeColunas}"
+        style="
+          padding:30px;
+          text-align:center;
+          color:#777;
+        "
+      >
+        ${mensagem}
+      </td>
+    </tr>
+  `;
+
+}
+
+
+window.abrirAbaPanorama =
+  function(aba){
+
+    document
+      .querySelectorAll(
+        ".botao-aba-panorama"
+      )
+      .forEach(botao => {
+
+        botao.classList.remove(
+          "principal"
+        );
+
+      });
+
+
+    document
+      .querySelectorAll(
+        ".conteudo-aba-panorama"
+      )
+      .forEach(conteudo => {
+
+        conteudo.style.display =
+          "none";
+
+      });
+
+
+    document
+      .getElementById(
+        `botaoPanorama${aba}`
+      )
+      ?.classList.add(
+        "principal"
+      );
+
+
+    const conteudoAtivo =
+      document.getElementById(
+        `conteudoPanorama${aba}`
+      );
+
+
+    if(conteudoAtivo){
+
+      conteudoAtivo.style.display =
+        "block";
+
+    }
+
+  };
+
+
+function montarDetalhesPanorama(
+  resultado
+){
+
+  const servicos =
+    resultado.servicos || [];
+
+  const clientes =
+    resultado.clientes || [];
+
+  const pacotes =
+    resultado.pacotes || [];
+
+  const profissionais =
+    resultado.profissionais || [];
+
+
+  const profissionalMaisAtendeu =
+    [...profissionais]
+      .sort(
+        (a, b) =>
+          Number(b.procedimentos || 0) -
+          Number(a.procedimentos || 0)
+      )[0];
+
+
+  const profissionalMaisFaturou =
+    [...profissionais]
+      .sort(
+        (a, b) =>
+          Number(b.valor_faturado || 0) -
+          Number(a.valor_faturado || 0)
+      )[0];
+
+
+  return `
+    <div
+      style="
+        display:flex;
+        gap:8px;
+        flex-wrap:wrap;
+        margin-bottom:18px;
+      "
+    >
+
+      <button
+        id="botaoPanoramaServicos"
+        type="button"
+        class="botao-aba-panorama principal"
+        onclick="abrirAbaPanorama('Servicos')"
+      >
+        Serviços
+      </button>
+
+      <button
+        id="botaoPanoramaClientes"
+        type="button"
+        class="botao-aba-panorama"
+        onclick="abrirAbaPanorama('Clientes')"
+      >
+        Clientes
+      </button>
+
+      <button
+        id="botaoPanoramaPacotes"
+        type="button"
+        class="botao-aba-panorama"
+        onclick="abrirAbaPanorama('Pacotes')"
+      >
+        Pacotes
+      </button>
+
+      <button
+        id="botaoPanoramaProfissionais"
+        type="button"
+        class="botao-aba-panorama"
+        onclick="abrirAbaPanorama('Profissionais')"
+      >
+        Profissionais
+      </button>
+
+    </div>
+
+
+    <div
+      id="conteudoPanoramaServicos"
+      class="conteudo-aba-panorama"
+    >
+
+      <div class="relatorio-bloco">
+
+        <div class="relatorio-bloco-cabecalho">
+          <h2>Serviços mais realizados</h2>
+
+          <small>
+            Ordenados pela quantidade realizada
+          </small>
+        </div>
+
+
+        <div class="relatorio-tabela-container">
+
+          <table class="relatorio-tabela">
+
+            <thead>
+              <tr>
+                <th>Posição</th>
+                <th>Serviço</th>
+
+                <th class="numero">
+                  Quantidade
+                </th>
+
+                <th class="numero">
+                  Valor bruto
+                </th>
+
+                <th class="numero">
+                  Comissão
+                </th>
+
+                <th class="numero">
+                  Valor líquido
+                </th>
+              </tr>
+            </thead>
+
+            <tbody>
+
+              ${
+                servicos.length
+                  ? servicos.map(
+                      (servico, indice) => `
+                        <tr>
+                          <td>
+                            ${indice + 1}º
+                          </td>
+
+                          <td>
+                            <strong>
+                              ${
+                                relatorioEscaparHTML(
+                                  servico.servico_nome
+                                )
+                              }
+                            </strong>
+                          </td>
+
+                          <td class="numero">
+                            ${
+                              Number(
+                                servico.quantidade || 0
+                              )
+                            }
+                          </td>
+
+                          <td class="numero">
+                            ${
+                              dinheiro(
+                                Number(
+                                  servico.valor_bruto || 0
+                                )
+                              )
+                            }
+                          </td>
+
+                          <td class="numero">
+                            ${
+                              dinheiro(
+                                Number(
+                                  servico.valor_comissao || 0
+                                )
+                              )
+                            }
+                          </td>
+
+                          <td class="numero">
+                            <strong>
+                              ${
+                                dinheiro(
+                                  Number(
+                                    servico.valor_liquido || 0
+                                  )
+                                )
+                              }
+                            </strong>
+                          </td>
+                        </tr>
+                      `
+                    ).join("")
+                  : relatorioListaVazia(
+                      6,
+                      "Nenhum serviço encontrado no período."
+                    )
+              }
+
+            </tbody>
+
+          </table>
+
+        </div>
+
+      </div>
+
+    </div>
+
+
+    <div
+      id="conteudoPanoramaClientes"
+      class="conteudo-aba-panorama"
+      style="display:none;"
+    >
+
+      <div class="relatorio-bloco">
+
+        <div class="relatorio-bloco-cabecalho">
+          <h2>Clientes que mais gastaram</h2>
+
+          <small>
+            Considerando procedimentos faturados
+          </small>
+        </div>
+
+
+        <div class="relatorio-tabela-container">
+
+          <table class="relatorio-tabela">
+
+            <thead>
+              <tr>
+                <th>Posição</th>
+                <th>Cliente</th>
+                <th>Serviços realizados</th>
+
+                <th class="numero">
+                  Visitas
+                </th>
+
+                <th class="numero">
+                  Procedimentos
+                </th>
+
+                <th class="numero">
+                  Total gasto
+                </th>
+              </tr>
+            </thead>
+
+            <tbody>
+
+              ${
+                clientes.length
+                  ? clientes.map(
+                      (cliente, indice) => `
+                        <tr>
+                          <td>
+                            ${indice + 1}º
+                          </td>
+
+                          <td>
+                            <strong>
+                              ${
+                                relatorioEscaparHTML(
+                                  cliente.cliente_nome
+                                )
+                              }
+                            </strong>
+                          </td>
+
+                          <td>
+                            ${
+                              (cliente.servicos || [])
+                                .map(servico => `
+                                  <div
+                                    style="
+                                      margin-bottom:5px;
+                                    "
+                                  >
+                                    ${
+                                      relatorioEscaparHTML(
+                                        servico.servico
+                                      )
+                                    }
+
+                                    · ${Number(
+                                      servico.quantidade || 0
+                                    )}x
+
+                                    · ${dinheiro(
+                                      Number(
+                                        servico.valor || 0
+                                      )
+                                    )}
+                                  </div>
+                                `)
+                                .join("")
+                            }
+                          </td>
+
+                          <td class="numero">
+                            ${
+                              Number(
+                                cliente.visitas || 0
+                              )
+                            }
+                          </td>
+
+                          <td class="numero">
+                            ${
+                              Number(
+                                cliente.procedimentos || 0
+                              )
+                            }
+                          </td>
+
+                          <td class="numero">
+                            <strong>
+                              ${
+                                dinheiro(
+                                  Number(
+                                    cliente.total_gasto || 0
+                                  )
+                                )
+                              }
+                            </strong>
+                          </td>
+                        </tr>
+                      `
+                    ).join("")
+                  : relatorioListaVazia(
+                      6,
+                      "Nenhuma cliente encontrada no período."
+                    )
+              }
+
+            </tbody>
+
+          </table>
+
+        </div>
+
+      </div>
+
+    </div>
+
+
+    <div
+      id="conteudoPanoramaPacotes"
+      class="conteudo-aba-panorama"
+      style="display:none;"
+    >
+
+      <div class="relatorio-bloco">
+
+        <div class="relatorio-bloco-cabecalho">
+          <h2>Pacotes mais vendidos</h2>
+
+          <small>
+            Ordenados pela quantidade vendida
+          </small>
+        </div>
+
+
+        <div class="relatorio-tabela-container">
+
+          <table class="relatorio-tabela">
+
+            <thead>
+              <tr>
+                <th>Posição</th>
+                <th>Pacote</th>
+
+                <th class="numero">
+                  Quantidade
+                </th>
+
+                <th class="numero">
+                  Valor vendido
+                </th>
+
+                <th class="numero">
+                  Comissão
+                </th>
+
+                <th class="numero">
+                  Valor líquido
+                </th>
+              </tr>
+            </thead>
+
+            <tbody>
+
+              ${
+                pacotes.length
+                  ? pacotes.map(
+                      (pacote, indice) => `
+                        <tr>
+                          <td>
+                            ${indice + 1}º
+                          </td>
+
+                          <td>
+                            <strong>
+                              ${
+                                relatorioEscaparHTML(
+                                  pacote.pacote_nome
+                                )
+                              }
+                            </strong>
+                          </td>
+
+                          <td class="numero">
+                            ${
+                              Number(
+                                pacote.quantidade || 0
+                              )
+                            }
+                          </td>
+
+                          <td class="numero">
+                            ${
+                              dinheiro(
+                                Number(
+                                  pacote.valor_vendido || 0
+                                )
+                              )
+                            }
+                          </td>
+
+                          <td class="numero">
+                            ${
+                              dinheiro(
+                                Number(
+                                  pacote.valor_comissao || 0
+                                )
+                              )
+                            }
+                          </td>
+
+                          <td class="numero">
+                            <strong>
+                              ${
+                                dinheiro(
+                                  Number(
+                                    pacote.valor_liquido || 0
+                                  )
+                                )
+                              }
+                            </strong>
+                          </td>
+                        </tr>
+                      `
+                    ).join("")
+                  : relatorioListaVazia(
+                      6,
+                      "Nenhum pacote vendido no período."
+                    )
+              }
+
+            </tbody>
+
+          </table>
+
+        </div>
+
+      </div>
+
+    </div>
+
+
+    <div
+      id="conteudoPanoramaProfissionais"
+      class="conteudo-aba-panorama"
+      style="display:none;"
+    >
+
+      <div
+        class="relatorios-indicadores"
+        style="margin-bottom:18px;"
+      >
+
+        <div class="relatorio-indicador destaque">
+          <small>Profissional que mais atendeu</small>
+
+          <strong>
+            ${
+              relatorioEscaparHTML(
+                profissionalMaisAtendeu
+                  ?.profissional_nome ||
+                "Sem resultado"
+              )
+            }
+          </strong>
+
+          <small>
+            ${
+              Number(
+                profissionalMaisAtendeu
+                  ?.procedimentos || 0
+              )
+            } procedimentos
+          </small>
+        </div>
+
+
+        <div class="relatorio-indicador destaque">
+          <small>Profissional que mais faturou</small>
+
+          <strong>
+            ${
+              relatorioEscaparHTML(
+                profissionalMaisFaturou
+                  ?.profissional_nome ||
+                "Sem resultado"
+              )
+            }
+          </strong>
+
+          <small>
+            ${
+              dinheiro(
+                Number(
+                  profissionalMaisFaturou
+                    ?.valor_faturado || 0
+                )
+              )
+            }
+          </small>
+        </div>
+
+      </div>
+
+
+      <div class="relatorio-bloco">
+
+        <div class="relatorio-bloco-cabecalho">
+          <h2>Desempenho dos profissionais</h2>
+        </div>
+
+
+        <div class="relatorio-tabela-container">
+
+          <table class="relatorio-tabela">
+
+            <thead>
+              <tr>
+                <th>Profissional</th>
+
+                <th class="numero">
+                  Clientes
+                </th>
+
+                <th class="numero">
+                  Visitas
+                </th>
+
+                <th class="numero">
+                  Procedimentos
+                </th>
+
+                <th class="numero">
+                  Faturado
+                </th>
+
+                <th class="numero">
+                  Comissão
+                </th>
+
+                <th class="numero">
+                  Líquido
+                </th>
+              </tr>
+            </thead>
+
+            <tbody>
+
+              ${
+                profissionais.length
+                  ? profissionais.map(
+                      profissional => `
+                        <tr>
+                          <td>
+                            <strong>
+                              ${
+                                relatorioEscaparHTML(
+                                  profissional.profissional_nome
+                                )
+                              }
+                            </strong>
+                          </td>
+
+                          <td class="numero">
+                            ${
+                              Number(
+                                profissional.clientes_atendidos || 0
+                              )
+                            }
+                          </td>
+
+                          <td class="numero">
+                            ${
+                              Number(
+                                profissional.visitas || 0
+                              )
+                            }
+                          </td>
+
+                          <td class="numero">
+                            ${
+                              Number(
+                                profissional.procedimentos || 0
+                              )
+                            }
+                          </td>
+
+                          <td class="numero">
+                            ${
+                              dinheiro(
+                                Number(
+                                  profissional.valor_faturado || 0
+                                )
+                              )
+                            }
+                          </td>
+
+                          <td class="numero">
+                            ${
+                              dinheiro(
+                                Number(
+                                  profissional.valor_comissao || 0
+                                )
+                              )
+                            }
+                          </td>
+
+                          <td class="numero">
+                            <strong>
+                              ${
+                                dinheiro(
+                                  Number(
+                                    profissional.valor_liquido || 0
+                                  )
+                                )
+                              }
+                            </strong>
+                          </td>
+                        </tr>
+                      `
+                    ).join("")
+                  : relatorioListaVazia(
+                      7,
+                      "Nenhum atendimento encontrado."
+                    )
+              }
+
+            </tbody>
+
+          </table>
+
+        </div>
+
+      </div>
+
+    </div>
+  `;
+
+}
   window.carregarPanoramaRelatorios =
   async function(){
 
@@ -444,27 +1198,49 @@ async function instalarPanoramaRelatorios(){
 
       `;
 
+if(
+  !categoriaId &&
+  !profissionalId
+){
 
-      conteudo.innerHTML = `
-        <div class="relatorio-bloco">
+  conteudo.innerHTML =
+    montarDetalhesPanorama(
+      resultado
+    );
 
-          <div class="relatorio-bloco-cabecalho">
+}else{
 
-            <h2>Panorama do período</h2>
+  conteudo.innerHTML = `
+    <div class="relatorio-bloco">
 
-            <small>
-              De ${dataInicial.split("-").reverse().join("/")}
-              até ${dataFinal.split("-").reverse().join("/")}
-            </small>
+      <div class="relatorio-bloco-cabecalho">
+        <h2>Resultado filtrado</h2>
 
-          </div>
+        <small>
+          De ${
+            dataInicial
+              .split("-")
+              .reverse()
+              .join("/")
+          }
+          até ${
+            dataFinal
+              .split("-")
+              .reverse()
+              .join("/")
+          }
+        </small>
+      </div>
 
-          <div class="relatorio-vazio">
-            Indicadores carregados com sucesso.
-          </div>
+      <div class="relatorio-vazio">
+        Remova os filtros de categoria e profissional
+        para visualizar os rankings completos.
+      </div>
 
-        </div>
-      `;
+    </div>
+  `;
+
+}
 
 
     }catch(erro){
