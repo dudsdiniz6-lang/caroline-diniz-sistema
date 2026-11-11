@@ -19,18 +19,127 @@
 
   }
 
+async function instalarPanoramaRelatorios(){
 
-  async function instalarPanoramaRelatorios(){
+  const area =
+    document.getElementById(
+      "areaPanoramaRelatorios"
+    );
 
-    const area =
-      document.getElementById(
-        "areaPanoramaRelatorios"
-      );
+  if(!area){
+    return;
+  }
 
-    if(!area){
-      return;
-    }
 
+  /*
+    Evita montar a tela novamente caso
+    o módulo já esteja carregado.
+  */
+
+  if(area.dataset.instalado === "true"){
+    return;
+  }
+
+  area.dataset.instalado = "true";
+
+
+  /*
+  ==========================================
+  MONTA A TELA IMEDIATAMENTE
+  ==========================================
+  */
+
+  area.innerHTML = `
+    <div class="relatorios-filtros">
+
+      <div>
+        <label>Data inicial</label>
+
+        <input
+          id="relatorioDataInicial"
+          type="date"
+          value="${primeiroDiaMesAtual()}"
+        >
+      </div>
+
+
+      <div>
+        <label>Data final</label>
+
+        <input
+          id="relatorioDataFinal"
+          type="date"
+          value="${dataISO(new Date())}"
+        >
+      </div>
+
+
+      <div>
+        <label>Categoria de serviço</label>
+
+        <select id="relatorioCategoria">
+          <option value="">
+            Todas as categorias
+          </option>
+        </select>
+      </div>
+
+
+      <div>
+        <label>Profissional</label>
+
+        <select id="relatorioProfissional">
+          <option value="">
+            Todos os profissionais
+          </option>
+        </select>
+      </div>
+
+
+      <div class="relatorios-filtro-botao">
+
+        <button
+          type="button"
+          class="principal"
+          onclick="carregarPanoramaRelatorios()"
+        >
+          Aplicar filtros
+        </button>
+
+      </div>
+
+    </div>
+
+
+    <div id="relatoriosMensagem">
+
+      <div class="card">
+        Escolha o período e clique em Aplicar filtros.
+      </div>
+
+    </div>
+
+
+    <div
+      id="relatoriosIndicadores"
+      class="relatorios-indicadores"
+    ></div>
+
+
+    <div
+      id="relatoriosConteudo"
+      class="relatorios-conteudo"
+    ></div>
+  `;
+
+
+  /*
+  ==========================================
+  CARREGA AS OPÇÕES EM SEGUNDO PLANO
+  ==========================================
+  */
+
+  try{
 
     const [
       categoriasResposta,
@@ -51,105 +160,73 @@
     ]);
 
 
-    const categorias =
-      categoriasResposta.data || [];
+    const campoCategoria =
+      document.getElementById(
+        "relatorioCategoria"
+      );
 
-    const profissionais =
-      profissionaisResposta.data || [];
-
-
-    area.innerHTML = `
-      <div class="relatorios-filtros">
-
-        <div>
-          <label>Data inicial</label>
-
-          <input
-            id="relatorioDataInicial"
-            type="date"
-            value="${primeiroDiaMesAtual()}"
-          >
-        </div>
+    const campoProfissional =
+      document.getElementById(
+        "relatorioProfissional"
+      );
 
 
-        <div>
-          <label>Data final</label>
+    if(
+      campoCategoria &&
+      !categoriasResposta.error
+    ){
 
-          <input
-            id="relatorioDataFinal"
-            type="date"
-            value="${dataISO(new Date())}"
-          >
-        </div>
+      campoCategoria.innerHTML = `
+        <option value="">
+          Todas as categorias
+        </option>
 
-
-        <div>
-          <label>Categoria de serviço</label>
-
-          <select id="relatorioCategoria">
-            <option value="">
-              Todas as categorias
+        ${(categoriasResposta.data || [])
+          .map(categoria => `
+            <option value="${categoria.id}">
+              ${categoria.nome}
             </option>
+          `)
+          .join("")
+        }
+      `;
 
-            ${categorias.map(categoria => `
-              <option value="${categoria.id}">
-                ${categoria.nome}
-              </option>
-            `).join("")}
-          </select>
-        </div>
+    }
 
 
-        <div>
-          <label>Profissional</label>
+    if(
+      campoProfissional &&
+      !profissionaisResposta.error
+    ){
 
-          <select id="relatorioProfissional">
-            <option value="">
-              Todos os profissionais
+      campoProfissional.innerHTML = `
+        <option value="">
+          Todos os profissionais
+        </option>
+
+        ${(profissionaisResposta.data || [])
+          .map(profissional => `
+            <option value="${profissional.id}">
+              ${profissional.nome}
             </option>
+          `)
+          .join("")
+        }
+      `;
 
-            ${profissionais.map(profissional => `
-              <option value="${profissional.id}">
-                ${profissional.nome}
-              </option>
-            `).join("")}
-          </select>
-        </div>
+    }
 
 
-        <div class="relatorios-filtro-botao">
-          <button
-            type="button"
-            class="principal"
-            onclick="carregarPanoramaRelatorios()"
-          >
-            Aplicar filtros
-          </button>
-        </div>
+  }catch(erro){
 
-      </div>
-
-
-<div id="relatoriosMensagem">
-  <div class="card">
-    Escolha o período e clique em Aplicar filtros.
-  </div>
-</div>
-
-      <div
-        id="relatoriosIndicadores"
-        class="relatorios-indicadores"
-      ></div>
-
-      <div
-        id="relatoriosConteudo"
-        class="relatorios-conteudo"
-      ></div>
-    `;
-
+    console.error(
+      "Erro ao carregar filtros do relatório:",
+      erro
+    );
 
   }
 
+}
 
    window.carregarPanoramaRelatorios =
     async function(){
