@@ -1,1 +1,209 @@
+/* =========================================================
+   PANORAMA GERAL — RELATÓRIOS
+========================================================= */
 
+#tela-relatorios {
+  padding-bottom: 40px;
+}
+
+#tela-relatorios .topo p {
+  margin: 4px 0 0;
+  color: #666;
+}
+
+
+/* FILTROS */
+
+.relatorios-filtros {
+  display: grid;
+  grid-template-columns:
+    repeat(auto-fit, minmax(190px, 1fr));
+  gap: 14px;
+  align-items: end;
+
+  padding: 18px;
+  margin-bottom: 20px;
+
+  background: #fff;
+  border: 1px solid #e7e7e7;
+  border-radius: 14px;
+}
+
+.relatorios-filtros label {
+  display: block;
+  margin-bottom: 6px;
+  font-size: 13px;
+  font-weight: 600;
+  color: #333;
+}
+
+.relatorios-filtros input,
+.relatorios-filtros select {
+  width: 100%;
+  min-height: 42px;
+  box-sizing: border-box;
+}
+
+.relatorios-filtro-botao button {
+  width: 100%;
+  min-height: 42px;
+}
+
+
+/* INDICADORES PRINCIPAIS */
+
+.relatorios-indicadores {
+  display: grid;
+  grid-template-columns:
+    repeat(auto-fit, minmax(210px, 1fr));
+  gap: 14px;
+  margin-bottom: 20px;
+}
+
+.relatorio-indicador {
+  padding: 18px;
+  background: #fff;
+  border: 1px solid #ececec;
+  border-radius: 14px;
+  box-shadow: 0 3px 12px rgba(0, 0, 0, 0.04);
+}
+
+.relatorio-indicador small {
+  display: block;
+  margin-bottom: 7px;
+  color: #666;
+}
+
+.relatorio-indicador strong {
+  display: block;
+  font-size: 24px;
+  line-height: 1.2;
+  color: #222;
+}
+
+.relatorio-indicador.destaque {
+  border-left: 4px solid #ff642d;
+}
+
+
+/* CONTEÚDO */
+
+.relatorios-conteudo {
+  display: grid;
+  gap: 18px;
+}
+
+.relatorio-bloco {
+  overflow: hidden;
+  background: #fff;
+  border: 1px solid #e7e7e7;
+  border-radius: 14px;
+}
+
+.relatorio-bloco-cabecalho {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+
+  padding: 16px 18px;
+  border-bottom: 1px solid #ededed;
+}
+
+.relatorio-bloco-cabecalho h2 {
+  margin: 0;
+  font-size: 18px;
+}
+
+.relatorio-bloco-cabecalho small {
+  color: #777;
+}
+
+
+/* TABELAS */
+
+.relatorio-tabela-container {
+  width: 100%;
+  overflow-x: auto;
+}
+
+.relatorio-tabela {
+  width: 100%;
+  min-width: 650px;
+  border-collapse: collapse;
+}
+
+.relatorio-tabela th,
+.relatorio-tabela td {
+  padding: 12px 16px;
+  border-bottom: 1px solid #ededed;
+}
+
+.relatorio-tabela th {
+  text-align: left;
+  font-size: 13px;
+  background: #fafafa;
+  color: #444;
+}
+
+.relatorio-tabela td {
+  font-size: 14px;
+}
+
+.relatorio-tabela tbody tr:hover {
+  background: #fff8f4;
+}
+
+.relatorio-tabela .numero {
+  text-align: right;
+}
+
+.relatorio-tabela tbody tr:last-child td {
+  border-bottom: none;
+}
+
+
+/* MENSAGENS */
+
+#relatoriosMensagem .card {
+  margin-bottom: 18px;
+  text-align: center;
+}
+
+.relatorio-vazio {
+  padding: 30px;
+  text-align: center;
+  color: #777;
+}
+
+
+/* CELULAR */
+
+@media (max-width: 700px) {
+
+  #tela-relatorios .topo {
+    align-items: flex-start;
+    gap: 12px;
+  }
+
+  .relatorios-filtros {
+    grid-template-columns: 1fr;
+  }
+
+  .relatorios-indicadores {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .relatorio-indicador strong {
+    font-size: 20px;
+  }
+
+}
+
+@media (max-width: 480px) {
+
+  .relatorios-indicadores {
+    grid-template-columns: 1fr;
+  }
+
+}
