@@ -20553,9 +20553,6 @@ function aplicarPermissoesMenu(){
   ==========================================
   */
 
-  document
-    .getElementById("menu-relatorios")
-    ?.remove();
 
   document
     .getElementById("tela-relatorios")
@@ -20637,9 +20634,7 @@ if(botaoCadastrarProduto){
     document.getElementById("menu-comandas")?.remove();
   }
 
-  if(!pode("relatorios_visualizar")){
-    document.getElementById("menu-relatorios")?.remove();
-  }
+
 
   if(!pode("configuracoes_visualizar")){
     document.getElementById("menu-configuracoes")?.remove();
