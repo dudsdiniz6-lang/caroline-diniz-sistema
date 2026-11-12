@@ -21646,16 +21646,32 @@ const idsComandas = [
 
   if(idsComandas.length > 0){
     const itensResp = await supabaseClient
-      .from("comanda_itens")
-      .select(`
-        comanda_id,
-        descricao,
-        valor,
-        profissionais(nome)
-      `)
-      .in("comanda_id", idsComandas);
+  .from("comanda_itens")
+  .select(`
+    id,
+    comanda_id,
+    descricao,
+    valor,
+    quantidade,
+    servicos(nome),
+    profissionais(nome)
+  `)
+  .in("comanda_id", idsComandas)
+  .eq("cancelado", false);
 
-    itensComandas = itensResp.data || [];
+if(itensResp.error){
+
+  console.error(
+    "Erro ao carregar itens das comandas:",
+    itensResp.error
+  );
+
+}else{
+
+  itensComandas =
+    itensResp.data || [];
+
+}
   }
 
   const total = pendencias.reduce((soma, p)=> soma + Number(p.valor || 0), 0);
@@ -21691,17 +21707,85 @@ const idsComandas = [
             <strong>${dinheiro(p.valor)}</strong>
           </p>
 
-          ${itens.length ? itens.map(i => `
-            <div class="caixa-linha">
-              <span>
-                ${i.descricao || "Serviço"}
-                <br>
-                <small>${i.profissionais?.nome || ""}</small>
-              </span>
-              <strong>${dinheiro(i.valor)}</strong>
+         ${
+  itens.length
+    ? `
+      <div style="
+        margin-top:12px;
+        border-top:1px solid #eee;
+      ">
+
+        ${itens.map(item => {
+
+          const nomeServico =
+            item.servicos?.nome ||
+            item.descricao ||
+            "Serviço";
+
+          const quantidade =
+            Number(item.quantidade || 1);
+
+          const valorFaturado =
+            Number(item.valor || 0);
+
+          return `
+            <div style="
+              display:grid;
+              grid-template-columns:1fr auto;
+              gap:15px;
+              align-items:center;
+              padding:12px 0;
+              border-bottom:1px solid #eee;
+            ">
+
+              <div>
+                <strong>
+                  ${financeiroEscaparHTML(nomeServico)}
+                </strong>
+
+                ${
+                  quantidade > 1
+                    ? `
+                      <br>
+                      <small>
+                        Quantidade: ${quantidade}
+                      </small>
+                    `
+                    : ""
+                }
+
+                ${
+                  item.profissionais?.nome
+                    ? `
+                      <br>
+                      <small>
+                        Profissional:
+                        ${financeiroEscaparHTML(
+                          item.profissionais.nome
+                        )}
+                      </small>
+                    `
+                    : ""
+                }
+              </div>
+
+              <strong style="white-space:nowrap;">
+                ${dinheiro(valorFaturado)}
+              </strong>
+
             </div>
-          `).join("") : `
-            <p>Sem detalhamento vinculado.</p>
+          `;
+
+        }).join("")}
+
+      </div>
+    `
+    : `
+      <p>
+        Sem detalhamento vinculado.
+      </p>
+    `
+}
           `}
         </div>
       `;
