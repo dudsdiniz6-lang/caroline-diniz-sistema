@@ -21630,9 +21630,17 @@ async function abrirDetalhesPendenciasCliente(clienteId){
     return;
   }
 
-  const idsComandas = pendencias
-    .filter(p => p.origem === "COMANDA" && p.origem_id)
-    .map(p => p.origem_id);
+const idsComandas = [
+  ...new Set(
+    pendencias
+      .filter(p =>
+        String(p.origem || "")
+          .toUpperCase() === "COMANDA" &&
+        p.origem_id
+      )
+      .map(p => p.origem_id)
+  )
+];
 
   let itensComandas = [];
 
@@ -21666,7 +21674,17 @@ async function abrirDetalhesPendenciasCliente(clienteId){
 
       return `
         <div class="card">
-          <h3>${formatarDataComanda(p.data)}</h3>
+        <h3>
+  ${
+    p.data
+      ? String(p.data)
+          .substring(0, 10)
+          .split("-")
+          .reverse()
+          .join("/")
+      : "Data não informada"
+  }
+</h3>
 
           <p>
             Valor em aberto:
