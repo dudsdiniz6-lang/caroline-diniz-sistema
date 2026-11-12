@@ -314,7 +314,439 @@ window.abrirAbaPanorama =
 
   };
 
+function relatorioFormatarData(valor){
 
+  if(!valor){
+    return "-";
+  }
+
+  const somenteData =
+    String(valor).slice(0, 10);
+
+  const partes =
+    somenteData.split("-");
+
+  if(partes.length !== 3){
+    return somenteData;
+  }
+
+  return `${
+    partes[2]
+  }/${
+    partes[1]
+  }/${
+    partes[0]
+  }`;
+
+}
+
+
+window.abrirDetalhesProfissionalRelatorio =
+  async function(profissionalId){
+
+    const dataInicial =
+      document.getElementById(
+        "relatorioDataInicial"
+      )?.value;
+
+    const dataFinal =
+      document.getElementById(
+        "relatorioDataFinal"
+      )?.value;
+
+
+    if(
+      !profissionalId ||
+      !dataInicial ||
+      !dataFinal
+    ){
+
+      alert(
+        "Não foi possível identificar o período ou a profissional."
+      );
+
+      return;
+
+    }
+
+
+    abrirModal(`
+      <div style="
+        width:min(1200px, 92vw);
+        padding:10px;
+      ">
+        <h2>Detalhes da profissional</h2>
+
+        <div class="card">
+          Carregando atendimentos...
+        </div>
+      </div>
+    `);
+
+
+    try{
+
+      const {
+        data,
+        error
+      } = await supabaseClient.rpc(
+        "detalhes_profissional_relatorio",
+        {
+          p_unidade_id:
+            Number(unidadeAtualId),
+
+          p_profissional_id:
+            Number(profissionalId),
+
+          p_data_inicial:
+            dataInicial,
+
+          p_data_final:
+            dataFinal
+        }
+      );
+
+
+      if(error){
+        throw error;
+      }
+
+
+      const resultado =
+        data || {};
+
+      const itens =
+        resultado.itens || [];
+
+
+      abrirModal(`
+        <div style="
+          width:min(1250px, 94vw);
+          max-height:86vh;
+          overflow-y:auto;
+          padding:5px;
+        ">
+
+          <div style="
+            display:flex;
+            justify-content:space-between;
+            align-items:flex-start;
+            gap:15px;
+            margin-bottom:18px;
+          ">
+
+            <div>
+              <h2 style="margin:0;">
+                ${
+                  relatorioEscaparHTML(
+                    resultado.profissional_nome ||
+                    "Profissional"
+                  )
+                }
+              </h2>
+
+              <p style="
+                margin:5px 0 0;
+                color:#666;
+              ">
+                Período de
+                ${relatorioFormatarData(dataInicial)}
+                até
+                ${relatorioFormatarData(dataFinal)}
+              </p>
+            </div>
+
+            <button
+              type="button"
+              onclick="fecharModal()"
+            >
+              Fechar
+            </button>
+
+          </div>
+
+
+          <div class="relatorios-indicadores">
+
+            <div class="relatorio-indicador">
+              <small>Clientes atendidos</small>
+
+              <strong>
+                ${
+                  Number(
+                    resultado.clientes_atendidos || 0
+                  )
+                }
+              </strong>
+            </div>
+
+
+            <div class="relatorio-indicador">
+              <small>Procedimentos</small>
+
+              <strong>
+                ${
+                  Number(
+                    resultado.procedimentos || 0
+                  )
+                }
+              </strong>
+            </div>
+
+
+            <div class="relatorio-indicador destaque">
+              <small>Valor faturado</small>
+
+              <strong>
+                ${
+                  dinheiro(
+                    Number(
+                      resultado.valor_faturado || 0
+                    )
+                  )
+                }
+              </strong>
+            </div>
+
+
+            <div class="relatorio-indicador">
+              <small>Comissão gerada</small>
+
+              <strong>
+                ${
+                  dinheiro(
+                    Number(
+                      resultado.comissao_gerada || 0
+                    )
+                  )
+                }
+              </strong>
+            </div>
+
+
+            <div class="relatorio-indicador">
+              <small>Comissão já paga</small>
+
+              <strong style="color:#18864b;">
+                ${
+                  dinheiro(
+                    Number(
+                      resultado.comissao_paga || 0
+                    )
+                  )
+                }
+              </strong>
+            </div>
+
+
+            <div class="relatorio-indicador">
+              <small>Comissão pendente</small>
+
+              <strong style="color:#b42318;">
+                ${
+                  dinheiro(
+                    Number(
+                      resultado.comissao_pendente || 0
+                    )
+                  )
+                }
+              </strong>
+            </div>
+
+          </div>
+
+
+          <div
+            class="relatorio-bloco"
+            style="margin-top:18px;"
+          >
+
+            <div class="relatorio-bloco-cabecalho">
+              <h2>Clientes e procedimentos</h2>
+
+              <small>
+                ${itens.length} lançamento(s)
+              </small>
+            </div>
+
+
+            <div class="relatorio-tabela-container">
+
+              <table class="relatorio-tabela">
+
+                <thead>
+                  <tr>
+                    <th>Data</th>
+                    <th>Cliente</th>
+                    <th>Serviço</th>
+
+                    <th class="numero">
+                      Faturado
+                    </th>
+
+                    <th class="numero">
+                      Comissão
+                    </th>
+
+                    <th class="numero">
+                      Valor da comissão
+                    </th>
+
+                    <th>Situação</th>
+                    <th>Pagamento</th>
+                  </tr>
+                </thead>
+
+                <tbody>
+
+                  ${
+                    itens.length
+                      ? itens.map(item => {
+
+                          const paga =
+                            item.status_comissao ===
+                            "Paga";
+
+                          return `
+                            <tr>
+
+                              <td>
+                                ${
+                                  relatorioFormatarData(
+                                    item.data
+                                  )
+                                }
+                              </td>
+
+                              <td>
+                                ${
+                                  relatorioEscaparHTML(
+                                    item.cliente_nome
+                                  )
+                                }
+                              </td>
+
+                              <td>
+                                ${
+                                  relatorioEscaparHTML(
+                                    item.servico_nome
+                                  )
+                                }
+                              </td>
+
+                              <td class="numero">
+                                ${
+                                  dinheiro(
+                                    Number(
+                                      item.valor_faturado || 0
+                                    )
+                                  )
+                                }
+                              </td>
+
+                              <td class="numero">
+                                ${
+                                  Number(
+                                    item.comissao_percentual || 0
+                                  ).toLocaleString(
+                                    "pt-BR"
+                                  )
+                                }%
+                              </td>
+
+                              <td class="numero">
+                                <strong>
+                                  ${
+                                    dinheiro(
+                                      Number(
+                                        item.comissao_gerada || 0
+                                      )
+                                    )
+                                  }
+                                </strong>
+                              </td>
+
+                              <td>
+                                <strong style="
+                                  color:${
+                                    paga
+                                      ? "#18864b"
+                                      : "#b42318"
+                                  };
+                                ">
+                                  ${
+                                    paga
+                                      ? "Paga"
+                                      : "Pendente"
+                                  }
+                                </strong>
+                              </td>
+
+                              <td>
+                                ${
+                                  paga
+                                    ? relatorioFormatarData(
+                                        item.data_pagamento
+                                      )
+                                    : "-"
+                                }
+                              </td>
+
+                            </tr>
+                          `;
+
+                        }).join("")
+                      : relatorioListaVazia(
+                          8,
+                          "Nenhum atendimento encontrado para esta profissional."
+                        )
+                  }
+
+                </tbody>
+
+              </table>
+
+            </div>
+
+          </div>
+
+        </div>
+      `);
+
+
+    }catch(erro){
+
+      console.error(
+        "Erro ao carregar detalhes da profissional:",
+        erro
+      );
+
+      abrirModal(`
+        <h2>Detalhes da profissional</h2>
+
+        <div class="card">
+          Não foi possível carregar os detalhes:
+          <strong>
+            ${
+              relatorioEscaparHTML(
+                erro?.message ||
+                "erro desconhecido"
+              )
+            }
+          </strong>
+        </div>
+
+        <button
+          type="button"
+          onclick="fecharModal()"
+        >
+          Fechar
+        </button>
+      `);
+
+    }
+
+  };
 function montarDetalhesPanorama(
   resultado
 ){
@@ -896,15 +1328,35 @@ function montarDetalhesPanorama(
                   ? profissionais.map(
                       profissional => `
                         <tr>
-                          <td>
-                            <strong>
-                              ${
-                                relatorioEscaparHTML(
-                                  profissional.profissional_nome
-                                )
-                              }
-                            </strong>
-                          </td>
+                         <td>
+
+  <button
+    type="button"
+    onclick="
+      abrirDetalhesProfissionalRelatorio(
+        ${Number(
+          profissional.profissional_id
+        )}
+      )
+    "
+    style="
+      border:none;
+      background:none;
+      padding:0;
+      color:#e85b28;
+      font-weight:700;
+      text-decoration:underline;
+      cursor:pointer;
+    "
+  >
+    ${
+      relatorioEscaparHTML(
+        profissional.profissional_nome
+      )
+    }
+  </button>
+
+</td>
 
                           <td class="numero">
                             ${
