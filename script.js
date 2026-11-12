@@ -21783,10 +21783,9 @@ if(itensResp.error){
     : `
       <p>
         Sem detalhamento vinculado.
-      </p>
+    </p>
     `
 }
-          `}
         </div>
       `;
     }).join("")}
