@@ -20803,7 +20803,28 @@ if(
     lista.innerHTML += `
       <div class="card">
 
-        <h3>${grupo.nome}</h3>
+       <button
+  type="button"
+  onclick="
+    abrirDetalhesPendenciasCliente(
+      ${Number(clienteId)}
+    )
+  "
+  style="
+    border:none;
+    background:none;
+    padding:0;
+    margin:0;
+    color:#e85b28;
+    font-size:18px;
+    font-weight:700;
+    text-align:left;
+    text-decoration:underline;
+    cursor:pointer;
+  "
+>
+  ${financeiroEscaparHTML(grupo.nome)}
+</button>
 
         <p>
           Total em aberto:
