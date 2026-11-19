@@ -1782,11 +1782,70 @@ async function carregarProfissionais(){
             Editar
           </button>
         ` : ""}
+        ${pode("profissionais_excluir") ? `
+  <button
+    type="button"
+    onclick="desativarProfissional(${profissional.id})"
+    style="color:#b42318;"
+  >
+    Desativar
+  </button>
+` : ""}
       </div>
     `;
 
   });
 
+}
+async function desativarProfissional(profissionalId){
+
+  if(!pode("profissionais_excluir")){
+    alert(
+      "Você não tem permissão para desativar profissionais."
+    );
+    return;
+  }
+
+  const confirmado = confirm(
+    "Deseja realmente desativar este profissional? Os registros e atendimentos antigos serão preservados."
+  );
+
+  if(!confirmado){
+    return;
+  }
+
+  const { error } = await supabaseClient
+    .from("profissionais")
+    .update({
+      ativo: false
+    })
+    .eq("id", profissionalId)
+    .eq("unidade_id", unidadeAtualId);
+
+  if(error){
+
+    console.error(
+      "Erro ao desativar profissional:",
+      error
+    );
+
+    alert(
+      "Não foi possível desativar: " +
+      error.message
+    );
+
+    return;
+  }
+
+  limparCache("profissionais");
+
+  await carregarProfissionais();
+
+  if(typeof carregarAgenda === "function"){
+    carregarAgenda();
+  }
+
+  alert("Profissional desativado com sucesso.");
 }
 async function abrirModalProfissional(id = null){
 
