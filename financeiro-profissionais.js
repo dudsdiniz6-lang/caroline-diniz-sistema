@@ -4854,26 +4854,64 @@ itensProfissional = [
     }
 
 
-    const comissaoPeriodo =
-      itensProfissional.reduce(
-        (total, item) => {
+ const comissaoPeriodo =
+  itensProfissional.reduce(
+    (total, item) => {
 
-          const valor =
-            Number(item.valor || 0);
+      const valor =
+        Number(item.valor || 0);
 
-          const percentual =
-            Number(
-              item.comissao_percentual || 0
-            );
+      const tipoItem =
+        String(item.tipo_item || "")
+          .trim()
+          .toUpperCase();
 
-          return (
-            total +
-            valor * percentual / 100
+      if(tipoItem === "PRODUTO"){
+
+        const percentualVenda =
+          Number(
+            item.comissao_venda_percentual || 0
           );
 
-        },
-        0
-      );
+        const comissaoVendaSalva =
+          Number(
+            item.comissao_venda_valor || 0
+          );
+
+        const comissaoProduto =
+          comissaoVendaSalva > 0
+            ? comissaoVendaSalva
+            : Number(
+                (
+                  valor *
+                  percentualVenda /
+                  100
+                ).toFixed(2)
+              );
+
+        return total + comissaoProduto;
+
+      }
+
+      const percentualServico =
+        Number(
+          item.comissao_percentual || 0
+        );
+
+      const comissaoServico =
+        Number(
+          (
+            valor *
+            percentualServico /
+            100
+          ).toFixed(2)
+        );
+
+      return total + comissaoServico;
+
+    },
+    0
+  );
 
 const {
   data: ultimoPagamento,
@@ -4998,9 +5036,22 @@ const totalDevido =
           vale => vale.id
         ),
       itensIds:
-        itensProfissional.map(
-          item => item.id
-        )
+  itensProfissional
+    .filter(item =>
+      String(item.tipo_item || "")
+        .trim()
+        .toUpperCase() !== "PRODUTO"
+    )
+    .map(item => item.id),
+
+vendasItensIds:
+  itensProfissional
+    .filter(item =>
+      String(item.tipo_item || "")
+        .trim()
+        .toUpperCase() === "PRODUTO"
+    )
+    .map(item => item.id)
     };
 
 
@@ -5493,34 +5544,42 @@ async function confirmarPagamentoComissaoPeriodo(){
     ==================================================
     */
 
-    const idsOriginais =
-      [
-        ...new Set(
-          (
-            pagamentoComissaoAtual.itensIds ||
-            []
-          )
-            .filter(Boolean)
-            .map(String)
-        )
-      ];
+    const idsOriginais = [
+  ...new Set(
+    (
+      pagamentoComissaoAtual.itensIds ||
+      []
+    )
+      .filter(Boolean)
+      .map(String)
+  )
+];
 
+const vendasIdsOriginais = [
+  ...new Set(
+    (
+      pagamentoComissaoAtual.vendasItensIds ||
+      []
+    )
+      .filter(Boolean)
+      .map(String)
+  )
+];
 
-    if(idsOriginais.length === 0){
+if(
+  idsOriginais.length === 0 &&
+  vendasIdsOriginais.length === 0
+){
+  throw new Error(
+    "Não existem comissões pendentes para este pagamento."
+  );
+}
 
-      throw new Error(
-        "Não existem serviços pendentes para este pagamento."
-      );
-
-    }
 
 /*
-==================================================
-1. CONFERE OS ITENS REALMENTE JÁ PAGOS
-
-USA A MESMA REGRA DO RESUMO E DOS DETALHES:
-SOMENTE PAGAMENTO ATIVO BLOQUEIA O SERVIÇO.
-==================================================
+==========================================
+CONFERE SERVIÇOS JÁ PAGOS
+==========================================
 */
 
 const idsJaPagos =
@@ -5538,37 +5597,70 @@ if(
   itensIdsValidos.length !==
   idsOriginais.length
 ){
-
   throw new Error(
-    "Um ou mais serviços desta tela já foram pagos em outro fechamento. O pagamento foi bloqueado. Feche esta tela, atualize o financeiro e confira novamente."
+    "Um ou mais serviços já foram pagos em outro fechamento. Feche esta tela, atualize o financeiro e confira novamente."
   );
-
-}
-
-if(itensIdsValidos.length === 0){
-
-  throw new Error(
-    "Todos os serviços desta tela já foram incluídos em pagamentos anteriores. Atualize o financeiro."
-  );
-
 }
 
 
-    const {
-      data: itensValidos,
-      error: erroItensValidos
-    } =
-      await supabaseClient
-        .from("comanda_itens")
-        .select(`
-          id,
-          valor,
-          comissao_percentual
-        `)
-        .in(
-          "id",
-          itensIdsValidos
-        );
+/*
+==========================================
+CONFERE VENDAS DE PRODUTOS JÁ PAGAS
+==========================================
+*/
+
+const vendasJaPagas =
+  await obterComissoesVendaBloqueadas();
+
+const vendasItensIdsValidos =
+  vendasIdsOriginais.filter(
+    id =>
+      !vendasJaPagas.servicos.has(
+        String(id)
+      )
+  );
+
+if(
+  vendasItensIdsValidos.length !==
+  vendasIdsOriginais.length
+){
+  throw new Error(
+    "Uma ou mais comissões de produtos já foram pagas em outro fechamento. Atualize o financeiro e confira novamente."
+  );
+}
+
+if(
+  itensIdsValidos.length === 0 &&
+  vendasItensIdsValidos.length === 0
+){
+  throw new Error(
+    "Todas as comissões desta tela já foram incluídas em pagamentos anteriores."
+  );
+}
+      const todosIdsValidos = [
+  ...new Set([
+    ...itensIdsValidos,
+    ...vendasItensIdsValidos
+  ])
+];
+
+const {
+  data: itensValidos,
+  error: erroItensValidos
+} = await supabaseClient
+  .from("comanda_itens")
+  .select(`
+    id,
+    tipo_item,
+    valor,
+    comissao_percentual,
+    comissao_venda_percentual,
+    comissao_venda_valor
+  `)
+  .in(
+    "id",
+    todosIdsValidos
+  );
 
 
     if(erroItensValidos){
@@ -5576,33 +5668,62 @@ if(itensIdsValidos.length === 0){
     }
 
 
-    const comissaoReal =
-      (itensValidos || [])
-        .reduce(
-          (total, item) => {
+  const comissaoReal =
+  (itensValidos || [])
+    .reduce(
+      (total, item) => {
 
-            const valor =
-              Number(item.valor || 0);
+        const valor =
+          Number(item.valor || 0);
 
-            const percentual =
-              Number(
-                item.comissao_percentual || 0
-              );
+        const tipoItem =
+          String(item.tipo_item || "")
+            .trim()
+            .toUpperCase();
 
-            return (
-              total +
-              (
-                valor *
-                percentual /
-                100
-              )
+        if(tipoItem === "PRODUTO"){
+
+          const percentualVenda =
+            Number(
+              item.comissao_venda_percentual || 0
             );
 
-          },
-          0
+          const valorVendaSalvo =
+            Number(
+              item.comissao_venda_valor || 0
+            );
+
+          const comissaoProduto =
+            valorVendaSalvo > 0
+              ? valorVendaSalvo
+              : Number(
+                  (
+                    valor *
+                    percentualVenda /
+                    100
+                  ).toFixed(2)
+                );
+
+          return total + comissaoProduto;
+
+        }
+
+        const percentualServico =
+          Number(
+            item.comissao_percentual || 0
+          );
+
+        return total + Number(
+          (
+            valor *
+            percentualServico /
+            100
+          ).toFixed(2)
         );
 
-
+      },
+      0
+    );
     /*
     ==================================================
     3. VALES
@@ -5722,7 +5843,7 @@ DATA INICIAL PASSA A SER INFORMATIVA.
         `)
         .in(
           "id",
-          itensIdsValidos
+      todosIdsValidos
         );
 
 
@@ -6211,51 +6332,221 @@ if(idsParaVincular.length > 0){
 
 }
 
-    if(valesIdsValidos.length > 0){
+   /*
+==================================================
+VINCULA AS COMISSÕES DE VENDAS DE PRODUTOS
+==================================================
+*/
 
-      const {
-        error: erroAtualizarVales
-      } =
-        await supabaseClient
-          .from("profissionais_vales")
-          .update({
+if(vendasItensIdsValidos.length > 0){
 
-            pagamento_comissao_id:
-              pagamentoCriadoId,
+  const vinculosVendas =
+    vendasItensIdsValidos.map(
+      itemId => ({
+        pagamento_id:
+          pagamentoCriadoId,
 
-            status:
-              "DESCONTADO"
+        origem_tipo:
+          "SERVICO",
 
-          })
-          .in(
-            "id",
-            valesIdsValidos
-          );
+        comanda_item_id:
+          itemId,
+
+        pacote_cliente_id:
+          null
+      })
+    );
+
+  const {
+    error: erroVincularVendas
+  } = await supabaseClient
+    .from(
+      "comissoes_vendas_pagamentos_itens"
+    )
+    .insert(vinculosVendas);
 
 
-      if(erroAtualizarVales){
+  if(erroVincularVendas){
 
-        await supabaseClient
-          .from("comissoes_pagamentos_itens")
-          .delete()
-          .eq(
-            "pagamento_id",
-            pagamentoCriadoId
-          );
+    await supabaseClient
+      .from("comissoes_pagamentos_itens")
+      .delete()
+      .eq(
+        "pagamento_id",
+        pagamentoCriadoId
+      );
 
-        await supabaseClient
-          .from("comissoes_pagamentos")
-          .delete()
-          .eq(
-            "id",
-            pagamentoCriadoId
-          );
+    await supabaseClient
+      .from("comissoes_vendas_pagamentos_itens")
+      .delete()
+      .eq(
+        "pagamento_id",
+        pagamentoCriadoId
+      );
 
-        throw erroAtualizarVales;
+    await supabaseClient
+      .from("comissoes_pagamentos")
+      .delete()
+      .eq(
+        "id",
+        pagamentoCriadoId
+      );
 
-      }
+    throw erroVincularVendas;
+  }
 
-    }
+
+  const {
+    data: vendasConfirmadas,
+    error: erroConfirmarVendas
+  } = await supabaseClient
+    .from(
+      "comissoes_vendas_pagamentos_itens"
+    )
+    .select("comanda_item_id")
+    .eq(
+      "pagamento_id",
+      pagamentoCriadoId
+    );
+
+
+  if(erroConfirmarVendas){
+
+    await supabaseClient
+      .from("comissoes_vendas_pagamentos_itens")
+      .delete()
+      .eq(
+        "pagamento_id",
+        pagamentoCriadoId
+      );
+
+    await supabaseClient
+      .from("comissoes_pagamentos_itens")
+      .delete()
+      .eq(
+        "pagamento_id",
+        pagamentoCriadoId
+      );
+
+    await supabaseClient
+      .from("comissoes_pagamentos")
+      .delete()
+      .eq(
+        "id",
+        pagamentoCriadoId
+      );
+
+    throw erroConfirmarVendas;
+  }
+
+
+  const idsVendasConfirmadas =
+    new Set(
+      (vendasConfirmadas || [])
+        .map(item =>
+          String(item.comanda_item_id)
+        )
+    );
+
+
+  const todasVendasVinculadas =
+    vendasItensIdsValidos.every(
+      id =>
+        idsVendasConfirmadas.has(
+          String(id)
+        )
+    );
+
+
+  if(!todasVendasVinculadas){
+
+    await supabaseClient
+      .from("comissoes_vendas_pagamentos_itens")
+      .delete()
+      .eq(
+        "pagamento_id",
+        pagamentoCriadoId
+      );
+
+    await supabaseClient
+      .from("comissoes_pagamentos_itens")
+      .delete()
+      .eq(
+        "pagamento_id",
+        pagamentoCriadoId
+      );
+
+    await supabaseClient
+      .from("comissoes_pagamentos")
+      .delete()
+      .eq(
+        "id",
+        pagamentoCriadoId
+      );
+
+    throw new Error(
+      "O pagamento não foi concluído porque as comissões dos produtos não foram vinculadas."
+    );
+  }
+
+}
+
+
+/*
+==================================================
+VINCULA OS VALES AO PAGAMENTO
+==================================================
+*/
+
+if(valesIdsValidos.length > 0){
+
+  const {
+    error: erroAtualizarVales
+  } = await supabaseClient
+    .from("profissionais_vales")
+    .update({
+      pagamento_comissao_id:
+        pagamentoCriadoId,
+
+      status:
+        "DESCONTADO"
+    })
+    .in(
+      "id",
+      valesIdsValidos
+    );
+
+
+  if(erroAtualizarVales){
+
+    await supabaseClient
+      .from("comissoes_vendas_pagamentos_itens")
+      .delete()
+      .eq(
+        "pagamento_id",
+        pagamentoCriadoId
+      );
+
+    await supabaseClient
+      .from("comissoes_pagamentos_itens")
+      .delete()
+      .eq(
+        "pagamento_id",
+        pagamentoCriadoId
+      );
+
+    await supabaseClient
+      .from("comissoes_pagamentos")
+      .delete()
+      .eq(
+        "id",
+        pagamentoCriadoId
+      );
+
+    throw erroAtualizarVales;
+  }
+
+}
 
 
     alert(
@@ -6342,11 +6633,44 @@ async function obterDadosReciboComissao(
     throw erroVinculos;
   }
 
-  const idsItens =
-    (vinculos || []).map(
-      item => item.comanda_item_id
-    );
+  const {
+  data: vinculosVendas,
+  error: erroVinculosVendas
+} = await supabaseClient
+  .from(
+    "comissoes_vendas_pagamentos_itens"
+  )
+  .select(`
+    comanda_item_id
+  `)
+  .eq(
+    "pagamento_id",
+    pagamentoId
+  )
+  .eq(
+    "origem_tipo",
+    "SERVICO"
+  );
 
+if(erroVinculosVendas){
+  throw erroVinculosVendas;
+}
+
+const idsItens = [
+  ...new Set([
+    ...(vinculos || [])
+      .map(item =>
+        item.comanda_item_id
+      )
+      .filter(Boolean),
+
+    ...(vinculosVendas || [])
+      .map(item =>
+        item.comanda_item_id
+      )
+      .filter(Boolean)
+  ])
+];
   let itens = [];
 
   if(idsItens.length > 0){
@@ -6358,12 +6682,17 @@ async function obterDadosReciboComissao(
       await supabaseClient
         .from("comanda_itens")
         .select(`
-          id,
-          comanda_id,
-          descricao,
-          valor,
-          comissao_percentual
-        `)
+  id,
+  comanda_id,
+  tipo_item,
+  produto_id,
+  quantidade,
+  descricao,
+  valor,
+  comissao_percentual,
+  comissao_venda_percentual,
+  comissao_venda_valor
+`)
         .in("id", idsItens);
 
     if(erroItens){
@@ -6494,13 +6823,33 @@ async function visualizarReciboComissao(
         const valor =
           Number(item.valor || 0);
 
-        const percentual =
-          Number(
-            item.comissao_percentual || 0
-          );
+const tipoItem =
+  String(item.tipo_item || "")
+    .trim()
+    .toUpperCase();
 
-        const comissao =
-          valor * percentual / 100;
+const percentual =
+  tipoItem === "PRODUTO"
+    ? Number(
+        item.comissao_venda_percentual || 0
+      )
+    : Number(
+        item.comissao_percentual || 0
+      );
+
+const comissao =
+  tipoItem === "PRODUTO" &&
+  Number(item.comissao_venda_valor || 0) > 0
+    ? Number(
+        item.comissao_venda_valor
+      )
+    : Number(
+        (
+          valor *
+          percentual /
+          100
+        ).toFixed(2)
+      );
 
         return `
           <tr>
@@ -6990,6 +7339,21 @@ async function cancelarPagamentoComissao(
     if(erroItens){
       throw erroItens;
     }
+    const {
+  error: erroVendas
+} = await supabaseClient
+  .from(
+    "comissoes_vendas_pagamentos_itens"
+  )
+  .delete()
+  .eq(
+    "pagamento_id",
+    pagamentoId
+  );
+
+if(erroVendas){
+  throw erroVendas;
+}
 
     alert(
       "Pagamento cancelado com sucesso."
