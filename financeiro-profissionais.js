@@ -4713,7 +4713,11 @@ const mapaComandas = {};
 
  const idsBloqueados =
   await obterIdsItensComissaoBloqueados();
-    let itensProfissional = [];
+
+const vendasBloqueadas =
+  await obterComissoesVendaBloqueadas();
+
+let itensProfissional = [];
 
 if(idsComandas.length > 0){
 
@@ -4767,26 +4771,77 @@ if(idsComandas.length > 0){
     );
   }
 
-  itensProfissional =
-    todosItens.filter(item => {
+const itensServicosPagamento =
+  todosItens.filter(item => {
 
-      const comanda =
-        mapaComandas[item.comanda_id];
+    const tipoItem =
+      String(item.tipo_item || "")
+        .trim()
+        .toUpperCase();
 
-      const profissionalItem =
-        item.profissional_id ??
-        comanda?.profissional_id;
+    if(tipoItem === "PRODUTO"){
+      return false;
+    }
 
-      return (
-        profissionalItem != null &&
-        String(profissionalItem).trim() ===
-          String(profissionalId).trim() &&
-        !idsBloqueados.has(
-          String(item.id)
-        )
+    const comanda =
+      mapaComandas[item.comanda_id];
+
+    const profissionalItem =
+      item.profissional_id ??
+      comanda?.profissional_id;
+
+    return (
+      profissionalItem != null &&
+      String(profissionalItem).trim() ===
+        String(profissionalId).trim() &&
+      !idsBloqueados.has(
+        String(item.id)
+      )
+    );
+
+  });
+
+
+const itensProdutosPagamento =
+  todosItens.filter(item => {
+
+    const tipoItem =
+      String(item.tipo_item || "")
+        .trim()
+        .toUpperCase();
+
+    const vendidoPeloProfissional =
+      item.vendedor_id != null &&
+      String(item.vendedor_id).trim() ===
+        String(profissionalId).trim();
+
+    const possuiComissaoVenda =
+      Number(
+        item.comissao_venda_percentual || 0
+      ) > 0 ||
+      Number(
+        item.comissao_venda_valor || 0
+      ) > 0;
+
+    const vendaJaPaga =
+      vendasBloqueadas.servicos.has(
+        String(item.id)
       );
 
-    });
+    return (
+      tipoItem === "PRODUTO" &&
+      vendidoPeloProfissional &&
+      possuiComissaoVenda &&
+      !vendaJaPaga
+    );
+
+  });
+
+
+itensProfissional = [
+  ...itensServicosPagamento,
+  ...itensProdutosPagamento
+];
 
 }
 
