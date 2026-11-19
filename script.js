@@ -11796,11 +11796,11 @@ async function abrirHistoricoEstoqueProduto(produtoId){
         estoque_novo,
         origem_tipo,
         observacao,
-        criado_em
+        created_at
       `)
       .eq("produto_id", produtoId)
       .eq("unidade_id", unidadeAtualId)
-      .order("criado_em", {
+      .order("created_at", {
         ascending:false
       })
 
@@ -11899,14 +11899,14 @@ async function abrirHistoricoEstoqueProduto(produtoId){
                 "ESTORNO"
               ].includes(movimento.tipo);
 
-            const dataHora =
-              movimento.criado_em
-                ? new Date(
-                    movimento.criado_em
-                  ).toLocaleString(
-                    "pt-BR"
-                  )
-                : "-";
+           const dataHora =
+  movimento.created_at
+    ? new Date(
+        movimento.created_at
+      ).toLocaleString(
+        "pt-BR"
+      )
+    : "-";
 
             return `
               <div
