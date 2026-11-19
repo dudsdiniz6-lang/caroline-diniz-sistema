@@ -21647,17 +21647,19 @@ const idsComandas = [
   if(idsComandas.length > 0){
     const itensResp = await supabaseClient
   .from("comanda_itens")
+  const itensResp = await supabaseClient
+  .from("comanda_itens")
   .select(`
     id,
     comanda_id,
     descricao,
     valor,
     quantidade,
+    cancelado,
     servicos(nome),
     profissionais(nome)
   `)
-  .in("comanda_id", idsComandas)
-  .eq("cancelado", false);
+  .in("comanda_id", idsComandas);
 
 if(itensResp.error){
 
@@ -21669,8 +21671,27 @@ if(itensResp.error){
 }else{
 
   itensComandas =
-    itensResp.data || [];
+    (itensResp.data || [])
+      .filter(item =>
+        item.cancelado !== true
+      );
 
+}
+  .in("comanda_id", idsComandas);
+if(itensResp.error){
+
+  console.error(
+    "Erro ao carregar itens das comandas:",
+    itensResp.error
+  );
+
+}else{
+
+ itensComandas =
+  (itensResp.data || [])
+    .filter(item =>
+      item.cancelado !== true
+    );
 }
   }
 
