@@ -4740,13 +4740,19 @@ if(idsComandas.length > 0){
       await supabaseClient
         .from("comanda_itens")
         .select(`
-          id,
-          comanda_id,
-          profissional_id,
-          descricao,
-          valor,
-          comissao_percentual
-        `)
+  id,
+  comanda_id,
+  profissional_id,
+  vendedor_id,
+  tipo_item,
+  produto_id,
+  quantidade,
+  descricao,
+  valor,
+  comissao_percentual,
+  comissao_venda_percentual,
+  comissao_venda_valor
+`)
         .in(
           "comanda_id",
           loteIdsComandas
