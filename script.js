@@ -21647,57 +21647,40 @@ const idsComandas = [
 
   let itensComandas = [];
 
-  if(idsComandas.length > 0){
-    const itensResp = await supabaseClient
-  .from("comanda_itens")
+ if(idsComandas.length > 0){
+
   const itensResp = await supabaseClient
-  .from("comanda_itens")
-  .select(`
-    id,
-    comanda_id,
-    descricao,
-    valor,
-    quantidade,
-    cancelado,
-    servicos(nome),
-    profissionais(nome)
-  `)
-  .in("comanda_id", idsComandas);
+    .from("comanda_itens")
+    .select(`
+      id,
+      comanda_id,
+      descricao,
+      valor,
+      quantidade,
+      cancelado,
+      servicos(nome),
+      profissionais(nome)
+    `)
+    .in("comanda_id", idsComandas);
 
-if(itensResp.error){
+  if(itensResp.error){
 
-  console.error(
-    "Erro ao carregar itens das comandas:",
-    itensResp.error
-  );
-
-}else{
-
-  itensComandas =
-    (itensResp.data || [])
-      .filter(item =>
-        item.cancelado !== true
-      );
-
-}
-  .in("comanda_id", idsComandas);
-if(itensResp.error){
-
-  console.error(
-    "Erro ao carregar itens das comandas:",
-    itensResp.error
-  );
-
-}else{
-
- itensComandas =
-  (itensResp.data || [])
-    .filter(item =>
-      item.cancelado !== true
+    console.error(
+      "Erro ao carregar itens das comandas:",
+      itensResp.error
     );
-}
+
+  }else{
+
+    itensComandas =
+      (itensResp.data || [])
+        .filter(item =>
+          item.cancelado !== true
+        );
+
   }
 
+}
   const total = pendencias.reduce((soma, p)=> soma + Number(p.valor || 0), 0);
 
   abrirModal(`
