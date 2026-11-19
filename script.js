@@ -11829,17 +11829,20 @@ async function abrirHistoricoEstoqueProduto(produtoId){
   }
 
 
-  if(movimentacoesResposta.error){
+ if(movimentacoesResposta.error){
 
-    console.error(
-      "Erro ao carregar histórico:",
-      movimentacoesResposta.error
-    );
+  console.error(
+    "Erro ao carregar histórico:",
+    movimentacoesResposta.error
+  );
 
-    alert("Não foi possível carregar o histórico.");
-    return;
-  }
+  alert(
+    "Erro ao carregar histórico: " +
+    movimentacoesResposta.error.message
+  );
 
+  return;
+}
 
   const nomesTipos = {
 
